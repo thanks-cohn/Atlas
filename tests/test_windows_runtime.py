@@ -123,6 +123,28 @@ class WindowsRuntimeTests(unittest.TestCase):
         reopened = WindowsState(self.state.directory)
         reopened.close()
 
+    def test_nested_missing_private_directories(self):
+        from atlas_companion.windows_state import secure_directory, WindowsState, windows_api, verify_private_handle
+        import ctypes
+        kernel, _ = windows_api()
+        for leaf, factory in (('install', secure_directory), ('state', WindowsState)):
+            ancestor = self.base / leaf
+            target = ancestor / 'Programs' / 'Atlas'
+            self.assertFalse(ancestor.exists())
+            result = factory(target)
+            try:
+                for folder in (ancestor, ancestor / 'Programs', target):
+                    handle = kernel.CreateFileW(str(folder), 0x20000, 3, None, 3, 0x02200000, None)
+                    self.assertNotEqual(handle, ctypes.c_void_p(-1).value)
+                    try:
+                        verify_private_handle(handle, self.state.sid)
+                    finally:
+                        kernel.CloseHandle(handle)
+                self.assertTrue(target.is_dir())
+            finally:
+                if leaf == 'state':
+                    result.close()
+
     def test_foreign_owned_existing_artifact_is_rejected(self):
         from atlas_companion.windows_state import create_private_file
         path = self.state.directory / 'foreign.key'

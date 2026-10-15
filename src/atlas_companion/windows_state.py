@@ -88,12 +88,7 @@ class WindowsState(State):
         self.sid = token_sid()
         absolute = os.path.abspath(directory)
         root_components(absolute)
-        # Validate existing ancestry before mkdir; never walk a junction.
-        ancestor = Path(absolute)
-        while not ancestor.exists():
-            ancestor = ancestor.parent
-        with WindowsRoot(str(ancestor)):
-            _create_private_directory(absolute, self.sid)
+        _create_private_directory(absolute, self.sid)
         self.directory = Path(absolute)
         self._guard = WindowsRoot(absolute)
         self.identity = self._guard.identity
@@ -261,11 +256,7 @@ def secure_directory(path):
     sid = token_sid()
     absolute = os.path.abspath(path)
     root_components(absolute)
-    ancestor = Path(absolute)
-    while not ancestor.exists():
-        ancestor = ancestor.parent
-    with WindowsRoot(str(ancestor)):
-        _create_private_directory(absolute, sid)
+    _create_private_directory(absolute, sid)
     with WindowsRoot(absolute):
         kernel, _ = windows_api()
         handle = kernel.CreateFileW(absolute, 0x60000, 3, None, 3, 0x02200000, None)
@@ -352,21 +343,55 @@ def verify_owner_handle(handle, sid):
 
 
 def _create_private_directory(path, sid):
-    """Create the final directory atomically with explicit user ownership/DACL."""
-    if os.path.exists(path):
-        return
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    """Create missing components privately while retaining every ancestor.
+
+    Existing OS/account ancestors may have different owners. Every component we
+    create (including a raced CREATE collision) and the final folder must have
+    the current user as owner. All opens reject reparse points and deny delete
+    sharing, so no validated ancestor can be swapped during path-based creation.
+    """
+    drive, names = root_components(path)
+    if not names:
+        raise APIError('INVALID_STATE', 'A drive root cannot be private state.')
     class Attributes(ctypes.Structure):
         _fields_ = [('length', w.DWORD), ('descriptor', w.LPVOID), ('inherit', w.BOOL)]
     kernel, _ = windows_api()
     descriptor = security_descriptor(sid, True)
+    opened = []
     try:
         attributes = Attributes(ctypes.sizeof(Attributes), descriptor, False)
         kernel.CreateDirectoryW.argtypes = [w.LPCWSTR, ctypes.POINTER(Attributes)]
-        if not kernel.CreateDirectoryW(path, ctypes.byref(attributes)):
-            code = ctypes.get_last_error()
-            if code != 183:
-                raise ctypes.WinError(code)
+        with WindowsRoot(drive) as root:
+            parent = root.handle
+            current = drive
+            try:
+                for index, name in enumerate(names):
+                    current = ntpath.join(current, name)
+                    creating = False
+                    try:
+                        child = root._relative(parent, name, True)
+                    except OSError as exc:
+                        if getattr(exc, 'winerror', None) not in (2, 3):
+                            raise
+                        creating = True
+                        if not kernel.CreateDirectoryW(current, ctypes.byref(attributes)):
+                            code = ctypes.get_last_error()
+                            if code != 183:
+                                raise ctypes.WinError(code)
+                        child = root._relative(parent, name, True)
+                    opened.append(child)
+                    parent = child
+                    if creating or index == len(names) - 1:
+                        security = kernel.CreateFileW(current, 0x20000, 3, None, 3, 0x02200000, None)
+                        if security == ctypes.c_void_p(-1).value:
+                            raise ctypes.WinError(ctypes.get_last_error())
+                        try:
+                            verify_owner_handle(security, sid)
+                        finally:
+                            kernel.CloseHandle(security)
+            finally:
+                for handle in reversed(opened):
+                    kernel.CloseHandle(handle)
     finally:
         kernel.LocalFree(descriptor)
 

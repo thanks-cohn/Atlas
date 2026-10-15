@@ -57,7 +57,25 @@ def main():
                 frame = b'{"action":"connect"}'
                 proc = subprocess.run([str(app / 'atlas-native.exe'), origin + '/'],
                     input=struct.pack('<I', len(frame)) + frame, env=env, capture_output=True, timeout=35)
-                assert proc.returncode == 0, 'Native host failed: ' + proc.stderr.decode(errors='replace')
+                if proc.returncode:
+                    # Only diagnostics for this disposable installed fixture. Never
+                    # print native credentials, even when a malformed host fails.
+                    details = {'returncode': proc.returncode, 'stderr': proc.stderr.decode(errors='replace')}
+                    if len(proc.stdout) >= 4:
+                        response_length = struct.unpack('<I', proc.stdout[:4])[0]
+                        try:
+                            response = json.loads(proc.stdout[4:4 + response_length])
+                            details['native_state'] = response.get('state')
+                        except (ValueError, AttributeError):
+                            pass
+                    try:
+                        diagnostic = subprocess.run([str(runtime), '--state-dir', str(private), 'serve'],
+                            env=env, capture_output=True, timeout=8)
+                        details['serve_exit'] = diagnostic.returncode
+                        details['serve_stderr'] = diagnostic.stderr.decode(errors='replace')
+                    except subprocess.TimeoutExpired:
+                        details['serve'] = 'A directly launched fixture remained running beyond eight seconds'
+                    raise AssertionError('Native host failed: ' + json.dumps(details))
                 length = struct.unpack('<I', proc.stdout[:4])[0]
                 value = json.loads(proc.stdout[4:4+length])
                 assert value['ok'] and value['port'] == 17892, 'Native bootstrap did not succeed'
