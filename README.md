@@ -30,7 +30,7 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 ## Install the Linux companion
 
-A standalone Linux x86_64 companion is now built with Python and the native management UI included. Extract the distribution and open `atlas-companion`; authorize the exact extension ID and choose locations in its native window. No repeated token pasting is needed after installed enrollment. See [installer instructions](packaging/README.md) and [latest handoff](codex/HANDOFF_LATEST.md). The local unsigned build is tested on glibc2.41; Windows and actual Chrome callback verification remain outstanding.
+A standalone Linux x86_64 companion is now built with Python and the native management UI included. Extract the distribution and open `atlas-companion`; authorize the exact extension ID and choose locations in its native window. No repeated token pasting is needed after installed enrollment. See [installer instructions](packaging/README.md) and [latest handoff](codex/HANDOFF_LATEST.md). The local unsigned build is tested on glibc2.41; a separate Ubuntu22.04/glibc2.35 build also passed. [Download the Linux installer artifact](https://github.com/thanks-cohn/Atlas/actions/runs/38775149275/artifacts/11994080011) (14-day retention; manual build workflow can regenerate it). Windows read-boundary tests now pass on a Windows runner; the complete Windows helper and actual Chrome callbacks remain unfinished/unverified.
 
 ## Run from source for development
 

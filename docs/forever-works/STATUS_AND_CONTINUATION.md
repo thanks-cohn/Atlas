@@ -60,3 +60,5 @@ Actual Chrome callbacks remain NOT_RUN under managed policy; OS logon/systemd/sl
 ### Windows continuation started
 
 Following Linux delivery `fbc2fd3`, a Windows-only held-handle read/list provider and actual-Windows workflow tests were added as a bounded first increment. It is not enabled in the integrated companion; Windows ACL state, mutations, native installer and lifecycle remain unfinished. Local grammar checks pass; native Windows tests require the Windows runner. See `docs/implementation/WINDOWS_PORT_V1.md` and workflow evidence rather than assuming platform parity.
+
+Actual Windows continuation evidence:workflow38775102540 passed on Windows Server2025 (7pass/1 Linux-onlyskip; all5 kernel tests executed). This proves only the new read/list boundary, not a complete Windows helper or Windows10/11 desktop lifecycle. Linux CI and unsigned installer workflow also passed; the Ubuntu22.04/glibc2.35 binary was independently downloaded and retested for no-Python native wake/bytes/GUI. See `docs/evidence/windows-and-linux-ci-2026-10-15.json` and latest handoff for artifact download and remaining gates.

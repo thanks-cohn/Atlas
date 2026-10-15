@@ -1,0 +1,60 @@
+{
+  "recorded_at_utc": "2026-10-15T17:13:42.852636+00:00",
+  "tested_commit": "d4739889ef840234a1d847c98fc0f156196189fc",
+  "windows": {
+    "workflow_url": "https://github.com/thanks-cohn/Atlas/actions/runs/38775102540",
+    "conclusion": "success",
+    "os": "Microsoft Windows Server 2025 Datacenter",
+    "runner_image": "windows-2025-vs2026",
+    "python": "3.12.10",
+    "tests_run": 8,
+    "passed": 7,
+    "skipped": 1,
+    "skip_reason": "Non-Windows fail-closed check",
+    "native_kernel_tests_passed": 5,
+    "scope": "Read-only handle boundary only; not an integrated Windows helper/installer",
+    "log_sha256": "ec04c03f7bf6b3c813cc93d086e2fc33127ede3bb7366a03545a0a9e836f437a",
+    "source_sha256": "60b1e033490db34209751be9f81ffcff620ab8d0e17bb113b1434216e1338af9",
+    "tests_sha256": "f68123e6ca231dfb14cef71892e6a17fb3630b2a5016645b7809e3a808f60a3f"
+  },
+  "linux_ci": {
+    "workflow_url": "https://github.com/thanks-cohn/Atlas/actions/runs/38775102490",
+    "conclusion": "success",
+    "python_tests_run": 90,
+    "passed": 85,
+    "skipped": 5,
+    "skip_reason": "Windows kernel tests run in separate Windows job",
+    "worker_contracts_passed": 18
+  },
+  "linux_installer": {
+    "workflow_url": "https://github.com/thanks-cohn/Atlas/actions/runs/38775149275",
+    "conclusion": "success",
+    "artifact_url": "https://github.com/thanks-cohn/Atlas/actions/runs/38775149275/artifacts/11994080011",
+    "artifact_id": 11994080011,
+    "artifact_retention_days": 14,
+    "build": {
+      "source_sha256": "f3c68e2aed2260068c024fdc6c45f85c4d3a2b419170baf8af33b30ca0e8a3ba",
+      "artifact": "atlas-companion",
+      "sha256": "2981b89d9e3402ca8498c3fba24c52453411171976192628d69dca958a1b2c61",
+      "bytes": 26851864,
+      "platform": "Linux-6.8.0-1064-azure-x86_64-with-glibc2.35",
+      "architecture": "x86_64",
+      "python": "3.12.15",
+      "pyinstaller": "6.16.0",
+      "status": "unsigned Linux development build; no Windows or distribution-signing claim"
+    },
+    "downloaded_binary_verified": true,
+    "source_fingerprint_verified": true,
+    "actual_downloaded_binary_native_wake_byte_copy": "PASS (Python absent from PATH)",
+    "actual_downloaded_binary_gui": "PASS on local X11 (Python absent from PATH)"
+  },
+  "not_run": [
+    "Integrated Windows helper/installer",
+    "Windows 10/11 desktop proof",
+    "Windows mutations/private DACL state/native recovery",
+    "Actual Chrome callbacks",
+    "OS sleep/reboot/systemd logon",
+    "Clean-machine Linux distribution matrix",
+    "Publisher signing/Store review"
+  ]
+}
