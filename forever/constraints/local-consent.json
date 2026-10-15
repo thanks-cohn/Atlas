@@ -1,0 +1,20 @@
+{
+  "foreverVersion": "0.1",
+  "id": "constraint.local-consent",
+  "kind": "constraint",
+  "statement": "Native executables are installed with explicit user consent; browser extensions cannot silently install OS executables; local service exposes no unauthenticated privileged file API.",
+  "category": "security-and-distribution",
+  "scope": [
+    "capability.authorized-files",
+    "capability.recovery"
+  ],
+  "classification": "hard",
+  "verification": [],
+  "rationale": "Maintain user sovereignty, Web Store policy compatibility and defense against browser-to-loopback abuse.",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
