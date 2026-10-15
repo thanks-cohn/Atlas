@@ -1,0 +1,20 @@
+{
+  "foreverVersion": "0.1",
+  "id": "constraint.power-lifecycle",
+  "kind": "constraint",
+  "statement": "Software on an ordinary suspended, hibernated or fully shut-down computer cannot perform ongoing work without external hardware/OS-supported wake; restoration must be triggered on wake, startup, browser activation or expressly consented supported wake timers.",
+  "category": "platform-lifecycle",
+  "classification": "hard",
+  "scope": [
+    "capability.companion-lifecycle",
+    "capability.companion-supervisor"
+  ],
+  "verification": [],
+  "rationale": "Distinguish real service continuity from physically impossible continuous execution; do not disable sleep silently.",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
