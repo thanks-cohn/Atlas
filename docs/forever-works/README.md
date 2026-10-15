@@ -26,3 +26,10 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [RECONSTITUTION_PROTOCOL.md](RECONSTITUTION_PROTOCOL.md) — cold-agent procedure, canonical inheritance requirements and held-out experiment.
 - [PERIODS.md](PERIODS.md) — historical periods, distinguish from implementation milestones.
 - [FIRST_EXECUTABLE_SLICE.md](FIRST_EXECUTABLE_SLICE.md) — initial resource graph implementation, tests and known limitations.
+
+## Cold-agent entry and canonical records
+
+- [Repository AGENTS.md](../../AGENTS.md) — provider-neutral cold-start work contract.
+- [Canonical Forever Works 0.1 manifest](../../forever/manifest.json) — machine-readable original intent, capabilities, invariants, constraint and historic mechanism decision.
+- [STATUS_AND_CONTINUATION.md](STATUS_AND_CONTINUATION.md) — current actual implementation, unknowns and next incremental work.
+- [scripts/check_project.py](../../scripts/check_project.py) — local linkage validator plus experimental Python unit tests, *not* full upstream schema proof.
