@@ -18,3 +18,11 @@ Read:
 **Upstream authority:** https://github.com/thanks-cohn/forever-works . Its normative Standard v0.1 and optional ecosystem-composition profile are independent of ATLAS. Future implementation should emit compliant canonical records (intent, capability, invariant, constraint, dependency, decision, compatibility, implementation, migration, evidence), stable references, provenance and verified proof. Do not call these narrative markdown proposals formally validated inheritance records. Any-Shape may later consume the accepted records.
 
 Track historical mechanisms such as Chute's network bridge because successors need to understand **which user problem they overcame**. When Chrome or Windows changes, invent and independently verify a better mechanism if needed.
+
+## Agent-neutral construction and verifiable inheritance
+
+- [BUILD_PROGRAM.md](BUILD_PROGRAM.md) — comprehensive dependency graph, parallel workstreams, milestone exit criteria, continuity rules and platform independence.
+- [CONTRACTS_AND_VERIFICATION.md](CONTRACTS_AND_VERIFICATION.md) — provisional domain/API semantics, negative/security/runtime proof and replacement requirements.
+- [RECONSTITUTION_PROTOCOL.md](RECONSTITUTION_PROTOCOL.md) — cold-agent procedure, canonical inheritance requirements and held-out experiment.
+- [PERIODS.md](PERIODS.md) — historical periods, distinguish from implementation milestones.
+- [FIRST_EXECUTABLE_SLICE.md](FIRST_EXECUTABLE_SLICE.md) — initial resource graph implementation, tests and known limitations.
