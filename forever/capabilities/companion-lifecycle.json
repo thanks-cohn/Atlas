@@ -1,0 +1,26 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.companion-lifecycle",
+  "kind": "capability",
+  "name": "Companion continuity across host lifecycles",
+  "statement": "Recover the supported authorized workflow after browser worker termination, companion process death, system sleep/wake, hibernation/resume and shutdown/reboot/logon when OS, browser and user context return.",
+  "requiredProperties": [
+    "state preserved at rest",
+    "event-triggered recovery, not continuous execution while powered down",
+    "support conditional OS logon startup and bounded retry",
+    "clear degraded and repair states"
+  ],
+  "relatedInvariants": [
+    "invariant.recovery-semantics",
+    "invariant.operation-reconciliation"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
