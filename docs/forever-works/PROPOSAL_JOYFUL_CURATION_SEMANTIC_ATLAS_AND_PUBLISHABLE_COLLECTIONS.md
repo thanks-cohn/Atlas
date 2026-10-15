@@ -211,3 +211,67 @@ Make premium feel genuinely *desirable*, never ransom core ownership, privacy, a
 **Concept tagline:** *Beautiful for humans. Comprehensible to machines. Sovereign to its owner.*
 
 **Product promise:** *Atlas doesn't merely save what you discovered. It preserves why you cared, gives you reasons to return, and lets your curated world become something worth sharing.*
+
+
+---
+
+## Addendum A — Curation Becomes Authorship: Galleries, Articles, and Editorial Reuse (2026-10-15)
+
+**Status:** Additional owner-directed product requirement and long-term design proposal. This addendum extends rather than supersedes the original curation, access-control, portability, and publishing principles.
+
+### A.1 Why this matters
+
+A person who carefully saves images, tags sources, names galleries, links documents, and writes notes has already performed meaningful editorial work. ATLAS must not require that person to repeat those hours in a separate authoring platform. A curated collection can become an article, essay, photo story, research bibliography, themed microsite, or gallery with minimal re-entry.
+
+**Core proposition:** *Curation is reusable creative labor. Organizing your world is already the beginning of creating something.*
+
+### A.2 Universal, explicit title field
+
+Every Atlas resource, catalog, relationship where meaningful, gallery, image, video, bookmark, document, file, and publication must support an independent, optional, user-editable **Title** field separate from its provider filename, source-page title, ID, notes, tags, and original URL. Imported titles may serve as initial suggestions, but user overrides must be preserved. Changing a title must never rename a physical source file without a separate explicit file operation. Fallback display titles remain useful when an object has no user-specified title.
+
+Gallery and publication titles may be entered manually or sourced from an existing item's title and subsequently edited independently.
+
+### A.3 Compose from what already exists
+
+Introduce an Atlas **Publication** as a first-class, portable item type that references selected existing objects, with an ordered arrangement of sections and optional new editorial writing.
+
+A user-facing workflow should be:
+
+1. Open a catalog or gallery and choose **Create article**, **Create gallery site**, or **Compose from selection**.
+2. Select the images, captions, existing notes, text fields, tags, files, and bookmarks to include; explicitly **keep some and omit others**.
+3. Reuse an existing title or write a new publication title. Arrange images, galleries, paragraphs, quotations written by the user, section headings, embeds, and supporting resources in a readable order.
+4. Choose whether a source annotation is rendered as caption, body paragraph, pull quote, contextual note, source credit, or hidden metadata; tags may render as visible topics, filters, or metadata only.
+5. Choose how included bookmarks appear: inline hyperlink, a compact group **after the related text/image**, footnote/endnote, bibliography, curated further-reading list, or not displayed.
+6. Inspect a polished live preview; edit transitions and copy; select an accessible layout/theme; publish/export only the approved material.
+
+The simple default should require little more than **choose collection → title → curate inclusions → preview → export**. No requirement to understand markup or web development. A powerful editor can be progressively disclosed without sacrificing a frictionless basic workflow.
+
+### A.4 Editing and provenance invariants
+
+A publication is **not a destructive transformation** of the user's source catalog. It contains its own editable publication title, introduction, section ordering, headings, transitions, publication-only annotations and selected references. It must be possible to publish multiple different articles and galleries from the same underlying resources without duplicating all media or overwriting the original user's notes.
+
+Support both:
+- **Linked content:** the publication references a canonical note/image/bookmark and can explicitly refresh an approved draft from later source revisions;
+- **Snapshot content:** the publication pins a specific authorized version, to prevent future source edits from silently changing a published piece.
+
+Never silently propagate a publication edit into a source item or silently propagate newly private/unapproved source material into a public export. Identify derived blocks with stable source IDs and revisions. Allow explicit unlink/fork when a user wants truly independent editorial copy.
+
+### A.5 Publication model and portable export
+
+Extend the proposed Atlas Knowledge Format (AKF) with a versioned `publication` object and ordered `publication_blocks`. Each block should have an ID, type (heading, text, image, image gallery, video, document reference, bookmark list, citation, relation visualization, custom supported media), selected source reference(s), render role, optional editorial override, visibility, ordering, and revision/snapshot provenance. Include theme/layout choices as portable **presentation metadata**, not as corruption of the original graph. Define deterministic semantics for missing media and references.
+
+**Publication outputs:** static HTML/CSS/JS site, gallery, photo essay, reading page, collection website and future richer destinations; optionally export manuscript-friendly formats under separate validated renderers. Each output must respect asset rights, source attribution, safe markup, accessibility and user-approved public/private scopes. A website need not run ATLAS to display its approved exported content.
+
+### A.6 Acceptance tests
+
+- Name an imported bookmark and linked image independently without changing original source filenames/titles.
+- Turn a gallery with several pre-existing captions and tags into a titled article, retaining edited body text and a curated list of bookmark links after relevant content.
+- Select ten candidate bookmarks but publish only four; verify omitted bookmarks and their private metadata are absent from page files, search index, counters, embeds and public AKF.
+- Make two differently themed articles from the same collection; edit one without altering original source notes or the other article.
+- Verify linked vs pinned-snapshot behavior, reloading publication drafts, asset availability failures, export/import round-trips, and safe static-site rendering.
+- Complete a basic publication from already-annotated material without recopying original notes manually.
+- Preserve keyboard navigation, screen reader structure, responsive presentation and safe handling of untrusted text.
+
+### A.7 Future-agent reconstruction instruction
+
+Agents rebuilding Atlas cold must preserve the distinction between **source objects** (what the user saved and meant), **editorial selection** (what the user decided belongs in one story), and **rendering/publishing** (how the approved selection is presented externally). Reuse typed references and immutable history or revisions to avoid data loss. The value proposition is not an AI pretending to author someone's story: it is honoring the creative work they have already done and making it publishable.
