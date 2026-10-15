@@ -41,3 +41,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Portable environment research
 
 - [PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md](PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) — proposed cross-OS personal workspace continuity, WebVM/other execution substrates, environment manifests, restoration, ecosystem opportunities, security boundaries and experimental validation.
+
+- [DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md](DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md) — preserved discussion of transporting the **same personal computing environment between computers**, WebVM's optional role, portability/security invariants, current implementation status and proof milestones.
