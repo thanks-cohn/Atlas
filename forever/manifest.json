@@ -1,0 +1,25 @@
+{
+  "foreverVersion": "0.1",
+  "projectId": "atlas",
+  "records": {
+    "intent": [
+      "project.intent.json"
+    ],
+    "capabilities": [
+      "capabilities/resource-graph.json",
+      "capabilities/authorized-files.json",
+      "capabilities/recovery.json"
+    ],
+    "invariants": [
+      "invariants/identity.json",
+      "invariants/authority.json",
+      "invariants/sovereignty.json"
+    ],
+    "constraints": [
+      "constraints/local-consent.json"
+    ],
+    "decisions": [
+      "decisions/mechanism-fluidity.json"
+    ]
+  }
+}
