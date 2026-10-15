@@ -116,7 +116,11 @@ def _connect(state, origin):
                 subprocess.Popen(command('--state-dir', str(state.directory), 'serve', '--port', str(PORT)),
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                  close_fds=True, env=child_environment(), **launch_options())
-                for attempt in range(30):
+                # A freshly extracted Windows onefile runtime can take longer
+                # than three seconds under normal antivirus scanning. Keep wake
+                # bounded by elapsed time, rather than assuming a warm process.
+                startup_deadline = time.monotonic() + 20
+                while time.monotonic() < startup_deadline:
                     try:
                         prove(state, origin, connection)
                         break
