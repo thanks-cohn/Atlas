@@ -158,6 +158,13 @@ def main():
             assert request('/v1/operate', operation)[1]['replayed']
             assert (target / 'original.bin').read_bytes() == content
             print('PASS real suspended Windows helper recovered by native demand wake; durable receipt prevents duplicate copy.')
+            upgraded = subprocess.run([str(binary), 'install', '--extension-id', extension, '--consent', '--upgrade',
+                '--state-dir', str(private), '--install-dir', str(app)], env=env, capture_output=True, timeout=45)
+            assert upgraded.returncode == 0, upgraded.stderr.decode(errors='replace')
+            token = connect()
+            assert len(request('/v1/grants')[1]['grants']) == 2
+            assert request('/v1/operate', operation)[1]['replayed']
+            print('PASS live installed native executable upgrade safely stops its attested helper and preserves grants and receipts.')
             startup = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'enable','--consent'],
                                      env=env,capture_output=True,timeout=30)
             assert startup.returncode == 0, startup.stderr.decode(errors='replace')
@@ -203,7 +210,6 @@ def main():
             stop_attested_service(state,17892);token=connect()
             assert request('/v1/list',{'grant':src})[0] == 403
             print('PASS per-user Run opt-in/disable and revoked location remains denied after restart.')
-            stop_attested_service(state,17892)
             removed=uninstall(app)
             assert removed['state_preserved'] and private.exists()
             assert not state.known_origin(origin)

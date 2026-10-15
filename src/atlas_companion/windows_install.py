@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import time
 import uuid
 
 HOST = 'org.atlas.companion'
@@ -59,6 +60,51 @@ def _registration(key, value=None, remove=False):
         winreg.SetValueEx(handle, '', 0, winreg.REG_SZ, str(value))
 
 
+def _unlink(path, missing_ok=False):
+    """Allow the frozen bootloader a bounded interval to release its image."""
+    deadline = time.monotonic() + 2
+    while True:
+        try:
+            path.unlink(missing_ok=missing_ok)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.05)
+
+
+def _quiesce(state, directory, receipt):
+    """Stop opt-in recovery and only an authenticated owned helper image."""
+    from .windows_supervisor import startup
+    from .windows_runtime import RuntimeLock, stop_attested_service
+    from .security import APIError
+    startup(state, receipt['extension_id'], 17892, 'uninstall', install_dir=directory)
+    deadline = time.monotonic() + 2
+    while True:
+        try:
+            with RuntimeLock(state, 'supervisor'):
+                break
+        except APIError as exc:
+            if exc.code != 'ALREADY_RUNNING' or time.monotonic() >= deadline:
+                raise
+            time.sleep(0.05)
+    try:
+        signed = json.loads(state._guard.read('service.identity', 4096))
+        executable = Path(signed['identity']['exe'])
+        owned = receipt['owned'].get(str(executable))
+        if executable == Path(receipt['runtime']):
+            owned = receipt['runtime_sha256']
+        if executable.parent != directory or executable.is_symlink() or not owned or _digest(executable) != owned:
+            return
+        # This helper verifies the HMAC, SID, fixed port, state identity and live
+        # process incarnation using a retained kernel handle before termination.
+        stop_attested_service(state, 17892)
+    except (APIError, OSError, KeyError, TypeError, ValueError):
+        # Missing/dead/invalid attestations never authorize a process kill.
+        # An executable still in use makes the subsequent unlink fail closed.
+        return
+
+
 def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=None, *, binary=None, upgrade=False):
     if sys.platform != 'win32':
         raise ValueError('Windows installer requires Windows')
@@ -86,12 +132,6 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
         previous = json.loads(receipt_path.read_text(encoding='utf-8'))
         if previous.get('extension_id') != extension_id or previous.get('registry_key') != _registry(browser) or previous.get('state_dir') != str(state_dir):
             raise ValueError('Upgrade cannot change extension, browser or state identity')
-        from .windows_supervisor import startup
-        previous_state = State(state_dir)
-        try:
-            startup(previous_state, extension_id, 17892, 'uninstall', install_dir=directory)
-        finally:
-            previous_state.close()
     old_registration = _registration(_registry(browser))
     if old_registration is not None and (not previous or old_registration != str(manifest)):
         raise ValueError('Existing native host registration belongs to another installation')
@@ -110,13 +150,19 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
                                        'path': str(native), 'allowed_origins': ['chrome-extension://' + extension_id + '/']}, indent=2),
                  native: source.read_bytes()}
     backups = {path: path.read_bytes() for path in outputs if path.exists()}
+    if previous:
+        previous_state = State(state_dir)
+        try:
+            _quiesce(previous_state, directory, previous)
+        finally:
+            previous_state.close()
     created = []
     try:
         for path, data in documents.items():
             if path.exists():
-                path.unlink()
-            _write(path, data)
+                _unlink(path)
             created.append(path)
+            _write(path, data)
         state = State(state_dir)
         try:
             state.protect_path(directory)
@@ -139,9 +185,10 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
         else:
             _registration(_registry(browser), old_registration)
         for path in created:
-            path.unlink(missing_ok=True)
+            _unlink(path, missing_ok=True)
         for path, data in backups.items():
-            _write(path, data)
+            if path in created:
+                _write(path, data)
         raise
     return {'paths': [str(config), str(native), str(manifest)], 'launcher': str(runtime), 'receipt': str(receipt_path)}
 
@@ -154,20 +201,26 @@ def uninstall(install_dir, *, revoke=True):
     if receipt_path.is_symlink():
         raise ValueError('Invalid receipt')
     receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
-    state = State(receipt['state_dir'])
-    from .windows_supervisor import startup
-    startup(state, receipt['extension_id'], 17892, 'uninstall', install_dir=directory)
     registered = _registration(receipt['registry_key'])
     if registered is not None and registered != receipt['manifest']:
         raise ValueError('Native registration changed; refusing to remove it')
     removed, retained = [], []
+    deletable = []
     for name, digest in receipt['owned'].items():
         path = Path(name)
         if path.parent != directory or path.is_symlink() or (path.exists() and _digest(path) != digest):
             retained.append(name)
         elif path.exists():
-            path.unlink()
-            removed.append(name)
+            deletable.append(path)
+    state = State(receipt['state_dir'])
+    try:
+        _quiesce(state, directory, receipt)
+        for path in deletable:
+            _unlink(path)
+            removed.append(str(path))
+    except BaseException:
+        state.close()
+        raise
     if registered is not None:
         _registration(receipt['registry_key'], remove=True)
     try:

@@ -127,6 +127,40 @@ class WindowsSupervisorContractTests(unittest.TestCase):
                 supervisor.startup(state, 'a' * 32, 17892, 'enable', consent=True)
             registration.assert_called_once_with()
 
+    def test_quiesce_only_delegates_owned_matching_image_to_attested_stop(self):
+        from contextlib import nullcontext
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from atlas_companion import windows_install as install
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            executable = directory / 'atlas-native.exe'
+            executable.write_bytes(b'MZowned')
+            state = SimpleNamespace(_guard=Mock())
+            state._guard.read.return_value = json.dumps({'identity': {'exe': str(executable)}}).encode()
+            receipt = {'extension_id': 'a' * 32, 'runtime': str(directory / 'runtime.exe'), 'runtime_sha256': 'unused',
+                       'owned': {str(executable): install._digest(executable)}}
+            with patch('atlas_companion.windows_supervisor.startup'), patch('atlas_companion.windows_runtime.RuntimeLock', return_value=nullcontext()), patch('atlas_companion.windows_runtime.stop_attested_service') as stop:
+                install._quiesce(state, directory, receipt)
+                stop.assert_called_once_with(state, 17892)
+                stop.reset_mock()
+                executable.write_bytes(b'MZchanged')
+                install._quiesce(state, directory, receipt)
+                stop.assert_not_called()
+
+    def test_unlink_retries_only_permission_failures_with_bounded_deadline(self):
+        from unittest.mock import Mock
+        from atlas_companion import windows_install as install
+        path = Mock()
+        path.unlink.side_effect = [PermissionError(), None]
+        with patch.object(install.time, 'sleep'):
+            install._unlink(path)
+        self.assertEqual(path.unlink.call_count, 2)
+        path.unlink.side_effect = PermissionError()
+        with patch.object(install.time, 'monotonic', side_effect=[0, 3]):
+            with self.assertRaises(PermissionError):
+                install._unlink(path)
+
     def test_health_failure_delegates_attested_wake_without_process_termination(self):
         from types import SimpleNamespace
         from atlas_companion.windows_supervisor import Supervisor
