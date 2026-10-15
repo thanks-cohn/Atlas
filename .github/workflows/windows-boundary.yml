@@ -1,0 +1,26 @@
+name: Windows native handle boundary
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/atlas_companion/windows_provider.py'
+      - 'tests/test_windows_provider.py'
+      - '.github/workflows/windows-boundary.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-kernel:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test real Windows handles, identity, junctions, private aliases and bytes
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH = 'src'
+          python -m unittest discover -s tests -p test_windows_provider.py -v
+          exit $LASTEXITCODE

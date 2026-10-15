@@ -58,3 +58,7 @@ The owner explicitly requested Windows work after Linux. Start with the existing
 5. Build Linux on an older supported ABI baseline and test Garuda/Ubuntu/etc.; current local binary requires compatible x86_64/glibc2.41. Validate optional systemd manager behavior and measure idle overhead on target desktops.
 
 All accepted Forever Works intent, authority, identity, recovery and power boundaries remain in force. Implementation/evidence records must reflect actual checked scope; canonical capabilities remain planned/proposed where their full obligations are not proven. Read the final Git status/remote, evidence and exact artifact checksums before continuing.
+
+## Windows work started after Linux delivery
+
+`windows_provider.py` and `tests/test_windows_provider.py` start a Windows-specific held-handle read/list boundary; this is not wired into the Linux-only companion. A dedicated real Windows Actions job checks the native kernel behavior. Three grammar/fail-closed tests pass locally; five Windows kernel tests are skipped on Linux, never counted as Windows proof. See `docs/implementation/WINDOWS_PORT_V1.md` and inspect the actual Windows workflow outcome before integration. Required DACL state, mutations, HKCU installer and Windows recovery remain unfinished. Linux installer build/source hashes belong specifically to the separately committed Linux delivery `fbc2fd3`.
