@@ -1,0 +1,29 @@
+{
+  "foreverVersion": "0.1",
+  "id": "decision.atlas-dated-additivity",
+  "kind": "decision",
+  "title": "Date-based append-only periods with evidence-gated canonical promotion",
+  "status": "accepted",
+  "context": "Owner requires that proposals not overwrite history. Each idea is associated with its actual introduction date and an explicit version.",
+  "decision": "Store unimplemented features as independent YYYY-MM-DD named, versioned packages under features/not-implemented. Future changes use additive dated amendments with amends/supersedes references; preserve older documents. After staging and production-value verification, append accepted capability/invariant references to the existing forever/manifest.json with evidence; never replace earlier records merely because a new period exists. Promote verified subsets only.",
+  "rationale": "Retains why/what/when/where/how, respects historical provenance, prevents aspirations being misrepresented as working features and lets a cold agent trace evolution.",
+  "mustSurvive": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "relatedEntities": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "dateVersion": "2026-10-15",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
