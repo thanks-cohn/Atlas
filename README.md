@@ -15,3 +15,7 @@ References: [Chute](https://github.com/thanks-cohn/chute), [FileChute](https://g
 ## Engineering and verification
 
 The architecture is specified as **Forever Works-style, agent-neutral inheritance**, not an instruction set for one coding agent. Read the [construction program](docs/forever-works/BUILD_PROGRAM.md), [verification contracts](docs/forever-works/CONTRACTS_AND_VERIFICATION.md), and [cold reconstitution protocol](docs/forever-works/RECONSTITUTION_PROTOCOL.md). An initial Python resource catalog experiment is in `src/atlas_core/`, with tests under `tests/`. Run `PYTHONPATH=src python -m unittest discover -s tests -v`. Privileged native/browser integration has **not yet** been built.
+
+## Cold-agent onboarding
+
+Begin with [AGENTS.md](AGENTS.md) (tool/provider-neutral instructions), the [current status ledger](docs/forever-works/STATUS_AND_CONTINUATION.md), and the [construction program](docs/forever-works/BUILD_PROGRAM.md). The first canonical [Forever Works 0.1 model](forever/manifest.json) records enduring requirements. Run `python scripts/check_project.py` for local linkage and Python prototype tests; this **does not** claim normative upstream conformance or native runtime proof. CI runs the same command on commits and pull requests.
