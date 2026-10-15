@@ -5,6 +5,7 @@ import hmac
 import re
 import threading
 import logging
+import socket
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
@@ -27,6 +28,14 @@ class Server(ThreadingHTTPServer):
         self.graph = GraphStore(state.directory / 'catalog.sqlite3')
         self.provider = (provider_factory or Provider)(state, self.graph)
         super().__init__(('127.0.0.1', port), Handler)
+
+    def server_bind(self):
+        if getattr(self.state, 'platform', 'linux') == 'windows':
+            # Windows SO_REUSEADDR permits a second listener on an occupied
+            # port. Exclusive ownership avoids ambiguous loopback routing.
+            self.allow_reuse_address = False
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
     def process_request(self, request, client_address):
         if not self._slots.acquire(blocking=False):

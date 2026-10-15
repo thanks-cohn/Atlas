@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import socket
 import struct
 import subprocess
 import sys
@@ -21,6 +22,24 @@ from atlas_companion.security import APIError
 
 PORT = 17892
 MAX_FRAME = 65536
+
+
+def windows_port_unbound():
+    """Windows can time out instead of refusing an unused loopback port.
+
+    Exclusive bind observes availability without contacting an unknown listener.
+    It authorizes only attempting our fixed command, never trust or termination;
+    fresh possession proof is still required before any bearer is disclosed.
+    """
+    if os.name != 'nt':
+        return False
+    try:
+        with socket.socket() as probe:
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            probe.bind(('127.0.0.1', PORT))
+        return True
+    except OSError:
+        return False
 
 
 def read_exact(stream, length):
@@ -96,7 +115,7 @@ def _connect(state, origin):
             prove(state, origin, connection)
         except (ConnectionRefusedError, TimeoutError, OSError, http.client.HTTPException) as exc:
             connection.close()
-            missing = isinstance(exc, ConnectionRefusedError)
+            missing = isinstance(exc, ConnectionRefusedError) or windows_port_unbound()
             if not missing:
                 # Confirm a timeout on a fresh connection before considering a
                 # precisely attested stale process. Invalid HMAC never triggers a kill.
