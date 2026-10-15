@@ -63,7 +63,28 @@ def main():
                     tree.selection_set(grant['id'])
                     buttons['Revoke'].invoke()
                     assert saved_grants() == []
-                    print('PASS actual Tk: native Add location -> read-only grant; permission upgrade retains ID; restart persistence; explicit revoke; no tokens displayed.')
+                    tabs.select(3); window.update()
+                    manual = window.nametowidget(tabs.tabs()[3])
+                    entries = [w for w in walk(manual) if isinstance(w, ttk.Entry)]
+                    identity, token_field = entries
+                    identity.delete(0, 'end'); identity.insert(0, 'a' * 32)
+                    assert str(buttons['Copy token'].cget('state')) == 'disabled'
+                    buttons['Generate token'].invoke()
+                    token = token_field.get()
+                    assert len(token) >= 20 and state.authenticate('chrome-extension://' + 'a' * 32, token)
+                    assert token_field.cget('show') == '*'
+                    buttons['Copy token'].invoke()
+                    assert window.clipboard_get() == token
+                    buttons['Clear displayed token'].invoke()
+                    assert not token_field.get()
+                    assert str(buttons['Copy token'].cget('state')) == 'disabled'
+                    buttons['Generate token'].invoke()
+                    assert not state.authenticate('chrome-extension://' + 'a' * 32, token)
+                    identity.delete(0, 'end'); identity.insert(0, 'b' * 32)
+                    assert not token_field.get()
+                    assert saved_grants() == []
+                    window.clipboard_clear()
+                    print('PASS actual Tk: grants, permission changes, revoke; manual token generation, masking, clipboard, rotation and identity-change clearing.')
                 except BaseException as exc:
                     errors.append(exc)
                 finally:

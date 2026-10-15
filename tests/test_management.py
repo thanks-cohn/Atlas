@@ -11,6 +11,24 @@ from atlas_companion.state import State
 
 
 class ManagementTests(unittest.TestCase):
+    def test_manual_pairing_consent_identity_rotation_and_no_grants(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = State(folder); model = Management(state)
+            ident = 'a' * 32; origin = 'chrome-extension://' + ident
+            old = state.pair(ident)
+            with self.assertRaises(APIError):
+                model.pairing_token(ident)
+            self.assertTrue(state.authenticate(origin, old))
+            with self.assertRaises(APIError):
+                model.pairing_token('invalid', consent=True)
+            token = model.pairing_token(ident, consent=True)
+            self.assertTrue(state.authenticate(origin, token))
+            self.assertFalse(state.authenticate(origin, old))
+            self.assertFalse(state.authenticate('chrome-extension://' + 'b' * 32, token))
+            self.assertEqual(state.grants(), [])
+            with state.connect() as db:
+                self.assertNotEqual(db.execute('SELECT digest FROM clients WHERE origin=?', (origin,)).fetchone()['digest'], token)
+
     def test_grants_require_consent_and_survive_restart_without_new_prompts(self):
         with tempfile.TemporaryDirectory() as folder:
             base = Path(folder); root = base / 'files'; root.mkdir()

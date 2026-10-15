@@ -71,3 +71,32 @@ This supersedes the historical Windows-foundation-only status above. Main now co
 Actual Windows Server2025 workflow38779850667 passed40 unit cases (39 passed/1 expected Linux-only skip), actual native Tk management with disposable controlled dialogs, and the real frozen x86_64 executable acceptance: no-Python native wake/HTTP byte copy; mkdir/rename/move/trash/restore; precise process stop/re-wake; real NtSuspendProcess hang recovery; durable grants/receipts; live upgrade; immediate opt-in supervisor and failed-helper restoration; disable/revocation persistence; live owned uninstall. Download and SHA256 are in the latest handoff and `docs/evidence/windows-companion-recovery-2026-10-15.json`. Downloaded binary digest, size and Windows-CRLF source fingerprint were independently checked. Linux development CI38779850655 passed122 Python cases (93 passed/29 Windows-only skips),18 worker contracts and actual Linux native/worker integration.
 
 Actual Chrome Native Messaging callbacks remain NOT_RUN under managed browser policy. Physical Windows10/11 sleep, hibernation, shutdown/reboot/logon, Linux systemd power cycles, clean-machine frozen GUI, publisher signing, Store approval, idle/power measurements and soak remain separate gates. A suspended process is not physical OS suspension. Windows recursive directory copy/cross-volume move remain explicitly unsupported; filesystem/graph/receipts still lack a shared atomic crash transaction. Preserve OUTCOME_UNKNOWN and never blindly replay a submitted mutation. See latest handoff for exact continuation; desktop lifecycle proof is next.
+
+
+## 2026-10-15 — owner-requested native manual-token fallback
+
+Owner observed a locally READY helper while the loaded extension rejected native
+pairing with "Pair this exact extension ID using the local CLI." Root cause of
+that installed-build mismatch remains UNKNOWN. Added a Manual pairing (debug)
+native tab with exact-ID entry, explicit token generation, masked/revealable
+read-only field, Copy token and Clear displayed token. Reuses State.pair through
+Management.pairing_token: explicit local consent, ID-bound digest storage,
+rotation of the previous credential, no new file grants, no HTTP token endpoint.
+Fixed authority and grants contracts remain unchanged; presentation is fluid.
+
+Verification: scripts/check_project.py and tests/test_management.py cover consent,
+invalid ID rejection, old-token invalidation, wrong-origin denial and unchanged
+grants. scripts/smoke_desktop.py now exercises the real new widgets, clipboard,
+masking and clearing in platform CI. Local environment has no display/Xvfb;
+actual Windows widgets/frozen EXE and user's Chrome acceptance require the new
+Windows workflow artifact. No claim that manual pairing repairs startup/native
+registration or guarantees this user's browser connectivity. Next: download new
+artifact, test manual pairing and actual folder listing; inspect the concrete
+browser error if HTTP authentication still fails.
+
+Executed local result: management suite PASS (4 tests). Full check_project run:
+123 tests, 3 failures, 3 errors, 29 Windows skips; failures/errors concern native
+subprocess wake/supervisor startup with missing /proc child identity or helper
+not reaching READY in this execution environment. Full suite is NOT PASS. New
+management tests passed within that run. Actual Tk smoke NOT_RUN locally (no
+Xvfb/display). Windows CI remains the platform-specific build/GUI gate.

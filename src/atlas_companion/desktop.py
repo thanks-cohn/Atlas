@@ -55,6 +55,12 @@ class Management:
     def __init__(self, state):
         self.state = state
 
+    def pairing_token(self, extension_id, *, consent=False):
+        """Explicit local fallback; rotates one identity's token, never grants files."""
+        if consent is not True:
+            raise APIError('CONSENT_REQUIRED', 'Generate a token in the native companion.')
+        return self.state.pair(extension_id)
+
     def authorize(self, path, *, writable=False, allow_broad=False, consent=False):
         if consent is not True:
             raise APIError('CONSENT_REQUIRED', 'Approve this location in the native companion.')
@@ -99,6 +105,8 @@ def _window_main(state):
     tabs.add(locations, text='Authorized locations')
     tabs.add(setup, text='Chrome connection')
     tabs.add(recovery, text='Recovery & diagnostics')
+    manual = ttk.Frame(tabs, padding=14)
+    tabs.add(manual, text='Manual pairing (debug)')
     ttk.Label(locations, text='Only locations listed here are available to your paired extension.', wraplength=700).pack(anchor='w', pady=(0, 12))
     tree = ttk.Treeview(locations, columns=('path', 'access'), show='headings', selectmode='browse', height=9)
     tree.heading('path', text='Location'); tree.heading('access', text='Access')
@@ -203,6 +211,48 @@ def _window_main(state):
     ttk.Button(setup, text='Install / repair browser connection', command=install).pack(anchor='w', pady=18)
     ttk.Label(setup, textvariable=install_status, wraplength=680).pack(anchor='w')
     ttk.Label(setup, text='A changed extension ID or revoked authorization requires explicit enrollment again. Your location grants stay separate.', wraplength=680).pack(anchor='w', pady=18)
+    ttk.Label(manual, text='Manual pairing token', style='Title.TLabel').pack(anchor='w')
+    ttk.Label(manual, text='Use this fallback if automatic connection fails. Paste the exact extension ID below, generate a token, then paste it into ATLAS Companion token and click Connect securely. The companion service must be running.', wraplength=680).pack(anchor='w', pady=12)
+    ttk.Label(manual, text='ATLAS extension ID (same identity as Chrome connection)').pack(anchor='w')
+    ttk.Entry(manual, textvariable=extension, width=45).pack(anchor='w', pady=6)
+    token_value = tk.StringVar()
+    token_status = tk.StringVar(value='No token generated. Existing folder permissions stay unchanged.')
+    ttk.Label(manual, text='Companion token').pack(anchor='w', pady=(12, 4))
+    token_entry = ttk.Entry(manual, textvariable=token_value, state='readonly', width=60, show='*')
+    token_entry.pack(anchor='w', fill='x')
+    reveal = tk.BooleanVar(value=False)
+    ttk.Checkbutton(manual, text='Show token', variable=reveal,
+                    command=lambda: token_entry.configure(show='' if reveal.get() else '*')).pack(anchor='w', pady=6)
+    token_buttons = ttk.Frame(manual); token_buttons.pack(anchor='w', pady=12)
+    def clear_token(*_):
+        token_value.set('')
+        copy_token_button.configure(state='disabled')
+        token_status.set('Token cleared from this window. Generate a new token for the selected identity.')
+    def generate_token():
+        clear_token()
+        ident = extension.get().strip()
+        if not re.fullmatch('[a-p]{32}', ident):
+            show_error('Enter the exact 32-character extension ID (letters a-p).'); return
+        if not messagebox.askyesno('Generate companion token', f'Authorize manual pairing for extension {ident}? This replaces its previous token. It does not add folder permissions. Automatic reconnect can replace this token again.', parent=window):
+            return
+        try:
+            token_value.set(model.pairing_token(ident, consent=True))
+            copy_token_button.configure(state='normal')
+            token_status.set('Token ready. Copy it into the extension and click Connect securely. Keep it private; do not include it in screenshots or support messages.')
+        except (APIError, OSError, ValueError) as exc:
+            show_error(exc)
+    def copy_token():
+        if token_value.get():
+            window.clipboard_clear()
+            window.clipboard_append(token_value.get())
+            token_status.set('Copied. Paste into Companion token in the extension, then click Connect securely.')
+    ttk.Button(token_buttons, text='Generate token', command=generate_token).pack(side='left')
+    copy_token_button = ttk.Button(token_buttons, text='Copy token', command=copy_token, state='disabled')
+    copy_token_button.pack(side='left', padx=8)
+    ttk.Button(token_buttons, text='Clear displayed token', command=clear_token).pack(side='left')
+    ttk.Label(manual, textvariable=token_status, wraplength=680).pack(anchor='w', pady=8)
+    extension.trace_add('write', clear_token)
+
     def uninstall():
         if not messagebox.askyesno('Uninstall ATLAS Companion', 'Remove this user installation, native browser registration and optional recovery startup? Saved location/catalog data and previous runtime files are preserved. Existing browser authorization will be revoked.', parent=window):
             return

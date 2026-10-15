@@ -39,3 +39,20 @@ The Windows workflow tests the actual frozen artifact on its reported Windows
 runner. This is not evidence of actual Chrome, Windows 10/11 clean machines,
 sleep/hibernate/reboot, signing, accessibility or Store approval; those remain
 NOT_RUN until separately reproduced.
+
+## Manual pairing debug fallback
+
+If automatic connection fails, open **Manual pairing (debug)** in the helper.
+Enter the exact extension ID from Chrome, choose **Generate token**, approve,
+and choose **Copy token**. Paste into the extension's **Companion token** field
+and click **Connect securely**. The local service must already be running;
+generating a token does not start it or grant folders. Authorized locations
+remain a separate choice. This works through the same pairing/authentication
+contract as the CLI and requires no command prompt.
+
+Generation replaces the previous token for that ID. Automatic native reconnect
+may rotate it again. Tokens are masked by default, revealed only on request,
+and kept only in this window's memory (the database stores their digest).
+Copying places the secret on the OS clipboard; do not share it in support logs.
+**Clear displayed token** clears the field, not the clipboard or authorization.
+A newly built EXE is required; an older downloaded helper cannot gain this UI.
