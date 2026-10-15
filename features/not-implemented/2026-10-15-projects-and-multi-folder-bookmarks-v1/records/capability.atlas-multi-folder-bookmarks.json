@@ -1,0 +1,28 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-multi-folder-bookmarks",
+  "kind": "capability",
+  "name": "One bookmark in multiple folders",
+  "statement": "Users may intentionally place one logical bookmark in multiple folders while retaining a single canonical identity.",
+  "requiredProperties": [
+    "Many-to-many stable bookmark-folder memberships",
+    "Independent optional title/tags/notes and contextual notes on membership edges",
+    "Add vs move vs remove from folder vs delete everywhere are distinct actions",
+    "Cross-folder edits remain consistent without duplicating bookmark identity",
+    "Duplicate URL does not automatically merge intentional distinct bookmarks",
+    "Browser import/export explicitly handles provider limitations and preserves provenance"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-single-bookmark-identity",
+    "invariant.atlas-nondestructive-projects"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner Atlas Projects and multi-folder bookmarks requests, 2026-10-15",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
