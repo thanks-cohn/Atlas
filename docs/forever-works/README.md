@@ -37,3 +37,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Premium product destination
 
 - [PREMIUM_EXPLORER_PRODUCT_CONTRACT.md](PREMIUM_EXPLORER_PRODUCT_CONTRACT.md) — complete right-click/multi-select/clipboard/move/copy/send-to/preview/search UX, multi-provider explorer, advanced catalogs, quality and verification requirements. The ultimate product contract is independent of the implementation agent.
+
+## Portable environment research
+
+- [PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md](PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) — proposed cross-OS personal workspace continuity, WebVM/other execution substrates, environment manifests, restoration, ecosystem opportunities, security boundaries and experimental validation.
