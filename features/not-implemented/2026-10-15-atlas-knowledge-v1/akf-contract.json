@@ -1,0 +1,132 @@
+{
+  "name": "Atlas Knowledge Format",
+  "version": "0.1-proposal",
+  "status": "domain model draft; NOT a validated JSON Schema",
+  "why": "A user owns data and meaning independently of how Atlas currently displays it.",
+  "entityDefinitions": {
+    "item": {
+      "types": [
+        "catalog",
+        "folder",
+        "bookmark",
+        "image",
+        "gallery",
+        "video",
+        "document",
+        "file",
+        "tag",
+        "note",
+        "publication"
+      ],
+      "fields": [
+        "id",
+        "type",
+        "userTitle?",
+        "sourceTitle?",
+        "description?",
+        "notes[]",
+        "tags[]",
+        "locators[]",
+        "assetIds[]",
+        "visibility",
+        "sourceProvenance",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "note": {
+      "fields": [
+        "id",
+        "subjectId",
+        "text",
+        "createdAt",
+        "author",
+        "visibility",
+        "tags[]"
+      ]
+    },
+    "relationship": {
+      "fields": [
+        "id",
+        "sourceId",
+        "targetId",
+        "type",
+        "direction",
+        "title?",
+        "reason?",
+        "notes[]",
+        "tags[]",
+        "visibility",
+        "createdAt"
+      ]
+    },
+    "asset": {
+      "fields": [
+        "id",
+        "mimeType",
+        "storage:local|r2|remote|bundled",
+        "locator?",
+        "bundlePath?",
+        "sha256?",
+        "rights?",
+        "availability"
+      ]
+    },
+    "publication": {
+      "fields": [
+        "id",
+        "title",
+        "orderedBlocks[]",
+        "linkedOrSnapshot",
+        "theme",
+        "sourceRevisions",
+        "visibility"
+      ]
+    },
+    "graphView": {
+      "fields": [
+        "id",
+        "clusterBy",
+        "filters",
+        "layout",
+        "nodeSizing:uniform|frequency|activeTime|combined",
+        "frequencyWeight?",
+        "range?"
+      ]
+    },
+    "attentionMetrics": {
+      "fields": [
+        "resourceId",
+        "visitCount?",
+        "activeSeconds?",
+        "measurementQuality",
+        "timeRange",
+        "userConsent",
+        "visibility"
+      ]
+    }
+  },
+  "exportProfiles": [
+    "owner-backup",
+    "scoped-agent",
+    "selected-public"
+  ],
+  "nonDisclosureRules": [
+    "Filter forbidden graph nodes and edges before counts, search, rankings and previews",
+    "Never publish local machine paths, credentials, private media endpoints or EXIF without approval",
+    "A public parent does not imply public children, relationship notes or metrics",
+    "Plaintext export metadata does not enforce access once a file leaves Atlas"
+  ],
+  "sampleRelationship": {
+    "id": "edge-003",
+    "sourceId": "image-001",
+    "targetId": "bookmark-014",
+    "type": "reminds_me_of",
+    "reason": "I paired this image with the article because they evoke the same atmosphere.",
+    "tags": [
+      "nostalgia"
+    ],
+    "visibility": "private"
+  },
+  "roundTripRequirement": "Export, independent import and export again must preserve chosen data semantics without Atlas runtime."
+}
