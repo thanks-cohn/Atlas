@@ -275,3 +275,100 @@ Extend the proposed Atlas Knowledge Format (AKF) with a versioned `publication` 
 ### A.7 Future-agent reconstruction instruction
 
 Agents rebuilding Atlas cold must preserve the distinction between **source objects** (what the user saved and meant), **editorial selection** (what the user decided belongs in one story), and **rendering/publishing** (how the approved selection is presented externally). Reuse typed references and immutable history or revisions to avoid data loss. The value proposition is not an AI pretending to author someone's story: it is honoring the creative work they have already done and making it publishable.
+
+
+---
+
+## Addendum B — The Living Atlas: Navigable Graphs, Attention-Weighted Nodes, and Cross-Provider Previews (2026-10-15)
+
+**Status:** Owner-directed future product proposal; a Graphmarks-like browser graph is visual inspiration, not a claim of adopted code or implemented support. Extends the original specification and Addendum A.
+
+### B.1 Purpose and experience
+
+Offer an aesthetically polished, responsive, **interactive graph of the user's chosen knowledge and resources**. Like bookmark visualizers that cluster visited domains, Atlas can reveal where someone spends time online, but its graph must go beyond site URLs: connect catalogs, folders, tags, notes, bookmarks, photographs, galleries, documents, videos, arbitrary local files and Cloudflare R2 objects in one navigable semantic space.
+
+The graph is a *view of the canonical Atlas resource graph*, not an isolated visualization database. Everything visible must be meaningfully clickable and useful. Favor fluid motion, clear focus, zoom/pan, label decluttering, stable layouts and accessible alternatives over decorative hairballs.
+
+**Key interaction:** click a circle to navigate directly to the item or open its details/preview in the right-side panel. Offer a user-visible action to open a web bookmark in a normal tab, while an image, note, gallery or file can open in the preview pane where supported. Context actions include inspect relationships, reveal connected items, open origin, add a note/tag/link, and jump to its catalog.
+
+### B.2 Node and edge semantics
+
+Each node carries a stable Atlas item ID, type, display title, icon/thumbnail, provider indicator, and permission-filtered references. Display color, shape and icon can encode semantic category (website, catalog, tag, local image, R2 video, document, etc.) independently of its size. Edges represent typed connections with user-authored explanatory annotations; optionally draw inferred/behavioral relationships in a visually distinguishable layer.
+
+Offer graph modes:
+- **Bookmark attention map:** website/domain/page clusters; site visits and active dwell time can guide node prominence.
+- **Knowledge graph:** manually curated typed Atlas relationships and tag/catalog connections.
+- **Resource graph:** local files, R2 objects, saved webpages and their shared annotations.
+- **Hybrid:** optional layered combination, with controls to avoid clutter and distinguish observed browsing from personally asserted meaning.
+
+Clusters may group by domain, tag, catalog, content type, storage provider, time period, or user-saved grouping. Multiple filters and label/search highlighting should apply before layout. Avoid reducing different pages to a single domain without a way to drill down.
+
+### B.3 Attention-weighted node size
+
+**Owner idea:** circle size reflects a combination of (a) **visit frequency** and (b) **time spent at a site/location**. Provide an understandable selector to switch among Frequency, Active Time, Combined, and Uniform sizing. The combined weight should be user-configurable and normalized so one exceptional website does not dwarf the entire graph.
+
+Illustrative, *not binding*, formula:
+- `visits_score = log1p(visits) / log1p(max_visits)`
+- `time_score = log1p(active_seconds) / log1p(max_active_seconds)`
+- `weight = alpha * visits_score + (1-alpha) * time_score` where `alpha` is adjustable and defaults to 0.5
+- `radius = min_radius + sqrt(weight) * radius_range`, subject to min/max radius bounds and zoom-specific legibility.
+
+Avoid interpreting Chrome tab-open duration as actual attention. Where measurable and consented, count **foreground, visible, active-tab dwell segments**, discard or cap idle intervals, and record `measurement_quality` with gaps and caveats. Browser history and visits are sensitive: collection is optional, disclosed, user-controllable, retention-bounded and initially private. Chrome APIs and platform limitations may prevent exact time accounting; surface `unknown` rather than fabricating measurements. A graph can function fully without any behavior tracking, using curated connection counts or uniform nodes instead.
+
+Allow timeframe filters (day/week/month/year/custom), and explain whether sizes represent filtered or lifetime measurements. Visit frequency, time and graph degree are separate statistics; never conflate them.
+
+### B.4 Preview panels and comparative split-view
+
+The graph remains visible on the main extension page, with a resizable **right preview inspector**. Clicking a node should show a useful preview in-place wherever authorized:
+- notes: titled text, tags and related links;
+- image: actual preview, caption, source and connections;
+- gallery: thumbnails/lightbox;
+- web bookmark: metadata plus safe link action (embedded webpage rendering only where allowed);
+- PDF/video/audio/document: supported safe preview or truthful unavailable state;
+- local file: native companion preview strictly within previously granted filesystem scope;
+- R2 object: preview via authorized provider requests, compatible with available range/download semantics and safe MIME handling.
+
+**Critical parity target:** opening an R2 object's preview should feel as straightforward as previewing an authorized local object. Differences in authentication, bandwidth, CORS, signed URL expiry and offline state are handled by adapters with accurate states, not hidden behind misleading 'local' semantics. Never embed long-lived R2 credentials in the frontend or publish them in exported sites.
+
+Support optional **split preview**, e.g. selected local file in the **upper half** of the right inspector and selected R2 object in the **lower half**, both visible while the graph/connecting lines and clusters remain on the left. A second node selection can populate the comparison slot rather than replace the first; make a pin/compare action obvious. Support swap top/bottom, resize divider, maximize one pane, remove one pane, compare metadata and return to single preview. The entire arrangement belongs inside the extension's full-page interface; on narrow side panels use a stacked or navigable accessible adaptation rather than unusably tiny panes.
+
+Preview failures (access revoked, offline R2, expired token, unsupported codec, file changed, missing object) must show a readable reason and recovery action without destroying the active graph selection.
+
+### B.5 Performance, accessibility and UX acceptance
+
+- Graph pan/zoom/search, highlight neighbors, expand/collapse cluster, drag nodes, and keyboard-accessible node list/inspection all operate on stable identities.
+- Graph drawing uses virtualization/LOD, progressive layout or clustering for large datasets; avoid fetching actual file/video bytes for every visible node.
+- Persistent selection and pinned comparisons survive layout/view changes where safe.
+- Hover previews are optional and bounded; no inadvertent huge downloads or autoplay.
+- Provide controls for line visibility, labels, node-size metric, date ranges and filter types without drowning the user in configuration.
+- Provide reduced-motion rendering, high-contrast selection, tooltips, keyboard focus order, semantic list alternative and responsive inspector.
+- Treat cross-provider identities, notes, attachments and all relationship labels as typed data, not strings parsed out of filenames.
+
+### B.6 Portable graph and visualization schema
+
+AKF export should include graph-relevant **source facts** (items, typed edges, captions, tags, permitted provenance) and optionally a separate presentation manifest (`graph_views`, node positioning, theme, clustering/filter settings, sizing metric). These display choices must be replaceable without changing canonical resource truth.
+
+Optional behavioral metrics have explicit units, timeframe, quality, consent and audience; exporting or publishing them requires separate affirmative selection. No browsing-attention log belongs automatically in public AKF or user-consented model-training datasets. Public graph viewers must omit unauthorized nodes **and** relationship edges, counts, inferred correlations, labels and preview endpoints.
+
+Independent programs should be able to reproduce a useful interactive graph or chart from a permitted AKF export without importing Atlas's application runtime.
+
+### B.7 Verification scenarios
+
+1. Import bookmarks; show a Graphmarks-inspired site cluster graph; change node sizing across frequency/time/combined/uniform and verify expected ranking against synthetic fixtures.
+2. Click a website node and open its original URL; click a linked note node and open it in the right inspector; click an image and preview/caption/tag it in the same UI.
+3. Link a local authorized image and an R2 document; use graph selections to pin local preview on **top** and R2 preview on **bottom** of the right panel, with readable resizable split and stable graph on the left.
+4. Revoke local grant / R2 authorization and verify clear denial, no secret leakage, and no unauthorized previews or retries.
+5. Simulate a background open tab and idle browser; no false claim of active reading time. Show the unknown/partial measurement state.
+6. Render hundreds and then thousands of generated nodes with responsive controls and measured memory/latency budgets on target low-end hardware.
+7. Publish a graph based on a permitted selection; verify private nodes, edges, inferred associations and attention metrics never leak via page assets, index, tooltip or JSON.
+8. Export/import the graph facts and optional presentation metadata; verify semantic connections and explanations reconstruct without the original UI implementation.
+
+### B.8 Forever Works acceptance rationale
+
+**Why:** A graph should turn dormant bookmarks and scattered resources into a compelling, explorable visual map. Cross-provider previews should make the user's data feel unified while faithfully preserving authorization.
+
+**Fixed:** accurate identities and connection meanings, honest attention statistics, privacy, provider permission enforcement, useful click-to-inspect/open behavior, local-and-R2 comparison, portable graph data and polished accessibility.
+
+**Fluid:** drawing/layout engine, graph clustering algorithms, storage backend, timing heuristics, colors and animation system, inspection panel UI implementation.
+
+**Non-goals:** covert surveillance, universal browsing-time accuracy, bypassing local filesystem access grants, extracting private R2 URLs into public exports, running untrusted files in the preview, or interpreting observed attention as conclusive evidence of a person's feelings.
