@@ -1,0 +1,29 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-projects-template-publishing",
+  "kind": "capability",
+  "name": "Projects template-driven publishing",
+  "statement": "Users can turn curated Atlas data into coherent, attractive publications using existing links, text, media and recorded relationships without training an AI.",
+  "requiredProperties": [
+    "Top-level Projects workspace separate from source Catalogs",
+    "Template picker and deterministic editable draft generation",
+    "Image-linked bookmarks display under the related image by default",
+    "Preserve original notes/captions and user-editable titles",
+    "Include/exclude content, customize ordering and link placement",
+    "Non-destructive linked/snapshot draft data",
+    "Approved static website export with responsive/accessibility/privacy safeguards"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-single-bookmark-identity",
+    "invariant.atlas-nondestructive-projects"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner Atlas Projects and multi-folder bookmarks requests, 2026-10-15",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
