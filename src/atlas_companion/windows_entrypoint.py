@@ -11,6 +11,27 @@ def main(arguments=None):
     if os.name != 'nt':
         raise OSError('This entry requires an actual Windows host.')
     arguments = list(sys.argv[1:] if arguments is None else arguments)
+    if arguments == ['--recover']:
+        # Keep the per-user Run command short enough for Windows' 260-character
+        # limit. Configuration comes only from this verified installed runtime.
+        if not getattr(sys, 'frozen', False):
+            raise ValueError('Login recovery requires an installed standalone runtime.')
+        from .windows_install import _digest
+        from .windows_state import secure_directory
+        runtime = Path(sys.executable).absolute()
+        secure_directory(runtime.parent)
+        receipt_path = runtime.with_name('installation.json')
+        if receipt_path.is_symlink():
+            raise ValueError('Invalid login recovery receipt.')
+        receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+        if (receipt.get('schema') != 1 or receipt.get('mode') != 'standalone-windows'
+                or os.path.normcase(os.path.abspath(receipt.get('runtime', ''))) != os.path.normcase(str(runtime))
+                or receipt.get('runtime_sha256') != _digest(runtime)
+                or not re.fullmatch('[a-p]{32}', receipt.get('extension_id', ''))):
+            raise ValueError('Login recovery runtime identity differs from its installation.')
+        from .windows_supervisor import main as supervisor_main
+        return supervisor_main(['--state-dir', receipt['state_dir'], '--extension-id', receipt['extension_id'],
+                                '--port', '17892', 'run'])
     if Path(sys.executable).name.lower() == 'atlas-native.exe' and arguments and arguments[0].startswith('chrome-extension://'):
         origin = arguments[0]
         if len(arguments) > 2 or (len(arguments) == 2 and not re.fullmatch(r'--parent-window=\d+', arguments[1])):

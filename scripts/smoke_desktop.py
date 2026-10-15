@@ -54,7 +54,7 @@ def main():
                     tree.selection_set(grant['id'])
                     buttons['Change read/write'].invoke()
                     persisted = saved_grants()
-                    assert len(persisted) == 1 and persisted[0]['writable']
+                    assert len(persisted) == 1 and persisted[0]['writable'] and persisted[0]['id'] == grant['id']
                     window.update()
                     if args.artifacts:
                         from PIL import ImageGrab
@@ -63,7 +63,7 @@ def main():
                     tree.selection_set(grant['id'])
                     buttons['Revoke'].invoke()
                     assert saved_grants() == []
-                    print('PASS actual Tk: native Add location → read-only grant; permission upgrade retains ID; restart persistence; explicit revoke; no tokens displayed.')
+                    print('PASS actual Tk: native Add location -> read-only grant; permission upgrade retains ID; restart persistence; explicit revoke; no tokens displayed.')
                 except BaseException as exc:
                     errors.append(exc)
                 finally:

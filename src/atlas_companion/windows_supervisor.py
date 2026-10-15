@@ -67,8 +67,10 @@ def startup(state, extension_id, port, action, consent=False, install_dir=None):
             (Path(state.directory) / 'supervisor.stop').touch()
         return {'status': 'DISABLED', 'state_preserved': True, 'demand_wake': 'independent'}
     runtime = _installed_runtime(state, extension_id, install_dir)
-    argv = [str(runtime), 'supervise', '--state-dir', str(state.directory), '--extension-id', extension_id, '--port', str(port), 'run']
+    argv = [str(runtime), '--recover']
     text = subprocess.list2cmdline(argv)
+    if len(text) >= 260:
+        raise ValueError('Windows login command must be shorter than 260 characters; choose a shorter installation path')
     if action == 'enable':
         if not state.known_origin('chrome-extension://' + extension_id):
             raise ValueError('Pair the exact extension first')

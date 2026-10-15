@@ -106,6 +106,27 @@ class WindowsSupervisorContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _installed_runtime(state, 'a' * 32, directory)
 
+    def test_login_launch_uses_short_receipt_recovery_command(self):
+        from types import SimpleNamespace
+        from atlas_companion import windows_supervisor as supervisor
+        with tempfile.TemporaryDirectory() as temporary:
+            state = SimpleNamespace(directory=Path(temporary), known_origin=lambda origin: True)
+            runtime = Path(temporary) / 'atlas.exe'
+            with patch.object(supervisor, '_installed_runtime', return_value=runtime), patch.object(supervisor, '_run_value', return_value=None) as registration, patch('atlas_companion.windows_runtime.child_environment', return_value={}), patch.object(supervisor.subprocess, 'CREATE_NO_WINDOW', 0, create=True), patch.object(supervisor.subprocess, 'Popen') as launch:
+                result = supervisor.startup(state, 'a' * 32, 17892, 'enable', consent=True)
+                self.assertEqual(result['startup'], 'LAUNCHED')
+                self.assertEqual(launch.call_args.args[0], [str(runtime), '--recover'])
+                self.assertEqual(registration.call_args.args[0], supervisor.subprocess.list2cmdline([str(runtime), '--recover']))
+
+    def test_too_long_login_command_is_rejected_before_registry_write(self):
+        from types import SimpleNamespace
+        from atlas_companion import windows_supervisor as supervisor
+        state = SimpleNamespace(directory=Path('/state'), known_origin=lambda origin: True)
+        with patch.object(supervisor, '_installed_runtime', return_value=Path('/' + 'x' * 260 + '/atlas.exe')), patch.object(supervisor, '_run_value', return_value=None) as registration:
+            with self.assertRaises(ValueError):
+                supervisor.startup(state, 'a' * 32, 17892, 'enable', consent=True)
+            registration.assert_called_once_with()
+
     def test_health_failure_delegates_attested_wake_without_process_termination(self):
         from types import SimpleNamespace
         from atlas_companion.windows_supervisor import Supervisor
