@@ -185,3 +185,8 @@ Local full check result for this increment: 133 tests, 3 failures and 3 errors i
 native wake/supervisor subprocess startup in this environment; 29 Windows-only
 skips. Full suite NOT PASS. New diagnostics/setup tests passed in that run.
 20 model records passed local linkage (not normative schema validation).
+
+Owner refinement: package debug.exe as the separate original detailed setup/repair
+window. atlas-companion.exe remains the simple ID/home/other-folder normal flow.
+The debug filename dispatches to --desktop --advanced only on no-argument launch;
+command-line service/native modes remain unchanged. Both share existing state.

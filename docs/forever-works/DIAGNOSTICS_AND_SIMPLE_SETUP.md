@@ -99,3 +99,13 @@ UI tabs, storage and event transport are replaceable with equivalent proof.
 The separate owner-supplied bookmark integration brief is preserved under
 `docs/requests/NATIVE_BOOKMARKS_IMPLEMENTATION_OWNER_BRIEF.md`; it is not implemented
 by this helper/diagnostic increment.
+
+### Separate debug executable
+
+The Windows download includes two separately named executable files using the
+same verified runtime: **atlas-companion.exe** for simple setup/automatic use and
+**debug.exe** for direct access to the original detailed setup, repair, token and
+diagnostic tabs. Double-clicking debug.exe selects advanced management immediately,
+without changing saved permissions or enrollment. Both use the same private state.
+Explicit CLI arguments preserve their existing meaning for either executable.
+Do not rename debug.exe if relying on this name-based entry selection.

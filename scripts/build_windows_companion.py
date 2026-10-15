@@ -27,19 +27,21 @@ def main():
                     '--distpath', str(output), '--workpath', str(ROOT / 'build/windows'),
                     '--specpath', str(ROOT / 'build/windows'), str(ROOT / 'packaging/companion_entry.py')], check=True)
     binary = output / 'atlas-companion.exe'
+    debug_binary = output / 'debug.exe'
+    shutil.copy2(binary, debug_binary)
     source = hashlib.sha256()
     for path in sorted((ROOT / 'src').rglob('*.py')):
         source.update(path.relative_to(ROOT).as_posix().encode() + b'\0' + path.read_bytes())
-    receipt = {'source_sha256': source.hexdigest(), 'artifact': binary.name,
+    receipt = {'source_sha256': source.hexdigest(), 'artifact': binary.name, 'debug_artifact': debug_binary.name,
                'sha256': hashlib.sha256(binary.read_bytes()).hexdigest(), 'bytes': binary.stat().st_size,
                'platform': platform.platform(), 'architecture': platform.machine(), 'python': platform.python_version(),
                'pyinstaller': '6.16.0', 'status': 'unsigned Windows development build; actual Chrome and Windows 10/11 lifecycle NOT_RUN'}
     (output / 'BUILD_RECEIPT.json').write_text(json.dumps(receipt, indent=2) + '\n')
-    (output / 'SHA256SUMS').write_text(receipt['sha256'] + '  ' + binary.name + '\n')
+    (output / 'SHA256SUMS').write_text(receipt['sha256'] + '  ' + binary.name + '\n' + receipt['sha256'] + '  ' + debug_binary.name + '\n')
     (output / 'README.md').write_bytes((ROOT / 'packaging/WINDOWS.md').read_bytes())
     archive = output / ('atlas-companion-windows-' + platform.machine() + '.zip')
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as package:
-        for item in (binary, output / 'README.md', output / 'BUILD_RECEIPT.json', output / 'SHA256SUMS'):
+        for item in (binary, debug_binary, output / 'README.md', output / 'BUILD_RECEIPT.json', output / 'SHA256SUMS'):
             package.write(item, item.name)
     subprocess.run([sys.executable, str(ROOT / 'scripts/package_extension.py')], check=True)
     for extension_zip in (ROOT / 'dist').glob('atlas-extension-*.zip'):

@@ -25,10 +25,17 @@ def _hide_owned_console():
         pass
 
 
+def launch_arguments(arguments, executable):
+    arguments = list(arguments)
+    if Path(executable).name.lower() == 'debug.exe' and not arguments:
+        return ['--desktop', '--advanced']
+    return arguments
+
+
 def main(arguments=None):
     if os.name != 'nt':
         raise OSError('This entry requires an actual Windows host.')
-    arguments = list(sys.argv[1:] if arguments is None else arguments)
+    arguments = launch_arguments(sys.argv[1:] if arguments is None else arguments, sys.executable)
     if arguments == ['--recover']:
         # Keep the per-user Run command short enough for Windows' 260-character
         # limit. Configuration comes only from this verified installed runtime.
@@ -68,10 +75,14 @@ def main(arguments=None):
         return supervisor_main(arguments[:command_index] + arguments[command_index+1:])
     from .windows_state import WindowsState
     default = str(Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Atlas')
+    installed_identity = None
     if getattr(sys, 'frozen', False):
         receipt = Path(sys.executable).with_name('installation.json')
         if receipt.is_file():
-            default = json.loads(receipt.read_text(encoding='utf-8'))['state_dir']
+            installation = json.loads(receipt.read_text(encoding='utf-8'))
+            default = installation['state_dir']
+            installed_identity = installation.get('extension_id')
+    launch_failed = False
     if not arguments:
         # A previously consented automatic setup starts quietly on normal launches.
         # Explicit --desktop always opens management/diagnostics.
@@ -80,6 +91,8 @@ def main(arguments=None):
         try:
             with state.connect() as db:
                 enrolled = [row['origin'].removeprefix('chrome-extension://') for row in db.execute('SELECT origin FROM clients')]
+            if installed_identity in enrolled:
+                enrolled = [installed_identity]
             if len(enrolled) == 1 and startup(state, enrolled[0], 17892, 'status')['status'] == 'ENABLED':
                 startup(state, enrolled[0], 17892, 'enable', consent=True)
                 from .desktop import diagnose
@@ -90,17 +103,19 @@ def main(arguments=None):
                         _hide_owned_console()
                         return 0
                     time.sleep(0.25)
+                launch_failed = True
         except Exception:
-            pass  # A failed launch falls through to the repair/setup window.
+            launch_failed = True  # A failed launch falls through to the repair/setup window.
         finally:
             state.close()
     if not arguments or '--desktop' in arguments:
         parser = argparse.ArgumentParser(description='ATLAS Windows Companion management')
         parser.add_argument('--desktop', action='store_true')
+        parser.add_argument('--advanced', action='store_true')
         parser.add_argument('--state-dir', default=default)
         options = parser.parse_args(arguments)
         from .desktop import main as desktop_main
-        return desktop_main(options.state_dir)
+        return desktop_main(options.state_dir, advanced=options.advanced or launch_failed)
     parser = argparse.ArgumentParser(description='ATLAS Windows Companion — explicit native grants and authenticated recovery')
     parser.add_argument('--state-dir', default=default)
     commands = parser.add_subparsers(dest='command', required=True)

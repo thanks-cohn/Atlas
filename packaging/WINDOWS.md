@@ -101,3 +101,13 @@ The shelf Diagnostics button copies a bounded report of connection stages/codes.
 Helper Debug events provides the native journal even when the browser cannot
 connect. Tokens/paths/headers/content are omitted. See the documented debug API
 in docs/forever-works/DIAGNOSTICS_AND_SIMPLE_SETUP.md. Update both components.
+
+### Separate debug executable
+
+The Windows download includes two separately named executable files using the
+same verified runtime: **atlas-companion.exe** for simple setup/automatic use and
+**debug.exe** for direct access to the original detailed setup, repair, token and
+diagnostic tabs. Double-clicking debug.exe selects advanced management immediately,
+without changing saved permissions or enrollment. Both use the same private state.
+Explicit CLI arguments preserve their existing meaning for either executable.
+Do not rename debug.exe if relying on this name-based entry selection.

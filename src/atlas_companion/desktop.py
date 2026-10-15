@@ -72,7 +72,7 @@ class Management:
         self.state.revoke_grant(ident)
 
 
-def _window_main(state):
+def _window_main(state, advanced_mode=False):
     if os.name != 'nt':
         require_platform()
     os.umask(0o077)
@@ -406,17 +406,19 @@ def _window_main(state):
     ttk.Button(simple, text='Advanced / diagnostics', command=advanced).pack(anchor='w', pady=12)
     tabs.pack_forget()
     simple.pack(fill='both', expand=True)
+    if advanced_mode:
+        advanced()
     refresh()
     window.mainloop()
     return 0
 
 
-def main(state_dir=None):
+def main(state_dir=None, advanced=False):
     from .runtime import RuntimeLock
     state = State(state_dir or (Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Atlas' if os.name == 'nt' else Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'atlas'))
     try:
         with RuntimeLock(state, 'desktop'):
-            return _window_main(state)
+            return _window_main(state, advanced_mode=advanced)
     finally:
         if hasattr(state, 'close'):
             state.close()
