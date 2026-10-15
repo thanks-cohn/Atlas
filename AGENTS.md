@@ -36,3 +36,7 @@ The first foundation was an experimental metadata-only JSON graph. The 2026-10-1
 ## Work selection
 
 Proceed from the earliest unmet acceptance gate in `BUILD_PROGRAM.md`, factoring parallel lanes. Near-term: independently validate canonical records against real Forever Works validator/schema; harden persistent graph formats/transactions/migrations; then construct authenticated read-only native companion and real Chrome MV3 UI. Prefer tests of observable behavior over mock-only diagrams. Before ending a task, update status ledger with exact artifact paths, tests, caveats, next dependency and actionable continuation. Commits should be additive; never claim an unexecuted test passed.
+
+## Companion continuity preservation
+
+The user's priority is Chute-inspired dependable native helper recovery across browser/OS lifecycle interruptions. Read `docs/forever-works/COMPANION_COLD_RECONSTRUCTION.md` and `COMPANION_RECOVERY_VERIFICATION.md`; the associated requirements are canonical under `forever/`. The pinned Chute Windows v2.6.1 RC1 tag is historical evidence, not permission to copy its licensed code or assert Windows support. An optional separate supervisor is proposed, never a substitute for OS permission or a claim to execute while powered off.
