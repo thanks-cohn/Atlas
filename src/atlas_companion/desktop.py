@@ -20,7 +20,7 @@ def diagnose(state, port=17892):
     with state.connect() as db:
         origins = [row['origin'] for row in db.execute('SELECT origin FROM clients')]
     result = {'state': 'NEEDS_PAIRING', 'locations': len(state.grants()),
-              'platform': 'linux', 'protocol': 'atlas.local.v1'}
+              'platform': getattr(state, 'platform', 'linux'), 'protocol': 'atlas.local.v1'}
     if not origins:
         result['message'] = 'Install and authorize your exact ATLAS extension identity.'
         return result
@@ -76,7 +76,7 @@ def _window_main(state):
     try:
         window = tk.Tk()
     except tk.TclError as exc:
-        raise APIError('NO_DISPLAY', 'Open ATLAS Companion from your Linux desktop session; a display is required.') from exc
+        raise APIError('NO_DISPLAY', 'Open ATLAS Companion from your desktop session; a display is required.') from exc
     window.title('ATLAS Companion - Setup & Locations')
     window.geometry('820x640')
     window.minsize(660, 500)
@@ -261,5 +261,9 @@ def _window_main(state):
 def main(state_dir=None):
     from .runtime import RuntimeLock
     state = State(state_dir or (Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Atlas' if os.name == 'nt' else Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'atlas'))
-    with RuntimeLock(state, 'desktop'):
-        return _window_main(state)
+    try:
+        with RuntimeLock(state, 'desktop'):
+            return _window_main(state)
+    finally:
+        if hasattr(state, 'close'):
+            state.close()

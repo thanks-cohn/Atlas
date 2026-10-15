@@ -32,6 +32,8 @@ jobs:
           exit $LASTEXITCODE
       - name: Build standalone Windows executable
         run: python scripts/build_windows_companion.py
+      - name: Verify actual Windows native management widgets
+        run: python scripts/smoke_desktop.py
       - name: Verify actual frozen native frames and HTTP bytes
         run: python scripts/smoke_windows_companion.py dist/windows/atlas-companion.exe
       - uses: actions/upload-artifact@v4

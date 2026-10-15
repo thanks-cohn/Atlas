@@ -18,7 +18,7 @@ def main():
     import tkinter as tk
     from tkinter import ttk
     from atlas_companion.desktop import main as desktop_main
-    from atlas_companion.state import State
+    from atlas_companion.desktop import State
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifacts', type=Path)
     args = parser.parse_args()
@@ -28,6 +28,13 @@ def main():
         base = Path(folder); root = base / 'files'; root.mkdir()
         state_dir = base / 'private'
         state = State(state_dir)
+        def saved_grants():
+            reopened = State(state_dir)
+            try:
+                return reopened.grants()
+            finally:
+                if hasattr(reopened, 'close'):
+                    reopened.close()
         def factory():
             window = real_tk()
             def walk(widget):
@@ -46,8 +53,8 @@ def main():
                     tree = next(w for w in widgets if isinstance(w, ttk.Treeview))
                     tree.selection_set(grant['id'])
                     buttons['Change read/write'].invoke()
-                    assert State(state_dir).get_grant(grant['id'])['writable']
-                    assert len(State(state_dir).grants()) == 1
+                    persisted = saved_grants()
+                    assert len(persisted) == 1 and persisted[0]['writable']
                     window.update()
                     if args.artifacts:
                         from PIL import ImageGrab
@@ -55,7 +62,7 @@ def main():
                         ImageGrab.grab().save(args.artifacts / 'native-locations.png')
                     tree.selection_set(grant['id'])
                     buttons['Revoke'].invoke()
-                    assert State(state_dir).grants() == []
+                    assert saved_grants() == []
                     print('PASS actual Tk: native Add location → read-only grant; permission upgrade retains ID; restart persistence; explicit revoke; no tokens displayed.')
                 except BaseException as exc:
                     errors.append(exc)
@@ -64,7 +71,11 @@ def main():
             window.after(150, exercise)
             return window
         with patch('tkinter.Tk', side_effect=factory), patch('tkinter.filedialog.askdirectory', return_value=str(root)), patch('tkinter.messagebox.askyesno', return_value=True), patch('tkinter.messagebox.showinfo', side_effect=lambda *_a, **_k: errors.append(AssertionError('Unexpected info dialog'))), patch('tkinter.messagebox.showerror', side_effect=lambda *_a, **_k: errors.append(AssertionError('GUI showed an unexpected error'))):
-            desktop_main(state_dir)
+            try:
+                desktop_main(state_dir)
+            finally:
+                if hasattr(state, 'close'):
+                    state.close()
     if errors:
         raise errors[0]
     print('NOT_RUN real user input, Chrome native callback, login/suspend/reboot.')
