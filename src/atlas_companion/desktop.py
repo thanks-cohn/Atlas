@@ -83,6 +83,9 @@ def _window_main(state):
         window = tk.Tk()
     except tk.TclError as exc:
         raise APIError('NO_DISPLAY', 'Open ATLAS Companion from your desktop session; a display is required.') from exc
+    if os.name == 'nt':
+        from .windows_entrypoint import _hide_owned_console
+        _hide_owned_console()
     window.title('ATLAS Companion - Setup & Locations')
     window.geometry('820x640')
     window.minsize(660, 500)
@@ -123,6 +126,8 @@ def _window_main(state):
             tree.insert('', 'end', iid=grant['id'], values=(grant['root'], 'Read & write' if grant['writable'] else 'Read only'))
 
     def show_error(exc):
+        from .diagnostics import record, error_code
+        record(state, 'NATIVE_MANAGEMENT', error_code(exc))
         messagebox.showerror('ATLAS Companion', str(exc), parent=window)
 
     def authorize_path(path):
@@ -271,7 +276,10 @@ def _window_main(state):
     diagnostics = tk.StringVar(value='Check the verified local companion without displaying credentials.')
     ttk.Label(recovery, textvariable=diagnostics, wraplength=680).pack(anchor='w', pady=12)
     def doctor():
-        result = diagnose(state); diagnostics.set(result['state'] + ' - ' + result['message'])
+        result = diagnose(state)
+        from .diagnostics import record
+        record(state, 'LOCAL_DIAGNOSIS', result['state'])
+        diagnostics.set(result['state'] + ' - ' + result['message'])
     ttk.Button(recovery, text='Check connection', command=doctor).pack(anchor='w')
     with state.connect() as db:
         enrolled = [row['origin'].removeprefix('chrome-extension://') for row in db.execute('SELECT origin FROM clients')]
@@ -303,6 +311,101 @@ def _window_main(state):
     ttk.Label(frame, text='Local first | Explicit grants | No administrator privileges', padding=(0, 8)).pack(anchor='w')
     if not enrolled:
         tabs.select(setup)
+    debug = ttk.Frame(tabs, padding=14)
+    tabs.add(debug, text='Debug events')
+    ttk.Label(debug, text='Native connection stages and error codes. No tokens or file contents.', wraplength=680).pack(anchor='w')
+    debug_output = tk.Text(debug, height=16, wrap='word', font=('monospace', 9))
+    debug_output.pack(fill='both', expand=True, pady=10)
+    def debug_refresh():
+        import json
+        from .diagnostics import snapshot
+        debug_output.configure(state='normal')
+        debug_output.delete('1.0', 'end')
+        try:
+            debug_output.insert('1.0', json.dumps(snapshot(state), indent=2))
+        except Exception:
+            debug_output.insert('1.0', '{"code":"DIAGNOSTIC_STORE_UNAVAILABLE"}')
+        debug_output.configure(state='disabled')
+    def debug_copy():
+        window.clipboard_clear()
+        window.clipboard_append(debug_output.get('1.0', 'end-1c'))
+    debug_buttons = ttk.Frame(debug); debug_buttons.pack(anchor='w')
+    ttk.Button(debug_buttons, text='Refresh debug events', command=debug_refresh).pack(side='left')
+    ttk.Button(debug_buttons, text='Copy debug report', command=debug_copy).pack(side='left', padx=8)
+    debug_refresh()
+    # Normal setup presents only identity and deliberate folder choices.
+    simple = ttk.Frame(frame, padding=12)
+    ttk.Label(simple, text='Connect ATLAS', style='Title.TLabel').pack(anchor='w')
+    ttk.Label(simple, text='Enter the extension ID once. Choose your folders. ATLAS starts automatically after setup and at sign-in.', wraplength=680).pack(anchor='w', pady=12)
+    ttk.Label(simple, text='Extension ID (from chrome://extensions)').pack(anchor='w')
+    ttk.Entry(simple, textvariable=extension, width=45).pack(anchor='w', pady=8)
+    quick_write = tk.BooleanVar(value=False)
+    ttk.Checkbutton(simple, text='Allow file changes in folders I choose (copy, move, rename and trash)', variable=quick_write).pack(anchor='w', pady=8)
+    quick_status = tk.StringVar(value='No folder is authorized until you choose it.')
+    ttk.Label(simple, textvariable=quick_status, wraplength=680).pack(anchor='w', pady=12)
+    def quick_setup():
+        import json
+        import queue
+        import threading
+        ident = extension.get().strip()
+        if not re.fullmatch('[a-p]{32}', ident):
+            show_error('Enter the exact 32-character extension ID (letters a-p).'); return
+        if not messagebox.askyesno('Set up ATLAS', 'Install this extension connection and start ATLAS automatically now and at sign-in? No administrator access is needed. Next, choose which folders to allow.', parent=window): return
+        mode = 'read and write' if quick_write.get() else 'read only'
+        chosen = []
+        if messagebox.askyesno('Home folder?', f'Allow {mode} access to your home folder and its accessible subfolders?\n\n{Path.home()}\n\nPrivate ATLAS state is excluded.', parent=window):
+            chosen.append((str(Path.home()), quick_write.get()))
+        while messagebox.askyesno('Other folders?', 'Would you like to allow another folder?', parent=window):
+            path = filedialog.askdirectory(title=f'Choose a folder to allow ({mode})', parent=window, mustexist=True)
+            if path: chosen.append((path, quick_write.get()))
+            else: break
+        quick_button.configure(state='disabled')
+        quick_status.set('Setting up and starting ATLAS…')
+        results = queue.Queue()
+        def task():
+            try:
+                if os.name == 'nt':
+                    from .windows_install import install_runtime, installation_directory
+                    from .windows_supervisor import startup
+                else:
+                    from .install import install_runtime, installation_directory
+                    from .supervisor import startup
+                appdir = installation_directory()
+                receipt = appdir / 'installation.json'
+                if receipt.exists():
+                    previous = json.loads(receipt.read_text())
+                    if previous.get('extension_id') != ident:
+                        raise APIError('EXTENSION_ID_CHANGED', 'A different extension is installed. Use Advanced / diagnostics to uninstall its integration, then run setup again. Saved folders remain.')
+                from .quick_setup import complete
+                result = complete(state, ident, chosen,
+                    lambda identity: install_runtime(identity, browser='chrome', state_dir=state.directory, upgrade=receipt.exists()),
+                    lambda identity: startup(state, identity, 17892, 'enable', consent=True), consent=True)
+                results.put((True, result))
+            except Exception as exc:
+                results.put((False, exc))
+        def poll():
+            try: ok, result = results.get_nowait()
+            except queue.Empty:
+                window.after(100, poll); return
+            quick_button.configure(state='normal')
+            refresh()
+            if ok:
+                quick_status.set('Done. ATLAS is running automatically. In Chrome, choose Connect installed companion once.')
+                messagebox.showinfo('ATLAS is ready', 'Setup complete. Your choices are saved. Connect installed companion in ATLAS once; normal future launches reconnect automatically.', parent=window)
+                window.destroy()
+            else:
+                quick_status.set('Setup needs attention. Open Advanced / diagnostics.')
+                show_error(result)
+        threading.Thread(target=task, daemon=True).start()
+        window.after(100, poll)
+    quick_button = ttk.Button(simple, text='Set up & start', command=quick_setup)
+    quick_button.pack(anchor='w', pady=10)
+    def advanced():
+        simple.pack_forget()
+        tabs.pack(fill='both', expand=True, pady=12)
+    ttk.Button(simple, text='Advanced / diagnostics', command=advanced).pack(anchor='w', pady=12)
+    tabs.pack_forget()
+    simple.pack(fill='both', expand=True)
     refresh()
     window.mainloop()
     return 0

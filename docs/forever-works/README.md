@@ -51,3 +51,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [forever/manifest.json](../../forever/manifest.json) — canonical Standard 0.1 records for wake, lifecycle, supervisor, recovery authority, reconciliation, OS power boundary and historical Chute reference.
 
 - [PREVIEW_CONTINUITY.md](PREVIEW_CONTINUITY.md) — owner rationale, existing-preview navigation, defaults, acceptance and limits.
+
+- [DIAGNOSTICS_AND_SIMPLE_SETUP.md](DIAGNOSTICS_AND_SIMPLE_SETUP.md) — simple enrollment, stages, codes, debug APIs and privacy.

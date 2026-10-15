@@ -7,6 +7,24 @@ import re
 import sys
 
 
+def _hide_owned_console():
+    """Hide only a console belonging solely to this GUI/background launch."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+        kernel.GetConsoleWindow.restype = wintypes.HWND
+        process = (wintypes.DWORD * 1)()
+        if kernel.GetConsoleProcessList(process, 1) == 1:
+            window = kernel.GetConsoleWindow()
+            if window:
+                user = ctypes.WinDLL('user32', use_last_error=True)
+                user.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+                user.ShowWindow(window, 0)
+    except OSError:
+        pass
+
+
 def main(arguments=None):
     if os.name != 'nt':
         raise OSError('This entry requires an actual Windows host.')
@@ -54,6 +72,28 @@ def main(arguments=None):
         receipt = Path(sys.executable).with_name('installation.json')
         if receipt.is_file():
             default = json.loads(receipt.read_text(encoding='utf-8'))['state_dir']
+    if not arguments:
+        # A previously consented automatic setup starts quietly on normal launches.
+        # Explicit --desktop always opens management/diagnostics.
+        from .windows_supervisor import startup
+        state = WindowsState(default)
+        try:
+            with state.connect() as db:
+                enrolled = [row['origin'].removeprefix('chrome-extension://') for row in db.execute('SELECT origin FROM clients')]
+            if len(enrolled) == 1 and startup(state, enrolled[0], 17892, 'status')['status'] == 'ENABLED':
+                startup(state, enrolled[0], 17892, 'enable', consent=True)
+                from .desktop import diagnose
+                import time
+                deadline = time.monotonic() + 45
+                while time.monotonic() < deadline:
+                    if diagnose(state)['state'] == 'READY':
+                        _hide_owned_console()
+                        return 0
+                    time.sleep(0.25)
+        except Exception:
+            pass  # A failed launch falls through to the repair/setup window.
+        finally:
+            state.close()
     if not arguments or '--desktop' in arguments:
         parser = argparse.ArgumentParser(description='ATLAS Windows Companion management')
         parser.add_argument('--desktop', action='store_true')

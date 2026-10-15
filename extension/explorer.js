@@ -1349,6 +1349,7 @@ document.addEventListener("keydown", (event) => {
     document.querySelectorAll(".file-row")[index]?.focus();
   }
 });
+window.dispatchEvent(new Event("atlas:boot-ready"));
 (async () => {
   try {
     const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings", "previewSizeSettings"]);
@@ -1385,6 +1386,8 @@ document.addEventListener("keydown", (event) => {
   } catch (error) {
     fail(error);
     render();
+  } finally {
+    window.dispatchEvent(new Event("atlas:boot-ready"));
   }
 })();
 

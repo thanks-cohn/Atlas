@@ -86,3 +86,18 @@ maximum and optional per-extension values from 0.01 to 128 MiB. An extension val
 overrides the general value. Oversize files show a type badge and Settings link.
 Update both helper and extension: an older helper cannot honor the new limits.
 Changes apply on next file open; no file permissions are broadened.
+
+## Simple setup and diagnostics (extension 0.1.4 + matching helper)
+
+Run the helper, enter your extension ID and choose Set up & start. Confirm
+automatic startup, choose home-folder access yes/no and optionally other folders.
+Read-only is default; enable file changes explicitly if desired. Setup closes
+after verified readiness. Connect installed companion once in Chrome. Advanced /
+diagnostics contains the former management controls and Debug events. Later
+ordinary Windows launches start already authorized recovery quietly; --desktop
+always opens the window. Failures return to management.
+
+The shelf Diagnostics button copies a bounded report of connection stages/codes.
+Helper Debug events provides the native journal even when the browser cannot
+connect. Tokens/paths/headers/content are omitted. See the documented debug API
+in docs/forever-works/DIAGNOSTICS_AND_SIMPLE_SETUP.md. Update both components.

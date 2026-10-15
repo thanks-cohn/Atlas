@@ -161,3 +161,27 @@ Earlier full suite: 124 tests, 3 failures/3 errors in local native subprocess
 startup/recovery, 29 Windows skips; 19 model links valid, not normative schema
 proof. Actual Chrome settings/placeholder UI and 30 MiB media playback NOT_RUN
 locally. Windows build gates verify actual platform implementation separately.
+
+
+## 2026-10-15 — simple setup and stage diagnostics
+
+Owner requested automatic ID/home/other-folder setup and a usable debug interface
+/API after blank shelves, native timeout/manual reconnect and WinError 32 repair.
+Implemented quick_setup.py consented sequence, simple desktop front page with
+advanced controls, Windows quiet subsequent launch with readiness fallback;
+45-second native browser deadline replaces mismatched 15-second timeout versus
+20-second service wake. Added bounded extension/native stage journals, trusted
+extension debug-report/debug-probe APIs, authenticated /v1/diagnostics, independent
+UI boot fallback and native copy-report tab. No tokens, headers or file paths are
+included. Repair file locks remain explicitly reported, not silently bypassed.
+
+Local PASS: 20 worker tests, 3 diagnostics tests, 4 quick-setup tests, 23 companion
+HTTP/security tests. Actual Windows widget/frozen checks require CI; Chrome and
+user-interactive/sign-in lifecycle acceptance NOT_RUN. For rationale, exact code
+coverage, contracts and limits read DIAGNOSTICS_AND_SIMPLE_SETUP.md. The attached
+bookmark implementation brief is preserved separately, not implemented here.
+
+Local full check result for this increment: 133 tests, 3 failures and 3 errors in
+native wake/supervisor subprocess startup in this environment; 29 Windows-only
+skips. Full suite NOT PASS. New diagnostics/setup tests passed in that run.
+20 model records passed local linkage (not normative schema validation).

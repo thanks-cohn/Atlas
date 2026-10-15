@@ -3,10 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="boot-diagnostics.js"></script>
     <title>ATLAS — Your files, connected</title>
     <link rel="stylesheet" href="explorer.css" />
   </head>
   <body>
+    <section id="debug-fallback" hidden role="alert">
+      <strong>ATLAS could not finish starting.</strong>
+      <button id="debug-fallback-open">Open diagnostics</button>
+      <button id="debug-reload">Reload interface</button>
+    </section>
     <div class="app">
       <aside class="sidebar">
         <div class="brand">
@@ -109,7 +115,7 @@
           ></div>
         </section>
         <footer>
-          <span id="status">Not connected</span
+          <button id="debug-open" title="Connection stages and error codes">Diagnostics</button><span id="status">Not connected</span
           ><span id="clipboard-status"></span
           ><button
             class="connection-state"
@@ -265,6 +271,16 @@
         ><button id="unknown-dismiss">I've inspected the outcome</button
         ><button id="unknown-close">Close</button>
       </div>
+    </dialog>
+    <dialog id="debug-dialog">
+      <h2>ATLAS diagnostics</h2>
+      <p>Connection stages and error codes. Reports omit tokens, headers, file paths and contents.</p>
+      <button id="debug-refresh">Refresh local report</button>
+      <button id="debug-probe">Check helper diagnostics</button>
+      <button id="debug-copy">Copy report</button>
+      <button id="debug-close">Close</button>
+      <p id="debug-copy-status" role="status"></p>
+      <pre id="debug-output" tabindex="0"></pre>
     </dialog>
     <dialog id="activity-dialog"></dialog>
     <script type="module" src="activity.js"></script>

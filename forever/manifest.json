@@ -12,7 +12,8 @@
       "capabilities/companion-wake.json",
       "capabilities/recovery.json",
       "capabilities/resource-graph.json",
-      "capabilities/preview-navigation.json"
+      "capabilities/preview-navigation.json",
+      "capabilities/observable-setup.json"
     ],
     "invariants": [
       "invariants/authority.json",

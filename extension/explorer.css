@@ -1021,3 +1021,8 @@ footer .connection-state {
 
 .preview-too-large { text-align: center; padding: 24px 12px; }
 .file-type-badge { display: inline-block; padding: 18px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--accent); font-weight: bold; overflow-wrap: anywhere; max-width: 100%; }
+
+#debug-fallback { position: fixed; top: 8px; left: 8px; right: 8px; z-index: 1000; background: #fff4e5; color: #493a25; padding: 16px; border: 1px solid #d5b88a; border-radius: 8px; }
+#debug-fallback[hidden] { display: none; }
+#debug-dialog { width: min(820px, 94vw); max-height: 90vh; overflow: auto; }
+#debug-output { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 55vh; overflow: auto; font: 11px monospace; }

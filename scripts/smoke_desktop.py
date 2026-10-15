@@ -46,6 +46,7 @@ def main():
                     widgets = list(walk(window))
                     buttons = {str(w.cget('text')): w for w in widgets if isinstance(w, ttk.Button)}
                     tabs = next(w for w in widgets if isinstance(w, ttk.Notebook))
+                    buttons['Advanced / diagnostics'].invoke()
                     tabs.select(0); window.update()
                     buttons['Add location...'].invoke()
                     grant = state.grants()[0]
@@ -83,6 +84,10 @@ def main():
                     identity.delete(0, 'end'); identity.insert(0, 'b' * 32)
                     assert not token_field.get()
                     assert saved_grants() == []
+                    buttons['Refresh debug events'].invoke()
+                    buttons['Copy debug report'].invoke()
+                    assert 'atlas.diagnostics.v1' in window.clipboard_get()
+                    assert token not in window.clipboard_get()
                     window.clipboard_clear()
                     print('PASS actual Tk: grants, permission changes, revoke; manual token generation, masking, clipboard, rotation and identity-change clearing.')
                 except BaseException as exc:

@@ -2,6 +2,7 @@
 const API = "http://127.0.0.1:17892";
 const routes = new Set([
   "/v1/health",
+  "/v1/diagnostics",
   "/v1/grants",
   "/v1/list",
   "/v1/read",
@@ -12,12 +13,37 @@ const routes = new Set([
 ]);
 const readRoutes = new Set([
   "/v1/health",
+  "/v1/diagnostics",
   "/v1/grants",
   "/v1/list",
   "/v1/read",
   "/v1/hash",
   "/v1/receipts",
 ]);
+let diagnosticQueue = Promise.resolve();
+const safeDiagnosticCode = value => typeof value === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(value) ? value : "UNCLASSIFIED_ERROR";
+function diagnostic(stage, code, extra = {}) {
+  const event = {timeMs:Date.now(),stage:safeDiagnosticCode(stage),code:safeDiagnosticCode(code)};
+  for (const key of ["durationMs","httpStatus"]) if (Number.isFinite(extra[key])) event[key] = extra[key];
+  diagnosticQueue = diagnosticQueue.then(async () => {
+    const saved = await chrome.storage.local.get("diagnosticEvents");
+    const events = Array.isArray(saved.diagnosticEvents) ? saved.diagnosticEvents : [];
+    await chrome.storage.local.set({diagnosticEvents:[...events,event].slice(-200)});
+  }).catch(() => {});
+  return diagnosticQueue;
+}
+async function diagnosticReport() {
+  await diagnosticQueue;
+  const saved = await chrome.storage.local.get("diagnosticEvents");
+  const session = await chrome.storage.session.get("lifecycleState");
+  const token = (await chrome.storage.session.get("token")).token;
+  const nativeEnrolled = (await chrome.storage.local.get("nativeEnrolled")).nativeEnrolled === true;
+  return {schema:"atlas.diagnostics.v1", extensionId:chrome.runtime.id, extensionVersion:chrome.runtime.getManifest?.()?.version || "unknown",
+    state:session.lifecycleState || "OFFLINE", hasSessionCredential:Boolean(token), nativeEnrolled,
+    connectionMode:nativeEnrolled ? "AUTOMATIC_NATIVE" : token ? "MANUAL_TOKEN_NO_AUTOMATIC_WAKE" : "UNPAIRED",
+    events:saved.diagnosticEvents || [], limits:{nativeTimeoutMs:45000,httpReadTimeoutMs:8000},
+    omitted:["tokens","headers","file_paths","file_contents","exception_messages"]};
+}
 const fail = (code, message) => Object.assign(new Error(message), { code });
 let connecting = null;
 chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
@@ -30,27 +56,35 @@ async function status(state) {
     (await chrome.storage.session.get("unknownOperation")).unknownOperation
   )
     state = "OUTCOME_UNKNOWN";
+  diagnostic("LIFECYCLE", safeDiagnosticCode(state));
   await chrome.storage.session.set({ lifecycleState: state });
   return state;
 }
 async function nativeCall(action) {
+  const started = Date.now();
+  diagnostic(action === "manage" ? "NATIVE_MANAGE" : "NATIVE_CONNECT", "NATIVE_CALL_STARTED");
   let timer;
   try {
-    return await Promise.race([
+    const result = await Promise.race([
       chrome.runtime.sendNativeMessage("org.atlas.companion", { action }),
       new Promise((_, reject) => {
         timer = setTimeout(
           () =>
             reject(
               fail(
-                "OFFLINE",
-                "Installed companion did not respond within 15 seconds. Retry reconnect after checking its status.",
+                "NATIVE_TIMEOUT",
+                "[NATIVE_TIMEOUT] Installed companion did not respond within 45 seconds. Open Diagnostics for the last completed connection stage.",
               ),
             ),
-          15000,
+          45000,
         );
       }),
     ]);
+    diagnostic("NATIVE_REPLY", result?.ok ? "NATIVE_REPLY_OK" : "NATIVE_REPLY_REJECTED", {durationMs:Date.now()-started});
+    return result;
+  } catch (error) {
+    diagnostic("NATIVE_REPLY", error.code || "NATIVE_CALL_FAILED", {durationMs:Date.now()-started});
+    throw error;
   } finally {
     clearTimeout(timer);
   }
@@ -92,6 +126,9 @@ function nativeError(error) {
   return fail("NEEDS_REPAIR", message);
 }
 async function http(path, body, token) {
+  const started = Date.now();
+  const stage = "HTTP_" + path.split("/").pop().replace(/-/g,"_").toUpperCase();
+  diagnostic(stage, "REQUEST_STARTED");
   let response, value;
   try {
     response = await fetch(API + path, {
@@ -107,7 +144,9 @@ async function http(path, body, token) {
       ),
     });
     value = await response.json();
+    diagnostic(stage, response.ok && value?.ok !== false ? "REQUEST_OK" : safeDiagnosticCode(value?.error?.code || "HTTP_REJECTED"), {httpStatus:response.status,durationMs:Date.now()-started});
   } catch (error) {
+    diagnostic(stage, error.name === "TimeoutError" ? "HTTP_TIMEOUT" : "HTTP_TRANSPORT_FAILED", {durationMs:Date.now()-started});
     throw fail(
       "TRANSPORT",
       "Companion unavailable or response interrupted. " +
@@ -166,7 +205,7 @@ async function connectNative(remember = false) {
       return { ok: true };
     } catch (error) {
       const mapped = nativeError(error);
-      await status(mapped.code === "TRANSPORT" ? "OFFLINE" : mapped.code);
+      await status(["TRANSPORT","NATIVE_TIMEOUT"].includes(mapped.code) ? "OFFLINE" : mapped.code);
       throw mapped;
     }
   })();
@@ -177,6 +216,7 @@ async function connectNative(remember = false) {
   }
 }
 async function ensureReady() {
+  diagnostic("ENSURE_READY", "READINESS_STARTED");
   const nativeEnrolled = await enrolled();
   const { token } = await chrome.storage.session.get("token");
   if (token) {
@@ -304,6 +344,18 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   )
     return;
   (async () => {
+    if (message.type === "debug-report") return {ok:true,report:await diagnosticReport()};
+    if (message.type === "debug-probe") {
+      const report = await diagnosticReport();
+      const {token} = await chrome.storage.session.get("token");
+      if (!token) return {ok:true,report,helper:{ok:false,code:"NO_SESSION_CREDENTIAL"}};
+      try { return {ok:true,report,helper:await http("/v1/diagnostics",undefined,token)}; }
+      catch(error) { return {ok:true,report,helper:{ok:false,code:safeDiagnosticCode(error.code)}}; }
+    }
+    if (message.type === "debug-ui-error") {
+      await diagnostic("UI_STARTUP", message.code === "UI_BOOT_TIMEOUT" ? message.code : "UI_SCRIPT_ERROR");
+      return {ok:true};
+    }
     if (message.type === "native-connect") return connectNative(true);
     if (message.type === "ensure-ready") return ensureReady();
     if (message.type === "native-manage") {
@@ -320,6 +372,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       }
     }
     if (message.type === "pair") {
+      diagnostic("MANUAL_PAIR", "MANUAL_PAIR_STARTED");
       if (
         typeof message.token !== "string" ||
         message.token.length < 20 ||
@@ -330,6 +383,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       await chrome.storage.session.set({ token: message.token });
       // Manual mode never becomes an enrollment hint for automatic native wake.
       await chrome.storage.local.remove("nativeEnrolled");
+      diagnostic("MANUAL_PAIR", "MANUAL_MODE_AUTO_WAKE_DISABLED");
       await status("READY");
       return { ok: true };
     }

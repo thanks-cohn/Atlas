@@ -19,6 +19,7 @@ else:
 from atlas_companion.runtime import launch_options, RuntimeLock, child_environment, stop_attested_service
 from atlas_companion.entrypoint import command
 from atlas_companion.security import APIError
+from atlas_companion.diagnostics import record, error_code
 
 PORT = 17892
 MAX_FRAME = 65536
@@ -97,16 +98,19 @@ def request(origin, path, body=None, token=None, connection=None):
 
 
 def prove(state, origin, connection):
+    record(state, 'NATIVE_PROOF', 'PROOF_STARTED')
     nonce = secrets.token_hex(32)
     expected = hmac.new(state.bootstrap_key(), f'atlas.native.v1:{nonce}:{PORT}'.encode(), hashlib.sha256).hexdigest()
     response = request(origin, '/v1/bootstrap-proof', {'nonce': nonce}, connection=connection)
     if not isinstance(response.get('proof'), str) or not hmac.compare_digest(expected, response['proof']):
+        record(state, 'NATIVE_PROOF', 'PROOF_MISMATCH')
         raise ValueError('Companion identity could not be verified')
     if connection.sock is None:
         raise ValueError('Companion must keep proof connection open')
 
 
 def _connect(state, origin):
+    record(state, 'NATIVE_CONNECT', 'CONNECT_STARTED')
     if not state.known_origin(origin):
         raise ValueError('Extension has been revoked; explicitly reinstall to authorize')
     connection = http.client.HTTPConnection('127.0.0.1', PORT, timeout=2)
@@ -114,6 +118,7 @@ def _connect(state, origin):
         try:
             prove(state, origin, connection)
         except (ConnectionRefusedError, TimeoutError, OSError, http.client.HTTPException) as exc:
+            record(state, 'NATIVE_PROOF', 'PROOF_TRANSPORT_FAILED')
             connection.close()
             missing = isinstance(exc, ConnectionRefusedError) or windows_port_unbound()
             if not missing:
@@ -127,10 +132,12 @@ def _connect(state, origin):
                 except (TimeoutError, OSError, http.client.HTTPException):
                     connection.close()
                     if not (state.directory / 'service.identity').exists():
+                        record(state, 'NATIVE_WAKE', 'NO_ATTESTED_SERVICE')
                         raise
                     stop_attested_service(state, PORT)
                     missing = True
             if missing:
+                record(state, 'NATIVE_WAKE', 'SERVICE_SPAWN_STARTED')
                 connection.close()
                 subprocess.Popen(command('--state-dir', str(state.directory), 'serve', '--port', str(PORT)),
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -147,15 +154,20 @@ def _connect(state, origin):
                         connection.close()
                         time.sleep(0.1)
                 else:
+                    record(state, 'NATIVE_WAKE', 'SERVICE_START_TIMEOUT')
                     raise ValueError('Companion did not start')
         # Reuse the proven TCP connection. Never reconnect while sending credentials.
         proven_socket = connection.sock
+        record(state, 'NATIVE_PROOF', 'PROOF_OK')
         token = state.pair(origin.removeprefix('chrome-extension://'))
+        record(state, 'NATIVE_PAIR', 'TOKEN_ROTATED')
         if connection.sock is not proven_socket or proven_socket is None:
             raise ValueError('Proven connection was lost')
+        record(state, 'NATIVE_HEALTH', 'HEALTH_CHECK_STARTED')
         health = request(origin, '/v1/health', token=token, connection=connection)
         if health.get('protocol') != 'atlas.local.v1' or health.get('status') != 'ready':
             raise ValueError('Companion protocol is incompatible')
+        record(state, 'NATIVE_CONNECT', 'CONNECT_READY')
         return {'ok': True, 'protocol': 'atlas.local.v1', 'port': PORT, 'token': token}
     finally:
         connection.close()
@@ -163,11 +175,16 @@ def _connect(state, origin):
 
 def connect(state, origin):
     # Serialize demand-wake and token rotation across concurrent native hosts.
+    record(state, 'NATIVE_WAKE_LOCK', 'LOCK_WAIT_STARTED')
     deadline = time.monotonic() + 8
     while True:
         try:
             with RuntimeLock(state, 'wake'):
-                return _connect(state, origin)
+                try:
+                    return _connect(state, origin)
+                except Exception as exc:
+                    record(state, 'NATIVE_CONNECT', error_code(exc))
+                    raise
         except APIError as exc:
             if exc.code != 'ALREADY_RUNNING' or time.monotonic() >= deadline:
                 raise

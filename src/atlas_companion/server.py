@@ -13,6 +13,7 @@ from atlas_core import CatalogError, GraphStore
 from . import PROTOCOL
 from .filesystem import Provider, error
 from .security import APIError
+from .diagnostics import record, snapshot
 
 MAX_BODY = 2 * 1024 * 1024
 
@@ -109,6 +110,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _fail(self, exc):
+        record(self.server.state, 'HTTP_GATE_OR_ROUTE', exc.code if isinstance(exc, APIError) else 'HTTP_INTERNAL_ERROR')
         self.close_connection = True
         if isinstance(exc, APIError):
             self._send(exc.status, {'ok': False, 'error': error(exc)})
@@ -183,6 +185,8 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path == '/v1/health' and not post:
                 result = {'protocol': PROTOCOL, 'status': 'ready', 'platform': getattr(self.server.state, 'platform', 'linux'),
                           'limits': {'preview_bytes': 31457280, 'preview_max_bytes': 134217728, 'copy_bytes': 268435456, 'batch_entries': 100}}
+            elif self.path == '/v1/diagnostics' and not post:
+                result = snapshot(self.server.state)
             elif self.path == '/v1/grants' and not post:
                 result = {'grants': [{'id': g['id'], 'label': g['label'], 'root': g['root'],
                                       'operations': ['read', 'write'] if g['writable'] else ['read']} for g in self.server.state.grants()]}
@@ -204,6 +208,8 @@ class Handler(BaseHTTPRequestHandler):
                     result = self.server.graph.snapshot()
             else:
                 raise APIError('NOT_FOUND', 'Unknown API route or method.', 404)
+            if self.path != '/v1/diagnostics':
+                record(self.server.state, 'HTTP_' + self.path.rsplit('/',1)[-1].replace('-','_').upper(), 'HTTP_OK')
             self._send(200, {'ok': True, **result})
         except Exception as exc:
             self._fail(exc)

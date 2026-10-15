@@ -202,7 +202,8 @@ test('unpaired API requests fail locally and disconnect clears credentials', asy
 });
 
 test('remembered native enrollment survives browser session without durable credentials', async()=>{
-  const w=worker();await w.send({type:'native-connect'});assert.equal(w.local.nativeEnrolled,true);assert.deepEqual(Object.keys(w.local),['nativeEnrolled']);
+  const w=worker();await w.send({type:'native-connect'});assert.equal(w.local.nativeEnrolled,true);assert.deepEqual(Object.keys(w.local).sort(),['diagnosticEvents','nativeEnrolled']);
+  noToken(w.local);
   delete w.session.token;const result=await w.send({type:'ensure-ready'});assert.equal(result.paired,true);assert.equal(result.state,'READY');assert.equal(w.calls.native.length,2);noToken(result);
   await w.send({type:'disconnect'});assert.equal(w.local.nativeEnrolled,undefined);delete w.session.token;
   const before=w.calls.native.length;assert.equal((await w.send({type:'ensure-ready'})).paired,false);assert.equal(w.calls.native.length,before);
@@ -251,6 +252,22 @@ test('browser startup wakes only explicitly remembered native enrollment',async(
  const returning=worker();returning.local.nativeEnrolled=true;await returning.startup();assert.equal(returning.calls.native.length,1);assert.equal(returning.session.token,token);
 });
 
+test('diagnostic report exposes stages and mode without credentials or automatic reconnect', async()=>{
+ const w=worker();
+ await w.send({type:'pair',token});
+ const report=await w.send({type:'debug-report'});
+ assert.equal(report.ok,true);assert.equal(report.report.connectionMode,'MANUAL_TOKEN_NO_AUTOMATIC_WAKE');
+ assert.equal(report.report.hasSessionCredential,true);assert.equal(report.report.limits.nativeTimeoutMs,45000);
+ assert.ok(report.report.events.some(e=>e.code==='REQUEST_OK'));noToken(report);noToken(w.local);
+ const before=w.calls.native.length;await w.send({type:'debug-probe'});assert.equal(w.calls.native.length,before);
+ const rejected=await w.send({type:'debug-report'},{id:'b'.repeat(32),url:extensionURL+'explorer.html'});assert.equal(rejected,undefined);
+});
+test('diagnostic journal is bounded and UI messages cannot inject raw data',async()=>{
+ const w=worker();
+ for(let i=0;i<205;i++)await w.send({type:'debug-ui-error',code:token});
+ const result=await w.send({type:'debug-report'});assert.equal(result.report.events.length,200);
+ assert.ok(result.report.events.every(e=>e.code==='UI_SCRIPT_ERROR'));noToken(result);
+});
 let failures = 0;
 for (const {name, run} of tests) {
   try { await run(); process.stdout.write(`PASS ${name}\n`); }

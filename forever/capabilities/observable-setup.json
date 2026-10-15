@@ -1,0 +1,28 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.observable-setup",
+  "kind": "capability",
+  "name": "Simple setup and observable companion recovery",
+  "statement": "Offer a short explicit native setup flow and inspectable secret-free connection-stage diagnostics so normal use is automatic and failures are actionable.",
+  "requiredProperties": [
+    "exact extension identity enrollment",
+    "home and other folder choices without implied grants",
+    "verified readiness before Done",
+    "bounded stage/code reports accessible when main UI fails",
+    "authenticated debug API without credential/path/content disclosure",
+    "distinguish manual mode from remembered automatic native mode"
+  ],
+  "relatedInvariants": [
+    "invariant.authority",
+    "invariant.recovery-semantics"
+  ],
+  "verification": [],
+  "criticality": "important",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner 2026-10-15: automatic ID/home/other-folder setup and stage-by-stage debug UI/API after unexplained offline failures",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
