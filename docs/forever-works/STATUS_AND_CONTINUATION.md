@@ -123,3 +123,24 @@ Windows artifact now includes the matching extension ZIP so helper-only updates
 do not leave the old request code running. Replace files in the existing unpacked
 extension folder and Reload to preserve its ID. Windows CI verifies frozen helper
 and actual token widgets separately; it is not actual Chrome acceptance proof.
+
+
+## 2026-10-15 — preserve Working v1, then improve existing preview
+
+First committed docs/releases/WORKING_V1.md at 1193e7332a63f3211e54c38354903ba926df3a5a,
+pinning the owner-confirmed source 6d974083daf7379d55d10a0da92a4cf01bf9da1c.
+Only afterward implemented Left/Right and two equivalent buttons in the existing
+details preview, current visible sort/filter order, wraparound, persisted
+image/audio/video defaults and opt-in text/PDF. Added built-in audio/video controls
+and local-blob PDF frame; no separate viewer layout, provider or native transport.
+See PREVIEW_CONTINUITY.md and canonical capability.preview-navigation /
+decision.preview-continuity. Records preserve requirements; acceptance remains
+planned until actual browser verification, rather than equating source with proof.
+
+Node navigation tests and JavaScript syntax/package checks PASS locally. No local
+Chromium/Playwright runtime is available: actual keyboard DOM, PDF plugin and
+codec playback NOT_RUN. Existing 2 MiB native preview read cap remains; large
+media streaming is not implemented. Next: verify folder navigation in installed
+Chrome and later design bounded authenticated streaming/document scrolling.
+
+Local full verification: 124 tests; 3 failures, 3 errors in native helper startup/supervisor tests; 29 Windows-only skips. Local model linkage: 19 records valid (not normative schema proof). Full suite is NOT PASS in this environment. Navigation unit checks PASS; actual Chrome preview integration remains NOT_RUN.

@@ -125,6 +125,19 @@
           <strong id="details-title">Details</strong
           ><button id="close-details" aria-label="Close details">×</button>
         </div>
+        <div id="preview-navigation" hidden>
+          <button id="preview-prev" title="Previous file (Left arrow)" aria-label="Previous file">←</button>
+          <button id="preview-next" title="Next file (Right arrow)" aria-label="Next file">→</button>
+        </div>
+        <details id="preview-settings">
+          <summary>Preview settings</summary>
+          <p>Arrow keys cycle through these file types in the current folder and wrap at both ends.</p>
+          <label><input id="preview-image" type="checkbox" checked> Images</label>
+          <label><input id="preview-audio" type="checkbox" checked> Music / audio</label>
+          <label><input id="preview-video" type="checkbox" checked> Videos</label>
+          <label><input id="preview-text" type="checkbox"> Text</label>
+          <label><input id="preview-pdf" type="checkbox"> PDFs</label>
+        </details>
         <div id="preview"></div>
         <div id="properties"></div>
       </aside>

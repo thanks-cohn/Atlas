@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "decision.preview-continuity",
+  "kind": "decision",
+  "title": "Improve the existing preview through small continuous navigation",
+  "status": "accepted",
+  "context": "The owner confirmed the connection/explorer working, requested preserving that Working v1 milestone, then asked to browse media without repeatedly closing and reopening files.",
+  "decision": "Extend the existing preview with Left/Right cycling and persisted type preferences. Default to music/audio, images and video; text and PDF are optional. Preserve the working interface instead of introducing another viewer architecture.",
+  "rationale": "Reduce repetitive actions and lost context, keep browsing pleasant and predictable, and make the default elegant by skipping unrelated files. Preserve why the behavior exists so future inheritors do not remove it as an incidental shortcut or repeatedly rediscover the same user need.",
+  "mustSurvive": [
+    "invariant.authority",
+    "invariant.identity"
+  ],
+  "relatedEntities": [
+    "capability.preview-navigation"
+  ],
+  "dateVersion": "2026-10-15",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner requests 2026-10-15: preserve Working v1, add Left/Right to existing preview, document pleasant/elegant continuous browsing rationale",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}

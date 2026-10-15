@@ -11,7 +11,8 @@
       "capabilities/companion-supervisor.json",
       "capabilities/companion-wake.json",
       "capabilities/recovery.json",
-      "capabilities/resource-graph.json"
+      "capabilities/resource-graph.json",
+      "capabilities/preview-navigation.json"
     ],
     "invariants": [
       "invariants/authority.json",
@@ -27,7 +28,8 @@
     ],
     "decisions": [
       "decisions/chute-rc1-reference.json",
-      "decisions/mechanism-fluidity.json"
+      "decisions/mechanism-fluidity.json",
+      "decisions/preview-continuity.json"
     ]
   }
 }

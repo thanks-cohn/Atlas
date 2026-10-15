@@ -49,3 +49,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [COMPANION_COLD_RECONSTRUCTION.md](COMPANION_COLD_RECONSTRUCTION.md) — pinned Chute Windows RC1 design, the exact 17.1 MiB executable SHA256, recovery semantics, OS lifecycle constraints, secure Native Messaging, optional consented second supervisor and agent-neutral reconstruction steps.
 - [COMPANION_RECOVERY_VERIFICATION.md](COMPANION_RECOVERY_VERIFICATION.md) — twenty positive, negative, browser lifecycle, power and independent-implementation acceptance tests.
 - [forever/manifest.json](../../forever/manifest.json) — canonical Standard 0.1 records for wake, lifecycle, supervisor, recovery authority, reconciliation, OS power boundary and historical Chute reference.
+
+- [PREVIEW_CONTINUITY.md](PREVIEW_CONTINUITY.md) — owner rationale, existing-preview navigation, defaults, acceptance and limits.

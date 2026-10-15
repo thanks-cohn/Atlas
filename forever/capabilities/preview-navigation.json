@@ -1,0 +1,28 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.preview-navigation",
+  "kind": "capability",
+  "name": "Continuous navigation in the existing file preview",
+  "statement": "Users move backward and forward through eligible files without closing the existing preview, preserving current folder context and wrapping at both ends.",
+  "requiredProperties": [
+    "Left/Right in current visible sorted order",
+    "default images, music/audio and video; skip other types and directories",
+    "persisted opt-in text/PDF inclusion",
+    "wrap last to first and first to last",
+    "do not intercept typing, dialogs or media seeking",
+    "retain authenticated scoped read path and bounded preview resources"
+  ],
+  "relatedInvariants": [
+    "invariant.authority",
+    "invariant.identity"
+  ],
+  "verification": [],
+  "criticality": "important",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner requests 2026-10-15: preserve Working v1, add Left/Right to existing preview, document pleasant/elegant continuous browsing rationale",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}

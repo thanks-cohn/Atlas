@@ -68,3 +68,13 @@ extension identity and its bound bearer; the compatibility header never grants
 folders. A previously running older service must be stopped before the new one
 can bind port 17892. If auto-recovery is active, disable it before replacement,
 then repair the installed companion and reenable it after updating.
+
+## Existing-preview navigation (extension 0.1.2)
+
+Left/Right and preview arrow buttons cycle eligible files in current displayed
+folder order and wrap. Preview settings persist; images, audio and video start
+enabled, text/PDF disabled. Update extension files in the same unpacked folder
+and Reload to preserve its ID. No new native API is required for this increment.
+The helper retains its 2 MiB preview cap; full-size music/video streaming remains
+a later change. Actual Chrome codec and PDF-viewer support require field checks.
+The Working v1 baseline is separately pinned in docs/releases/WORKING_V1.md.

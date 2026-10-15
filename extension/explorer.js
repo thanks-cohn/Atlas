@@ -1,4 +1,7 @@
+import { previewDefaults, previewStep, previewKind } from "./preview-navigation.js";
 import { createGraphUI } from "./graph.js";
+let previewSettings = {...previewDefaults};
+let previewEntry = null;
 const $ = (id) => document.getElementById(id);
 const state = {
   grants: [],
@@ -871,6 +874,8 @@ function menu(event) {
   menu.querySelector("button:not(:disabled)")?.focus();
 }
 function properties(entries) {
+  previewEntry = null;
+  $("preview-navigation").hidden = true;
   state.previewRequest++;
   $("details").hidden = false;
   $("details-title").textContent =
@@ -941,6 +946,8 @@ async function open(entry) {
     return;
   }
   properties([entry]);
+  previewEntry = entry;
+  $("preview-navigation").hidden = false;
   const current = entry.path;
   const request = state.previewRequest;
   const grant = state.grant.id;
@@ -959,14 +966,29 @@ async function open(entry) {
       previewURL = null;
     }
     const mime = result.mime || "application/octet-stream";
-    if (mime.startsWith("image/") && !mime.includes("svg")) {
-      const data = Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0));
-      previewURL = URL.createObjectURL(new Blob([data], { type: mime }));
+    const data = Uint8Array.from(atob(result.data), c => c.charCodeAt(0));
+    const blobURL = () => {
+      previewURL = URL.createObjectURL(new Blob([data], {type:mime}));
+      return previewURL;
+    };
+    if (mime.startsWith("audio/") || mime.startsWith("video/")) {
+      const media = document.createElement(mime.startsWith("audio/") ? "audio" : "video");
+      media.controls = true;
+      media.preload = "metadata";
+      media.src = blobURL();
+      $("preview").replaceChildren(media);
+    } else if (mime === "application/pdf") {
+      const frame = document.createElement("iframe");
+      frame.title = entry.name;
+      frame.src = blobURL();
+      $("preview").replaceChildren(frame);
+    } else if (mime.startsWith("image/") && !mime.includes("svg")) {
+      blobURL();
       const image = document.createElement("img");
       image.src = previewURL;
       image.alt = entry.name;
       $("preview").replaceChildren(image);
-    } else if (mime.startsWith("text/") || /json|javascript|xml/.test(mime)) {
+    } else if (mime.startsWith("text/") || /json|javascript|xml/.test(mime) || previewKind(entry.name) === "text") {
       const value =
         result.text ??
         new TextDecoder().decode(
@@ -1063,6 +1085,8 @@ for (const view of ["list", "grid"])
 $("fullpage").onclick = () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("explorer.html") });
 $("close-details").onclick = () => {
+  previewEntry = null;
+
   state.previewRequest++;
   $("details").hidden = true;
   if (previewURL) {
@@ -1122,6 +1146,24 @@ $("pair-form").onsubmit = async (event) => {
     button.disabled = false;
   }
 };
+function stepPreview(delta) {
+  if (!previewEntry || $("details").hidden || !state.grant) return;
+  const next = previewStep(visible(), previewEntry.path, delta, previewSettings);
+  if (next) {
+    state.selected = new Set([next.path]);
+    renderSelection();
+    open(next);
+  } else notice("No files match your preview settings in this folder.");
+}
+$("preview-prev").onclick = () => stepPreview(-1);
+$("preview-next").onclick = () => stepPreview(1);
+for (const kind of Object.keys(previewDefaults)) {
+  $("preview-" + kind).checked = previewSettings[kind];
+  $("preview-" + kind).onchange = () => {
+    previewSettings[kind] = $("preview-" + kind).checked;
+    chrome.storage.local.set({previewSettings});
+  };
+}
 let typeQuery = "",
   typeAt = 0;
 document.addEventListener("keydown", (event) => {
@@ -1148,6 +1190,12 @@ document.addEventListener("keydown", (event) => {
       return;
     }
     if (key === "enter" || key === " ") return;
+  }
+  if (!$("details").hidden && previewEntry && !document.querySelector("dialog[open]") && !event.target.matches("input,textarea,select,audio,video,iframe") && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault(); stepPreview(event.key === "ArrowLeft" ? -1 : 1); return;
+    }
+    if (event.key === "Escape") { event.preventDefault(); $("close-details").click(); return; }
   }
   if (
     event.target.matches("input,textarea,select") ||
@@ -1230,7 +1278,13 @@ document.addEventListener("keydown", (event) => {
 });
 (async () => {
   try {
-    const preferences = await chrome.storage.local.get(["view", "sort"]);
+    const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings"]);
+    if (preferences.previewSettings) {
+      for (const kind of Object.keys(previewDefaults)) {
+        if (typeof preferences.previewSettings[kind] === "boolean") previewSettings[kind] = preferences.previewSettings[kind];
+        $("preview-" + kind).checked = previewSettings[kind];
+      }
+    }
     state.view = preferences.view === "grid" ? "grid" : "list";
     if (preferences.sort) $("sort").value = preferences.sort;
     $("list-view").classList.toggle("active", state.view === "list");
