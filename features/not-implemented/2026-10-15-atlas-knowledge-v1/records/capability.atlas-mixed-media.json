@@ -1,0 +1,29 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-mixed-media",
+  "kind": "capability",
+  "name": "Mixed-media linking and provider preview",
+  "statement": "Users can accomplish mixed-media linking and provider preview while preserving user-owned meaning, usability and consent.",
+  "requiredProperties": [
+    "Image and gallery items independently attach other images, links, files, notes and media",
+    "Media can be a remote URL, local authorized resource, R2 object or bundled export with truthful availability",
+    "Resource re-use does not duplicate underlying file bytes",
+    "Right-hand inspector previews notes, images, video and supported files while graph stays visible",
+    "Resizable split inspector compares local preview above R2 preview below",
+    "Respect provider authentication, grant boundaries, content sanitization and offline states"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
