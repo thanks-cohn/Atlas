@@ -1,0 +1,27 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.companion-wake",
+  "kind": "capability",
+  "name": "Installed companion demand wake",
+  "statement": "After an explicitly consented companion installation, an authorized extension can cause a missing or unhealthy native bridge to be safely started or restored through OS-supported mechanisms, then authenticated before privileged operations resume.",
+  "requiredProperties": [
+    "detect missing or stale bridge",
+    "recover on supported running host when activated",
+    "retain scoped grants without broadening authority",
+    "report actionable unavailable states"
+  ],
+  "relatedInvariants": [
+    "invariant.recovery-semantics",
+    "invariant.wake-authority",
+    "invariant.operation-reconciliation"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
