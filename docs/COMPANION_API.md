@@ -1,10 +1,10 @@
 # ATLAS local companion protocol
 
-Protocol identifier: `atlas.local.v1`. This document describes the current Linux development implementation, subordinate to the enduring authority/identity contracts. The transport and runtime can be replaced only with preservation of accepted behavior, grants, portable metadata and independent denial tests.
+Protocol identifier: `atlas.local.v1`. This document describes the current Linux and Windows development implementations, subordinate to the enduring authority/identity contracts. The transport and runtime can be replaced only with preservation of accepted behavior, grants, portable metadata and independent denial tests.
 
 ## Authority and deployment
 
-The companion is a separately user-started Python process on `127.0.0.1:17892`. It does not authorize native installation or start a remote listener. An optional Linux Native Messaging development bridge can explicitly register an exact extension identity and wake the fixed companion command; see DEVELOPMENT.md. Production standalone installers remain separate work. Windows is unsupported by the current descriptor-safe filesystem provider and must not inherit Linux runtime claims.
+The companion is a separately installed native process on `127.0.0.1:17892`; unsigned standalone builds bundle Python and native management. Exact-identity Native Messaging registration and location grants require explicit local consent. Browser activation can subsequently wake the fixed helper command, and an optional per-user supervisor can restore it at login and after process failure. Linux and Windows use independent filesystem, authority and recovery boundaries; neither inherits the other platform's runtime proof. See `packaging/README.md`, `packaging/WINDOWS.md` and the latest handoff for actual artifacts and verification scope. No remote listener, administrator service or powered-off execution is introduced.
 
 Pairing is an explicit local CLI operation for one exact Chrome extension ID (`[a-p]{32}`). It generates a cryptographically random bearer token, returns it once and retains only its SHA-256 digest with `chrome-extension://<id>` in local state. Re-pairing rotates that origin's token. Privileged requests require both the exact paired Origin and the bearer credential; knowing an extension ID, being on localhost or passing CORS is insufficient. The extension's service worker owns transport and credentials; there are no website content scripts receiving native credentials.
 
@@ -21,7 +21,7 @@ POST bodies require `Content-Type: application/json`, one valid Content-Length a
 | Method | Route | Result / request |
 | --- | --- | --- |
 | POST | `/v1/bootstrap-proof` | Known exact Origin and valid Host, no bearer; `{nonce:<64 lowercase hex>}` yields HMAC-SHA256 private-key proof bound to nonce and actual port. Does not pair or grant filesystem authority. |
-| GET | `/v1/health` | Protocol, ready status, Linux platform and resource limits; authenticated. |
+| GET | `/v1/health` | Protocol, ready status, platform (`linux` or `windows`) and resource limits; authenticated. |
 | GET | `/v1/grants` | Existing authorized root IDs, labels, paths and read/write capability labels. |
 | POST | `/v1/list` | Authorized directory listing; request described below. |
 | POST | `/v1/hash` | On-demand SHA-256 of an authorized regular file, at most 256 MiB; detects observed source changes during hashing. |
@@ -54,7 +54,7 @@ Mutation bodies use `id`, `action` and relevant arguments:
 | `trash` | `sources:[{grant,path}]` | Moves each entry into private root-local `.atlas-trash` and returns opaque `trash_id`. |
 | `restore` | One `sources:[{grant,path:<trash_id>}]`, `destination:{grant,path}` | Restores a recorded trashed entry under its original basename; destination conflict is denied. |
 
-Batches are bounded to 100 selected entries. A recursive copy is bounded to 256 MiB, 10,000 entries and 64 directory levels. A single-source copy may provide a validated `name` override for duplicate/copy-as. Copy stages content before publishing the final destination, rejects symlinks/special files and excludes reserved trash staging. It is a byte-copy operation, not a complete backup/ACL/xattr/hardlink-preservation tool. A failed batch may have completed earlier entries; inspect every result.
+Batches are bounded to 100 selected entries. On Linux, recursive copy is bounded to 256 MiB, 10,000 entries and 64 directory levels. Windows currently supports bounded file copy (256 MiB); directory copy explicitly returns `UNSUPPORTED_ENTRY`. A single-source copy may provide a validated `name` override for duplicate/copy-as. Copy stages content before publishing the final destination, rejects symlinks/special files and excludes reserved trash staging. It is a byte-copy operation, not a complete backup/ACL/xattr/hardlink-preservation tool. A failed batch may have completed earlier entries; inspect every result.
 
 Mutation responses contain `receipt` and `replayed`; the receipt holds `id`, `action`, `status` (`completed`, `partial` or `failed`), `results` and completion time. Each result has `source`, `ok` and either destination/recovery information or a structured `error:{code,message}`. Returning a receipt does not mean every item succeeded.
 
@@ -67,3 +67,10 @@ Revalidate granted authority before issuing operations; revocation is effective 
 ## Verification and remaining gates
 
 Run `python scripts/check_project.py` and inspect the actual companion tests and latest handoff. Passing Python tests does not prove Chrome native installation, Windows security, DNS rebinding resistance under all browser variants, lifecycle recovery, OS sleep/reboot behavior, or production security. Maintain independent malicious-Origin, wrong-token, Host, traversal, symlink/race, revoked grant, read-only grant, conflict, partial-copy and duplicate-retry oracles when replacing this transport or provider.
+
+
+## Windows provider boundary
+
+The Windows provider traverses one component at a time through retained NT handles with reparse rejection and pinned volume/128-bit file identity. Directory handles resist rename/reparenting. Local fixed/removable/optical/RAM drives may be explicitly granted; UNC, mapped network, device/extended namespaces, ADS, ambiguous DOS names, trailing dots/spaces and regular hardlinks are rejected. Windows no-overwrite handle-based rename backs rename/move/publication; unsupported cross-volume moves fail safely. Trash is a private current-user/SYSTEM directory whose durable entry/directory identities must match the receipt on restore.
+
+Authority uses separate Windows schema1, current-SID ownership, protected DACLs and persistent rollback journals. State, runtime and enrolled manifests remain excluded even with explicitly approved broad root/volume access. Native wake and optional supervisor bind recovery to an HMAC-signed SID/executable/process-creation identity and retained process HANDLE. Login recovery uses a verified installed `--recover` command to fit Windows Run command limits. These platform mechanisms preserve the shared API and graph schemas; source or Server2025 tests alone do not prove Chrome callbacks or Windows10/11 sleep/hibernate/reboot.

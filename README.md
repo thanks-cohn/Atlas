@@ -8,13 +8,13 @@ ATLAS is a **browser-first, native-capable, local-first explorer** that unifies 
 
 Start with [docs/forever-works/README.md](docs/forever-works/README.md).
 
-**Stage:** Linux development vertical slice: real scoped filesystem companion, Chrome MV3 explorer and durable portable resource graph. Python-process native wake is verified on Linux; actual Chrome extension/native callback runtime, production security, Windows and Chrome Web Store approval remain separate release gates. See the latest handoff for executed proof and current limitations.
+**Stage:** Functional Linux and Windows companion development with a Chrome MV3 explorer and durable portable resource graph. Native filesystem and recovery implementations have separate platform tests; actual Chrome callbacks, desktop sleep/hibernate/reboot, clean-machine compatibility, publisher signing and Store approval remain separate release gates. See the latest handoff for exact executed proof and artifacts.
 
 References: [Chute](https://github.com/thanks-cohn/chute), [FileChute](https://github.com/thanks-cohn/filechute), [Redown](https://github.com/thanks-cohn/remote-download-2-cloudfare), [Forever Works](https://github.com/thanks-cohn/forever-works), [Any-Shape](https://github.com/thanks-cohn/any-shape).
 
 ## Engineering and verification
 
-The architecture is specified as **Forever Works-style, agent-neutral inheritance**, not an instruction set for one coding agent. Read the [construction program](docs/forever-works/BUILD_PROGRAM.md), [verification contracts](docs/forever-works/CONTRACTS_AND_VERIFICATION.md), and [cold reconstitution protocol](docs/forever-works/RECONSTITUTION_PROTOCOL.md). The portable graph is in `src/atlas_core/`, the Linux companion in `src/atlas_companion/`, the MV3 client in `extension/` and verification fixtures under `tests/`. Run `python scripts/check_project.py`. See [development setup](docs/DEVELOPMENT.md) and [the versioned local API](docs/COMPANION_API.md); implemented code is not a claim of production readiness.
+The architecture is specified as **Forever Works-style, agent-neutral inheritance**, not an instruction set for one coding agent. Read the [construction program](docs/forever-works/BUILD_PROGRAM.md), [verification contracts](docs/forever-works/CONTRACTS_AND_VERIFICATION.md), and [cold reconstitution protocol](docs/forever-works/RECONSTITUTION_PROTOCOL.md). The portable graph is in `src/atlas_core/`, the platform-specific companions in `src/atlas_companion/`, the MV3 client in `extension/` and verification fixtures under `tests/`. Run `python scripts/check_project.py`. See [development setup](docs/DEVELOPMENT.md) and [the versioned local API](docs/COMPANION_API.md); implemented code is not a claim of production readiness.
 
 ## Cold-agent onboarding
 
@@ -30,7 +30,7 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 ## Install the Linux companion
 
-A standalone Linux x86_64 companion is now built with Python and the native management UI included. Extract the distribution and open `atlas-companion`; authorize the exact extension ID and choose locations in its native window. No repeated token pasting is needed after installed enrollment. See [installer instructions](packaging/README.md) and [latest handoff](codex/HANDOFF_LATEST.md). The local unsigned build is tested on glibc2.41; a separate Ubuntu22.04/glibc2.35 build also passed. [Download the Linux installer artifact](https://github.com/thanks-cohn/Atlas/actions/runs/38775149275/artifacts/11994080011) (14-day retention; manual build workflow can regenerate it). Windows read-boundary tests now pass on a Windows runner; the complete Windows helper and actual Chrome callbacks remain unfinished/unverified.
+A standalone Linux x86_64 companion is now built with Python and the native management UI included. Extract the distribution and open `atlas-companion`; authorize the exact extension ID and choose locations in its native window. No repeated token pasting is needed after installed enrollment. See [installer instructions](packaging/README.md) and [latest handoff](codex/HANDOFF_LATEST.md). The local unsigned build is tested on glibc2.41; a separate Ubuntu22.04/glibc2.35 build also passed. [Download the Linux installer artifact](https://github.com/thanks-cohn/Atlas/actions/runs/38775149275/artifacts/11994080011) (14-day retention; manual build workflow can regenerate it). Windows now has an integrated native provider, private state, installer and recovery supervisor; see the Windows instructions and current verification receipt below.
 
 ## Run from source for development
 
@@ -39,7 +39,7 @@ A standalone Linux x86_64 companion is now built with Python and the native mana
 3. Run `./scripts/run_companion.sh pair --extension-id YOUR_CHROME_EXTENSION_ID` and keep the printed token private.
 4. Run `./scripts/run_companion.sh serve`, open ATLAS from its toolbar icon and paste the token into Connect.
 
-The default native state is private to your OS user under `~/.local/share/atlas`; use `--state-dir /your/private/path` **before** each subcommand to choose another location. Setup never silently installs a native executable. This provider requires Linux and deliberately rejects symlink traversal and ungranted paths. An optional explicit Linux Native Messaging launcher can wake/pair the companion; [setup and limitations](docs/DEVELOPMENT.md) distinguish it from a standalone native distribution. Windows support remains incomplete.
+The default native state is private to your OS user under `~/.local/share/atlas`; use `--state-dir /your/private/path` **before** each subcommand to choose another location. Setup never silently installs a native executable. This provider requires Linux and deliberately rejects symlink traversal and ungranted paths. An optional explicit Linux Native Messaging launcher can wake/pair the companion; [setup and limitations](docs/DEVELOPMENT.md) distinguish it from a standalone native distribution. Windows uses its own NT-handle provider and standalone installer; these Linux source commands are not Windows installation instructions.
 
 Read [DEVELOPMENT.md](docs/DEVELOPMENT.md), [COMPANION_API.md](docs/COMPANION_API.md), [the privacy disclosure](docs/PRIVACY.md) and [the latest implementation handoff](codex/HANDOFF_LATEST.md) before using personal data. `python scripts/package_extension.py` produces an unsigned extension-only ZIP under ignored `dist/`; it does not install or publish anything.
 
@@ -49,4 +49,11 @@ Read [DEVELOPMENT.md](docs/DEVELOPMENT.md), [COMPANION_API.md](docs/COMPANION_AP
 
 ## Companion cold-rebuild inheritance
 
-The recovery architecture and exact Chute Windows v2.6.1 RC1 reference are documented in [Companion Cold Reconstruction](docs/forever-works/COMPANION_COLD_RECONSTRUCTION.md), supported by [20 lifecycle and security test cases](docs/forever-works/COMPANION_RECOVERY_VERIFICATION.md) and new canonical [Forever Works 0.1 records](forever/manifest.json). An optional per-user wake supervisor is proposed; it cannot execute during machine shutdown or ordinary suspend.
+The recovery architecture and exact Chute Windows v2.6.1 RC1 reference are documented in [Companion Cold Reconstruction](docs/forever-works/COMPANION_COLD_RECONSTRUCTION.md), supported by [20 lifecycle and security test cases](docs/forever-works/COMPANION_RECOVERY_VERIFICATION.md) and new canonical [Forever Works 0.1 records](forever/manifest.json). Optional per-user supervisors are implemented separately for Linux and Windows; they cannot execute during machine shutdown or ordinary suspend.
+
+
+## Windows companion
+
+[Download the verified Windows helper](https://github.com/thanks-cohn/Atlas/actions/runs/38779850667/artifacts/11995571257) (14-day Actions artifact retention), then see [installation and build instructions](packaging/WINDOWS.md). The unsigned x86_64 standalone build embeds Python and native location management. Install the exact Chrome extension identity once, explicitly authorize desired folders once, and connect from ATLAS once. Native demand wake restores the helper when ATLAS returns; optional per-user login recovery starts supervision immediately and registers it for later Windows sign-ins. Saved grants and operation receipts persist. Normal operations do not require token pasting or repeated location authorization. Revocation, changed extension identity and OS-denied access still require attention.
+
+Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/directory move and recoverable trash/restore. Directory copy and cross-volume move are explicitly unsupported in this increment. Do not treat process-kill/suspension tests as physical sleep, hibernation or reboot proof; current results and next verification steps are in [the latest handoff](codex/HANDOFF_LATEST.md).
