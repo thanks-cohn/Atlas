@@ -19,3 +19,7 @@ The architecture is specified as **Forever Works-style, agent-neutral inheritanc
 ## Cold-agent onboarding
 
 Begin with [AGENTS.md](AGENTS.md) (tool/provider-neutral instructions), the [current status ledger](docs/forever-works/STATUS_AND_CONTINUATION.md), and the [construction program](docs/forever-works/BUILD_PROGRAM.md). The first canonical [Forever Works 0.1 model](forever/manifest.json) records enduring requirements. Run `python scripts/check_project.py` for local linkage and Python prototype tests; this **does not** claim normative upstream conformance or native runtime proof. CI runs the same command on commits and pull requests.
+
+## Premium explorer destination
+
+ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** with an explicitly installed native helper: rich right-click operations, copy/cut/paste, move/copy/send-to, multi-select, keyboard navigation, previews, local and R2 browsing, tags, catalogs and relationships. The enduring requirements are in [the premium explorer contract](docs/forever-works/PREMIUM_EXPLORER_PRODUCT_CONTRACT.md). An ambitious Codex implementation assignment is available at [codex/BUILD_PREMIUM_ATLAS_END_TO_END.md](codex/BUILD_PREMIUM_ATLAS_END_TO_END.md); it is not normative architecture.
