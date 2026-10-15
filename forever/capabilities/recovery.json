@@ -1,0 +1,25 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.recovery",
+  "kind": "capability",
+  "name": "Companion recovery across process lifecycles",
+  "statement": "Recover the authorized explorer workflow after extension worker suspension, helper termination and ordinary machine restart without loss of catalog relationships.",
+  "requiredProperties": [
+    "reconnection status",
+    "persistent state",
+    "idempotent effects"
+  ],
+  "relatedInvariants": [
+    "invariant.identity",
+    "invariant.authority"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
