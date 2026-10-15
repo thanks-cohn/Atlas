@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.operation-reconciliation",
+  "kind": "invariant",
+  "name": "No destructive blind replay",
+  "statement": "Following crash, sleep or reboot, uncertain file operations must not silently repeat; durable receipts and reconciliation must preserve or explicitly resolve pending, partial and unknown outcomes.",
+  "scope": [
+    "capability.companion-wake",
+    "capability.companion-lifecycle"
+  ],
+  "verification": [],
+  "severity": "critical",
+  "changePolicy": "Storage and messaging are fluid; observable idempotency and honest uncertain outcomes are fixed.",
+  "relatedCapabilities": [
+    "capability.companion-wake",
+    "capability.companion-lifecycle"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
