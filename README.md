@@ -42,3 +42,7 @@ Read [DEVELOPMENT.md](docs/DEVELOPMENT.md), [COMPANION_API.md](docs/COMPANION_AP
 ## Cross-computer continuity decision
 
 [The same personal environment across computers](docs/forever-works/DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md) records our long-term goal: restore a recognizable portable workspace, catalogs, preferences, relationships and compatible execution tools on different operating systems, while reauthorizing machine-specific access. This is a proposal, not yet a working sync/restore product.
+
+## Companion cold-rebuild inheritance
+
+The recovery architecture and exact Chute Windows v2.6.1 RC1 reference are documented in [Companion Cold Reconstruction](docs/forever-works/COMPANION_COLD_RECONSTRUCTION.md), supported by [20 lifecycle and security test cases](docs/forever-works/COMPANION_RECOVERY_VERIFICATION.md) and new canonical [Forever Works 0.1 records](forever/manifest.json). An optional per-user wake supervisor is proposed; it cannot execute during machine shutdown or ordinary suspend.
