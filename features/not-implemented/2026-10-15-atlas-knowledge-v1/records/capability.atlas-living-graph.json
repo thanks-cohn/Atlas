@@ -1,0 +1,30 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-living-graph",
+  "kind": "capability",
+  "name": "Graphmarks-inspired living graph",
+  "statement": "Users can accomplish graphmarks-inspired living graph while preserving user-owned meaning, usability and consent.",
+  "requiredProperties": [
+    "Clickable typed node circles for websites, bookmarks, notes, galleries, documents, tags, files, R2 and local resources",
+    "Nodes open bookmark or inspector and can expand annotated relations and clusters",
+    "Node radius optionally based on visit count, measured active dwell, normalized weighted combination or uniform",
+    "Never conflate tab-open time or idle background time with real active browsing; show uncertainty",
+    "Graph modes: visited-site, curated semantics, provider resources, hybrid",
+    "Search, time filters, clustered layouts, keyboard list fallback and efficient large-set rendering",
+    "Right inspector supports pinned local-top / R2-bottom split preview"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
