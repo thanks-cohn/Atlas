@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.identity",
+  "kind": "invariant",
+  "name": "Resource identity survives location change",
+  "statement": "Catalog membership and typed relationships remain attached to stable resource IDs when underlying locators change or become unavailable.",
+  "scope": [
+    "capability.resource-graph",
+    "capability.recovery"
+  ],
+  "verification": [],
+  "changePolicy": "Representation may change; identity and relationship continuity may not silently regress.",
+  "severity": "critical",
+  "relatedCapabilities": [
+    "capability.resource-graph",
+    "capability.recovery"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
