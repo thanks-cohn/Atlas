@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.wake-authority",
+  "kind": "invariant",
+  "name": "Wake never expands authority",
+  "statement": "A recovery trigger, native host, optional supervisor or fresh extension installation may not silently authorize new filesystem roots, enable arbitrary execution, bypass pairing, expose credentials to webpages or transfer machine-specific grants to another identity or device.",
+  "scope": [
+    "capability.companion-wake",
+    "capability.companion-supervisor"
+  ],
+  "verification": [],
+  "severity": "critical",
+  "changePolicy": "Every replacement must prove authenticated identity binding, scope preservation, revocation and negative cases.",
+  "relatedCapabilities": [
+    "capability.companion-wake",
+    "capability.companion-supervisor"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
