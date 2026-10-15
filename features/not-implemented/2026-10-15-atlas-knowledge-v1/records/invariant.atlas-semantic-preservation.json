@@ -1,0 +1,30 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.atlas-semantic-preservation",
+  "kind": "invariant",
+  "name": "The user's meaning survives every representation",
+  "statement": "Independent titles, dated notes, tags, stable logical IDs, relationship types and explanations survive persistence, migrations, AKF round trip, graph display and publishing.",
+  "scope": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "relatedCapabilities": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "changePolicy": "Change implementation or presentation only after compatible versioned migration and independently reproducible verification preserving this obligation.",
+  "severity": "high",
+  "verification": [],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
