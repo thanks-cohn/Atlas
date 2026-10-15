@@ -1,0 +1,25 @@
+{
+  "upstream": "https://github.com/thanks-cohn/forever-works",
+  "upstreamCommit": "ebeb65f786ba0d9ba0e730dddd8047937348257a",
+  "upstreamValidator": "PASS",
+  "environment": {
+    "python": "3.12.14",
+    "os": "Linux",
+    "jsonschema": "4.26.0"
+  },
+  "draft202012Schema": "PASS",
+  "recordCount": 9,
+  "sha256": {
+    "forever/manifest.json": "f08ec6e9c9e7cc806e99f0b01f24ec28a17c07c0b2cd9e0bb764d22fd9e19d7b",
+    "forever/project.intent.json": "36bdb4845c4b601221c29ac0dc1c8155eb48ff56287f8ce460b64c76167552fd",
+    "forever/capabilities/resource-graph.json": "84d91d13f045dcd3eccedcf92e49fa578d8b46209230fdfe32c8bf1d9ad1b106",
+    "forever/capabilities/authorized-files.json": "2fb5ccfb077f07eff9fa885bcad095dbaeec76dbd2d023c87712bffebc93cfdf",
+    "forever/capabilities/recovery.json": "4938db0880dc3a260621bcb6a14c624e59147bbbf97a54a814726e1fba3fccbe",
+    "forever/invariants/identity.json": "2796abb777f83e962bb44f6d81ec23405c45ae4c3db0e18173ced2acaad29972",
+    "forever/invariants/authority.json": "5b138fd0f46ecf64942f35e86457ffb9d2515ac48fd5d6be48afb3ba8c875c9d",
+    "forever/invariants/sovereignty.json": "3b79e06a68307c92c07dd4b8fe39481d6c024a1c3939a92ef41646f992570e5a",
+    "forever/constraints/local-consent.json": "e12aa441e917fe750c146279d1f601f5be2e8f93ba0a9c0677b7aaec8681ef1d",
+    "forever/decisions/mechanism-fluidity.json": "52537b9e327aa6d7e2c8b853402b15242db01f7d4f1a597aca3ed4adc03e599d"
+  },
+  "scope": "Canonical model only; no runtime, product completion, or security claim"
+}

@@ -1,4 +1,4 @@
-name: ATLAS foundation checks
+name: ATLAS development checks
 on:
   push:
   pull_request:
@@ -10,5 +10,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify model links and prototype domain tests
+      - name: Verify model links, core, companion and native tests
         run: python scripts/check_project.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify extension worker authority contract
+        run: node scripts/test_extension_broker.mjs
+      - name: Verify real CLI and filesystem integration
+        run: python scripts/smoke_companion.py

@@ -47,7 +47,7 @@ def main():
         cwd=ROOT, env=env, check=False)
     if completed.returncode:
         raise SystemExit(completed.returncode)
-    print("ATLAS prototype tests: command succeeded; real native/browser acceptance not executed")
+    print("ATLAS Python suite: command succeeded; consult runner counts and handoff for platform/browser proof")
 
 if __name__ == "__main__":
     main()

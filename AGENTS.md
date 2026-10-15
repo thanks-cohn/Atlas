@@ -31,7 +31,7 @@ From repository root: `python scripts/check_project.py`. Uses Python standard li
 
 ## Current implementation state
 
-As of first foundation, `src/atlas_core/catalog.py` is only an experimental metadata-only JSON resource graph. There is no Chrome extension, local API, privileged helper, actual R2 connector, installer or approved Store release. See status ledger before claiming otherwise.
+The first foundation was an experimental metadata-only JSON graph. The 2026-10-15 implementation adds a Linux scoped-filesystem companion, durable metadata store, MV3 client source and explicit Linux Native Messaging development bootstrap. Read the latest appended status and `codex/HANDOFF_LATEST.md` for exact proof and limitations; implemented source is not proof of Chrome/Windows runtime or production security. R2 and Store approval remain unimplemented/unproven.
 
 ## Work selection
 

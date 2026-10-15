@@ -1,0 +1,99 @@
+{
+  "recorded_at": "2026-10-15T14:05:13.412487+00:00",
+  "baseline_commit": "cf2847c3dc213aefd68f6bb92a612be6ad4dc6b9",
+  "environment": {
+    "os": "Linux",
+    "python": "3.12.14",
+    "node": "v24.19.0",
+    "chromium": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)"
+  },
+  "checks": [
+    {
+      "command": "python scripts/check_project.py",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "ceaa62d83456a571dcf8ec467a53cd6a18cf3ae93b4a52f954f63686be07e072",
+      "tests": 54,
+      "skipped": false
+    },
+    {
+      "command": "node scripts/test_extension_broker.mjs",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "fa036d502797938ffb6b09f87ce502f8f0f6887fe312597f61526dff54e40caf"
+    },
+    {
+      "command": "python scripts/smoke_companion.py",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "15330a1e1d3835c5828cb6627946ed57ba640552618eab984354e69fb2ed8f66"
+    },
+    {
+      "command": "python scripts/browser_smoke.py --artifacts artifacts/browser",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "9f7e8c95cd445d209cab85f5442194d12e891dfe6d7a75b8507a55f551ca9b17",
+      "proof_scope": "Chromium DOM plus real companion via test-only transport; actual MV3/native browser NOT_RUN"
+    },
+    {
+      "command": "python scripts/validate_forever_upstream.py /tmp/atlas-forever-works",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "0da078ec9f7af406015e562dce733f0e8ea0938f212333b2eb8d3e888ad62fcc"
+    },
+    {
+      "command": "python scripts/package_extension.py",
+      "exit_code": 0,
+      "status": "PASS",
+      "log_sha256": "4fe344bbf749536275fd789e601c755dd0961c02a2df74e4bd7cd44084054009"
+    }
+  ],
+  "extension_zip_sha256": "a9a125509be37a4fdeec3de67b36eeaa3a4731f59a43b8cb37a16dd94959d157",
+  "package_identical_rebuild": true,
+  "not_run": [
+    "Actual MV3 execution/CORS/Chrome Native Messaging callback: managed policy blocks unpacked extensions",
+    "Windows/PyInstaller standalone packaging",
+    "Android",
+    "R2 live provider",
+    "Chrome Store review/approval",
+    "External security audit",
+    "Blinded reconstruction"
+  ],
+  "implementation_sha256": {
+    "extension/activity.js": "de1e0b5acddbc437d2e66c2b6d8446df586cd51625845f01b16c39e4589a29cb",
+    "extension/background.js": "6b2635d7c22c8f663303d2d1558aa0daced9398e8810f748bdc86160586726f3",
+    "extension/explorer.css": "8b03ae70d219bfd8cfe6af5e4f2d64b782ed08281e7f94ca97d8a31ceecbd1ab",
+    "extension/explorer.html": "08b900513267a81231ef39dba2db1ca57bd51cc70ad138bf0b67dc0630dccb8c",
+    "extension/explorer.js": "210cea3b098e6d6c15370a1be797a09314ee4db05adae9a9ec472e37a9ac1d64",
+    "extension/graph.js": "78497c3680354052685df585f6308362454fd8f22fc891081d1252a317243c67",
+    "extension/manifest.json": "6192fa4948231e4d0ff77a3e6591db282a9c6481777f29f8466711887e9b2e84",
+    "scripts/browser_smoke.py": "1ee0ee81b4e93a465d040a54d8538ca9053c3345beabf32232b62adabbb8ba3a",
+    "scripts/check_project.py": "b59ffa212b97dd87c3c26282f80cc4215ce03a9a89af790e9aa8fcdc559b5cb6",
+    "scripts/install_native_host.py": "9659d435101c0d5826cda211832540f3703f83193620f8b199a196bfe15b835c",
+    "scripts/package_extension.py": "28e0d8da68b0bbccb7f0a5a7ae7225252479cebe39c8a7ddfbed8eba5115bc0f",
+    "scripts/run_companion.sh": "b5877eef4a1945974abc4c6810ae5d8e52f1713aa8e0b6a7d4f97291fb2f17d4",
+    "scripts/smoke_companion.py": "f90d9a6b7fbfc6149157840f6d4db371096ee8e7e50ece270e79b5f1a489b14a",
+    "scripts/test_extension_broker.mjs": "aff6fb47b60978cf4cbd57d9a0de1d997a1a6e8768b2a0d553ec1b52b3096669",
+    "scripts/validate_forever_upstream.py": "c3160b83bd8b85e9259188cd161524834967880d03cb07528529a0e0f63046f2",
+    "src/atlas_companion/__init__.py": "be0f3d504fb8792cf07109d0789926e0f4e04cc5b1603198a1f6b59c5fa9bb8f",
+    "src/atlas_companion/__main__.py": "1125c04daa92dcb6de7a843178aeca0af6ae0126bdf29aef7332fc5d37a2ed79",
+    "src/atlas_companion/filesystem.py": "c22eb63fefa1394aa9c645c8a00558a3cf5e9698ea301e75d7077d7e60126e3c",
+    "src/atlas_companion/security.py": "4226507208f7c0a12b682780fb333c7d4225c76f535bd56faca2d7f80466b9ff",
+    "src/atlas_companion/server.py": "1bcb6a1e25843817524d4eea87194ae70da39f97a429f7364f1ec1d6ac337a24",
+    "src/atlas_companion/state.py": "5edeafbef299044d4ac36b625ee3ee9377813f6b1f7fb0951d998dde4532f7d9",
+    "src/atlas_core/__init__.py": "238b1dc10edd26b493ad282b773941b15a4a8929d18bf4330b5c5d9c58997aff",
+    "src/atlas_core/catalog.py": "559b5fa9f7d7ae9b24e669d0b94dff9d1f06fa4409091bf41aaec8e9da6678cc",
+    "src/atlas_core/store.py": "4c3da0dab1d1d88777f0480a2e0c0fa09c95f3d0e1da70137a792dce2f066b64",
+    "src/atlas_native/__init__.py": "cbfa97d3cf2102e84cb163a6a19fc01151df7095a1bd5c4e4ad752b7d4df0d31",
+    "src/atlas_native/__main__.py": "364c0141e3f2fc794c2e1b1a271433e638be8693717897860cc453758830321d",
+    "tests/test_catalog.py": "ef9c96d8443696c7198213cae87b0740119adb69c5b1c6d71e1167376e000dbb",
+    "tests/test_companion_hardening.py": "0faff0d69112e948858eb38272ca69528c06be30043f2dfc1cb9922b6cc6b4f1",
+    "tests/test_companion_http.py": "2fde8b59a6afd29596eacc0d5a6641865836723653e2198c702a54f17dbd9b66",
+    "tests/test_companion_security.py": "14214cb4ccba9d6a5d16b27a263973cc1ea06ef86ec6e469b78f61fdb040553a",
+    "tests/test_file_hash.py": "b9191be5bc31b606ad9614583a0e16d4691e933fec66440a2638bea494f22c4b",
+    "tests/test_graph_store.py": "d0613d6032ea095f60b66b6100dac637dc6c8c19393ec902edc2688c14928c3f",
+    "tests/test_native_bootstrap.py": "70893eb9ba865fe3e6bfc0dee55fe6195939163fd06d28a89c554b249160746b",
+    "tests/test_provider_scale.py": "dbef5b4e4ef0f75938d8c49d7a47b5cd9152d7b8141a97127b560a4cbda60fc3",
+    "tests/test_recovery_history.py": "7bd9b9eea40b11cc16082abaa766f9abd0848bfa3a61249420f81eec38d148f0"
+  }
+}

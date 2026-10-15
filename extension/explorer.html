@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ATLAS — Your files, connected</title>
+    <link rel="stylesheet" href="explorer.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">A</span><strong>ATLAS</strong
+          ><span class="edition">LOCAL</span>
+        </div>
+        <div class="section-label">WORKSPACE</div>
+        <button id="home" class="nav-home">▦ <span>All locations</span></button>
+        <button id="activity" class="nav-home">
+          ↶ <span>Activity & recovery</span></button
+        ><button id="library" class="nav-home">
+          ◇ <span>Catalogs & links</span>
+        </button>
+        <div class="section-label locations-label">
+          AUTHORIZED FOLDERS
+          <button id="reload-grants" title="Reload authorized folders">
+            ↻
+          </button>
+        </div>
+        <nav id="roots" aria-label="Authorized folders"></nav>
+        <div class="sidebar-bottom">
+          <span class="privacy-dot"></span> Local first. Yours always.<button
+            id="connection"
+            title="Connection settings"
+          >
+            ⚙
+          </button>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div class="navigation">
+            <button id="back" title="Back (Alt+Left)">←</button
+            ><button id="forward" title="Forward (Alt+Right)">→</button
+            ><button id="up" title="Parent folder (Backspace)">↑</button>
+          </div>
+          <form id="location-form">
+            <input
+              id="location"
+              aria-label="Relative folder path"
+              placeholder="Select an authorized location"
+              autocomplete="off"
+            />
+          </form>
+          <button id="refresh" title="Refresh (F5)">↻</button
+          ><button id="fullpage" title="Open in a full tab">↗</button>
+        </header>
+        <section class="heading">
+          <div>
+            <div id="eyebrow">YOUR WORKSPACE</div>
+            <h1 id="title">All locations</h1>
+            <div id="subtitle">A clear view of everything that matters.</div>
+          </div>
+          <div class="view-controls">
+            <button id="list-view" title="Detailed list" class="active">
+              ☷</button
+            ><button id="grid-view" title="Grid">▦</button>
+          </div>
+        </section>
+        <nav id="breadcrumbs" aria-label="Folder breadcrumbs"></nav>
+        <section class="toolbar">
+          <button id="new-folder" class="primary">＋ New folder</button
+          ><button id="paste" disabled>▣ Paste</button
+          ><button id="undo" disabled title="Restore the last trashed item">
+            ↶ Undo trash
+          </button>
+          <div class="toolbar-spacer"></div>
+          <input
+            id="search"
+            type="search"
+            aria-label="Filter current folder"
+            placeholder="Search this folder…"
+          /><select id="sort" aria-label="Sort files">
+            <option value="name">Name ↑</option>
+            <option value="name-desc">Name ↓</option>
+            <option value="modified">Modified ↓</option>
+            <option value="size">Size ↓</option>
+            <option value="type">Type ↑</option>
+          </select>
+        </section>
+        <div id="notice" class="notice" role="status" hidden></div>
+        <section id="content" tabindex="0" aria-label="Files">
+          <div id="empty" class="empty">
+            <div class="empty-symbol">◇</div>
+            <h2>Your files. A little more connected.</h2>
+            <p>
+              Pair your local companion to browse folders you explicitly
+              authorize.
+            </p>
+            <button id="connect-start" class="primary">
+              Connect companion
+            </button>
+          </div>
+          <div
+            id="files"
+            role="listbox"
+            aria-label="Folder contents"
+            aria-multiselectable="true"
+          ></div>
+        </section>
+        <footer>
+          <span id="status">Not connected</span
+          ><span id="clipboard-status"></span
+          ><span class="connection-state" id="connection-state">● Offline</span>
+        </footer>
+      </main>
+      <aside id="details" hidden>
+        <div class="details-top">
+          <strong id="details-title">Details</strong
+          ><button id="close-details" aria-label="Close details">×</button>
+        </div>
+        <div id="preview"></div>
+        <div id="properties"></div>
+      </aside>
+    </div>
+    <div id="context-menu" class="context-menu" role="menu" hidden></div>
+    <dialog id="pair-dialog">
+      <form id="pair-form">
+        <div class="dialog-icon">A</div>
+        <h2>Connect your companion</h2>
+        <p>
+          ATLAS only accesses folders you grant locally. Install and start the
+          companion yourself, configure this extension ID, then enter its token.
+          The token stays in trusted extension session storage.
+        </p>
+        <button type="button" class="primary" id="native-connect">
+          Connect installed companion
+        </button>
+        <p>Or pair manually using a companion token:</p>
+        <label>Extension ID<input id="extension-id" readonly /></label
+        ><label
+          >Companion token<input
+            id="token"
+            type="password"
+            autocomplete="off"
+            required
+            minlength="20"
+            placeholder="Paste your local token"
+        /></label>
+        <p id="pair-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" id="disconnect">Disconnect</button
+          ><button type="button" id="pair-cancel">Cancel</button
+          ><button class="primary" type="submit">Connect securely</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="input-dialog">
+      <form id="input-form">
+        <h2 id="input-title"></h2>
+        <p id="input-description"></p>
+        <label id="input-label"
+          >Name<input id="input-value" required autocomplete="off"
+        /></label>
+        <div class="dialog-actions">
+          <button id="input-cancel" type="button">Cancel</button
+          ><button type="submit" class="primary">Continue</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="library-dialog">
+      <div class="details-top">
+        <strong>Catalogs & relationships</strong
+        ><button id="library-close" aria-label="Close library">×</button>
+      </div>
+      <p class="library-intro">
+        Organize meaning without moving your files. Resources, tags and
+        relationships persist in your companion.
+      </p>
+      <div class="library-actions">
+        <button id="catalog-create">＋ Catalog</button
+        ><button id="bookmark-create">＋ Bookmark</button
+        ><button id="graph-export">Export JSON</button>
+      </div>
+      <select id="catalog-filter" aria-label="Catalog filter">
+        <option value="">All resources</option>
+      </select>
+      <div id="library-resources"></div>
+      <p id="library-status" role="status"></p>
+    </dialog>
+    <dialog id="destination-dialog">
+      <form id="destination-form">
+        <h2 id="destination-title">Choose destination</h2>
+        <p>
+          Only explicitly authorized writable locations are available. Existing
+          files are never overwritten.
+        </p>
+        <label
+          >Authorized location<select id="destination-grant"></select></label
+        ><label
+          >Relative folder path<input
+            id="destination-path"
+            autocomplete="off"
+            placeholder="Root folder"
+        /></label>
+        <div class="destination-navigation">
+          <button type="button" id="destination-up">↑ Parent</button
+          ><button type="button" id="destination-load">Browse path</button>
+        </div>
+        <div id="destination-folders"></div>
+        <p id="destination-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" id="destination-cancel">Cancel</button
+          ><button type="submit" class="primary" id="destination-confirm">
+            Choose this folder
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="activity-dialog"></dialog>
+    <script type="module" src="activity.js"></script>
+    <script src="explorer.js" type="module"></script>
+  </body>
+</html>
