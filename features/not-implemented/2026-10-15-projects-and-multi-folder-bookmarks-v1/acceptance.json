@@ -1,0 +1,72 @@
+{
+  "periodDate": "2026-10-15",
+  "status": "NOT_RUN",
+  "tests": [
+    {
+      "id": "P01",
+      "expectation": "Create one bookmark, add to three folders; same canonical ID and shared notes visible in each.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P02",
+      "expectation": "Remove from one folder while preserving other memberships and source; delete folder without silently deleting bookmark.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P03",
+      "expectation": "Duplicate URLs with different meanings remain separate unless the user chooses to merge.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P04",
+      "expectation": "Browser import and export preserve or explicitly explain multi-membership compatibility and physical duplicate fallbacks.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P05",
+      "expectation": "Generate Editorial Project from selected gallery; existing notes become captions/text, bookmark linked to image appears directly below.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P06",
+      "expectation": "Switch to Gallery/Research template without changing canonical sources; edit headings, order and curated bookmark inclusion.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P07",
+      "expectation": "Create two projects from same source; update one without modifying the other or original notes.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P08",
+      "expectation": "Export static website offline; verify functioning links, accessible navigation, media rights and responsive layout.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P09",
+      "expectation": "Public project with private bookmark membership or attachment leaks no related counts, labels, URLs or source bytes.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P10",
+      "expectation": "AKF project and membership JSON independently parses, survives roundtrip and preserves stable identities.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "P11",
+      "expectation": "Integration, staging, privacy-negative tests and production-quality user value verified before canonical manifest promotion.",
+      "status": "NOT_RUN",
+      "evidence": []
+    }
+  ]
+}
