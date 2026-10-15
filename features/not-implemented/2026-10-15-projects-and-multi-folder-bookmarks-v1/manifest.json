@@ -1,0 +1,32 @@
+{
+  "kind": "proposed-forever-works-period-package",
+  "foreverVersion": "0.1",
+  "projectId": "atlas",
+  "periodDate": "2026-10-15",
+  "periodId": "2026-10-15-projects-and-multi-folder-bookmarks-v1",
+  "revision": 1,
+  "packageVersion": "1.0.0",
+  "implementationState": "not-implemented",
+  "registeredInCanonicalManifest": false,
+  "amends": [
+    "features/not-implemented/2026-10-15-atlas-knowledge-v1"
+  ],
+  "supersedes": [],
+  "records": {
+    "capabilities": [
+      "records/capability.atlas-multi-folder-bookmarks.json",
+      "records/capability.atlas-projects-template-publishing.json"
+    ],
+    "invariants": [
+      "records/invariant.atlas-single-bookmark-identity.json",
+      "records/invariant.atlas-nondestructive-projects.json"
+    ]
+  },
+  "documentation": [
+    "README.md",
+    "SPECIFICATION.md",
+    "COLD_AGENT_HANDOFF.md"
+  ],
+  "verification": "acceptance.json",
+  "promotionRule": "Append only independently verified features into main forever/manifest.json after staging and production-value acceptance; never overwrite original records."
+}
