@@ -1,0 +1,29 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-portable-knowledge",
+  "kind": "capability",
+  "name": "Open machine-readable structured Atlas knowledge",
+  "statement": "Users can accomplish open machine-readable structured atlas knowledge while preserving user-owned meaning, usability and consent.",
+  "requiredProperties": [
+    "Documented versioned JSON Schema, examples and independent parser for future AKF",
+    "Stable IDs, object types, nested/dated annotations, tags, provenance and typed explanatory edges",
+    "Asset manifest with hashes where available, locator kinds and explicit included-bytes status",
+    "Owner backup distinct from redacted public export and scoped AI-access export",
+    "Independent export/import round-trip preserving user meaning and relationships",
+    "User consent for model training separate from programmatic access, AI retrieval and public publishing"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
