@@ -13,6 +13,8 @@ Read:
 5. [SECURITY_AND_DISTRIBUTION.md](SECURITY_AND_DISTRIBUTION.md) — filesystem consent, local-network threat model, Chrome Web Store and Windows installation.
 6. [ROADMAP_AND_ACCEPTANCE.md](ROADMAP_AND_ACCEPTANCE.md) — stages, tests, cold-agent inheritance, release gates.
 
+7. [CHUTE_RESILIENCE_REFERENCE.md](CHUTE_RESILIENCE_REFERENCE.md) — pinned Windows release, recovery engineering, and owner-reported 50-day cross-platform field experience.
+
 **Upstream authority:** https://github.com/thanks-cohn/forever-works . Its normative Standard v0.1 and optional ecosystem-composition profile are independent of ATLAS. Future implementation should emit compliant canonical records (intent, capability, invariant, constraint, dependency, decision, compatibility, implementation, migration, evidence), stable references, provenance and verified proof. Do not call these narrative markdown proposals formally validated inheritance records. Any-Shape may later consume the accepted records.
 
 Track historical mechanisms such as Chute's network bridge because successors need to understand **which user problem they overcame**. When Chrome or Windows changes, invent and independently verify a better mechanism if needed.
