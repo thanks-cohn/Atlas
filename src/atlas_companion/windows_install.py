@@ -89,7 +89,7 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
         from .windows_supervisor import startup
         previous_state = State(state_dir)
         try:
-            startup(previous_state, extension_id, 17892, 'uninstall')
+            startup(previous_state, extension_id, 17892, 'uninstall', install_dir=directory)
         finally:
             previous_state.close()
     old_registration = _registration(_registry(browser))
@@ -156,7 +156,7 @@ def uninstall(install_dir, *, revoke=True):
     receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
     state = State(receipt['state_dir'])
     from .windows_supervisor import startup
-    startup(state, receipt['extension_id'], 17892, 'uninstall')
+    startup(state, receipt['extension_id'], 17892, 'uninstall', install_dir=directory)
     registered = _registration(receipt['registry_key'])
     if registered is not None and registered != receipt['manifest']:
         raise ValueError('Native registration changed; refusing to remove it')

@@ -111,6 +111,8 @@ class WindowsRoot:
         self.nt = ctypes.WinDLL('ntdll')
         self.kernel.CreateFileW.argtypes = [w.LPCWSTR, w.DWORD, w.DWORD, w.LPVOID, w.DWORD, w.DWORD, w.HANDLE]
         self.kernel.CreateFileW.restype = w.HANDLE
+        self.kernel.GetDriveTypeW.argtypes = [w.LPCWSTR]
+        self.kernel.GetDriveTypeW.restype = w.UINT
         self.kernel.CloseHandle.argtypes = [w.HANDLE]; self.kernel.CloseHandle.restype = w.BOOL
         self.kernel.GetFileInformationByHandleEx.argtypes = [w.HANDLE, ctypes.c_int, w.LPVOID, w.DWORD]
         self.kernel.GetFileInformationByHandleEx.restype = w.BOOL
@@ -221,6 +223,8 @@ class WindowsRoot:
 
     def _absolute(self, path, directory=True):
         drive, names = root_components(path)
+        if self.kernel.GetDriveTypeW(drive) not in (2, 3, 5, 6):
+            raise WindowsBoundaryError('Only local drives are supported; mapped network drives are denied.')
         handle = self.kernel.CreateFileW(drive, 0x100081, 3, None, 3, 0x02000000 | 0x00200000, None)
         if handle == ctypes.c_void_p(-1).value:
             raise ctypes.WinError(ctypes.get_last_error())

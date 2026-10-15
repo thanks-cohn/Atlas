@@ -10,7 +10,7 @@ import secrets
 import sys
 
 from .security import APIError
-from .windows_state import windows_api, token_sid, security_descriptor
+from .windows_state import windows_api, token_sid, security_descriptor, create_private_file
 
 
 class _SecurityAttributes(ctypes.Structure):
@@ -91,7 +91,7 @@ def write_service_identity(state, port):
     signed = {'identity': identity, 'mac': hmac.new(state.bootstrap_key(), b'atlas.windows.service.v1:' + _encoded(identity), hashlib.sha256).hexdigest()}
     target = state.directory / ('service.identity.' + secrets.token_hex(8))
     try:
-        with target.open('x', encoding='utf-8') as stream:
+        with os.fdopen(create_private_file(target, state.sid), 'w', encoding='utf-8') as stream:
             json.dump(signed, stream)
             stream.flush()
             os.fsync(stream.fileno())

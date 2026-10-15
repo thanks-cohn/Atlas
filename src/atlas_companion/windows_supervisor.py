@@ -32,54 +32,111 @@ def _run_value(value=None, remove=False):
                 return None
 
 
-def startup(state, extension_id, port, action, consent=False):
+def _installed_runtime(state, extension_id, install_dir=None):
+    from .windows_install import installation_directory, _registration, _registry, _digest
+    candidates = [Path(install_dir)] if install_dir else [installation_directory()]
+    if install_dir is None:
+        for browser in ('chrome', 'chromium'):
+            manifest = _registration(_registry(browser))
+            if manifest:
+                candidates.append(Path(manifest).parent)
+    for directory in dict.fromkeys(path.absolute() for path in candidates):
+        receipt = directory / 'installation.json'
+        if receipt.is_symlink() or not receipt.is_file():
+            continue
+        data = json.loads(receipt.read_text(encoding='utf-8'))
+        if data.get('extension_id') != extension_id or os.path.normcase(os.path.abspath(data.get('state_dir', ''))) != os.path.normcase(os.path.abspath(state.directory)):
+            continue
+        runtime = Path(data['runtime'])
+        if runtime.parent != directory or runtime.is_symlink() or not runtime.is_file() or _digest(runtime) != data.get('runtime_sha256'):
+            raise ValueError('Installed supervisor runtime failed receipt verification')
+        return runtime
+    raise ValueError('No matching installed runtime for this state and extension')
+
+
+def startup(state, extension_id, port, action, consent=False, install_dir=None):
     if not re.fullmatch('[a-p]{32}', extension_id) or not 1 <= port <= 65535:
         raise ValueError('Invalid extension identity or port')
-    from .windows_install import installation_directory
-    receipt = installation_directory() / 'installation.json'
-    # Use the installed immutable runtime, never the downloaded/setup path.
-    if receipt.is_file():
-        data = json.loads(receipt.read_text(encoding='utf-8'))
-        argv = [data['runtime'], 'supervise', '--state-dir', str(state.directory), '--extension-id', extension_id, '--port', str(port), 'run']
-    else:
-        argv = command('supervise', '--state-dir', str(state.directory), '--extension-id', extension_id, '--port', str(port), 'run')
-    text = subprocess.list2cmdline(argv)
+    if action not in ('enable', 'disable', 'uninstall', 'status'):
+        raise ValueError('Invalid startup action')
+    if action == 'enable' and not consent:
+        raise ValueError('Explicit --consent required for login startup')
     current = _run_value()
+    if current is None and action in ('disable', 'uninstall', 'status'):
+        if action != 'status':
+            (Path(state.directory) / 'supervisor.stop').touch()
+        return {'status': 'DISABLED', 'state_preserved': True, 'demand_wake': 'independent'}
+    runtime = _installed_runtime(state, extension_id, install_dir)
+    argv = [str(runtime), 'supervise', '--state-dir', str(state.directory), '--extension-id', extension_id, '--port', str(port), 'run']
+    text = subprocess.list2cmdline(argv)
     if action == 'enable':
-        if not consent:
-            raise ValueError('Explicit --consent required for login startup')
-        if not receipt.is_file() or not state.known_origin('chrome-extension://' + extension_id):
-            raise ValueError('Install and pair the exact extension first')
+        if not state.known_origin('chrome-extension://' + extension_id):
+            raise ValueError('Pair the exact extension first')
         if current is not None and current != text:
             raise ValueError('Existing login startup differs; refusing to replace it')
+        from .windows_runtime import child_environment
+        # The child arbitrates using its private Windows mutex. A second enable
+        # cannot create a second worker; launch never uses a shell.
+        marker = Path(state.directory) / 'supervisor.stop'
+        marker.unlink(missing_ok=True)
         _run_value(text)
-        return {'status': 'ENABLED_AT_NEXT_LOGON', 'demand_wake': 'independent'}
+        try:
+            subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             env=child_environment(), creationflags=subprocess.CREATE_NO_WINDOW)
+        except Exception:
+            _run_value(remove=True) if current is None else _run_value(current)
+            raise
+        return {'status': 'ENABLED', 'startup': 'LAUNCHED', 'demand_wake': 'independent'}
+    if current != text:
+        raise ValueError('Existing login startup differs; refusing to change it')
     if action in ('disable', 'uninstall'):
-        if current is not None and current != text:
-            raise ValueError('Existing login startup differs; refusing to remove it')
-        if current is not None:
-            _run_value(remove=True)
-        # Cooperative private stop marker; no PID/name based process killing.
+        _run_value(remove=True)
         (Path(state.directory) / 'supervisor.stop').touch()
         return {'status': 'DISABLED', 'state_preserved': True, 'demand_wake': 'independent'}
-    return {'status': 'ENABLED' if current == text else 'DISABLED', 'running': 'UNKNOWN'}
+    return {'status': 'ENABLED', 'running': 'UNKNOWN'}
 
 
 class Supervisor(BaseSupervisor):
-    def _spawn(self):
-        from .windows_runtime import child_environment
-        self.child = subprocess.Popen(command('--state-dir', str(self.state.directory), 'serve', '--port', str(self.port)),
-                                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                      env=child_environment(), creationflags=subprocess.CREATE_NO_WINDOW)
+    def step(self):
+        import http.client
         import time
-        self.child_started = time.monotonic()
+        from .supervisor import health
+        from .security import APIError
+        if self.port != 17892:
+            raise ValueError('Windows native recovery uses the fixed companion port 17892')
+        if not self.state.known_origin(self.origin):
+            self.last_status = 'NEEDS_PAIRING'
+            return self.last_status
+        try:
+            ready = health(self.state, self.origin, self.port)
+        except (OSError, ValueError, http.client.HTTPException):
+            ready = False
+        if ready:
+            self.failures = 0
+            self.next_start = 0
+            self.last_status = 'READY'
+            return self.last_status
+        self.failures = min(self.failures + 1, 6)
+        self.last_status = 'NEEDS_REPAIR'
+        now = time.monotonic()
+        if now >= self.next_start:
+            self.next_start = now + min(60, 2 ** self.failures)
+            from atlas_native.__main__ import connect
+            try:
+                # Shared wake arbitration and handle-attested recovery account for
+                # frozen bootloader children. Discard bootstrap credentials.
+                connect(self.state, self.origin)
+                self.last_status = 'READY'
+                self.failures = 0
+            except (APIError, OSError, ValueError, http.client.HTTPException):
+                pass
+        return self.last_status
 
     def run(self, stop=None):
         from .windows_runtime import RuntimeLock
         stop = stop or threading.Event()
         marker = Path(self.state.directory) / 'supervisor.stop'
         with RuntimeLock(self.state, 'supervisor'):
-            marker.unlink(missing_ok=True)
             while not stop.is_set() and not marker.exists():
                 self.step()
                 stop.wait(1 if self.last_status == 'STARTING' else min(60, self.interval * 2 ** min(self.failures, 3)))

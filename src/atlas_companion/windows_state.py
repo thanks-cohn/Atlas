@@ -1,11 +1,13 @@
 """Per-user Windows authority state; protected DACLs and retained root handles."""
 import ctypes
+from contextlib import contextmanager
 from ctypes import wintypes as w
 import json
 import ntpath
 import os
 from pathlib import Path
 import secrets
+import sqlite3
 import uuid
 
 from .state import State
@@ -148,10 +150,35 @@ class WindowsState(State):
         finally:
             kernel.CloseHandle(handle)
 
+    @contextmanager
+    def connect(self):
+        # SQLite's CRT-created files inherit a token's default OWNER, which can
+        # be Administrators under an elevated account. Precreate both durable
+        # artifacts with explicit TokenUser ownership; PERSIST keeps the rollback
+        # journal in place rather than recreating it with the CRT default owner.
+        for name in (self.path.name, self.path.name + '-journal'):
+            try:
+                fd = create_private_file(self.directory / name, self.sid)
+            except FileExistsError:
+                self._protect_file(name)
+            else:
+                os.close(fd)
+        db = sqlite3.connect(self.path, timeout=15)
+        db.row_factory = sqlite3.Row
+        try:
+            mode = db.execute('PRAGMA journal_mode=PERSIST').fetchone()[0]
+            if mode.lower() != 'persist':
+                raise APIError('INVALID_STATE', 'Private persistent rollback journal required.')
+            db.execute('PRAGMA synchronous=FULL')
+            with db:
+                yield db
+        finally:
+            db.close()
+
     def bootstrap_key(self):
         path = self.directory / 'bootstrap.key'
         try:
-            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_BINARY, 0o600)
+            fd = create_private_file(path, self.sid)
         except FileExistsError:
             pass
         else:
@@ -340,5 +367,34 @@ def _create_private_directory(path, sid):
             code = ctypes.get_last_error()
             if code != 183:
                 raise ctypes.WinError(code)
+    finally:
+        kernel.LocalFree(descriptor)
+
+
+def create_private_file(path, sid):
+    """CREATE_NEW with an explicit TokenUser owner and protected private DACL.
+
+    Return a Python-owned CRT descriptor. Existing artifacts are never adopted,
+    followed, truncated or assigned a different owner by this creation helper.
+    """
+    import msvcrt
+    class Attributes(ctypes.Structure):
+        _fields_ = [('length', w.DWORD), ('descriptor', w.LPVOID), ('inherit', w.BOOL)]
+    kernel, _ = windows_api()
+    descriptor = security_descriptor(sid)
+    try:
+        attributes = Attributes(ctypes.sizeof(Attributes), descriptor, False)
+        handle = kernel.CreateFileW(str(path), 0xc0060000, 3, ctypes.byref(attributes), 1, 0x00200080, None)
+        if handle == ctypes.c_void_p(-1).value:
+            code = ctypes.get_last_error()
+            if code in (80, 183):
+                raise FileExistsError(code, 'Private artifact already exists', str(path))
+            raise ctypes.WinError(code)
+        try:
+            verify_private_handle(handle, sid)
+            return msvcrt.open_osfhandle(handle, os.O_BINARY | os.O_RDWR)
+        except BaseException:
+            kernel.CloseHandle(handle)
+            raise
     finally:
         kernel.LocalFree(descriptor)

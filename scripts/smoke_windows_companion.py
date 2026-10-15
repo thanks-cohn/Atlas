@@ -83,6 +83,28 @@ def main():
             assert (target/'original.bin').read_bytes()==content and (source/'original.bin').read_bytes()==content
             assert request('/v1/operate', operation)[1]['replayed']
             print('PASS actual Windows installed .exe: native frame wakes helper, HTTP copy exact bytes, original intact, idempotent replay, no Python PATH.')
+            def mutate(action, path=None, name=None, destination=None):
+                body = {'id': uuid.uuid4().hex, 'action': action}
+                if path is not None:
+                    body['sources'] = [{'grant': dst, 'path': path}]
+                if name is not None:
+                    body['name'] = name
+                if destination is not None:
+                    body['destination'] = {'grant': dst, 'path': destination}
+                status, result = request('/v1/operate', body)
+                assert status == 200 and result['receipt']['status'] == 'completed', result
+                return result['receipt']['results'][0]
+            mutate('mkdir', name='organized', destination='')
+            mutate('rename', 'original.bin', name='renamed.bin')
+            mutate('move', 'renamed.bin', destination='organized')
+            trash = mutate('trash', 'organized')
+            assert not (target / 'organized').exists()
+            mutate('restore', trash['trash_id'], destination='')
+            assert (target / 'organized' / 'renamed.bin').read_bytes() == content
+            # Preserve the initial copy receipt's target for subsequent replay checks.
+            mutate('move', 'organized/renamed.bin', destination='')
+            mutate('rename', 'renamed.bin', name='original.bin')
+            print('PASS frozen HTTP mkdir, rename, move, recoverable directory trash and identity-bound restore.')
             previous = token
             stop_attested_service(state,17892)
             token = connect()
@@ -91,6 +113,33 @@ def main():
             assert len(request('/v1/grants')[1]['grants']) == 2
             assert request('/v1/operate',operation)[1]['replayed']
             print('PASS exact attested process restart, durable grants, credential rotation, no duplicate effect after recovery.')
+            # Suspend only this disposable, identity-attested helper. This tests a
+            # genuinely unresponsive Windows process, not a simulated HTTP error.
+            import ctypes
+            from ctypes import wintypes as w
+            from atlas_companion.windows_runtime import _process_identity
+            from atlas_companion.windows_state import windows_api
+            signed = json.loads(state._guard.read('service.identity', 4096))
+            identity = signed['identity']
+            kernel, _ = windows_api()
+            kernel.OpenProcess.argtypes = [w.DWORD, w.BOOL, w.DWORD]
+            kernel.OpenProcess.restype = w.HANDLE
+            handle = kernel.OpenProcess(0x1000 | 0x0800, False, identity['pid'])
+            assert handle, 'Could not open disposable helper for suspension'
+            try:
+                actual = _process_identity(handle, identity['pid'])
+                assert all(identity[k] == actual[k] for k in actual)
+                ntdll = ctypes.WinDLL('ntdll', use_last_error=True)
+                ntdll.NtSuspendProcess.argtypes = [w.HANDLE]
+                ntdll.NtSuspendProcess.restype = w.LONG
+                assert ntdll.NtSuspendProcess(handle) >= 0
+            finally:
+                kernel.CloseHandle(handle)
+            token = connect()
+            assert request('/v1/health')[0] == 200
+            assert request('/v1/operate', operation)[1]['replayed']
+            assert (target / 'original.bin').read_bytes() == content
+            print('PASS real suspended Windows helper recovered by native demand wake; durable receipt prevents duplicate copy.')
             startup = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'enable','--consent'],
                                      env=env,capture_output=True,timeout=30)
             assert startup.returncode == 0, startup.stderr.decode(errors='replace')

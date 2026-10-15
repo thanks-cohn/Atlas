@@ -43,6 +43,44 @@ class WindowsRuntimeTests(unittest.TestCase):
         finally:
             reopened.close()
 
+    def test_explicit_file_ownership_and_persistent_journal(self):
+        from atlas_companion.windows_state import windows_api, verify_private_handle, WindowsState
+        import ctypes
+        self.state.bootstrap_key()
+        self.state.pair('b' * 32)
+        kernel, _ = windows_api()
+        for name in ('windows-state.sqlite3', 'windows-state.sqlite3-journal', 'bootstrap.key'):
+            handle = kernel.CreateFileW(str(self.state.directory / name), 0x20000, 3, None, 3, 0x00200000, None)
+            self.assertNotEqual(handle, ctypes.c_void_p(-1).value)
+            try:
+                verify_private_handle(handle, self.state.sid)
+            finally:
+                kernel.CloseHandle(handle)
+        journal = self.state.directory / 'windows-state.sqlite3-journal'
+        from atlas_companion.windows_provider import WindowsRoot
+        with self.state._guard._open(journal.name, False) as handle:
+            before = self.state._guard._identity(handle)
+        for _ in range(3):
+            self.state.pair('c' * 32)
+        with self.state._guard._open(journal.name, False) as handle:
+            self.assertEqual(before, self.state._guard._identity(handle))
+        reopened = WindowsState(self.state.directory)
+        reopened.close()
+
+    def test_foreign_owned_existing_artifact_is_rejected(self):
+        from atlas_companion.windows_state import create_private_file
+        path = self.state.directory / 'foreign.key'
+        try:
+            descriptor = create_private_file(path, 'S-1-5-32-544')
+        except OSError as exc:
+            if getattr(exc, 'winerror', None) in (5, 1307, 1314):
+                self.skipTest('Token cannot assign Administrators ownership; elevated negative fixture unavailable')
+            raise
+        os.close(descriptor)
+        with self.assertRaises(APIError) as denied:
+            self.state._protect_file(path.name)
+        self.assertEqual(denied.exception.code, 'INVALID_STATE')
+
     def test_grants_consent_exclusions_revocation_and_receipts(self):
         from atlas_companion.windows_state import WindowsState
         with self.assertRaises(APIError) as denied:
