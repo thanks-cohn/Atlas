@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.atlas-nondestructive-projects",
+  "kind": "invariant",
+  "name": "Project creation preserves sources and confidentiality",
+  "statement": "Project templates and exports preserve source collections, original notes, intentional image-to-bookmark associations, and field-level visibility; generated public site contains only approved objects and assets.",
+  "scope": [
+    "capability.atlas-multi-folder-bookmarks",
+    "capability.atlas-projects-template-publishing"
+  ],
+  "relatedCapabilities": [
+    "capability.atlas-multi-folder-bookmarks",
+    "capability.atlas-projects-template-publishing"
+  ],
+  "changePolicy": "Preserve through compatible schema migration and independent verification before replacement",
+  "severity": "high",
+  "verification": [],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner Atlas Projects and multi-folder bookmarks requests, 2026-10-15",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
