@@ -69,13 +69,23 @@ class Handler(BaseHTTPRequestHandler):
         logging.info('%s %s', self.command, self.path.split('?')[0][:120])
 
     def _origin(self):
-        return self.headers.get('Origin', '')
+        return self.headers.get('Origin', self.headers.get('X-Atlas-Extension-Origin', ''))
 
     def _gate(self, authenticate=True):
         if len(self.headers.get_all('Host', [])) != 1 or self.headers.get('Host') != f'127.0.0.1:{self.server.server_port}':
             raise APIError('INVALID_HOST', 'Only the configured numeric loopback host is accepted.', 403)
-        if len(self.headers.get_all('Origin', [])) != 1 or not self.server.state.known_origin(self._origin()):
-            raise APIError('INVALID_ORIGIN', 'Pair this exact extension ID using the local CLI.', 403)
+        origins = self.headers.get_all('Origin', [])
+        explicit = self.headers.get_all('X-Atlas-Extension-Origin', [])
+        # Chrome extension workers can omit Origin on permission-authorized GETs.
+        # The explicit identity is only a selector: bearer validation remains mandatory.
+        fallback = (not origins and authenticate and len(explicit) == 1
+                    and self.headers.get('Sec-Fetch-Site') == 'none')
+        if (len(origins) > 1 or len(explicit) > 1
+                or (not origins and not fallback)
+                or (origins and explicit and origins[0] != explicit[0])
+                or not re.fullmatch(r'chrome-extension://[a-p]{32}', self._origin())
+                or not self.server.state.known_origin(self._origin())):
+            raise APIError('INVALID_ORIGIN', 'Missing or unauthorized extension identity. Update the extension and authorize its exact ID in the companion.', 403)
         if self.headers.get('Sec-Fetch-Site') in ('same-origin', 'same-site'):
             # The accepted origin must be a Chrome extension, never a local web app.
             raise APIError('INVALID_CLIENT', 'Local website requests are not supported.', 403)
@@ -118,13 +128,13 @@ class Handler(BaseHTTPRequestHandler):
             if self.headers.get('Access-Control-Request-Method') not in ('GET', 'POST'):
                 raise APIError('METHOD_DENIED', 'Only GET and POST are supported.', 405)
             requested = {h.strip().lower() for h in self.headers.get('Access-Control-Request-Headers', '').split(',') if h.strip()}
-            if requested - {'authorization', 'content-type'}:
+            if requested - {'authorization', 'content-type', 'x-atlas-extension-origin'}:
                 raise APIError('HEADERS_DENIED', 'Unsupported preflight headers.', 403)
             self.send_response(204)
             self.send_header('Access-Control-Allow-Origin', self._origin())
             self.send_header('Vary', 'Origin')
             self.send_header('Access-Control-Allow-Methods', 'GET, POST')
-            self.send_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+            self.send_header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Atlas-Extension-Origin')
             self.send_header('Access-Control-Max-Age', '300')
             self.end_headers()
         except Exception as exc:

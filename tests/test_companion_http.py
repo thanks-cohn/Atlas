@@ -68,6 +68,27 @@ class CompanionHTTPTests(unittest.TestCase):
         self.assertEqual(status, 415)
         self.assertFalse(body['ok'])
 
+    def test_chrome_worker_without_origin_requires_bound_bearer(self):
+        headers = {'Origin': None, 'X-Atlas-Extension-Origin': self.origin, 'Sec-Fetch-Site': 'none'}
+        status, _, body = self.request('GET', '/v1/health', overrides=headers)
+        self.assertEqual(status, 200)
+        self.assertEqual(body['status'], 'ready')
+        status, _, body = self.request('GET', '/v1/grants', overrides=headers)
+        self.assertEqual(status, 200)
+        self.assertEqual(body['grants'][0]['id'], self.grant)
+        for changes, expected in (({'Authorization': None}, 401),
+                                  ({'Authorization': 'Bearer wrong'}, 401),
+                                  ({'X-Atlas-Extension-Origin': 'chrome-extension://' + 'b' * 32}, 403),
+                                  ({'Origin': 'https://attacker.example'}, 403),
+                                  ({'Origin': 'null'}, 403),
+                                  ({'Sec-Fetch-Site': 'cross-site'}, 403)):
+            status, _, body = self.request('GET', '/v1/grants', overrides={**headers, **changes})
+            self.assertEqual(status, expected)
+            self.assertNotIn('grants', body)
+        self.state.revoke_client('a' * 32)
+        status, _, _ = self.request('GET', '/v1/grants', overrides=headers)
+        self.assertEqual(status, 403)
+
     def test_real_list_read_and_path_escape_denial(self):
         status, _, body = self.request('POST', '/v1/list', {'grant': self.grant})
         self.assertEqual(status, 200)

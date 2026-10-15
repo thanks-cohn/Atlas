@@ -5,6 +5,7 @@ import importlib.metadata
 import json
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -40,6 +41,9 @@ def main():
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as package:
         for item in (binary, output / 'README.md', output / 'BUILD_RECEIPT.json', output / 'SHA256SUMS'):
             package.write(item, item.name)
+    subprocess.run([sys.executable, str(ROOT / 'scripts/package_extension.py')], check=True)
+    for extension_zip in (ROOT / 'dist').glob('atlas-extension-*.zip'):
+        shutil.copy2(extension_zip, output / extension_zip.name)
     print(json.dumps(receipt, indent=2))
 
 

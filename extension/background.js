@@ -98,6 +98,7 @@ async function http(path, body, token) {
       method: body === undefined ? "GET" : "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        "X-Atlas-Extension-Origin": chrome.runtime.getURL("").replace(/\/$/, ""),
         "Content-Type": "application/json",
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),

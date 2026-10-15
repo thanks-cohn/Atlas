@@ -56,3 +56,15 @@ and kept only in this window's memory (the database stores their digest).
 Copying places the secret on the OS clipboard; do not share it in support logs.
 **Clear displayed token** clears the field, not the clipboard or authorization.
 A newly built EXE is required; an older downloaded helper cannot gain this UI.
+
+## Chrome worker Origin compatibility (extension 0.1.1)
+
+Update both helper and extension for Chrome workers which omit Origin on GET.
+The Windows Actions download also contains `atlas-extension-0.1.1.zip`. Extract
+that ZIP into your existing unpacked extension folder, then Reload in
+chrome://extensions to retain its identity. Start the updated service, generate a
+fresh manual token if needed, and Connect securely. The helper checks explicit
+extension identity and its bound bearer; the compatibility header never grants
+folders. A previously running older service must be stopped before the new one
+can bind port 17892. If auto-recovery is active, disable it before replacement,
+then repair the installed companion and reenable it after updating.

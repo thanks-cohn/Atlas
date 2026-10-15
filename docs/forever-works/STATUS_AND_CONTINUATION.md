@@ -100,3 +100,26 @@ subprocess wake/supervisor startup with missing /proc child identity or helper
 not reaching READY in this execution environment. Full suite is NOT PASS. New
 management tests passed within that run. Actual Tk smoke NOT_RUN locally (no
 Xvfb/display). Windows CI remains the platform-specific build/GUI gate.
+
+
+## 2026-10-15 — observed Chrome worker GET without Origin
+
+Owner supplied network evidence: GET /v1/health returned INVALID_ORIGIN/403;
+Chrome 154 worker sent Sec-Fetch-Site: none and a bearer, but no Origin header.
+This was an origin-gate failure before token validation, not proof of an invalid
+token. Implemented extension v0.1.1 explicit X-Atlas-Extension-Origin identity
+selector. Helper accepts it only for authenticated requests without Origin and
+with Sec-Fetch-Site: none; exact enrolled extension identity and bound bearer
+remain mandatory. A supplied Origin must match; website/null origins, missing or
+wrong tokens, revoked identities and missing identity still fail closed.
+Unauthenticated bootstrap/preflight retains real-Origin requirement. This header
+is not independent authority and does not grant files. Native consent remains fixed.
+
+Verification: 23 companion HTTP/security tests PASS including the observed GET
+shape and negatives; 18/18 Node worker tests PASS. Local native recovery integration
+still fails on helper startup in this execution environment; actual Chrome manual
+pairing and folder display remain NOT_RUN until owner installs both new builds.
+Windows artifact now includes the matching extension ZIP so helper-only updates
+do not leave the old request code running. Replace files in the existing unpacked
+extension folder and Reload to preserve its ID. Windows CI verifies frozen helper
+and actual token widgets separately; it is not actual Chrome acceptance proof.
