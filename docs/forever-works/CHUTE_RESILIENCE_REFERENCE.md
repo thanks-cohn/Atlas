@@ -7,7 +7,7 @@
 - Source repository: https://github.com/thanks-cohn/chute
 - Release: https://github.com/thanks-cohn/chute/releases/tag/chute-windows-v2.6.1-rc1
 - Immutable tagged commit: `deb9bdbaba594e493092f498916cdfd269c6cd3b`
-- Windows artifact: `Chute-Setup.exe` (release reports 317.1 MB)
+- Windows artifact: `Chute-Setup.exe` (GitHub release API reports 17,910,394 bytes (~17.1 MiB))
 - Installer SHA-256 as published on release: `36c7d80d4277e3f3b4167425e81f8da8eaee8a3a0fb3798d70bf2aeb5a5f6d50`
 - Packaging: Python bundled into standalone executable, no separate Python runtime; no Windows administrator account or Windows Service required. Release notes say executable unsigned and Windows SmartScreen **may** warn.
 - Chrome Web Store extension identifier from Chute source: `hpcpnigfadojjmnbflfhkfkallfafajb`.
@@ -66,3 +66,6 @@ In particular, persistent functional service across sleep/shutdown is different 
 **Evidence:** original release, immutable tagged source, published installer digest, CI smoke-test account and separately attributed user-reported 50-day cross-OS experience. None of this proves ATLAS itself currently passes.
 
 Future agents may use an entirely different future implementation if it meets the same tested objectives. This is **purpose-preserving mechanism replacement**, not a mandate to immortalize one historical workaround.
+
+
+See [COMPANION_COLD_RECONSTRUCTION.md](COMPANION_COLD_RECONSTRUCTION.md) for the implementation-independent cold-rebuild specification, optional supervisor proposal, canonical record links and pinned-source recovery mechanics; see [COMPANION_RECOVERY_VERIFICATION.md](COMPANION_RECOVERY_VERIFICATION.md) for the detailed lifecycle test matrix.
