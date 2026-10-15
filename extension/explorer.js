@@ -2,6 +2,7 @@ import { previewDefaults, previewStep, previewKind } from "./preview-navigation.
 import { createGraphUI } from "./graph.js";
 let previewSettings = {...previewDefaults};
 let previewEntry = null;
+let previewSizeSettings = {maximumMiB:30, byExtension:{}};
 const $ = (id) => document.getElementById(id);
 const state = {
   grants: [],
@@ -940,20 +941,46 @@ function properties(entries) {
   }
 }
 let previewURL = null;
+function showPreviewSizeLimit(entry, maximumMiB) {
+  const panel = text("div", "", "preview-too-large");
+  const ext = entry.name.includes('.') ? entry.name.split('.').pop().toUpperCase() : "FILE";
+  panel.append(text("div", ext, "file-type-badge"));
+  panel.append(text("p", `This file exceeds the ${maximumMiB} MiB preview limit.`));
+  const button = text("button", "Go to Settings to increase the maximum preview size");
+  button.onclick = () => {
+    $("preview-settings").open = true;
+    const key = entry.name.toLowerCase().split('.').pop();
+    $("preview-size-extension").value = key;
+    const specific = Object.hasOwn(previewSizeSettings.byExtension, key);
+    $(specific ? "preview-extension-size" : "preview-max-size").focus();
+    $("preview-settings").scrollIntoView({block:"nearest"});
+  };
+  panel.append(button);
+  $("preview").replaceChildren(panel);
+}
 async function open(entry) {
   if (dir(entry)) {
     await navigate(state.grant, entry.path);
     return;
   }
   properties([entry]);
+  if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
   previewEntry = entry;
+  refreshSizeExtensions();
   $("preview-navigation").hidden = false;
   const current = entry.path;
   const request = state.previewRequest;
   const grant = state.grant.id;
   $("preview").replaceChildren(text("p", "Loading preview…"));
+  const extensionKey = entry.name.toLowerCase().split(".").pop();
+  const activeLimitMiB = previewSizeSettings.byExtension[extensionKey] ?? previewSizeSettings.maximumMiB;
+  if (typeof entry.size === "number" && entry.size > Math.floor(activeLimitMiB * 1048576)) {
+    showPreviewSizeLimit(entry, activeLimitMiB); return;
+  }
   try {
-    const result = await api("/v1/read", { grant, path: entry.path });
+    const ext = entry.name.toLowerCase().split('.').pop();
+    const maximumMiB = previewSizeSettings.byExtension[ext] ?? previewSizeSettings.maximumMiB;
+    const result = await api("/v1/read", { grant, path: entry.path, max_bytes: Math.floor(maximumMiB * 1048576) });
     if (
       $("details").hidden ||
       request !== state.previewRequest ||
@@ -1001,8 +1028,10 @@ async function open(entry) {
       );
     }
   } catch (error) {
-    if (request === state.previewRequest && !$("details").hidden)
-      $("preview").replaceChildren(text("p", error.message));
+    if (request === state.previewRequest && !$("details").hidden) {
+      if (error.code === "PREVIEW_TOO_LARGE") showPreviewSizeLimit(entry, activeLimitMiB);
+      else $("preview").replaceChildren(text("p", error.message));
+    }
   }
 }
 $("content").oncontextmenu = (event) => {
@@ -1146,6 +1175,50 @@ $("pair-form").onsubmit = async (event) => {
     button.disabled = false;
   }
 };
+const validPreviewSize = value => typeof value === "number" && Number.isFinite(value) && value >= 0.01 && value <= 128;
+function refreshSizeExtensions() {
+  const select = $("preview-size-extension");
+  const selected = select.value;
+  const extensions = new Set(["jpg","jpeg","png","gif","webp","avif","bmp","mp3","wav","ogg","flac","m4a","aac","mp4","webm","mov","m4v","txt","md","json","csv","pdf", ...Object.keys(previewSizeSettings.byExtension)]);
+  for (const entry of state.entries) {
+    const ext = entry.name.toLowerCase().split('.').pop();
+    if (!dir(entry) && entry.name.includes('.') && /^[a-z0-9]{1,12}$/.test(ext)) extensions.add(ext);
+  }
+  select.replaceChildren();
+  for (const ext of [...extensions].sort()) {
+    const option = document.createElement("option"); option.value = ext; option.textContent = "." + ext; select.append(option);
+  }
+  if (extensions.has(selected)) select.value = selected;
+  $("preview-extension-size").value = previewSizeSettings.byExtension[select.value] ?? previewSizeSettings.maximumMiB;
+}
+refreshSizeExtensions();
+$("preview-size-extension").onchange = () => {
+  $("preview-extension-size").value = previewSizeSettings.byExtension[$("preview-size-extension").value] ?? previewSizeSettings.maximumMiB;
+};
+async function savePreviewSize(extensionOnly) {
+  const input = $(extensionOnly ? "preview-extension-size" : "preview-max-size");
+  const value = Number(input.value);
+  if (!validPreviewSize(value)) { $("preview-size-status").textContent = "Enter a size from 0.01 to 128 MiB."; return; }
+  const next = {maximumMiB:previewSizeSettings.maximumMiB, byExtension:{...previewSizeSettings.byExtension}};
+  if (extensionOnly) next.byExtension[$("preview-size-extension").value] = value;
+  else next.maximumMiB = value;
+  try {
+    await chrome.storage.local.set({previewSizeSettings:next});
+    previewSizeSettings = next;
+    $("preview-size-status").textContent = "Saved. Applies the next time a file is opened.";
+  } catch (error) { $("preview-size-status").textContent = error.message; }
+}
+$("preview-save-max").onclick = () => savePreviewSize(false);
+$("preview-save-extension").onclick = () => savePreviewSize(true);
+$("preview-reset-extension").onclick = async () => {
+  const next = {maximumMiB:previewSizeSettings.maximumMiB, byExtension:{...previewSizeSettings.byExtension}};
+  delete next.byExtension[$("preview-size-extension").value];
+  try {
+    await chrome.storage.local.set({previewSizeSettings:next}); previewSizeSettings = next;
+    $("preview-extension-size").value = next.maximumMiB;
+    $("preview-size-status").textContent = "Saved. This extension now uses the general maximum.";
+  } catch (error) { $("preview-size-status").textContent = error.message; }
+};
 function stepPreview(delta) {
   if (!previewEntry || $("details").hidden || !state.grant) return;
   const next = previewStep(visible(), previewEntry.path, delta, previewSettings);
@@ -1278,7 +1351,16 @@ document.addEventListener("keydown", (event) => {
 });
 (async () => {
   try {
-    const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings"]);
+    const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings", "previewSizeSettings"]);
+    if (preferences.previewSizeSettings) {
+      const saved = preferences.previewSizeSettings;
+      if (validPreviewSize(saved.maximumMiB)) previewSizeSettings.maximumMiB = saved.maximumMiB;
+      for (const [ext, value] of Object.entries(saved.byExtension || {})) {
+        if (/^[a-z0-9]{1,12}$/.test(ext) && validPreviewSize(value)) previewSizeSettings.byExtension[ext] = value;
+      }
+      $("preview-max-size").value = previewSizeSettings.maximumMiB;
+      refreshSizeExtensions();
+    }
     if (preferences.previewSettings) {
       for (const kind of Object.keys(previewDefaults)) {
         if (typeof preferences.previewSettings[kind] === "boolean") previewSettings[kind] = preferences.previewSettings[kind];

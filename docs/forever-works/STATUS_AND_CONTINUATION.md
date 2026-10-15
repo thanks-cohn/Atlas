@@ -143,4 +143,21 @@ codec playback NOT_RUN. Existing 2 MiB native preview read cap remains; large
 media streaming is not implemented. Next: verify folder navigation in installed
 Chrome and later design bounded authenticated streaming/document scrolling.
 
-Local full verification: 124 tests; 3 failures, 3 errors in native helper startup/supervisor tests; 29 Windows-only skips. Local model linkage: 19 records valid (not normative schema proof). Full suite is NOT PASS in this environment. Navigation unit checks PASS; actual Chrome preview integration remains NOT_RUN.
+
+## 2026-10-15 — owner-configurable preview size and actionable placeholder
+
+Supersedes the earlier 2 MiB implementation limit. General preview maximum is
+30 MiB by default; saved per-extension overrides take precedence. Existing
+preview settings have extension dropdown, adjacent size input, Save and reset to
+general. Common extensions and current-folder extensions populate the dropdown.
+Oversize files show a type badge and a direct Settings action, using the effective
+limit rather than hardcoded 30. Linux and Windows providers independently validate
+max_bytes (up to 128 MiB implementation ceiling); both enforce bounded reads.
+Ownership rationale and current memory tradeoffs are in PREVIEW_CONTINUITY.md.
+
+Verification: new default/invalid-limit and real 3 MiB file read tests PASS (2);
+existing companion HTTP tests PASS (6); navigation tests and JS syntax PASS.
+Earlier full suite: 124 tests, 3 failures/3 errors in local native subprocess
+startup/recovery, 29 Windows skips; 19 model links valid, not normative schema
+proof. Actual Chrome settings/placeholder UI and 30 MiB media playback NOT_RUN
+locally. Windows build gates verify actual platform implementation separately.

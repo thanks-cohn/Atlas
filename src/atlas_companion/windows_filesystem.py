@@ -70,12 +70,14 @@ class Provider(ReceiptProvider):
                 'offset': offset, 'limit': limit, 'path': path, 'grant': grant['id']}
 
     def read(self, request):
+        from .preview_limits import preview_limit
+        limit = preview_limit(request)
         grant = self.state.get_grant(request.get('grant'))
         path = request.get('path')
         path_parts(path, False)
         self.state.check_path(grant, path)
         with self._root(grant) as root:
-            data = root.read(path)
+            data = root.read(path, limit=limit)
         self._authority(grant, path)
         leaf = path_parts(path, False)[-1]
         return {'data': base64.b64encode(data).decode('ascii'), 'size': len(data),

@@ -182,7 +182,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = {'proof': proof}
             elif self.path == '/v1/health' and not post:
                 result = {'protocol': PROTOCOL, 'status': 'ready', 'platform': getattr(self.server.state, 'platform', 'linux'),
-                          'limits': {'preview_bytes': 2097152, 'copy_bytes': 268435456, 'batch_entries': 100}}
+                          'limits': {'preview_bytes': 31457280, 'preview_max_bytes': 134217728, 'copy_bytes': 268435456, 'batch_entries': 100}}
             elif self.path == '/v1/grants' and not post:
                 result = {'grants': [{'id': g['id'], 'label': g['label'], 'root': g['root'],
                                       'operations': ['read', 'write'] if g['writable'] else ['read']} for g in self.server.state.grants()]}

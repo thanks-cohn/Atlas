@@ -78,3 +78,11 @@ and Reload to preserve its ID. No new native API is required for this increment.
 The helper retains its 2 MiB preview cap; full-size music/video streaming remains
 a later change. Actual Chrome codec and PDF-viewer support require field checks.
 The Working v1 baseline is separately pinned in docs/releases/WORKING_V1.md.
+
+## Configurable preview size (extension 0.1.3 and matching helper)
+
+Replaces the earlier fixed 2 MiB cap. Preview settings now save a general 30 MiB
+maximum and optional per-extension values from 0.01 to 128 MiB. An extension value
+overrides the general value. Oversize files show a type badge and Settings link.
+Update both helper and extension: an older helper cannot honor the new limits.
+Changes apply on next file open; no file permissions are broadened.

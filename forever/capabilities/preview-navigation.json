@@ -10,7 +10,10 @@
     "persisted opt-in text/PDF inclusion",
     "wrap last to first and first to last",
     "do not intercept typing, dialogs or media seeking",
-    "retain authenticated scoped read path and bounded preview resources"
+    "retain authenticated scoped read path and bounded preview resources",
+    "saved general size limit and per-extension overrides with explicit Save",
+    "oversize type badge with actionable settings link",
+    "independently bounded native reads; size policy is not a Chrome limitation"
   ],
   "relatedInvariants": [
     "invariant.authority",

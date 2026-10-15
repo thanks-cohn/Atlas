@@ -137,6 +137,18 @@
           <label><input id="preview-video" type="checkbox" checked> Videos</label>
           <label><input id="preview-text" type="checkbox"> Text</label>
           <label><input id="preview-pdf" type="checkbox"> PDFs</label>
+          <div class="preview-size-settings">
+            <label>Maximum preview size (MiB)<input id="preview-max-size" type="number" min="0.01" max="128" step="0.01" value="30"></label>
+            <button id="preview-save-max" type="button">Save maximum</button>
+            <p>Extension-specific limits override the general maximum.</p>
+            <div class="preview-extension-limit">
+              <select id="preview-size-extension" aria-label="File extension"></select>
+              <input id="preview-extension-size" aria-label="Extension maximum size in MiB" type="number" min="0.01" max="128" step="0.01" placeholder="MiB">
+              <button id="preview-save-extension" type="button">Save</button>
+            </div>
+            <button id="preview-reset-extension" type="button">Use general maximum for this extension</button>
+            <p id="preview-size-status" role="status"></p>
+          </div>
         </details>
         <div id="preview"></div>
         <div id="properties"></div>

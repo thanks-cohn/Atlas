@@ -57,12 +57,29 @@ that the new module is included. These are not rendered Chrome keyboard or media
 playback proof. Actual installed Chrome integration, preferences after reload,
 PDF plugin behavior and codecs require field verification.
 
-The existing **2 MiB read limit** remains. Most full songs/videos and some images
-or PDFs exceed it and will report the existing size error. This addition does not
-claim streaming or unrestricted media preview. Future document scrolling and
-larger authenticated bounded media access are separate increments, not silently
-solved by increasing memory limits. Current text may scroll within its existing
-preview; broader document navigation remains a roadmap request.
+The size policy is now user-configurable: general maximum **30 MiB** by default,
+with extension-specific overrides chosen from a dropdown and saved explicitly.
+Overrides take precedence over the general maximum, including a larger override.
+The current bounded whole-file implementation accepts 0.01–128 MiB in the UI;
+128 MiB is an implementation ceiling, not a Chrome limitation. Native providers
+validate integer byte limits independently. Settings persist in local extension
+storage and apply on the next open. Resetting an extension uses the general value.
+The dropdown includes common preview types plus extensions in the current folder.
+
+If file size exceeds the effective limit, show a file-type badge, explain the
+limit, and offer "Go to Settings to increase the maximum preview size". Focus the
+extension override if present, otherwise the general value. Do not silently load
+an oversized file or hide it from Left/Right cycling. The helper independently
+bounds reads even if metadata is missing or stale.
+
+Rationale: owners should choose the balance between useful previews and memory
+use rather than encounter an unexplained small fixed cap. The size placeholder
+turns an apparent failure into an understandable, actionable preference. Preserve
+that explanation, precedence and explicit Save interaction across implementations.
+Base64, worker messaging and Blob conversion create transient copies; this remains
+whole-file preview, not streaming. Large-media streaming and fuller document
+scrolling remain future increments. Never describe the 128 MiB ceiling or old
+2 MiB cap as a browser-imposed limitation.
 
 Canonical requirement: `capability.preview-navigation`; rationale:
 `decision.preview-continuity`. Keep future proof linked to these IDs and record

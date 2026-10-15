@@ -299,10 +299,10 @@ class WindowsRoot:
                     offset += step
         return sorted(result, key=lambda x: (x['kind'] != 'directory', x['name'].casefold()))
 
-    def read(self, path, limit=2*1024*1024):
+    def read(self, path, limit=30*1024*1024):
         components(path, False)
-        if type(limit) is not int or not 0 <= limit <= 2*1024*1024:
-            raise WindowsBoundaryError('Read limit must be 0-2 MiB.')
+        if type(limit) is not int or not 0 <= limit <= 128*1024*1024:
+            raise WindowsBoundaryError('Read limit must be 0-128 MiB.')
         with self._open(path, False) as handle:
             before = self._info(handle, 1, _Standard)
             basic = self._info(handle, 0, _Basic)

@@ -13,7 +13,7 @@ from .security import (APIError, directory, name, parent, parts, regular_stat,
                        rename_no_replace, root_fd)
 
 MAX_HASH_BYTES = 256 * 1024 * 1024
-MAX_PREVIEW = 2 * 1024 * 1024
+MAX_PREVIEW = 30 * 1024 * 1024
 MAX_COPY_BYTES = 256 * 1024 * 1024
 MAX_COPY_ENTRIES = 10000
 
@@ -78,6 +78,8 @@ class Provider:
                 'limit': limit, 'path': path, 'grant': grant['id']}
 
     def read(self, request):
+        from .preview_limits import preview_limit
+        limit = preview_limit(request)
         grant = self.state.get_grant(request.get('grant'))
         path = request.get('path')
         self.state.check_path(grant, path)
@@ -89,11 +91,11 @@ class Provider:
                 s = os.fstat(stream)
                 if not stat.S_ISREG(s.st_mode):
                     raise APIError('UNSUPPORTED_ENTRY', 'Only regular files can be previewed.', 403)
-                if s.st_size > MAX_PREVIEW:
-                    raise APIError('PREVIEW_TOO_LARGE', 'Preview is limited to 2 MiB.', 413)
+                if s.st_size > limit:
+                    raise APIError('PREVIEW_TOO_LARGE', f'File exceeds your preview limit ({limit / 1048576:g} MiB). Change it in Preview settings.', 413)
                 with os.fdopen(os.dup(stream), 'rb') as f:
-                    content = f.read(MAX_PREVIEW + 1)
-                if len(content) > MAX_PREVIEW:
+                    content = f.read(limit + 1)
+                if len(content) > limit:
                     raise APIError('PREVIEW_TOO_LARGE', 'File grew beyond the preview limit.', 413)
             finally:
                 os.close(stream)
