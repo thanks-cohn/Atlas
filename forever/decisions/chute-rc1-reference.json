@@ -1,0 +1,27 @@
+{
+  "foreverVersion": "0.1",
+  "id": "decision.chute-rc1-reference",
+  "kind": "decision",
+  "title": "Pin Chute Windows 2.6.1 RC1 as recovery precedent",
+  "status": "accepted",
+  "context": "Owner observed excellent long-term Chute continuity and requested replicable cold-agent inheritance.",
+  "decision": "Preserve documented purpose, tested native messaging wake-and-relaunch behavior and exact source/release pin from Chute Windows v2.6.1 RC1; independently implement under ATLAS security and licensing constraints.",
+  "rationale": "A future agent must understand which operational outcome mattered and its evidence even if the historical code is unavailable or replaced.",
+  "mustSurvive": [
+    "invariant.recovery-semantics",
+    "invariant.wake-authority",
+    "invariant.operation-reconciliation"
+  ],
+  "relatedEntities": [
+    "capability.companion-wake",
+    "capability.companion-lifecycle",
+    "capability.companion-supervisor"
+  ],
+  "dateVersion": "2026-10-15",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
