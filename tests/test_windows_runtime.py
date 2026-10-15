@@ -33,7 +33,6 @@ class WindowsRuntimeTests(unittest.TestCase):
         # no-delete-share directory handles, so use READ_CONTROL directly.
         import ctypes
         from ctypes import wintypes as w
-        import re
         from atlas_companion.windows_state import windows_api
         kernel, advapi = windows_api()
         handle = kernel.CreateFileW(str(self.state.directory), 0x20000, 3, None, 3, 0x02200000, None)
@@ -55,26 +54,39 @@ class WindowsRuntimeTests(unittest.TestCase):
             self.assertTrue(advapi.GetSecurityDescriptorControl(descriptor,
                 ctypes.byref(control), ctypes.byref(revision)))
             self.assertTrue(control.value & 0x1000, 'DACL must be protected')
-            advapi.ConvertSecurityDescriptorToStringSecurityDescriptorW.argtypes = [
-                w.LPVOID, w.DWORD, w.DWORD, ctypes.POINTER(w.LPWSTR), w.LPVOID]
-            sddl = w.LPWSTR()
-            self.assertTrue(advapi.ConvertSecurityDescriptorToStringSecurityDescriptorW(
-                descriptor, 1, 4, ctypes.byref(sddl), None))
-            try:
-                acl_text = sddl.value
-                aces = re.findall(r'\(([^()]*)\)', acl_text)
-                self.assertEqual(len(aces), 2, acl_text)
-                trustees = set()
-                for ace in aces:
-                    kind, flags, rights, object_guid, inherited_guid, trustee = ace.split(';')
-                    self.assertEqual(kind, 'A', acl_text)
-                    self.assertEqual(flags, 'OICI', acl_text)
-                    self.assertIn(rights, ('FA', 'GA'), acl_text)
-                    self.assertEqual((object_guid, inherited_guid), ('', ''), acl_text)
-                    trustees.add(trustee)
-                self.assertEqual(trustees, {current_sid(), 'SY'}, acl_text)
-            finally:
-                kernel.LocalFree(ctypes.cast(sddl, w.HLOCAL))
+            present, defaulted, acl = w.BOOL(), w.BOOL(), w.LPVOID()
+            advapi.GetSecurityDescriptorDacl.argtypes = [w.LPVOID,
+                ctypes.POINTER(w.BOOL), ctypes.POINTER(w.LPVOID), ctypes.POINTER(w.BOOL)]
+            self.assertTrue(advapi.GetSecurityDescriptorDacl(descriptor,
+                ctypes.byref(present), ctypes.byref(acl), ctypes.byref(defaulted)))
+            self.assertTrue(present.value and acl.value, 'Non-null DACL required')
+            class AclSize(ctypes.Structure):
+                _fields_ = [('count', w.DWORD), ('used', w.DWORD), ('free', w.DWORD)]
+            size = AclSize()
+            advapi.GetAclInformation.argtypes = [w.LPVOID, w.LPVOID, w.DWORD, ctypes.c_int]
+            self.assertTrue(advapi.GetAclInformation(acl, ctypes.byref(size), ctypes.sizeof(size), 2))
+            self.assertIn(size.count, (2, 4))
+            advapi.GetAce.argtypes = [w.LPVOID, w.DWORD, ctypes.POINTER(w.LPVOID)]
+            flags_by_sid = {}
+            for index in range(size.count):
+                ace = w.LPVOID()
+                self.assertTrue(advapi.GetAce(acl, index, ctypes.byref(ace)))
+                header = ctypes.string_at(ace, 8)
+                self.assertEqual(header[0], 0, 'Only ACCESS_ALLOWED_ACE permitted')
+                self.assertGreaterEqual(int.from_bytes(header[2:4], 'little'), 20)
+                self.assertIn(header[1], (0, 3, 11), 'Only effective/OICI/OICI-inherit-only flags permitted')
+                self.assertIn(int.from_bytes(header[4:8], 'little'), (0x10000000, 0x1f01ff))
+                trustee = w.LPWSTR()
+                self.assertTrue(advapi.ConvertSidToStringSidW(w.LPVOID(ace.value + 8), ctypes.byref(trustee)))
+                try:
+                    flags_by_sid.setdefault(trustee.value, []).append(header[1])
+                finally:
+                    kernel.LocalFree(ctypes.cast(trustee, w.HLOCAL))
+            self.assertEqual(set(flags_by_sid), {current_sid(), 'S-1-5-18'})
+            for flags in flags_by_sid.values():
+                # Windows may split generic inheritable access into an effective
+                # mapped full-control ACE and an inherit-only generic ACE.
+                self.assertIn(sorted(flags), ([3], [0, 11]))
         finally:
             if descriptor:
                 kernel.LocalFree(descriptor)
