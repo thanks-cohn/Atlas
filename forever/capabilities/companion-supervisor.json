@@ -1,0 +1,26 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.companion-supervisor",
+  "kind": "capability",
+  "name": "Optional independent recovery supervisor",
+  "statement": "Where platform permits and user explicitly opts in, a separately governed lightweight supervisor may use OS session, startup and resume signals to check and restore a failing companion without needing the browser extension to be open.",
+  "requiredProperties": [
+    "no fake execution while asleep or powered off",
+    "least privilege and bounded wake policy",
+    "single-instance ownership",
+    "not mandatory for normal client operation"
+  ],
+  "relatedInvariants": [
+    "invariant.wake-authority",
+    "invariant.recovery-semantics"
+  ],
+  "verification": [],
+  "criticality": "important",
+  "status": "proposed",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
