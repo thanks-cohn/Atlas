@@ -1,0 +1,25 @@
+{
+  "foreverVersion": "0.1",
+  "id": "decision.mechanism-fluidity",
+  "kind": "decision",
+  "title": "Historical Chute-inspired helper is replaceable",
+  "status": "accepted",
+  "context": "Browser sandbox restrictions and unreliable long-term background work made user file workflows frustrating.",
+  "decision": "Use a browser interface plus explicitly installed Python/PyInstaller companion and authenticated loopback/Native Messaging as initial design, not permanent system identity.",
+  "rationale": "Preserve seamless consented file access and recovery while allowing better platform-native designs later.",
+  "mustSurvive": [
+    "invariant.identity",
+    "invariant.authority",
+    "invariant.sovereignty"
+  ],
+  "relatedEntities": [
+    "capability.authorized-files",
+    "capability.recovery"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
