@@ -6,19 +6,27 @@
       "project.intent.json"
     ],
     "capabilities": [
-      "capabilities/resource-graph.json",
       "capabilities/authorized-files.json",
-      "capabilities/recovery.json"
+      "capabilities/companion-lifecycle.json",
+      "capabilities/companion-supervisor.json",
+      "capabilities/companion-wake.json",
+      "capabilities/recovery.json",
+      "capabilities/resource-graph.json"
     ],
     "invariants": [
-      "invariants/identity.json",
       "invariants/authority.json",
-      "invariants/sovereignty.json"
+      "invariants/identity.json",
+      "invariants/operation-reconciliation.json",
+      "invariants/recovery-semantics.json",
+      "invariants/sovereignty.json",
+      "invariants/wake-authority.json"
     ],
     "constraints": [
-      "constraints/local-consent.json"
+      "constraints/local-consent.json",
+      "constraints/power-lifecycle.json"
     ],
     "decisions": [
+      "decisions/chute-rc1-reference.json",
       "decisions/mechanism-fluidity.json"
     ]
   }
