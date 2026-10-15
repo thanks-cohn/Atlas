@@ -100,3 +100,7 @@ On a Windows test system: user explicitly installs helper, pairs Chrome extensio
 ## Handing the project to any future agent
 
 Read the project index; read/validate canonical records and extensions with specified versions; inspect gaps before source code; trace intent→invariant→capability→implementation→evidence; select one milestone and prove it on the actual target; update migrations/history without erasing old decisions; perform a cold reconstitution check when replacing technologies. A generic agent must not need a hidden prompt, one proprietary tool, a second repository, a framework-specific assumption or personal oral history to understand ATLAS.
+
+## Premium product completion requirement
+
+Milestone completion must ultimately satisfy [PREMIUM_EXPLORER_PRODUCT_CONTRACT.md](PREMIUM_EXPLORER_PRODUCT_CONTRACT.md), particularly familiar real file explorer fundamentals: context-menu actions, clipboard, multi-selection, drag/drop, safe copy/move/rename/new-folder/trash, preview, directory navigation, permission-aware provider interoperability and polished accessible interactions. Building only a resource catalog graph is an intermediate step, not the destination.
