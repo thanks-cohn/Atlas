@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.authorized-files",
+  "kind": "capability",
+  "name": "Explicitly authorized filesystem operations",
+  "statement": "An installed native companion may perform narrowly granted file operations without requiring repeated Chrome picker prompts for every authorized operation.",
+  "requiredProperties": [
+    "scope-bound user consent",
+    "revocation",
+    "unauthorized-path denial"
+  ],
+  "relatedInvariants": [
+    "invariant.authority"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
