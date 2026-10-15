@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-15",
+  "state": "ALL_NOT_RUN",
+  "promotionGates": {
+    "proposal": "Documents only; no feature implementation implied",
+    "staging": "Integrated actual provider/UI workflows and negative/security tests with reproducible receipts",
+    "productionValue": "Real user-value workflows, stability, resource usage, accessible UX and owner-accepted verified deployment/production-grade operation",
+    "canonicalPromotion": "Add only verified records to original manifest; retain all current entries, supply test evidence, independently validate Forever Works schema"
+  },
+  "scenarios": [
+    {
+      "id": "S01",
+      "expectation": "Bookmark import and instant save; preserved source provenance, optional annotations and durable pinned catalogs.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S02",
+      "expectation": "Independent titles, notes and tags on image, gallery, document, bookmark and relationship; authored reason remains intact.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S03",
+      "expectation": "Correct clickable 1 Gallery / 3 Documents / 2 Connections / 1 Video / 5 Files counts after filtering private children.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S04",
+      "expectation": "Local image plus R2 PDF selected as graph nodes and previewed top and bottom of right inspector while graph remains visible.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S05",
+      "expectation": "Permission revoked: local/R2 preview accurately denies operation and no credentials leak.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S06",
+      "expectation": "Graph time-vs-frequency sizing is deterministic; idle/background time not misrepresented as active dwell; missing data labelled.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S07",
+      "expectation": "Export through independently implemented AKF reader and roundtrip node, annotation, edge and media manifest identifiers.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S08",
+      "expectation": "Protected child of public parent remains invisible via links, graphs, counts, thumbnails, site bundle and JSON.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S09",
+      "expectation": "Compose an article using existing text/images with editable title, some bookmarks excluded and chosen references under relevant paragraphs.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S10",
+      "expectation": "Multiple publications from one catalog preserve source; test source snapshots and explicitly refreshed linked versions.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S11",
+      "expectation": "Generated static gallery/essay works without Atlas backend, has responsive keyboard support and contains only approved assets.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "S12",
+      "expectation": "Stage integration and production-value acceptance evidenced BEFORE additive canonical manifest registration.",
+      "status": "NOT_RUN",
+      "evidence": []
+    }
+  ]
+}
