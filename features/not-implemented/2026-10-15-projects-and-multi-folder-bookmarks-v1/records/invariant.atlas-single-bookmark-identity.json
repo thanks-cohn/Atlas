@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.atlas-single-bookmark-identity",
+  "kind": "invariant",
+  "name": "Canonical bookmarks can belong to many folders",
+  "statement": "One Atlas bookmark may have many membership edges but remains one logical resource; folder operations cannot silently destroy its other memberships, provenance or independently authored meaning.",
+  "scope": [
+    "capability.atlas-multi-folder-bookmarks",
+    "capability.atlas-projects-template-publishing"
+  ],
+  "relatedCapabilities": [
+    "capability.atlas-multi-folder-bookmarks",
+    "capability.atlas-projects-template-publishing"
+  ],
+  "changePolicy": "Preserve through compatible schema migration and independent verification before replacement",
+  "severity": "high",
+  "verification": [],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner Atlas Projects and multi-folder bookmarks requests, 2026-10-15",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
