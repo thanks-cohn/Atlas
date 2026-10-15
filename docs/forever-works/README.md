@@ -33,3 +33,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Canonical Forever Works 0.1 manifest](../../forever/manifest.json) — machine-readable original intent, capabilities, invariants, constraint and historic mechanism decision.
 - [STATUS_AND_CONTINUATION.md](STATUS_AND_CONTINUATION.md) — current actual implementation, unknowns and next incremental work.
 - [scripts/check_project.py](../../scripts/check_project.py) — local linkage validator plus experimental Python unit tests, *not* full upstream schema proof.
+
+## Premium product destination
+
+- [PREMIUM_EXPLORER_PRODUCT_CONTRACT.md](PREMIUM_EXPLORER_PRODUCT_CONTRACT.md) — complete right-click/multi-select/clipboard/move/copy/send-to/preview/search UX, multi-provider explorer, advanced catalogs, quality and verification requirements. The ultimate product contract is independent of the implementation agent.
