@@ -55,7 +55,7 @@ def _installed_runtime(state, extension_id, install_dir=None):
 
 
 def startup(state, extension_id, port, action, consent=False, install_dir=None):
-    if not re.fullmatch('[a-p]{32}', extension_id) or not 1 <= port <= 65535:
+    if not re.fullmatch('[a-p]{32}', extension_id) or port != 17892:
         raise ValueError('Invalid extension identity or port')
     if action not in ('enable', 'disable', 'uninstall', 'status'):
         raise ValueError('Invalid startup action')
@@ -139,7 +139,11 @@ class Supervisor(BaseSupervisor):
         with RuntimeLock(self.state, 'supervisor'):
             while not stop.is_set() and not marker.exists():
                 self.step()
-                stop.wait(1 if self.last_status == 'STARTING' else min(60, self.interval * 2 ** min(self.failures, 3)))
+                delay = 1 if self.last_status == 'STARTING' else min(60, self.interval * 2 ** min(self.failures, 3))
+                import time
+                deadline = time.monotonic() + delay
+                while not marker.exists() and not stop.is_set() and time.monotonic() < deadline:
+                    stop.wait(min(0.25, max(0, deadline - time.monotonic())))
 
 
 def main(argv=None):
@@ -153,8 +157,11 @@ def main(argv=None):
     parser.add_argument('action', choices=['run', 'enable', 'disable', 'uninstall', 'status'])
     args = parser.parse_args(argv)
     state = WindowsState(args.state_dir)
-    if args.action == 'run':
-        Supervisor(state, args.extension_id, args.port, args.interval).run()
-    else:
-        print(json.dumps(startup(state, args.extension_id, args.port, args.action, args.consent)))
+    try:
+        if args.action == 'run':
+            Supervisor(state, args.extension_id, args.port, args.interval).run()
+        else:
+            print(json.dumps(startup(state, args.extension_id, args.port, args.action, args.consent)))
+    finally:
+        state.close()
     return 0

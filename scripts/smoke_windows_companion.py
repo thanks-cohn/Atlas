@@ -143,9 +143,44 @@ def main():
             startup = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'enable','--consent'],
                                      env=env,capture_output=True,timeout=30)
             assert startup.returncode == 0, startup.stderr.decode(errors='replace')
+            from atlas_companion.windows_runtime import RuntimeLock
+            from atlas_companion.security import APIError
+            from atlas_companion.supervisor import health
+            deadline = time.monotonic() + 20
+            while True:
+                try:
+                    with RuntimeLock(state, 'supervisor'):
+                        pass
+                except APIError as exc:
+                    assert exc.code == 'ALREADY_RUNNING'
+                    break
+                assert time.monotonic() < deadline, 'Enabled supervisor never acquired its private mutex'
+                time.sleep(0.2)
+            stop_attested_service(state, 17892)
+            deadline = time.monotonic() + 40
+            while True:
+                try:
+                    if health(state, origin, 17892):
+                        break
+                except (OSError, ValueError, http.client.HTTPException):
+                    pass
+                assert time.monotonic() < deadline, 'Supervisor did not restore the failed helper'
+                time.sleep(0.3)
+            token = connect()
+            assert len(request('/v1/grants')[1]['grants']) == 2
+            print('PASS opt-in installed supervisor immediately starts and automatically restores an attested failed helper.')
             disabled = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'disable'],
                                       env=env,capture_output=True,timeout=30)
             assert disabled.returncode == 0, disabled.stderr.decode(errors='replace')
+            deadline = time.monotonic() + 15
+            while True:
+                try:
+                    with RuntimeLock(state, 'supervisor'):
+                        break
+                except APIError as exc:
+                    assert exc.code == 'ALREADY_RUNNING'
+                assert time.monotonic() < deadline, 'Disabled supervisor did not release its private mutex'
+                time.sleep(0.2)
             state.revoke_grant(src)
             stop_attested_service(state,17892);token=connect()
             assert request('/v1/list',{'grant':src})[0] == 403

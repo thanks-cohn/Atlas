@@ -27,7 +27,7 @@ Uninstall removes unchanged owned host/config files and registry registration,
 revokes pairing, and retains state, runtime and all user content. Modified files
 are retained for review. There is no silent updater.
 
-Optional per-user login recovery is separately enabled with `supervise
+Optional per-user login recovery is separately enabled and launched immediately with `supervise
 --extension-id ID --consent enable`; `disable` removes the Run entry and asks an
 existing supervisor to stop. It never grants access, changes power policy or
 kills arbitrary processes. Native demand wake works independently. No helper runs

@@ -84,5 +84,50 @@ class WindowsInstallationTests(unittest.TestCase):
             self.install_runtime()
 
 
+class WindowsSupervisorContractTests(unittest.TestCase):
+    """Portable decision tests; do not assert execution on the Windows kernel."""
+    def test_receipt_requires_matching_state_identity_and_payload_digest(self):
+        import hashlib
+        from types import SimpleNamespace
+        from atlas_companion import windows_install as install
+        from atlas_companion.windows_supervisor import _installed_runtime
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            runtime = directory / 'atlas-test.exe'
+            runtime.write_bytes(b'MZfixture')
+            state = SimpleNamespace(directory=directory / 'state')
+            receipt = {'state_dir': str(state.directory), 'extension_id': 'a' * 32,
+                       'runtime': str(runtime), 'runtime_sha256': hashlib.sha256(runtime.read_bytes()).hexdigest()}
+            (directory / 'installation.json').write_text(json.dumps(receipt))
+            self.assertEqual(_installed_runtime(state, 'a' * 32, directory), runtime)
+            with self.assertRaises(ValueError):
+                _installed_runtime(state, 'b' * 32, directory)
+            runtime.write_bytes(b'MZmodified')
+            with self.assertRaises(ValueError):
+                _installed_runtime(state, 'a' * 32, directory)
+
+    def test_health_failure_delegates_attested_wake_without_process_termination(self):
+        from types import SimpleNamespace
+        from atlas_companion.windows_supervisor import Supervisor
+        state = SimpleNamespace(known_origin=lambda origin: True)
+        worker = Supervisor(state, 'a' * 32)
+        with patch('atlas_companion.supervisor.health', return_value=False), patch('atlas_native.__main__.connect', return_value={'token': 'never-output'}) as connect:
+            self.assertEqual(worker.step(), 'READY')
+            connect.assert_called_once_with(state, 'chrome-extension://' + 'a' * 32)
+        self.assertIsNone(worker.child)
+
+    def test_existing_stop_marker_is_respected_on_delayed_start(self):
+        from contextlib import nullcontext
+        from types import SimpleNamespace
+        from atlas_companion.windows_supervisor import Supervisor
+        with tempfile.TemporaryDirectory() as temporary:
+            state = SimpleNamespace(directory=Path(temporary))
+            (state.directory / 'supervisor.stop').touch()
+            worker = Supervisor(state, 'a' * 32)
+            with patch('atlas_companion.windows_runtime.RuntimeLock', return_value=nullcontext()), patch.object(worker, 'step') as step:
+                worker.run()
+                step.assert_not_called()
+
+
 if __name__ == '__main__':
     unittest.main()
