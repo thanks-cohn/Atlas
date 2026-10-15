@@ -1,0 +1,22 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.sovereignty",
+  "kind": "invariant",
+  "name": "User data and meaning remain portable",
+  "statement": "User-authored tags, notes, catalogs, relation identities and provenance remain inspectable/exportable without requiring a paid service or proprietary platform.",
+  "scope": [
+    "capability.resource-graph"
+  ],
+  "verification": [],
+  "changePolicy": "Storage engine may change if complete documented migration passes.",
+  "severity": "high",
+  "relatedCapabilities": [
+    "capability.resource-graph"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
