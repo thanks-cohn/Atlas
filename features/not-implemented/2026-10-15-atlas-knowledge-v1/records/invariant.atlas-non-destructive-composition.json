@@ -1,0 +1,30 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.atlas-non-destructive-composition",
+  "kind": "invariant",
+  "name": "Publishing cannot silently rewrite the source",
+  "statement": "Publication blocks and themed outputs may reference or snapshot canonical items, but draft changes and publication do not overwrite original annotations or silently republish newly private data.",
+  "scope": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "relatedCapabilities": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "changePolicy": "Change implementation or presentation only after compatible versioned migration and independently reproducible verification preserving this obligation.",
+  "severity": "high",
+  "verification": [],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
