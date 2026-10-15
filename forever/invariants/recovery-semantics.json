@@ -1,0 +1,26 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.recovery-semantics",
+  "kind": "invariant",
+  "name": "Continuity means recoverability",
+  "statement": "Supported operations become available again following ordinary lifecycle interruptions after the machine and required user session resume; service availability must not be misrepresented as uninterrupted computation through suspend, hibernate or power-off.",
+  "scope": [
+    "capability.companion-wake",
+    "capability.companion-lifecycle",
+    "capability.companion-supervisor"
+  ],
+  "verification": [],
+  "severity": "critical",
+  "changePolicy": "Process lifecycle machinery is replaceable; honest recoverability and accepted continuity must survive.",
+  "relatedCapabilities": [
+    "capability.companion-wake",
+    "capability.companion-lifecycle",
+    "capability.companion-supervisor"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner companion recovery design 2026-10-15; Chute Windows v2.6.1 RC1 historical reference",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
