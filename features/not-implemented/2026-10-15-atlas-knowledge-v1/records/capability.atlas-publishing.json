@@ -1,0 +1,30 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-publishing",
+  "kind": "capability",
+  "name": "Curation becomes authorship and website",
+  "statement": "Users can accomplish curation becomes authorship and website while preserving user-owned meaning, usability and consent.",
+  "requiredProperties": [
+    "Manual editable title independent of original filename and source title",
+    "Reuse existing notes, images, galleries and tags as titled photo essays, gallery websites, articles and portfolios",
+    "Choose which bookmarks to include and put links after relevant prose, inline or as bibliography",
+    "Publication ordered blocks with independent editorial text and source references",
+    "Linked or pinned snapshot variants; publishing never mutates original annotations",
+    "Accessible safe static HTML/CSS/JS output for generic host including GitHub Pages/Cloudflare Pages",
+    "Future templates for timelines, research exhibits, charts and interactive public graph views"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
