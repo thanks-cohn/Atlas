@@ -1,0 +1,30 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.atlas-privacy-and-authority",
+  "kind": "invariant",
+  "name": "Explicit user ownership and privacy per projection",
+  "statement": "New personal data defaults private; API, previews, graph neighborhoods, counts, indexes, static exports, assets and agent interfaces cannot expose unauthorized nodes, edges or existence. Explicit training authorization is distinct.",
+  "scope": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "relatedCapabilities": [
+    "capability.atlas-joyful-curation",
+    "capability.atlas-mixed-media",
+    "capability.atlas-portable-knowledge",
+    "capability.atlas-publishing",
+    "capability.atlas-living-graph"
+  ],
+  "changePolicy": "Change implementation or presentation only after compatible versioned migration and independently reproducible verification preserving this obligation.",
+  "severity": "high",
+  "verification": [],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
