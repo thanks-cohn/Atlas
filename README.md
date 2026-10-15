@@ -28,6 +28,10 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 [The Joy of Curation and the Permanence of Meaning](docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md) records the owner-directed future vision for visual catalog experiences, per-item and per-relationship notes and tags, galleries/media/file associations, privacy-aware agent-readable JSON, graph and chart exploration, and transformation of curated collections into public static websites. This is an architectural/product proposal, not a claim these features have been implemented.
 
+## Shelf-first bookmarks, reusable groupings and portable sites
+
+[The Shelf-First Bookmarks, Composable Groupings, and Portable Publishing proposal](docs/forever-works/PROPOSAL_SHELF_FIRST_BOOKMARKS_COMPOSITIONS_AND_PORTABLE_PUBLISHING.md) records owner direction for a native Chrome bookmarks explorer in the Atlas shelf; group membership as resource access (not automatic association or display); individually annotated bookmarks, images, notes and documents; user-directed composition of grouped resources into pinboards, structured pages and Liquid canvases; Portfolio-inspired seven-visible-image gallery navigation; local-first editing; complete static-site/project export; and optional Cloudflare or GitHub Pages deployment. This is a **future-facing proposal**, not proof that these workflows exist yet.
+
 ## Future portable environment proposal
 
 [Portable Personal Environment and WebVM](docs/forever-works/PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) explores restoring one's browser-centered workspace, assets, workflows and compatible tools across Windows, Linux, Android and future hosts, without making WebVM a mandatory dependency. This is a non-normative proposal, not implemented runtime or sync functionality.
