@@ -68,13 +68,24 @@ def main():
                             details['native_state'] = response.get('state')
                         except (ValueError, AttributeError):
                             pass
-                    try:
-                        diagnostic = subprocess.run([str(runtime), '--state-dir', str(private), 'serve'],
-                            env=env, capture_output=True, timeout=8)
-                        details['serve_exit'] = diagnostic.returncode
-                        details['serve_stderr'] = diagnostic.stderr.decode(errors='replace')
-                    except subprocess.TimeoutExpired:
-                        details['serve'] = 'A directly launched fixture remained running beyond eight seconds'
+                    # Files avoid an unbounded pipe-EOF wait if the onefile
+                    # bootloader exits before its diagnostic service child.
+                    with tempfile.TemporaryFile() as diagnostic_log:
+                        diagnostic = subprocess.Popen([str(runtime), '--state-dir', str(private), 'serve'],
+                            env=env, stdin=subprocess.DEVNULL, stdout=diagnostic_log, stderr=diagnostic_log)
+                        try:
+                            details['serve_exit'] = diagnostic.wait(timeout=8)
+                        except subprocess.TimeoutExpired:
+                            details['serve'] = 'Direct fixture remained running beyond eight seconds'
+                            try:
+                                stop_attested_service(state, 17892)
+                            except Exception:
+                                pass
+                            if diagnostic.poll() is None:
+                                diagnostic.terminate()
+                                diagnostic.wait(timeout=3)
+                        diagnostic_log.seek(0)
+                        details['serve_diagnostic'] = diagnostic_log.read(8192).decode(errors='replace')
                     raise AssertionError('Native host failed: ' + json.dumps(details))
                 length = struct.unpack('<I', proc.stdout[:4])[0]
                 value = json.loads(proc.stdout[4:4+length])
