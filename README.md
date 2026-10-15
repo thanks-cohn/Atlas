@@ -11,3 +11,7 @@ Start with [docs/forever-works/README.md](docs/forever-works/README.md).
 **Stage:** P001 architecture and foundations; executable implementation and behavioral proof are future work.
 
 References: [Chute](https://github.com/thanks-cohn/chute), [FileChute](https://github.com/thanks-cohn/filechute), [Redown](https://github.com/thanks-cohn/remote-download-2-cloudfare), [Forever Works](https://github.com/thanks-cohn/forever-works), [Any-Shape](https://github.com/thanks-cohn/any-shape).
+
+## Engineering and verification
+
+The architecture is specified as **Forever Works-style, agent-neutral inheritance**, not an instruction set for one coding agent. Read the [construction program](docs/forever-works/BUILD_PROGRAM.md), [verification contracts](docs/forever-works/CONTRACTS_AND_VERIFICATION.md), and [cold reconstitution protocol](docs/forever-works/RECONSTITUTION_PROTOCOL.md). An initial Python resource catalog experiment is in `src/atlas_core/`, with tests under `tests/`. Run `PYTHONPATH=src python -m unittest discover -s tests -v`. Privileged native/browser integration has **not yet** been built.
