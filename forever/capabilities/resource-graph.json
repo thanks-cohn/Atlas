@@ -1,0 +1,25 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.resource-graph",
+  "kind": "capability",
+  "name": "Universal relationship catalogs",
+  "statement": "Users can catalog, tag and link stable logical resource identities independently of provider-specific locations.",
+  "requiredProperties": [
+    "multi-provider locator references",
+    "persistent tags, catalogs and directed relationships",
+    "portable export without relocating files"
+  ],
+  "relatedInvariants": [
+    "invariant.identity",
+    "invariant.sovereignty"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
