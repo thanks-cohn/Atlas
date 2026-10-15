@@ -12,6 +12,9 @@ import sys
 import time
 
 from atlas_companion.state import State
+from atlas_companion.runtime import RuntimeLock, child_environment, stop_attested_service
+from atlas_companion.entrypoint import command
+from atlas_companion.security import APIError
 
 PORT = 17892
 MAX_FRAME = 65536
@@ -39,8 +42,8 @@ def read_message(stream):
             result[key] = value
         return result
     message = json.loads(read_exact(stream, length), object_pairs_hook=unique)
-    if message != {'action': 'connect'}:
-        raise ValueError('Only connect is supported')
+    if message not in ({'action': 'connect'}, {'action': 'manage'}):
+        raise ValueError('Only connect or manage is supported')
     return message
 
 
@@ -81,27 +84,44 @@ def prove(state, origin, connection):
         raise ValueError('Companion must keep proof connection open')
 
 
-def connect(state, origin):
+def _connect(state, origin):
     if not state.known_origin(origin):
         raise ValueError('Extension has been revoked; explicitly reinstall to authorize')
     connection = http.client.HTTPConnection('127.0.0.1', PORT, timeout=2)
     try:
         try:
             prove(state, origin, connection)
-        except (ConnectionRefusedError, TimeoutError, OSError):
+        except (ConnectionRefusedError, TimeoutError, OSError, http.client.HTTPException) as exc:
             connection.close()
-            subprocess.Popen([sys.executable, '-m', 'atlas_companion', '--state-dir', str(state.directory), 'serve', '--port', str(PORT)],
-                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True, close_fds=True)
-            for attempt in range(30):
+            missing = isinstance(exc, ConnectionRefusedError)
+            if not missing:
+                # Confirm a timeout on a fresh connection before considering a
+                # precisely attested stale process. Invalid HMAC never triggers a kill.
+                time.sleep(0.2)
                 try:
                     prove(state, origin, connection)
-                    break
-                except (ConnectionRefusedError, TimeoutError, OSError):
+                except ConnectionRefusedError:
+                    missing = True
+                except (TimeoutError, OSError, http.client.HTTPException):
                     connection.close()
-                    time.sleep(0.1)
-            else:
-                raise ValueError('Companion did not start')
+                    if not (state.directory / 'service.identity').exists():
+                        raise
+                    stop_attested_service(state, PORT)
+                    missing = True
+            if missing:
+                connection.close()
+                subprocess.Popen(command('--state-dir', str(state.directory), 'serve', '--port', str(PORT)),
+                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 start_new_session=True, close_fds=True, env=child_environment())
+                for attempt in range(30):
+                    try:
+                        prove(state, origin, connection)
+                        break
+                    except (ConnectionRefusedError, TimeoutError, OSError):
+                        connection.close()
+                        time.sleep(0.1)
+                else:
+                    raise ValueError('Companion did not start')
         # Reuse the proven TCP connection. Never reconnect while sending credentials.
         proven_socket = connection.sock
         token = state.pair(origin.removeprefix('chrome-extension://'))
@@ -115,6 +135,19 @@ def connect(state, origin):
         connection.close()
 
 
+def connect(state, origin):
+    # Serialize demand-wake and token rotation across concurrent native hosts.
+    deadline = time.monotonic() + 8
+    while True:
+        try:
+            with RuntimeLock(state, 'wake'):
+                return _connect(state, origin)
+        except APIError as exc:
+            if exc.code != 'ALREADY_RUNNING' or time.monotonic() >= deadline:
+                raise
+            time.sleep(0.1)
+
+
 def main():
     os.umask(0o077)
     try:
@@ -124,12 +157,22 @@ def main():
         config = json.loads(Path(sys.argv[1]).read_text())
         origin = 'chrome-extension://' + config['extension_id']
         if sys.argv[2] != origin + '/':
-            raise ValueError('Unauthorized native caller')
-        read_message(sys.stdin.buffer)
-        response = connect(State(config['state_dir']), origin)
-    except Exception:
+            raise APIError('NEEDS_PAIRING', 'Native caller identity changed.')
+        message = read_message(sys.stdin.buffer)
+        state = State(config['state_dir'])
+        if not state.known_origin(origin):
+            raise APIError('NEEDS_PAIRING', 'Extension is not enrolled.')
+        if message['action'] == 'manage':
+            subprocess.Popen(command('--desktop', '--state-dir', str(state.directory)),
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True, close_fds=True, env=child_environment())
+            response = {'ok': True, 'state': 'MANAGE_OPENED'}
+        else:
+            response = connect(state, origin)
+    except Exception as exc:
         # Never echo exception details, tokens, config or caller data into native output.
-        response = {'ok': False, 'error': 'Native bootstrap unavailable. Check installation, pairing and companion port.'}
+        code = 'NEEDS_PAIRING' if isinstance(exc, APIError) and exc.code == 'NEEDS_PAIRING' else 'OFFLINE' if isinstance(exc, (ConnectionError, TimeoutError)) else 'NEEDS_REPAIR'
+        response = {'ok': False, 'code': code, 'state': code, 'error': 'Native bootstrap unavailable. Check installation, pairing and companion port.'}
     write_message(sys.stdout.buffer, response)
     return 0 if response['ok'] else 1
 

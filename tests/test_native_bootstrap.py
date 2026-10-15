@@ -50,6 +50,39 @@ class NativeTests(unittest.TestCase):
                 server.server_close()
                 thread.join()
 
+    def test_manage_only_fixed_trusted_gui_no_pair_or_grants(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as folder:
+            state = State(folder)
+            extension = 'f' * 32
+            token = state.pair(extension)
+            origin = 'chrome-extension://' + extension
+            config = Path(folder) / 'config.json'
+            config.write_text(json.dumps({'extension_id': extension, 'state_dir': folder}))
+            body = b'{"action":"manage"}'
+            def invoke():
+                source = io.BytesIO(struct.pack('<I', len(body)) + body)
+                target = io.BytesIO()
+                with patch.object(sys, 'argv', ['atlas-native', str(config), origin + '/']), patch.object(sys, 'stdin', SimpleNamespace(buffer=source)), patch.object(sys, 'stdout', SimpleNamespace(buffer=target)):
+                    code = native.main()
+                result = target.getvalue()
+                size = struct.unpack('<I', result[:4])[0]
+                return code, json.loads(result[4:4 + size])
+            with patch.object(native.subprocess, 'Popen') as spawn:
+                code, response = invoke()
+                self.assertEqual(code, 0)
+                self.assertEqual(response, {'ok': True, 'state': 'MANAGE_OPENED'})
+                argv = spawn.call_args.args[0]
+                self.assertEqual(argv[-3:], ['--desktop', '--state-dir', folder])
+                self.assertTrue(state.authenticate(origin, token))
+                self.assertEqual(state.grants(), [])
+                state.revoke_client(extension)
+                spawn.reset_mock()
+                code, response = invoke()
+                self.assertEqual(code, 1)
+                self.assertEqual(response['code'], 'NEEDS_PAIRING')
+                spawn.assert_not_called()
+
     def test_private_key_tampering_fails_closed(self):
         import os
         from atlas_companion.security import APIError

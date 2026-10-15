@@ -19,3 +19,5 @@ jobs:
         run: node scripts/test_extension_broker.mjs
       - name: Verify real CLI and filesystem integration
         run: python scripts/smoke_companion.py
+      - name: Verify native wake and worker integration without replay
+        run: node scripts/test_recovery_broker_native.mjs

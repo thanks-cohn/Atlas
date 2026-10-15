@@ -11,7 +11,7 @@ import time
 import uuid
 from pathlib import Path
 
-from .security import APIError, open_absolute_directory
+from .security import APIError, open_absolute_directory, parts, descriptor_path
 
 
 class State:
@@ -20,22 +20,36 @@ class State:
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         if self.directory.is_symlink():
             raise APIError('INVALID_STATE', 'State directory cannot be a symlink.')
+        state_fd = open_absolute_directory(str(self.directory))
+        try:
+            # Parent symlinks would make lexical exclusion/consent checks ambiguous.
+            self.directory = Path(descriptor_path(state_fd))
+        finally:
+            os.close(state_fd)
         os.chmod(self.directory, 0o700)
         self.path = self.directory / 'state.sqlite3'
         if self.path.is_symlink():
             raise APIError('INVALID_STATE', 'State database cannot be a symlink.')
         with self.connect() as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
-            if version not in (0, 1):
+            if version not in (0, 1, 2):
                 raise APIError('UNSUPPORTED_STATE_VERSION', 'State database was created by a newer companion.')
             db.executescript('''
+                BEGIN IMMEDIATE;
                 CREATE TABLE IF NOT EXISTS clients(origin TEXT PRIMARY KEY, digest TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY, root TEXT UNIQUE NOT NULL,
                     label TEXT NOT NULL, device INTEGER NOT NULL, inode INTEGER NOT NULL, writable INTEGER NOT NULL);
                 CREATE TABLE IF NOT EXISTS receipts(id TEXT PRIMARY KEY, request TEXT NOT NULL,
                     result TEXT, created REAL NOT NULL);
-                PRAGMA user_version=1;
+                CREATE TABLE IF NOT EXISTS exclusions(path TEXT PRIMARY KEY, device INTEGER NOT NULL, inode INTEGER NOT NULL);
             ''')
+            columns = {row['name'] for row in db.execute('PRAGMA table_info(grants)')}
+            if 'broad' not in columns:
+                db.execute('ALTER TABLE grants ADD COLUMN broad INTEGER NOT NULL DEFAULT 0')
+            info = self.directory.stat()
+            db.execute('INSERT OR REPLACE INTO exclusions VALUES (?,?,?)',
+                       (str(self.directory), info.st_dev, info.st_ino))
+            db.execute('PRAGMA user_version=2')
         os.chmod(self.path, 0o600)
 
     @contextmanager
@@ -97,24 +111,116 @@ class State:
         with self.connect() as db:
             db.execute('DELETE FROM clients WHERE origin=?', ('chrome-extension://' + extension_id,))
 
-    def grant(self, path, label=None, writable=False):
+    def _exclusions(self):
+        # Other trusted installer processes can add exclusions while serving.
+        with self.connect() as db:
+            return [dict(row) for row in db.execute('SELECT * FROM exclusions')]
+
+    def protect_path(self, path):
+        """Trusted-native only: persist an installed runtime/config exclusion."""
+        absolute = str(Path(path).absolute())
+        parent_path, leaf = os.path.split(absolute.rstrip('/'))
+        if not leaf:
+            raise APIError('INVALID_EXCLUSION', 'Cannot exclude the complete filesystem.')
+        parent = open_absolute_directory(parent_path or '/')
+        try:
+            fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+            try:
+                info = os.fstat(fd)
+                if not (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)):
+                    raise APIError('INVALID_EXCLUSION', 'Protect only an existing regular file or directory.')
+                canonical = descriptor_path(fd)
+            finally:
+                os.close(fd)
+        finally:
+            os.close(parent)
+        with self.connect() as db:
+            db.execute('INSERT OR REPLACE INTO exclusions VALUES (?,?,?)', (canonical, info.st_dev, info.st_ino))
+        return canonical
+
+    @staticmethod
+    def _under(path, ancestor):
+        return os.path.commonpath([path, ancestor]) == ancestor
+
+    def requires_broad(self, path):
         root = str(Path(path).absolute())
-        if root == '/':
-            raise APIError('INVALID_ROOT', 'Grant a narrow folder, never the entire filesystem.')
-        state_root = str(self.directory)
-        if os.path.commonpath([root, state_root]) in (root, state_root):
-            raise APIError('INVALID_ROOT', 'Folder grants cannot overlap private companion state.')
+        return (root == '/' or root == str(Path.home()) or os.path.ismount(root)
+                or any(self._under(item['path'], root) for item in self._exclusions()))
+
+    def grant(self, path, label=None, writable=False, allow_broad=False):
+        root = str(Path(path).absolute())
+        exclusions = self._exclusions()
+        if any(self._under(root, item['path']) for item in exclusions):
+            raise APIError('PRIVATE_STATE', 'Private companion state cannot be granted.', 403)
+        broad = self.requires_broad(root)
+        if broad and allow_broad is not True:
+            raise APIError('BROAD_CONSENT_REQUIRED', 'This location includes a home, volume or private-state ancestor. Explicit broad access consent is required.', 403)
         fd = open_absolute_directory(root)
         try:
-            s = os.fstat(fd)
+            self.check_fd(fd)
+            info = os.fstat(fd)
         finally:
             os.close(fd)
         with self.connect() as db:
             old = db.execute('SELECT id FROM grants WHERE root=?', (root,)).fetchone()
             ident = old['id'] if old else uuid.uuid4().hex
-            db.execute('INSERT OR REPLACE INTO grants VALUES (?,?,?,?,?,?)',
-                       (ident, root, label or Path(root).name, s.st_dev, s.st_ino, int(writable)))
+            db.execute('INSERT OR REPLACE INTO grants (id,root,label,device,inode,writable,broad) VALUES (?,?,?,?,?,?,?)',
+                       (ident, root, label or Path(root).name or 'Filesystem', info.st_dev, info.st_ino, int(writable), int(broad)))
         return ident
+
+    def check_path(self, grant, path='', recursive=False, exclusions=None):
+        components = parts(path)
+        absolute = os.path.join(grant['root'], *components)
+        self._check_absolute(absolute, recursive, exclusions)
+
+    def _check_absolute(self, absolute, recursive=False, exclusions=None):
+        for item in self._exclusions() if exclusions is None else exclusions:
+            private = item['path']
+            if self._under(absolute, private) or (recursive and self._under(private, absolute)):
+                raise APIError('PRIVATE_STATE', 'Private companion state and operations on its ancestors are excluded.', 403)
+
+    def check_fd(self, fd, recursive=False):
+        """Check the actual held Linux descriptor, not only an attacker path.
+
+        Directory ancestry is traversed by descriptors so renaming a directory
+        into the private subtree cannot bypass its persisted inode exclusion.
+        Files with multiple hard links are deliberately unsupported: an alias to
+        a private database must never become a readable graph/file resource.
+        """
+        self._check_absolute(descriptor_path(fd), recursive)
+        info = os.fstat(fd)
+        excluded = {(item['device'], item['inode']) for item in self._exclusions()}
+        if (info.st_dev, info.st_ino) in excluded:
+            raise APIError('PRIVATE_STATE', 'Private companion artifact is excluded.', 403)
+        if not stat.S_ISDIR(info.st_mode):
+            if info.st_nlink > 1:
+                raise APIError('HARDLINK_DENIED', 'Multiply linked files are excluded from companion access.', 403)
+            return
+        current = os.dup(fd)
+        try:
+            for _ in range(512):
+                value = os.fstat(current)
+                identity = value.st_dev, value.st_ino
+                if identity in excluded:
+                    raise APIError('PRIVATE_STATE', 'Private companion directory is excluded.', 403)
+                above = os.open('..', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+                parent_info = os.fstat(above)
+                if (parent_info.st_dev, parent_info.st_ino) == identity:
+                    os.close(above)
+                    return
+                os.close(current)
+                current = above
+            raise APIError('LIMIT', 'Directory ancestry exceeds the supported limit.', 403)
+        finally:
+            os.close(current)
+
+    def check_entry(self, parent_fd, leaf, recursive=False):
+        self.check_fd(parent_fd)
+        fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent_fd)
+        try:
+            self.check_fd(fd, recursive)
+        finally:
+            os.close(fd)
 
     def grants(self):
         with self.connect() as db:

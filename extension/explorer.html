@@ -26,6 +26,7 @@
             ↻
           </button>
         </div>
+        <button id="add-location" class="add-location">＋ Add location</button>
         <nav id="roots" aria-label="Authorized folders"></nav>
         <div class="sidebar-bottom">
           <span class="privacy-dot"></span> Local first. Yours always.<button
@@ -110,7 +111,13 @@
         <footer>
           <span id="status">Not connected</span
           ><span id="clipboard-status"></span
-          ><span class="connection-state" id="connection-state">● Offline</span>
+          ><button
+            class="connection-state"
+            id="connection-state"
+            title="Reconnect companion"
+          >
+            ● Offline
+          </button>
         </footer>
       </main>
       <aside id="details" hidden>
@@ -128,15 +135,18 @@
         <div class="dialog-icon">A</div>
         <h2>Connect your companion</h2>
         <p>
-          ATLAS only accesses folders you grant locally. Install and start the
-          companion yourself, configure this extension ID, then enter its token.
-          The token stays in trusted extension session storage.
+          Install the native companion once and authorize this extension.
+          Connect below; future launches restore your existing locations
+          automatically. Credentials stay in trusted session storage. Manual
+          token pairing is an optional development fallback.
         </p>
         <button type="button" class="primary" id="native-connect">
           Connect installed companion
         </button>
         <p>Or pair manually using a companion token:</p>
-        <label>Extension ID<input id="extension-id" readonly /></label
+        <button type="button" id="manage-locations">
+          Manage authorized locations</button
+        ><label>Extension ID<input id="extension-id" readonly /></label
         ><label
           >Companion token<input
             id="token"
@@ -215,6 +225,21 @@
           </button>
         </div>
       </form>
+    </dialog>
+    <dialog id="unknown-dialog">
+      <h2>Inspect the operation outcome</h2>
+      <p>
+        A submitted operation lost its final response. ATLAS will never repeat
+        it automatically. Review Activity and the actual files, or reload
+        catalogs for a metadata change. Dismissing this warning does not alter
+        any pending receipt or prove an operation succeeded.
+      </p>
+      <div class="dialog-actions">
+        <button id="unknown-activity">Review activity</button
+        ><button id="unknown-catalogs">Review catalogs</button
+        ><button id="unknown-dismiss">I've inspected the outcome</button
+        ><button id="unknown-close">Close</button>
+      </div>
     </dialog>
     <dialog id="activity-dialog"></dialog>
     <script type="module" src="activity.js"></script>

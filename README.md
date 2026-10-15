@@ -28,7 +28,11 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 [Portable Personal Environment and WebVM](docs/forever-works/PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) explores restoring one's browser-centered workspace, assets, workflows and compatible tools across Windows, Linux, Android and future hosts, without making WebVM a mandatory dependency. This is a non-normative proposal, not implemented runtime or sync functionality.
 
-## Run the Linux development explorer
+## Install the Linux companion
+
+A standalone Linux x86_64 companion is now built with Python and the native management UI included. Extract the distribution and open `atlas-companion`; authorize the exact extension ID and choose locations in its native window. No repeated token pasting is needed after installed enrollment. See [installer instructions](packaging/README.md) and [latest handoff](codex/HANDOFF_LATEST.md). The local unsigned build is tested on glibc2.41; Windows and actual Chrome callback verification remain outstanding.
+
+## Run from source for development
 
 1. Open `chrome://extensions`, enable Developer mode and **Load unpacked** from `extension/`. Copy its actual extension ID.
 2. Run `./scripts/run_companion.sh grant /absolute/path/to/a/test-folder --write` to explicitly authorize a narrow disposable folder (omit `--write` for read-only).

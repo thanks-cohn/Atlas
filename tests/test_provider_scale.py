@@ -48,7 +48,7 @@ class ProviderScaleTests(unittest.TestCase):
                 with self.subTest(root=root):
                     with self.assertRaises(APIError) as caught:
                         state.grant(str(root), writable=True)
-                    self.assertEqual(caught.exception.code, 'INVALID_ROOT')
+                    self.assertEqual(caught.exception.code, 'BROAD_CONSENT_REQUIRED' if root == base else 'PRIVATE_STATE')
             state.bootstrap_key()
             self.assertEqual(state.grants(), [])
 

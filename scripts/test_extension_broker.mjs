@@ -16,8 +16,9 @@ function worker() {
   let listener;
   const calls = {fetch: [], native: [], access: [], writes: [], removes: [], tabs: [], panels: []};
   const session = {};
+  const local = {};
   const stub = {
-    calls, session,
+    calls, session, local,
     response: {ok: true, status: 200, body: {ok: true, protocol: 'atlas.local.v1', status: 'ready'}},
     nativeResult: {ok: true, protocol: 'atlas.local.v1', port: 17892, token},
     fetchFailure: null,
@@ -27,23 +28,27 @@ function worker() {
       id: extensionId,
       getURL: path => extensionURL + path,
       onMessage: {addListener: callback => { listener = callback; }},
+      onStartup:{addListener:callback=>{stub.startup=callback;}},
       sendNativeMessage: async (host, message) => {
         calls.native.push({host, message: clone(message)});
+        if(stub.nativeFailure)throw stub.nativeFailure;
+        if(stub.nativeHook)await stub.nativeHook();
         return clone(stub.nativeResult);
       },
     },
     action: {onClicked: {addListener: callback => { stub.click = callback; }}},
     tabs: {create: value => calls.tabs.push(clone(value))},
     sidePanel: {open: async value => { calls.panels.push(clone(value)); if (stub.panelFailure) throw new Error('Side panel unavailable'); }},
-    storage: {session: {
+    storage: {local:{get:async key=>({[key]:local[key]}),set:async value=>Object.assign(local,clone(value)),remove:async key=>{delete local[key];},setAccessLevel:async()=>{}},session: {
       setAccessLevel: async value => calls.access.push(clone(value)),
       set: async value => { calls.writes.push(clone(value)); Object.assign(session, clone(value)); },
       get: async key => ({[key]: session[key]}),
       remove: async key => { calls.removes.push(key); delete session[key]; },
     }},
   };
-  const context = vm.createContext({chrome, AbortSignal, fetch: async (url, options) => {
+  const context = vm.createContext({chrome, AbortSignal, setTimeout, clearTimeout, fetch: async (url, options) => {
     calls.fetch.push({url, options: clone(options)});
+    if(stub.fetchHook)return stub.fetchHook(url,options);
     if (stub.fetchFailure) throw stub.fetchFailure;
     return {ok: stub.response.ok, status: stub.response.status, json: async () => clone(stub.response.body)};
   }});
@@ -117,7 +122,7 @@ test('failed manual health authentication cannot persist proposed credentials', 
     const result = await w.send({type: 'pair', token});
     assert.equal(result.ok, false);
     assert.equal(w.session.token, 'previous-valid-token');
-    assert.equal(w.calls.writes.length, 0);
+    assert.equal(w.calls.writes.filter(v=>v.token).length, 0);
     noToken(result);
   }
 });
@@ -128,17 +133,17 @@ test('manual pairing rejects invalid credential lengths without network access',
     assert.equal((await w.send({type: 'pair', token: bad})).ok, false);
   }
   assert.equal(w.calls.fetch.length, 0);
-  assert.equal(w.calls.writes.length, 0);
+  assert.equal(w.calls.writes.filter(v=>v.token).length, 0);
 });
 
 test('native pairing rejects incompatible protocol, port and malformed results', async () => {
-  for (const change of [{protocol: 'atlas.local.v0'}, {port: 80}, {port: '17892'}, {token: null}, {ok: false}]) {
+  for (const change of [{protocol: 'atlas.local.v0'}, {port: 80}, {port: '17892'}, {token: null}, {token: ''}, {token:'x'.repeat(201)}, {ok: false}]) {
     const w = worker();
     Object.assign(w.nativeResult, change);
     const result = await w.send({type: 'native-connect'});
     assert.equal(result.ok, false);
     assert.equal(w.calls.fetch.length, 0);
-    assert.equal(w.calls.writes.length, 0);
+    assert.equal(w.calls.writes.filter(v=>v.token).length, 0);
     assert.equal(w.calls.native[0].host, 'org.atlas.companion');
     assert.deepEqual(w.calls.native[0].message, {action: 'connect'});
     noToken(result);
@@ -156,7 +161,7 @@ test('native bootstrap authenticates health before storing token', async () => {
   rejected.response.ok = false;
   rejected.response.body = {ok: false, error: {message: 'Unpaired'}};
   assert.equal((await rejected.send({type: 'native-connect'})).ok, false);
-  assert.deepEqual(rejected.session, {});
+  assert.equal(rejected.session.token,undefined);
 });
 
 test('only exact API routes can reach the fixed numeric loopback endpoint', async () => {
@@ -190,10 +195,60 @@ test('unpaired API requests fail locally and disconnect clears credentials', asy
   const result = await w.send({type: 'disconnect'});
   assert.deepEqual(result, {ok: true});
   noToken(result);
-  assert.deepEqual(w.calls.removes, ['token']);
+  assert.deepEqual(w.calls.removes, ['token','unknownOperation']);
   assert.deepEqual(await w.send({type: 'state'}), {ok: true, paired: false});
   assert.equal((await w.send({type: 'api', path: '/v1/grants'})).ok, false);
   assert.equal(w.calls.fetch.length, 0);
+});
+
+test('remembered native enrollment survives browser session without durable credentials', async()=>{
+  const w=worker();await w.send({type:'native-connect'});assert.equal(w.local.nativeEnrolled,true);assert.deepEqual(Object.keys(w.local),['nativeEnrolled']);
+  delete w.session.token;const result=await w.send({type:'ensure-ready'});assert.equal(result.paired,true);assert.equal(result.state,'READY');assert.equal(w.calls.native.length,2);noToken(result);
+  await w.send({type:'disconnect'});assert.equal(w.local.nativeEnrolled,undefined);delete w.session.token;
+  const before=w.calls.native.length;assert.equal((await w.send({type:'ensure-ready'})).paired,false);assert.equal(w.calls.native.length,before);
+});
+test('manual mode and a new extension never auto-enroll or native wake',async()=>{
+  const w=worker();await w.send({type:'pair',token});assert.equal(w.local.nativeEnrolled,undefined);delete w.session.token;
+  assert.equal((await w.send({type:'ensure-ready'})).paired,false);assert.equal(w.calls.native.length,0);
+  w.session.token=token;w.fetchFailure=new Error('Failed to fetch');const result=await w.send({type:'api',path:'/v1/list',body:{}});assert.equal(result.ok,false);assert.equal(w.calls.native.length,0);noToken(result);
+});
+test('read transport failure wakes native once and retries the read once',async()=>{
+  const w=worker();w.local.nativeEnrolled=true;w.session.token=token;let lists=0;
+  w.fetchHook=async(url)=>{if(url.endsWith('/v1/list')&&++lists===1)throw new Error('Helper killed');return {ok:true,status:200,json:async()=>({ok:true,protocol:'atlas.local.v1',status:'ready',entries:[]})};};
+  assert.equal((await w.send({type:'api',path:'/v1/list',body:{grant:'test',path:''}})).ok,true);assert.equal(lists,2);assert.equal(w.calls.native.length,1);
+});
+test('concurrent read recovery shares one native connection and remains bounded on failure',async()=>{
+  const w=worker();w.local.nativeEnrolled=true;w.session.token=token;let woke=false;
+  w.nativeHook=async()=>{await new Promise(resolve=>setTimeout(resolve,10));woke=true;};
+  w.fetchHook=async url=>{if(url.endsWith('/v1/list')&&!woke)throw new Error('Offline');return {ok:true,status:200,json:async()=>({ok:true,protocol:'atlas.local.v1',status:'ready'})};};
+  const results=await Promise.all([1,2,3].map(()=>w.send({type:'api',path:'/v1/list',body:{}})));assert.ok(results.every(r=>r.ok));assert.equal(w.calls.native.length,1);
+  w.fetchFailure=new Error('Offline');delete w.fetchHook;w.calls.native=[];const result=await w.send({type:'api',path:'/v1/list',body:{}});assert.equal(result.ok,false);assert.equal(w.calls.native.length,1);
+});
+test('ambiguous filesystem and graph writes are never replayed or native-reconnected automatically',async()=>{
+  for(const path of ['/v1/operate','/v1/catalog']){const w=worker();w.local.nativeEnrolled=true;w.session.token=token;w.fetchHook=async url=>{if(url.endsWith(path))throw new Error('Response lost');return {ok:true,status:200,json:async()=>({ok:true,protocol:'atlas.local.v1',status:'ready'})};};const result=await w.send({type:'api',path,body:{id:'test-operation-id-12345'}});assert.equal(result.error.code,'OUTCOME_UNKNOWN');assert.equal(result.error.operationId,'test-operation-id-12345');assert.equal(w.calls.fetch.filter(call=>call.url.endsWith(path)).length,1);assert.equal(w.calls.native.length,0);assert.equal(w.session.lifecycleState,'OUTCOME_UNKNOWN');noToken(result);}
+});
+test('mutation readiness recovery occurs before submission and never replays the operation',async()=>{
+  const w=worker();w.session.token=token;w.local.nativeEnrolled=true;let ready=false,writes=0;
+  w.nativeHook=async()=>{ready=true;};w.fetchHook=async url=>{if(!ready)throw new Error('Helper already dead');if(url.endsWith('/v1/operate'))writes++;return {ok:true,status:200,json:async()=>({ok:true,protocol:'atlas.local.v1',status:'ready',receipt:{status:'completed'}})};};
+  const result=await w.send({type:'api',path:'/v1/operate',body:{id:'single-submission-0001'}});assert.equal(result.ok,true);assert.equal(writes,1);assert.equal(w.calls.native.length,1);
+});
+
+test('native failure states and management never grant browser root authority',async()=>{
+  for(const [message,code] of [['Specified native messaging host not found.','NEEDS_INSTALL'],['Access to native messaging host is forbidden.','NEEDS_PAIRING']]){const w=worker();w.local.nativeEnrolled=true;w.nativeFailure=new Error(message);const result=await w.send({type:'ensure-ready'});assert.equal(result.error.code,code);assert.equal(w.session.token,undefined);}
+  const w=worker();assert.equal((await w.send({type:'native-manage'})).ok,true);assert.deepEqual(w.calls.native[0].message,{action:'manage'});assert.equal(w.session.token,undefined);assert.equal(w.local.nativeEnrolled,undefined);
+});
+
+test('unknown outcomes stay visible across reads and reconcile only final matching receipts or explicit acknowledgement',async()=>{
+ const w=worker();w.session.token=token;w.session.unknownOperation={operationId:'uncertain-op',kind:'/v1/operate'};
+ assert.equal((await w.send({type:'ensure-ready'})).state,'OUTCOME_UNKNOWN');
+ await w.send({type:'api',path:'/v1/list',body:{}});assert.equal(w.session.lifecycleState,'OUTCOME_UNKNOWN');
+ w.response.body={ok:true,receipts:[{id:'uncertain-op',status:'pending'}]};await w.send({type:'api',path:'/v1/receipts'});assert.ok(w.session.unknownOperation);
+ w.response.body={ok:true,receipts:[{id:'uncertain-op',status:'completed'}]};await w.send({type:'api',path:'/v1/receipts'});assert.equal(w.session.unknownOperation,undefined);assert.equal(w.session.lifecycleState,'READY');
+ w.session.unknownOperation={operationId:null,kind:'/v1/catalog'};const count=w.calls.fetch.length;await w.send({type:'acknowledge-unknown'});assert.equal(w.session.unknownOperation,undefined);assert.equal(w.calls.fetch.length,count);
+});
+test('browser startup wakes only explicitly remembered native enrollment',async()=>{
+ const fresh=worker();await fresh.startup();assert.equal(fresh.calls.native.length,0);
+ const returning=worker();returning.local.nativeEnrolled=true;await returning.startup();assert.equal(returning.calls.native.length,1);assert.equal(returning.session.token,token);
 });
 
 let failures = 0;

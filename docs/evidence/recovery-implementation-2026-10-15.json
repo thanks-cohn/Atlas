@@ -1,0 +1,112 @@
+{
+  "recorded_at_utc": "2026-10-15T17:05:48.657104+00:00",
+  "baseline_commit": "12eeefc",
+  "scope": "Linux recovery, native setup, explicit broad scopes, standalone installation; Chrome callbacks and Windows NOT_RUN",
+  "checks": {
+    "python": {
+      "status": "PASS",
+      "log_sha256": "c5c962de3e770607942420164f281cb193b6fedd9b86f7f75fd860c56d8b9d8c"
+    },
+    "worker": {
+      "status": "PASS",
+      "log_sha256": "64468648840e4aa62e3c7ac518edee924107bb3e7118b3069a8b8211abcf3dd9"
+    },
+    "native-worker": {
+      "status": "PASS",
+      "log_sha256": "e85c51d45c2de5600bfc9d08eeef13769a6411ba14fb04e6c12569fec216e82c"
+    },
+    "installed": {
+      "status": "PASS",
+      "log_sha256": "1d52802bd64b43c8ac7fb6b37eedb4dfd389f7cf014169814a051b529559b42e"
+    },
+    "browser": {
+      "status": "PASS",
+      "log_sha256": "b3acdf0d2be24c6cab8753c4a0278dc09261c62776dd753574595d49f7a8c89f"
+    },
+    "desktop": {
+      "status": "PASS",
+      "log_sha256": "326787a989b35f506fb94d277eed2fcccf67bc4951c375efb6ecb6a03b86603a"
+    },
+    "cli": {
+      "status": "PASS",
+      "log_sha256": "15330a1e1d3835c5828cb6627946ed57ba640552618eab984354e69fb2ed8f66"
+    }
+  },
+  "python_tests": 82,
+  "worker_tests": 18,
+  "native_integration_categories": 7,
+  "browser_dom_categories": 16,
+  "frozen_gui": "PASS actual X11, Python absent from PATH",
+  "artifact": {
+    "source_sha256": "78066ff4837d1bbefc6d78d641487df83622f1a4f8802f877e2e1264976f95a1",
+    "artifact": "atlas-companion",
+    "sha256": "e2c34aecbdd92b90090d25c23796e82ac135f23537a56e966b15e52f93644c72",
+    "bytes": 15808360,
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "architecture": "x86_64",
+    "python": "3.12.14",
+    "pyinstaller": "6.16.0",
+    "status": "unsigned Linux development build; no Windows or distribution-signing claim"
+  },
+  "not_run": [
+    "Actual Chrome MV3/native callback",
+    "OS sleep/reboot/logon/systemd user manager",
+    "Windows",
+    "Clean-machine distribution ABI",
+    "Signing/Store approval",
+    "Soak and power measurements"
+  ],
+  "sha256": {
+    "extension/activity.js": "de1e0b5acddbc437d2e66c2b6d8446df586cd51625845f01b16c39e4589a29cb",
+    "extension/background.js": "a1efc97d20c30a5fd94743b2fff6295ef969a0ee559d5a1bbef075c5128d1bd0",
+    "extension/explorer.css": "0ae951eda40fa6622828bb4a910dbf8b496ad037e28e1e086b53b96bf3216ee2",
+    "extension/explorer.html": "e4b35068709bc9ab25188ec3760f786cffb6c639e0536226696bec697e5d6f90",
+    "extension/explorer.js": "366382601f32f543505bddbb2d8815257514cf0536144df6beed0ddabfee3495",
+    "extension/graph.js": "78497c3680354052685df585f6308362454fd8f22fc891081d1252a317243c67",
+    "extension/manifest.json": "6192fa4948231e4d0ff77a3e6591db282a9c6481777f29f8466711887e9b2e84",
+    "packaging/README.md": "95fdf96a6b153c81d4a9ff45c412ded853771eee0a41b67cddc15b6436a2e6df",
+    "packaging/companion_entry.py": "73489b87535bc1091d767bd7ee3539d8343923491347fded8680a4c2f9625f1d",
+    "packaging/requirements-build.txt": "dfc1fc95ebbac6fc7400ea5116503d02bb8b0e0b9a3d24cd6819e8baab263961",
+    "scripts/browser_smoke.py": "6cd1ba2f58a4cb40b03f76669570f75a8bdf11ad1fa57ee6fc0326c1afbbec04",
+    "scripts/build_companion.py": "dbc034937b507d94c1fc0933b9594d6ea1eca01198b1a99d7a93f6414d2450a9",
+    "scripts/check_project.py": "b59ffa212b97dd87c3c26282f80cc4215ce03a9a89af790e9aa8fcdc559b5cb6",
+    "scripts/install_native_host.py": "9eee87a634d8f87fcd669ff6954cbc77b59997187c15ea771266f60e1bcc348a",
+    "scripts/package_extension.py": "28e0d8da68b0bbccb7f0a5a7ae7225252479cebe39c8a7ddfbed8eba5115bc0f",
+    "scripts/run_companion.sh": "b5877eef4a1945974abc4c6810ae5d8e52f1713aa8e0b6a7d4f97291fb2f17d4",
+    "scripts/smoke_companion.py": "f90d9a6b7fbfc6149157840f6d4db371096ee8e7e50ece270e79b5f1a489b14a",
+    "scripts/smoke_desktop.py": "ff9af9ebefd54b77863dfd44ea2212aeda9d9b194d7423f4b9d413fbd376e459",
+    "scripts/smoke_installed_companion.py": "218a3ea6f635d3724d85be19f3148852019516c25d4b3604dbc05b1040f8712b",
+    "scripts/test_extension_broker.mjs": "7294c1a8108f0212187b389455d12b7bcc66a0252a0484a0a146b4eea0d05e2c",
+    "scripts/test_recovery_broker_native.mjs": "441746e5e9ea8ad230707e209e7866c08f168d2574104b0eec09a36cb2e1f328",
+    "scripts/validate_forever_upstream.py": "c3160b83bd8b85e9259188cd161524834967880d03cb07528529a0e0f63046f2",
+    "src/atlas_companion/__init__.py": "be0f3d504fb8792cf07109d0789926e0f4e04cc5b1603198a1f6b59c5fa9bb8f",
+    "src/atlas_companion/__main__.py": "63b4c05e84e19891584a4042dd8f4693768a48e74734f1c89dc65835e6776474",
+    "src/atlas_companion/desktop.py": "6b87b5b9db1696b50cacb6f8af70b2db6082e0e663c405e850743c0615127a06",
+    "src/atlas_companion/entrypoint.py": "564c6a04024c0f6136ad8e804b8d6fd083fffdb4ef84908a78480a7e877a1765",
+    "src/atlas_companion/filesystem.py": "5152a104ecb78b807e609b57fafc58a48d422625d8ffb934b6ccebd73d3fcb82",
+    "src/atlas_companion/install.py": "af628955e4b86cd398d0375dcbf9080f8ea13a08aa918b4f5020e9696132127e",
+    "src/atlas_companion/runtime.py": "122cc7e268cd2c9e97c5eed20ffb262c71e5d9731ebdc035b74c17f456cc5ef4",
+    "src/atlas_companion/security.py": "247908a0effd877561d5e9467cdd543108a6ee7408942ad60a6901562bc953a5",
+    "src/atlas_companion/server.py": "1bcb6a1e25843817524d4eea87194ae70da39f97a429f7364f1ec1d6ac337a24",
+    "src/atlas_companion/state.py": "7bfffc45a28be7a9fe6909403e512502bd71b19c8735658f84fc09f25144c234",
+    "src/atlas_companion/supervisor.py": "0e9e23da5a34707a368781ab150cde8cc56db76f80fbc288c7238aa3acfc13d1",
+    "src/atlas_core/__init__.py": "238b1dc10edd26b493ad282b773941b15a4a8929d18bf4330b5c5d9c58997aff",
+    "src/atlas_core/catalog.py": "559b5fa9f7d7ae9b24e669d0b94dff9d1f06fa4409091bf41aaec8e9da6678cc",
+    "src/atlas_core/store.py": "4c3da0dab1d1d88777f0480a2e0c0fa09c95f3d0e1da70137a792dce2f066b64",
+    "src/atlas_native/__init__.py": "cbfa97d3cf2102e84cb163a6a19fc01151df7095a1bd5c4e4ad752b7d4df0d31",
+    "src/atlas_native/__main__.py": "a730815af391f588bbb3035e1f03ed90eb531d1288dac566c81dbbd0b86dc6fb",
+    "tests/test_broad_grants.py": "6cb96af05b340bd902c18da0aa5c85efe21ef2c79ee27c95668e17c939fd2ba1",
+    "tests/test_catalog.py": "ef9c96d8443696c7198213cae87b0740119adb69c5b1c6d71e1167376e000dbb",
+    "tests/test_companion_hardening.py": "0faff0d69112e948858eb38272ca69528c06be30043f2dfc1cb9922b6cc6b4f1",
+    "tests/test_companion_http.py": "2fde8b59a6afd29596eacc0d5a6641865836723653e2198c702a54f17dbd9b66",
+    "tests/test_companion_security.py": "14214cb4ccba9d6a5d16b27a263973cc1ea06ef86ec6e469b78f61fdb040553a",
+    "tests/test_file_hash.py": "b9191be5bc31b606ad9614583a0e16d4691e933fec66440a2638bea494f22c4b",
+    "tests/test_graph_store.py": "d0613d6032ea095f60b66b6100dac637dc6c8c19393ec902edc2688c14928c3f",
+    "tests/test_installation.py": "b9073197beae82c5fd440f379583803dcfb62d8063eb57fb3ed583226e3c97ea",
+    "tests/test_management.py": "dbe463fabba56233849bd09bf9c0a4cf4a5c4d822521aea1d103f7fc0f2eff13",
+    "tests/test_native_bootstrap.py": "d857d61ad00dd7a9e3e7cc359e411543810e26d0c31ab078678f28f8060da5be",
+    "tests/test_provider_scale.py": "9bc0b24224e4ab94159ceac3c4d3a53f4319e7232a63514097fa9f19866d4738",
+    "tests/test_recovery_history.py": "7bd9b9eea40b11cc16082abaa766f9abd0848bfa3a61249420f81eec38d148f0",
+    "tests/test_supervisor.py": "246d962f08191814ef3b2c370ea3a3359a333ac91daa826e87e761b664ee9ce1"
+  }
+}

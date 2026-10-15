@@ -13,6 +13,9 @@ const state = {
   view: "list",
   busy: false,
   paired: false,
+  lifecycle: "OFFLINE",
+  outcomeUnknown: false,
+  nativeManaging: false,
   lastTrash: null,
   dragged: null,
   load: 0,
@@ -53,11 +56,19 @@ const icon = (entry) =>
   );
 async function send(message) {
   const response = await chrome.runtime.sendMessage(message);
-  if (!response || response.ok === false)
-    throw new Error(
-      response?.error?.message ||
-        "The extension worker is unavailable. Reload ATLAS.",
+  if (!response || response.ok === false) {
+    if (response?.state) setLifecycle(response.state);
+    throw Object.assign(
+      new Error(
+        response?.error?.message ||
+          "The extension worker is unavailable. Reload ATLAS.",
+      ),
+      {
+        code: response?.error?.code,
+        operationId: response?.error?.operationId,
+      },
     );
+  }
   return response;
 }
 const transportFailure = (error) =>
@@ -74,7 +85,7 @@ async function api(path, body) {
     paired(true);
     return value;
   } catch (error) {
-    if (transportFailure(error)) paired(false);
+    if (transportFailure(error) && !error.code) paired(false);
     throw error;
   }
 }
@@ -86,10 +97,30 @@ function notice(message, success = false) {
 function fail(error) {
   notice(error.message || String(error));
 }
+function setLifecycle(value) {
+  if (value === "OUTCOME_UNKNOWN") state.outcomeUnknown = true;
+  if (value === "READY" && state.outcomeUnknown) value = "OUTCOME_UNKNOWN";
+  state.lifecycle = value;
+  state.paired = ["READY", "NEEDS_GRANT", "OUTCOME_UNKNOWN"].includes(value);
+  const labels = {
+    READY: "Ready",
+    STARTING: "Starting companion…",
+    OFFLINE: "Offline",
+    NEEDS_INSTALL: "Install companion",
+    NEEDS_PAIRING: "Connect companion",
+    NEEDS_GRANT: "Add a location",
+    NEEDS_REPAIR: "Companion needs repair",
+    OUTCOME_UNKNOWN: "Operation outcome unknown",
+  };
+  $("connection-state").textContent = "● " + (labels[value] || value);
+  $("connection-state").dataset.state = value;
+  $("connection-state").classList.toggle("ready", state.paired);
+  $("connection-state").title = value;
+}
 function paired(ready) {
-  state.paired = ready;
-  $("connection-state").textContent = ready ? "● Connected" : "● Offline";
-  $("connection-state").classList.toggle("ready", ready);
+  setLifecycle(
+    ready ? (state.grants.length ? "READY" : "NEEDS_GRANT") : "OFFLINE",
+  );
 }
 function chosen() {
   return state.entries.filter((e) => state.selected.has(e.path));
@@ -214,10 +245,10 @@ function render() {
       $("empty").hidden = false;
       $("connect-start").hidden = state.paired;
       $("empty").querySelector("h2").textContent = state.paired
-        ? "No folders authorized yet"
+        ? "Add your first location"
         : "Your files. A little more connected.";
       $("empty").querySelector("p").textContent = state.paired
-        ? "Grant a folder with the companion CLI, then reload authorized folders. ATLAS never grants itself access."
+        ? "Choose Add location to select folders in the trusted companion. Return here and refresh locations after approval."
         : "Pair your local companion to browse folders you explicitly authorize.";
     }
     updateStatus();
@@ -1210,7 +1241,9 @@ document.addEventListener("keydown", (event) => {
       Date.now() - saved.clipboard.created < 30 * 60 * 1000
     )
       state.clipboard = saved.clipboard;
-    const result = await send({ type: "state" });
+    setLifecycle("STARTING");
+    const result = await send({ type: "ensure-ready" });
+    if (result.state) setLifecycle(result.state);
     if (result.paired) await loadGrants();
     await navigate(null);
   } catch (error) {
@@ -1224,8 +1257,72 @@ window.addEventListener("atlas:refresh", () =>
 );
 
 chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "session" && changes.unknownOperation)
+    state.outcomeUnknown = Boolean(changes.unknownOperation.newValue);
+  if (area === "session" && changes.lifecycleState)
+    setLifecycle(changes.lifecycleState.newValue || "OFFLINE");
   if (area === "session" && changes.clipboard) {
     state.clipboard = changes.clipboard.newValue || null;
     render();
   }
 });
+
+async function manageLocations() {
+  try {
+    await send({ type: "native-manage" });
+    state.nativeManaging = true;
+    notice(
+      "The trusted native location manager is opening. Approve or revoke locations there, then use Refresh locations here. The browser cannot grant itself access.",
+      true,
+    );
+  } catch (error) {
+    fail(error);
+  }
+}
+$("add-location").onclick = manageLocations;
+$("manage-locations").onclick = manageLocations;
+window.addEventListener("focus", () => {
+  if (state.nativeManaging) {
+    state.nativeManaging = false;
+    loadGrants()
+      .then(() => navigate(state.grant, state.path, false))
+      .catch(fail);
+  }
+});
+$("connection-state").onclick = async () => {
+  if (state.outcomeUnknown) {
+    $("unknown-dialog").showModal();
+    return;
+  }
+  setLifecycle("STARTING");
+  try {
+    const result = await send({ type: "ensure-ready" });
+    if (result.state) setLifecycle(result.state);
+    if (result.paired) {
+      await loadGrants();
+      await navigate(state.grant, state.path, false);
+    } else showPair();
+  } catch (error) {
+    fail(error);
+  }
+};
+
+$("unknown-close").onclick = () => $("unknown-dialog").close();
+$("unknown-activity").onclick = () => {
+  $("unknown-dialog").close();
+  $("activity").click();
+};
+$("unknown-catalogs").onclick = () => {
+  $("unknown-dialog").close();
+  $("library").click();
+};
+$("unknown-dismiss").onclick = async () => {
+  await send({ type: "acknowledge-unknown" });
+  state.outcomeUnknown = false;
+  setLifecycle(state.grants.length ? "READY" : "NEEDS_GRANT");
+  $("unknown-dialog").close();
+  notice(
+    "Warning dismissed after your inspection. Durable receipts are retained; no operation was retried.",
+    true,
+  );
+};

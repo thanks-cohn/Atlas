@@ -1,0 +1,25 @@
+name: Build Linux companion
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  standalone:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned build tools with normal verification
+        run: python -m pip install -r packaging/requirements-build.txt
+      - name: Build standalone Linux companion
+        run: python scripts/build_companion.py
+      - name: Verify actual installed binary and Native Messaging framing
+        run: python scripts/smoke_installed_companion.py dist/linux/atlas-companion
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-companion-linux-x86_64
+          path: dist/linux/
+          if-no-files-found: error
+          retention-days: 14

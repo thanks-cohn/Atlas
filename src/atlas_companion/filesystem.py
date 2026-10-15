@@ -37,12 +37,16 @@ class Provider:
         grant = self.state.get_grant(request.get('grant'))
         path = request.get('path', '')
         components = parts(path)
+        self.state.check_path(grant, path)
         offset, limit = request.get('offset', 0), request.get('limit', 500)
         if type(offset) is not int or type(limit) is not int or offset < 0 or not 1 <= limit <= 1000:
             raise APIError('INVALID_PAGE', 'offset must be nonnegative; limit must be 1–1000.')
         entries = []
         scanned = 0
+        private_exclusions = self.state._exclusions()
+        private_ids = {(item['device'], item['inode']) for item in private_exclusions}
         with root_fd(grant) as root, directory(root, components) as fd:
+            self.state.check_fd(fd)
             # Bound work even when an attacker supplies a huge directory.
             with os.scandir(fd) as scan:
                 for entry in scan:
@@ -51,7 +55,17 @@ class Provider:
                         raise APIError('LIMIT', 'Directory exceeds 20,000 entries. Choose a narrower folder.', 413)
                     if entry.name.startswith('.atlas-'):
                         continue
+                    try:
+                        self.state.check_path(grant, '/'.join(components + [entry.name]), exclusions=private_exclusions)
+                    except APIError as exc:
+                        if exc.code == 'PRIVATE_STATE':
+                            continue
+                        raise
                     s = entry.stat(follow_symlinks=False)
+                    if s.st_nlink > 1 and stat.S_ISREG(s.st_mode):
+                        continue
+                    if (s.st_dev, s.st_ino) in private_ids:
+                        continue
                     if not (stat.S_ISDIR(s.st_mode) or stat.S_ISREG(s.st_mode)):
                         continue
                     entries.append({'name': entry.name, 'path': '/'.join(components + [entry.name]),
@@ -66,9 +80,12 @@ class Provider:
     def read(self, request):
         grant = self.state.get_grant(request.get('grant'))
         path = request.get('path')
+        self.state.check_path(grant, path)
         with root_fd(grant) as root, parent(root, path) as (fd, leaf):
+            self.state.check_fd(fd)
             stream = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
             try:
+                self.state.check_fd(stream)
                 s = os.fstat(stream)
                 if not stat.S_ISREG(s.st_mode):
                     raise APIError('UNSUPPORTED_ENTRY', 'Only regular files can be previewed.', 403)
@@ -80,6 +97,7 @@ class Provider:
                     raise APIError('PREVIEW_TOO_LARGE', 'File grew beyond the preview limit.', 413)
             finally:
                 os.close(stream)
+        self.state.get_grant(grant['id'])
         return {'data': base64.b64encode(content).decode('ascii'), 'size': len(content),
                 'mime': mimetypes.guess_type(leaf)[0] or 'application/octet-stream', 'name': leaf}
 
@@ -91,9 +109,12 @@ class Provider:
         another process grows the file after the initial metadata check.
         """
         grant = self.state.get_grant(request.get('grant'))
+        self.state.check_path(grant, request.get('path'))
         with root_fd(grant) as root, parent(root, request.get('path')) as (fd, leaf):
+            self.state.check_fd(fd)
             stream = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
             try:
+                self.state.check_fd(stream)
                 before = os.fstat(stream)
                 if not stat.S_ISREG(before.st_mode):
                     raise APIError('UNSUPPORTED_ENTRY', 'Only regular files can be hashed.', 403)
@@ -114,6 +135,7 @@ class Provider:
                                            value.st_mtime_ns, value.st_ctime_ns)
                 if signature(before) != signature(after) or total != after.st_size:
                     raise APIError('CHANGED_DURING_READ', 'File changed while hashing; retry when it is stable.', 409)
+                self.state.get_grant(grant['id'])
                 return {'sha256': digest.hexdigest(), 'size': total, 'modified': after.st_mtime}
             finally:
                 os.close(stream)
@@ -140,11 +162,13 @@ class Provider:
             if not isinstance(destination, dict):
                 raise APIError('INVALID_DESTINATION', 'Choose an authorized destination folder.')
             parts(destination.get('path', ''))
-            self.state.get_grant(destination.get('grant'), write=True)
+            target_grant = self.state.get_grant(destination.get('grant'), write=True)
+            self.state.check_path(target_grant, destination.get('path', ''))
         for source in sources:
-            self.state.get_grant(source.get('grant'), write=action != 'copy')
+            source_grant = self.state.get_grant(source.get('grant'), write=action != 'copy')
             if action != 'restore':
                 parts(source.get('path'), False)
+                self.state.check_path(source_grant, source['path'], recursive=True)
             else:
                 # Restore source path is an opaque trash ID, not a filesystem path.
                 if not isinstance(source.get('path'), str) or not __import__('re').fullmatch('[a-f0-9]{32}', source['path']):
@@ -169,7 +193,9 @@ class Provider:
     def _one(self, action, source, destination, new_name):
         if action == 'mkdir':
             grant = self.state.get_grant(destination['grant'], write=True)
+            self.state.check_path(grant, '/'.join(filter(None, [destination.get('path', ''), new_name])))
             with root_fd(grant) as root, directory(root, parts(destination.get('path', ''))) as dst:
+                self.state.check_fd(dst)
                 os.mkdir(new_name, 0o755, dir_fd=dst)
                 os.fsync(dst)
             return {'destination': {'grant': grant['id'], 'path': '/'.join(filter(None, [destination.get('path', ''), new_name]))}}
@@ -177,7 +203,9 @@ class Provider:
         with root_fd(grant) as root:
             if action == 'restore':
                 return self._restore(root, grant, source, destination)
+            self.state.check_path(grant, source['path'], recursive=True)
             with parent(root, source['path']) as (src, leaf):
+                self.state.check_entry(src, leaf, recursive=True)
                 s = regular_stat(src, leaf)
                 if action == 'trash':
                     trash = self._trash_fd(root)
@@ -190,6 +218,7 @@ class Provider:
                         os.close(trash)
                     return {'trash_id': ident, 'original': source, 'recoverable': True}
                 if action == 'rename':
+                    self.state.check_path(grant, '/'.join(parts(source['path'])[:-1] + [new_name]))
                     rename_no_replace(src, leaf, src, new_name)
                     os.fsync(src)
                     dest_path = '/'.join(parts(source['path'])[:-1] + [new_name])
@@ -198,19 +227,21 @@ class Provider:
                 target = self.state.get_grant(destination['grant'], write=True)
                 target_leaf = new_name if action == 'copy' and new_name else leaf
                 dest_path = '/'.join(filter(None, [destination.get('path', ''), target_leaf]))
+                self.state.check_path(target, dest_path)
                 # Never copy a directory into itself, including overlapping grants.
                 target_abs = os.path.join(target['root'], destination.get('path', ''), target_leaf)
                 source_abs = os.path.join(grant['root'], source['path'])
                 if stat.S_ISDIR(s.st_mode) and os.path.commonpath([target_abs, source_abs]) == source_abs:
                     raise APIError('RECURSIVE_DESTINATION', 'A folder cannot be transferred into itself.')
                 with root_fd(target) as dstroot, directory(dstroot, parts(destination.get('path', ''))) as dst:
+                    self.state.check_fd(dst)
                     if action == 'move':
                         rename_no_replace(src, leaf, dst, leaf)
                         os.fsync(src)
                         os.fsync(dst)
                         self._reconcile(grant['id'], source['path'], target['id'], dest_path)
                     else:
-                        self._copy_publish(src, leaf, dst, target_leaf)
+                        self._copy_publish(src, leaf, dst, target_leaf, grant['id'], target['id'])
                 return {'destination': {'grant': target['id'], 'path': dest_path}}
 
     def _reconcile(self, old_grant, old, new_grant, new):
@@ -238,10 +269,14 @@ class Provider:
             raise APIError('NOT_FOUND', 'No authorized trash receipt exists.', 404)
         target = self.state.get_grant(destination['grant'], write=True)
         leaf = parts(found['original']['path'])[-1]
+        restored_path = '/'.join(filter(None, [destination.get('path', ''), leaf]))
+        self.state.check_path(target, restored_path)
         trash = self._trash_fd(root)
         try:
+            self.state.check_entry(trash, source['path'], recursive=True)
             regular_stat(trash, source['path'])
             with root_fd(target) as dstroot, directory(dstroot, parts(destination.get('path', ''))) as dst:
+                self.state.check_fd(dst)
                 rename_no_replace(trash, source['path'], dst, leaf)
                 os.fsync(dst)
                 os.fsync(trash)
@@ -251,25 +286,37 @@ class Provider:
         self._reconcile(grant['id'], found['original']['path'], target['id'], restored_path)
         return {'destination': {'grant': target['id'], 'path': restored_path}}
 
-    def _copy_publish(self, src, leaf, dst, target):
+    def _copy_publish(self, src, leaf, dst, target, source_grant=None, target_grant=None):
         # Stage within destination; never publish a partially copied file/tree.
         staging = '.atlas-copy-' + uuid.uuid4().hex
-        budget = {'bytes': 0, 'entries': 0}
+        budget = {'bytes': 0, 'entries': 0, 'source_grant': source_grant, 'target_grant': target_grant}
         try:
             self._copy(src, leaf, dst, staging, budget, 0)
+            self._copy_authority(budget)
+            self.state.check_fd(dst)
             rename_no_replace(dst, staging, dst, target)
             os.fsync(dst)
         finally:
             self._remove_staging(dst, staging)
 
+    def _copy_authority(self, budget):
+        if budget.get('source_grant'):
+            self.state.get_grant(budget['source_grant'])
+        if budget.get('target_grant'):
+            self.state.get_grant(budget['target_grant'], write=True)
+
     def _copy(self, src, leaf, dst, target, budget, depth):
+        self._copy_authority(budget)
         if depth > 64:
             raise APIError('LIMIT', 'Copy exceeds 64 directory levels.')
         budget['entries'] += 1
         if budget['entries'] > MAX_COPY_ENTRIES:
             raise APIError('LIMIT', 'Copy exceeds 10,000 entries.')
+        self.state.check_entry(src, leaf, recursive=True)
+        self.state.check_fd(dst)
         fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=src)
         try:
+            self.state.check_fd(fd, recursive=True)
             s = os.fstat(fd)
             if stat.S_ISDIR(s.st_mode):
                 os.mkdir(target, 0o755, dir_fd=dst)
@@ -287,6 +334,7 @@ class Provider:
                 try:
                     with os.fdopen(os.dup(fd), 'rb') as reader, os.fdopen(os.dup(out), 'wb') as writer:
                         while chunk := reader.read(1024 * 1024):
+                            self._copy_authority(budget)
                             budget['bytes'] += len(chunk)
                             if budget['bytes'] > MAX_COPY_BYTES:
                                 raise APIError('LIMIT', 'Copy exceeds 256 MiB; use the system file manager for larger transfers.')

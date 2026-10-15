@@ -980,3 +980,29 @@ dialog input {
   color: var(--muted);
   line-height: 1.6;
 }
+.add-location {
+  color: var(--accent);
+  text-align: left;
+  font-size: 11px;
+  margin: 0 0 9px 4px;
+}
+.connection-state[data-state="STARTING"] {
+  color: #b08231;
+}
+.connection-state[data-state="OUTCOME_UNKNOWN"],
+.connection-state[data-state="NEEDS_REPAIR"] {
+  color: #ae5146;
+}
+footer .connection-state {
+  padding: 3px 5px;
+  font-size: 10px;
+}
+@media (max-width: 650px) {
+  .add-location {
+    overflow: hidden;
+    white-space: nowrap;
+    width: 40px;
+    font-size: 11px;
+    padding: 8px 3px;
+  }
+}

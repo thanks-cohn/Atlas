@@ -82,7 +82,7 @@ def main():
                     window.addEventListener('storage',e=>{if(e.key?.startsWith('atlas-session-'))atlasEmit(e.key.slice(14),JSON.parse(e.oldValue||'null'),JSON.parse(e.newValue||'null'));});
                     window.chrome={
                       runtime:{id:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',getURL:p=>p,sendMessage:m=>{
-                        if(m.type==='state')return Promise.resolve({ok:true,paired:localStorage.getItem('atlas-test-paired')==='yes'});
+                        if(m.type==='state'||m.type==='ensure-ready'){const paired=localStorage.getItem('atlas-test-paired')==='yes';return Promise.resolve({ok:true,paired,state:paired?'READY':'NEEDS_PAIRING'});}
                         if(m.type==='pair')localStorage.setItem('atlas-test-paired','yes');
                         return window.atlasTestBroker(m);
                       }},
@@ -245,6 +245,18 @@ def main():
                 if args.artifacts:
                     page.screenshot(path=str(args.artifacts / 'narrow.png'))
                 assert not failures, failures
+                for lifecycle in ('STARTING','OFFLINE','NEEDS_INSTALL','NEEDS_PAIRING','NEEDS_GRANT','NEEDS_REPAIR','OUTCOME_UNKNOWN'):
+                    page.evaluate('(value)=>chrome.storage.session.set({lifecycleState:value})', lifecycle)
+                    expect(page.locator('#connection-state')).to_have_attribute('data-state',lifecycle)
+                    assert not page.locator('#pair-dialog').evaluate('(dialog)=>dialog.open')
+                page.locator('#connection-state').click()
+                expect(page.locator('#unknown-dialog')).to_be_visible()
+                page.locator('#unknown-dismiss').click()
+                expect(page.locator('#unknown-dialog')).not_to_be_visible()
+                print('PASS unknown outcome inspection/acknowledgement: no mutation replay')
+                page.evaluate("chrome.storage.session.remove('unknownOperation')")
+                page.evaluate("chrome.storage.session.set({lifecycleState:'READY'})")
+                print('PASS explicit lifecycle states: no unsolicited pairing dialog')
                 print('PASS 390px layout: no document overflow; no JS page errors')
                 print('NOT_RUN actual MV3 worker/CORS/Chrome Native Messaging (managed extension loading policy)')
                 context.close()

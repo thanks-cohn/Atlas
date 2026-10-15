@@ -113,3 +113,12 @@ def rename_no_replace(src_fd, src, dst_fd, dst):
     if fn(src_fd, os.fsencode(src), dst_fd, os.fsencode(dst), 1):
         e = ctypes.get_errno()
         raise OSError(e, os.strerror(e))
+
+
+def descriptor_path(fd):
+    """Linux kernel-resolved name of an already open descriptor, fail closed."""
+    require_platform()
+    value = os.readlink('/proc/self/fd/' + str(fd))
+    if not value.startswith('/') or value.endswith(' (deleted)'):
+        raise APIError('PATH_CHANGED', 'Entry changed during access; refresh and retry.', 409)
+    return value
