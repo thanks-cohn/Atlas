@@ -43,3 +43,9 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md](PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) — proposed cross-OS personal workspace continuity, WebVM/other execution substrates, environment manifests, restoration, ecosystem opportunities, security boundaries and experimental validation.
 
 - [DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md](DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md) — preserved discussion of transporting the **same personal computing environment between computers**, WebVM's optional role, portability/security invariants, current implementation status and proof milestones.
+
+## Companion cold reconstruction and optional supervisor
+
+- [COMPANION_COLD_RECONSTRUCTION.md](COMPANION_COLD_RECONSTRUCTION.md) — pinned Chute Windows RC1 design, the exact 17.1 MiB executable SHA256, recovery semantics, OS lifecycle constraints, secure Native Messaging, optional consented second supervisor and agent-neutral reconstruction steps.
+- [COMPANION_RECOVERY_VERIFICATION.md](COMPANION_RECOVERY_VERIFICATION.md) — twenty positive, negative, browser lifecycle, power and independent-implementation acceptance tests.
+- [forever/manifest.json](../../forever/manifest.json) — canonical Standard 0.1 records for wake, lifecycle, supervisor, recovery authority, reconciliation, OS power boundary and historical Chute reference.
