@@ -28,13 +28,57 @@ class WindowsRuntimeTests(unittest.TestCase):
         self.assertTrue(current_sid().startswith('S-1-'))
         key = self.state.bootstrap_key()
         token = self.state.pair('a' * 32)
-        # Inspect protected DACL using the Windows security API via PowerShell.
-        script = "$acl=Get-Acl -LiteralPath $env:ATLAS_TEST_PRIVATE; $acl.AreAccessRulesProtected; $acl.Access | ForEach-Object { $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value }"
-        environment = dict(os.environ, ATLAS_TEST_PRIVATE=str(self.state.directory))
-        result = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', script],
-                                env=environment, capture_output=True, text=True, check=True)
-        self.assertIn('True', result.stdout)
-        self.assertEqual(set(result.stdout.split()[1:]), {current_sid(), 'S-1-5-18'})
+        # Inspect the actual security descriptor independently of the production
+        # verifier. PowerShell Get-Acl can fail nonterminating under retained
+        # no-delete-share directory handles, so use READ_CONTROL directly.
+        import ctypes
+        from ctypes import wintypes as w
+        import re
+        from atlas_companion.windows_state import windows_api
+        kernel, advapi = windows_api()
+        handle = kernel.CreateFileW(str(self.state.directory), 0x20000, 3, None, 3, 0x02200000, None)
+        self.assertNotEqual(handle, ctypes.c_void_p(-1).value)
+        owner, descriptor = w.LPVOID(), w.LPVOID()
+        advapi.GetSecurityInfo.argtypes = [w.HANDLE, ctypes.c_int, w.DWORD,
+            ctypes.POINTER(w.LPVOID), w.LPVOID, w.LPVOID, w.LPVOID, ctypes.POINTER(w.LPVOID)]
+        try:
+            self.assertEqual(advapi.GetSecurityInfo(handle, 1, 5, ctypes.byref(owner),
+                None, None, None, ctypes.byref(descriptor)), 0)
+            owner_text = w.LPWSTR()
+            self.assertTrue(advapi.ConvertSidToStringSidW(owner, ctypes.byref(owner_text)))
+            try:
+                self.assertEqual(owner_text.value, current_sid())
+            finally:
+                kernel.LocalFree(ctypes.cast(owner_text, w.HLOCAL))
+            control, revision = w.WORD(), w.DWORD()
+            advapi.GetSecurityDescriptorControl.argtypes = [w.LPVOID, ctypes.POINTER(w.WORD), ctypes.POINTER(w.DWORD)]
+            self.assertTrue(advapi.GetSecurityDescriptorControl(descriptor,
+                ctypes.byref(control), ctypes.byref(revision)))
+            self.assertTrue(control.value & 0x1000, 'DACL must be protected')
+            advapi.ConvertSecurityDescriptorToStringSecurityDescriptorW.argtypes = [
+                w.LPVOID, w.DWORD, w.DWORD, ctypes.POINTER(w.LPWSTR), w.LPVOID]
+            sddl = w.LPWSTR()
+            self.assertTrue(advapi.ConvertSecurityDescriptorToStringSecurityDescriptorW(
+                descriptor, 1, 4, ctypes.byref(sddl), None))
+            try:
+                acl_text = sddl.value
+                aces = re.findall(r'\(([^()]*)\)', acl_text)
+                self.assertEqual(len(aces), 2, acl_text)
+                trustees = set()
+                for ace in aces:
+                    kind, flags, rights, object_guid, inherited_guid, trustee = ace.split(';')
+                    self.assertEqual(kind, 'A', acl_text)
+                    self.assertEqual(flags, 'OICI', acl_text)
+                    self.assertIn(rights, ('FA', 'GA'), acl_text)
+                    self.assertEqual((object_guid, inherited_guid), ('', ''), acl_text)
+                    trustees.add(trustee)
+                self.assertEqual(trustees, {current_sid(), 'SY'}, acl_text)
+            finally:
+                kernel.LocalFree(ctypes.cast(sddl, w.HLOCAL))
+        finally:
+            if descriptor:
+                kernel.LocalFree(descriptor)
+            kernel.CloseHandle(handle)
         reopened = WindowsState(self.state.directory)
         try:
             self.assertEqual(key, reopened.bootstrap_key())
