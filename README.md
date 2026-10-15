@@ -23,3 +23,7 @@ Begin with [AGENTS.md](AGENTS.md) (tool/provider-neutral instructions), the [cur
 ## Premium explorer destination
 
 ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** with an explicitly installed native helper: rich right-click operations, copy/cut/paste, move/copy/send-to, multi-select, keyboard navigation, previews, local and R2 browsing, tags, catalogs and relationships. The enduring requirements are in [the premium explorer contract](docs/forever-works/PREMIUM_EXPLORER_PRODUCT_CONTRACT.md). An ambitious Codex implementation assignment is available at [codex/BUILD_PREMIUM_ATLAS_END_TO_END.md](codex/BUILD_PREMIUM_ATLAS_END_TO_END.md); it is not normative architecture.
+
+## Future portable environment proposal
+
+[Portable Personal Environment and WebVM](docs/forever-works/PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) explores restoring one's browser-centered workspace, assets, workflows and compatible tools across Windows, Linux, Android and future hosts, without making WebVM a mandatory dependency. This is a non-normative proposal, not implemented runtime or sync functionality.
