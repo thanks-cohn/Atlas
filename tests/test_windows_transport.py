@@ -12,7 +12,7 @@ from unittest import mock
 class WindowsTransportTests(unittest.TestCase):
     def setUp(self):
         from atlas_companion.windows_state import WindowsState
-        from atlas_companion.windows_filesystem import WindowsProvider
+        from atlas_companion.windows_filesystem import Provider as WindowsProvider
         from atlas_companion.server import Server
         from atlas_native import __main__ as native
         self.native = native
