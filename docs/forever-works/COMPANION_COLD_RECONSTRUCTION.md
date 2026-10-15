@@ -54,3 +54,11 @@ Native host enrollment uses ATLAS's **own** exact production extension ID, and a
 ## Current ATLAS boundary
 
 As recorded in `codex/HANDOFF_LATEST.md` 2026-10-15, ATLAS has a Linux development native bootstrap with authenticated wake proof; actual Chrome MV3 callback, Windows PyInstaller install, resume/hibernate/shutdown cycles and optional second supervisor remained unproven/unbuilt. Do not replace this record with a success assertion absent new evidence.
+
+## Accepted native-feeling interaction refinement — 2026-10-15
+
+The owner requires a **one-time, understandable native setup** followed by a consistent familiar file explorer. Installation, exact extension pairing and initial folder/drive grants should be durable within that same user account/device, surviving browser reload, MV3 worker suspension, helper restart, sleep/resume and reboot/logon where OS policy permits. Existing authorized operations should not repeatedly request Chrome pickers, pairing tokens, or identical grants. An authorized whole-drive or home-directory scope may be supported after explicit native consent; it never implies privilege beyond the user's OS account or transfer of scopes between devices.
+
+**Fixed user-observable behavior:** previously authorized access reappears automatically, the native bridge can be awakened without manual terminal commands, and ordinary authorized navigation, copy/paste and move operations work without consent fatigue. **Required exceptions:** new root/scope, changed extension identity, revoked authorization, another device/account, unavailable OS permission, and irreversible/high-risk effects may require explicit interaction. A durable grant remains revocable and inspectable. Do not silently disable OS security or request admin by default.
+
+**Evidence:** after initial enrollment, run repeat-use scenarios through real Chrome/Native Messaging and restart/wake events and count redundant prompts (target **zero** for same-scope ordinary actions). Test revocation and extension identity changes as negative cases. This refines the companion product acceptance outcome; implementation and browser-native permission prompts are not assumed equivalent.
