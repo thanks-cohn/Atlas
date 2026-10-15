@@ -1,0 +1,29 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.atlas-joyful-curation",
+  "kind": "capability",
+  "name": "Fun-first visual catalogs and annotations",
+  "statement": "Users can accomplish fun-first visual catalogs and annotations while preserving user-owned meaning, usability and consent.",
+  "requiredProperties": [
+    "One-click Save and native bookmark import with original provenance",
+    "Sortable pinned catalog icons and beautiful accessible list, masonry, gallery and editorial views",
+    "All items, folders, tags, documents, video, files, image galleries and images have optional independent title, notes and tags",
+    "Multiple dated user notes and user-authored meanings; no forced metadata",
+    "Relationships have their own typed labels, why-connected text and tags",
+    "Clickable exact counts for attached galleries, documents, connections, videos and files"
+  ],
+  "relatedInvariants": [
+    "invariant.atlas-semantic-preservation",
+    "invariant.atlas-privacy-and-authority",
+    "invariant.atlas-non-destructive-composition"
+  ],
+  "verification": [],
+  "criticality": "essential",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
