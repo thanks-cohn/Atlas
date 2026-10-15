@@ -38,3 +38,7 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 The default native state is private to your OS user under `~/.local/share/atlas`; use `--state-dir /your/private/path` **before** each subcommand to choose another location. Setup never silently installs a native executable. This provider requires Linux and deliberately rejects symlink traversal and ungranted paths. An optional explicit Linux Native Messaging launcher can wake/pair the companion; [setup and limitations](docs/DEVELOPMENT.md) distinguish it from a standalone native distribution. Windows support remains incomplete.
 
 Read [DEVELOPMENT.md](docs/DEVELOPMENT.md), [COMPANION_API.md](docs/COMPANION_API.md), [the privacy disclosure](docs/PRIVACY.md) and [the latest implementation handoff](codex/HANDOFF_LATEST.md) before using personal data. `python scripts/package_extension.py` produces an unsigned extension-only ZIP under ignored `dist/`; it does not install or publish anything.
+
+## Cross-computer continuity decision
+
+[The same personal environment across computers](docs/forever-works/DECISION_RECORD_CROSS_COMPUTER_ENVIRONMENT_CONTINUITY.md) records our long-term goal: restore a recognizable portable workspace, catalogs, preferences, relationships and compatible execution tools on different operating systems, while reauthorizing machine-specific access. This is a proposal, not yet a working sync/restore product.
