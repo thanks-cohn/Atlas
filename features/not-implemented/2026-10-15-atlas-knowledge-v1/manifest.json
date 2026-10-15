@@ -1,0 +1,43 @@
+{
+  "kind": "proposed-forever-works-period-package",
+  "foreverVersion": "0.1",
+  "projectId": "atlas",
+  "periodDate": "2026-10-15",
+  "periodId": "2026-10-15-atlas-knowledge-v1",
+  "packageVersion": "1.0.0",
+  "revision": 1,
+  "implementationState": "not-implemented",
+  "registeredInCanonicalManifest": false,
+  "canonicalManifest": "forever/manifest.json",
+  "amends": [
+    "docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md"
+  ],
+  "supersedes": [],
+  "records": {
+    "capabilities": [
+      "records/capability.atlas-joyful-curation.json",
+      "records/capability.atlas-mixed-media.json",
+      "records/capability.atlas-portable-knowledge.json",
+      "records/capability.atlas-publishing.json",
+      "records/capability.atlas-living-graph.json"
+    ],
+    "invariants": [
+      "records/invariant.atlas-semantic-preservation.json",
+      "records/invariant.atlas-privacy-and-authority.json",
+      "records/invariant.atlas-non-destructive-composition.json"
+    ],
+    "decisions": [
+      "records/decision.atlas-dated-additivity.json"
+    ]
+  },
+  "domainContract": "akf-contract.json",
+  "tests": "acceptance.json",
+  "documentation": [
+    "README.md",
+    "WHY_WHAT_WHEN_WHERE_HOW.md",
+    "COLD_AGENT_HANDOFF.md"
+  ],
+  "promotionRule": "Do not edit canonical manifest before verified integrated staging, real production-quality user-value acceptance and independently reproducible evidence; then append newly accepted references without losing older entries.",
+  "provenance": "Owner-directed Atlas vision 2026-10-15 and docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md",
+  "validation": "NOT RUN: records modelled after project's Forever Works 0.1 examples; independent upstream schema validation required."
+}
