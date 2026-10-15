@@ -24,7 +24,7 @@ def components(path, allow_empty=True):
         return []
     result = path.split('/')
     for name in result:
-        if (not name or name in ('.', '..') or name.startswith('.atlas-')
+        if (not name or name in ('.', '..') or name.casefold().startswith('.atlas-')
                 or any(c in name for c in ':<>"|?*') or any(ord(c) < 32 for c in name)
                 or name.endswith((' ', '.'))
                 or re.fullmatch(r'(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?', name, re.I)):
@@ -91,6 +91,11 @@ class _DirectoryEntry(ctypes.Structure):
                 ('FileId', ctypes.c_longlong), ('FileName', w.WCHAR * 1)]
 
 
+class _RenameInformation(ctypes.Structure):
+    _fields_ = [('ReplaceIfExists', w.BOOLEAN), ('RootDirectory', w.HANDLE),
+                ('FileNameLength', w.DWORD), ('FileName', w.WCHAR * 1)]
+
+
 class WindowsRoot:
     """Explicit held local root; list/read only, no implicit enrollment or writes.
 
@@ -111,9 +116,15 @@ class WindowsRoot:
         self.kernel.GetFileInformationByHandleEx.restype = w.BOOL
         self.kernel.ReadFile.argtypes = [w.HANDLE, w.LPVOID, w.DWORD, ctypes.POINTER(w.DWORD), w.LPVOID]
         self.kernel.ReadFile.restype = w.BOOL
+        self.kernel.WriteFile.argtypes = [w.HANDLE, w.LPCVOID, w.DWORD, ctypes.POINTER(w.DWORD), w.LPVOID]
+        self.kernel.WriteFile.restype = w.BOOL
+        self.kernel.FlushFileBuffers.argtypes = [w.HANDLE]
+        self.kernel.FlushFileBuffers.restype = w.BOOL
         self.nt.NtCreateFile.argtypes = [ctypes.POINTER(w.HANDLE), w.DWORD, ctypes.POINTER(_ObjectAttributes),
             ctypes.POINTER(_IOStatus), w.LPVOID, w.DWORD, w.DWORD, w.DWORD, w.DWORD, w.LPVOID, w.DWORD]
         self.nt.NtCreateFile.restype = ctypes.c_long
+        self.nt.NtSetInformationFile.argtypes = [w.HANDLE, ctypes.POINTER(_IOStatus), w.LPVOID, w.ULONG, ctypes.c_int]
+        self.nt.NtSetInformationFile.restype = ctypes.c_long
         self.nt.RtlNtStatusToDosError.argtypes = [ctypes.c_long]; self.nt.RtlNtStatusToDosError.restype = w.ULONG
         self.handle = None
         self._excluded = set()
@@ -156,17 +167,22 @@ class WindowsRoot:
         if not self._collecting_private_identities and self._identity(handle) in self._excluded:
             raise WindowsBoundaryError('Private native state/runtime is excluded.')
 
-    def _relative(self, parent, name, directory=None):
-        components(name, False)
+    def _relative(self, parent, name, directory=None, *, access=0x100081,
+                  disposition=1, internal=False, share=3, security=None):
+        if internal:
+            if not re.fullmatch(r'\.atlas-(?:trash|copy-[a-f0-9]{32})', name):
+                raise WindowsBoundaryError('Invalid internal generated name.')
+        elif len(components(name, False)) != 1:
+            raise WindowsBoundaryError('Native opens require a single component.')
         text = ctypes.create_unicode_buffer(name)
         encoded_length = len(name.encode('utf-16-le'))
         u = _UnicodeString(encoded_length, encoded_length + 2, ctypes.cast(text, w.LPWSTR))
-        obj = _ObjectAttributes(ctypes.sizeof(_ObjectAttributes), parent, ctypes.pointer(u), 0x40 | 0x1000, None, None)
+        obj = _ObjectAttributes(ctypes.sizeof(_ObjectAttributes), parent, ctypes.pointer(u), 0x40 | 0x1000, security, None)
         output = w.HANDLE(); status = _IOStatus()
         # FILE_READ_DATA/LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE.
         flags = 0x00200000 | 0x20 | (1 if directory is True else 0x40 if directory is False else 0)
-        code = self.nt.NtCreateFile(ctypes.byref(output), 0x100081, ctypes.byref(obj), ctypes.byref(status),
-                                   None, 0, 3, 1, flags, None, 0)
+        code = self.nt.NtCreateFile(ctypes.byref(output), access, ctypes.byref(obj), ctypes.byref(status),
+                                   None, 0, share, disposition, flags, None, 0)
         if code < 0:
             raise ctypes.WinError(self.nt.RtlNtStatusToDosError(code))
         try:
@@ -175,6 +191,33 @@ class WindowsRoot:
         except BaseException:
             self.kernel.CloseHandle(output)
             raise
+
+    def rename_handle(self, source, parent, name):
+        """Rename the DELETE-authorized source into held parent, never replace."""
+        if len(components(name, False)) != 1:
+            raise WindowsBoundaryError('Rename requires a single component.')
+        self._check(source)
+        self._check(parent)
+        encoded = name.encode('utf-16-le')
+        offset = _RenameInformation.FileName.offset
+        buffer = ctypes.create_string_buffer(max(ctypes.sizeof(_RenameInformation), offset + len(encoded)))
+        info = _RenameInformation.from_buffer(buffer)
+        info.ReplaceIfExists = False
+        info.RootDirectory = parent
+        info.FileNameLength = len(encoded)
+        ctypes.memmove(ctypes.addressof(buffer) + offset, encoded, len(encoded))
+        status = _IOStatus()
+        code = self.nt.NtSetInformationFile(source, ctypes.byref(status), buffer, offset + len(encoded), 10)
+        if code < 0:
+            raise ctypes.WinError(self.nt.RtlNtStatusToDosError(code))
+
+    def discard_staging(self, handle):
+        """Delete only an owned unpublished staging handle; never public paths."""
+        value = w.BOOLEAN(True)
+        status = _IOStatus()
+        code = self.nt.NtSetInformationFile(handle, ctypes.byref(status), ctypes.byref(value), ctypes.sizeof(value), 13)
+        if code < 0:
+            raise ctypes.WinError(self.nt.RtlNtStatusToDosError(code))
 
     def _absolute(self, path, directory=True):
         drive, names = root_components(path)

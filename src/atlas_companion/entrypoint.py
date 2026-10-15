@@ -13,6 +13,9 @@ def command(*arguments):
 
 def main():
     arguments = sys.argv[1:]
+    if os.name == 'nt':
+        from .windows_entrypoint import main as windows_main
+        return windows_main(arguments)
     if arguments and arguments[0] == '--native':
         from atlas_native.__main__ import main as native_main
         sys.argv = [sys.argv[0], *arguments[1:]]

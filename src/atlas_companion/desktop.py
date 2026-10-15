@@ -9,7 +9,10 @@ import re
 from pathlib import Path
 
 from .security import APIError, require_platform
-from .state import State
+if os.name == 'nt':
+    from .windows_state import WindowsState as State
+else:
+    from .state import State
 
 
 def diagnose(state, port=17892):
@@ -64,7 +67,8 @@ class Management:
 
 
 def _window_main(state):
-    require_platform()
+    if os.name != 'nt':
+        require_platform()
     os.umask(0o077)
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
@@ -184,7 +188,10 @@ def _window_main(state):
         if not messagebox.askyesno('Install ATLAS Companion', 'Register this exact extension for native wake and install a per-user companion launcher? No folders will be granted and no administrator access is requested.', parent=window):
             return
         try:
-            from .install import install_runtime, installation_directory
+            if os.name == 'nt':
+                from .windows_install import install_runtime, installation_directory
+            else:
+                from .install import install_runtime, installation_directory
             appdir = installation_directory()
             upgrade = (appdir / 'installation.json').exists()
             if upgrade and not messagebox.askyesno('Repair / upgrade existing installation', 'Replace only unchanged installer-owned launchers and register this same extension again? Previous runtimes and all user data are preserved. A changed extension identity requires explicit uninstall first.', parent=window):
@@ -200,7 +207,10 @@ def _window_main(state):
         if not messagebox.askyesno('Uninstall ATLAS Companion', 'Remove this user installation, native browser registration and optional recovery startup? Saved location/catalog data and previous runtime files are preserved. Existing browser authorization will be revoked.', parent=window):
             return
         try:
-            from .install import uninstall as remove_installation, installation_directory
+            if os.name == 'nt':
+                from .windows_install import uninstall as remove_installation, installation_directory
+            else:
+                from .install import uninstall as remove_installation, installation_directory
             appdir = installation_directory()
             result = remove_installation(appdir)
             install_status.set('Uninstalled browser/startup integration. Saved data and prior runtimes remain. Modified files retained: ' + str(len(result['retained_modified'])))
@@ -223,7 +233,10 @@ def _window_main(state):
     ttk.Label(recovery, text='Keeps the companion available while your user session is running. This is optional; native demand wake works without it. Never runs while the machine is powered off.', wraplength=680).pack(anchor='w', pady=8)
     def supervisor(enable):
         try:
-            from .supervisor import startup
+            if os.name == 'nt':
+                from .windows_supervisor import startup
+            else:
+                from .supervisor import startup
             if enable:
                 ident = supervisor_id.get().strip()
                 if not messagebox.askyesno('Enable background recovery', 'Enable an optional per-user recovery supervisor at login? You can disable it here. No root grants or wake timers are added.', parent=window): return
@@ -247,6 +260,6 @@ def _window_main(state):
 
 def main(state_dir=None):
     from .runtime import RuntimeLock
-    state = State(state_dir or Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'atlas')
+    state = State(state_dir or (Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Atlas' if os.name == 'nt' else Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'atlas'))
     with RuntimeLock(state, 'desktop'):
         return _window_main(state)

@@ -1,6 +1,7 @@
 """Linux advisory ownership locks; no PID files and no process-name killing."""
-import fcntl
 import os
+if os.name != 'nt':
+    import fcntl
 import stat
 import sys
 from pathlib import Path
@@ -127,3 +128,14 @@ def stop_attested_service(state, port):
             os.close(process)
     except (KeyError, TypeError, ValueError, ProcessLookupError) as exc:
         raise APIError('NEEDS_REPAIR', 'Service identity is invalid or no longer matches a live process.') from exc
+
+
+def launch_options():
+    if os.name == 'nt':
+        import subprocess
+        return {'creationflags': subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {'start_new_session': True}
+
+
+if os.name == 'nt':
+    from .windows_runtime import RuntimeLock, write_service_identity, stop_attested_service

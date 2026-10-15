@@ -20,12 +20,12 @@ class Server(ThreadingHTTPServer):
     daemon_threads = True
     block_on_close = True
 
-    def __init__(self, state, port=17892):
+    def __init__(self, state, port=17892, provider_factory=None):
         self.state = state
         self._slots = threading.BoundedSemaphore(32)
         state.bootstrap_key()
         self.graph = GraphStore(state.directory / 'catalog.sqlite3')
-        self.provider = Provider(state, self.graph)
+        self.provider = (provider_factory or Provider)(state, self.graph)
         super().__init__(('127.0.0.1', port), Handler)
 
     def process_request(self, request, client_address):
@@ -162,7 +162,7 @@ class Handler(BaseHTTPRequestHandler):
                 proof = hmac.new(self.server.state.bootstrap_key(), b'atlas.native.v1:' + nonce.encode() + b':' + str(self.server.server_port).encode(), hashlib.sha256).hexdigest()
                 result = {'proof': proof}
             elif self.path == '/v1/health' and not post:
-                result = {'protocol': PROTOCOL, 'status': 'ready', 'platform': 'linux',
+                result = {'protocol': PROTOCOL, 'status': 'ready', 'platform': getattr(self.server.state, 'platform', 'linux'),
                           'limits': {'preview_bytes': 2097152, 'copy_bytes': 268435456, 'batch_entries': 100}}
             elif self.path == '/v1/grants' and not post:
                 result = {'grants': [{'id': g['id'], 'label': g['label'], 'root': g['root'],

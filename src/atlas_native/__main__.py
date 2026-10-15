@@ -11,8 +11,11 @@ import subprocess
 import sys
 import time
 
-from atlas_companion.state import State
-from atlas_companion.runtime import RuntimeLock, child_environment, stop_attested_service
+if os.name == 'nt':
+    from atlas_companion.windows_state import WindowsState as State
+else:
+    from atlas_companion.state import State
+from atlas_companion.runtime import launch_options, RuntimeLock, child_environment, stop_attested_service
 from atlas_companion.entrypoint import command
 from atlas_companion.security import APIError
 
@@ -112,7 +115,7 @@ def _connect(state, origin):
                 connection.close()
                 subprocess.Popen(command('--state-dir', str(state.directory), 'serve', '--port', str(PORT)),
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                 start_new_session=True, close_fds=True, env=child_environment())
+                                 close_fds=True, env=child_environment(), **launch_options())
                 for attempt in range(30):
                     try:
                         prove(state, origin, connection)
@@ -149,6 +152,10 @@ def connect(state, origin):
 
 
 def main():
+    if os.name == 'nt':
+        import msvcrt
+        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+        msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     os.umask(0o077)
     try:
         # Launcher supplies private config path; Chrome appends its exact caller origin.
@@ -165,7 +172,7 @@ def main():
         if message['action'] == 'manage':
             subprocess.Popen(command('--desktop', '--state-dir', str(state.directory)),
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True, close_fds=True, env=child_environment())
+                             close_fds=True, env=child_environment(), **launch_options())
             response = {'ok': True, 'state': 'MANAGE_OPENED'}
         else:
             response = connect(state, origin)
