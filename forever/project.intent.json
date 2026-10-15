@@ -1,0 +1,43 @@
+{
+  "foreverVersion": "0.1",
+  "id": "intent.atlas",
+  "kind": "intent",
+  "name": "ATLAS universal resource explorer",
+  "statement": "Provide a user-controlled relationship-based explorer unifying authorized local, browser, cloud and application resources without erasing their locations or authority boundaries.",
+  "purpose": [
+    "Find, relate, organize and safely operate on authorized resources independent of provider",
+    "Preserve user-defined information meaning beyond implementations"
+  ],
+  "priorities": [
+    "data sovereignty",
+    "permission safety",
+    "recovery",
+    "portability"
+  ],
+  "nonGoals": [
+    "unrestricted machine access",
+    "silent native installation",
+    "mandatory cloud accounts"
+  ],
+  "supportedEnvironments": [
+    "Chromium MV3",
+    "Windows",
+    "Linux",
+    "Android with platform-scoped access"
+  ],
+  "status": "active",
+  "relatedCapabilities": [
+    "capability.resource-graph",
+    "capability.authorized-files",
+    "capability.recovery"
+  ],
+  "relatedConstraints": [
+    "constraint.local-consent"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
