@@ -24,6 +24,10 @@ Begin with [AGENTS.md](AGENTS.md) (tool/provider-neutral instructions), the [cur
 
 ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** with an explicitly installed native helper: rich right-click operations, copy/cut/paste, move/copy/send-to, multi-select, keyboard navigation, previews, local and R2 browsing, tags, catalogs and relationships. The enduring requirements are in [the premium explorer contract](docs/forever-works/PREMIUM_EXPLORER_PRODUCT_CONTRACT.md). An ambitious Codex implementation assignment is available at [codex/BUILD_PREMIUM_ATLAS_END_TO_END.md](codex/BUILD_PREMIUM_ATLAS_END_TO_END.md); it is not normative architecture.
 
+## Joyful curation and publishable knowledge collections
+
+[The Joy of Curation and the Permanence of Meaning](docs/forever-works/PROPOSAL_JOYFUL_CURATION_SEMANTIC_ATLAS_AND_PUBLISHABLE_COLLECTIONS.md) records the owner-directed future vision for visual catalog experiences, per-item and per-relationship notes and tags, galleries/media/file associations, privacy-aware agent-readable JSON, graph and chart exploration, and transformation of curated collections into public static websites. This is an architectural/product proposal, not a claim these features have been implemented.
+
 ## Future portable environment proposal
 
 [Portable Personal Environment and WebVM](docs/forever-works/PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) explores restoring one's browser-centered workspace, assets, workflows and compatible tools across Windows, Linux, Android and future hosts, without making WebVM a mandatory dependency. This is a non-normative proposal, not implemented runtime or sync functionality.
