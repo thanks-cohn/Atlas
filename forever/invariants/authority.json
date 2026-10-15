@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "invariant.authority",
+  "kind": "invariant",
+  "name": "Narrowly authorized native effects",
+  "statement": "Every privileged file operation requires a valid explicitly user-granted scope and authenticated caller; malicious webpages and unpaired clients are denied.",
+  "scope": [
+    "capability.authorized-files",
+    "capability.recovery"
+  ],
+  "verification": [],
+  "changePolicy": "Transport and implementation may change; authority and denial guarantees may not weaken.",
+  "severity": "critical",
+  "relatedCapabilities": [
+    "capability.authorized-files",
+    "capability.recovery"
+  ],
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner ATLAS vision, October 2026",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}
