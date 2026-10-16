@@ -17,9 +17,11 @@ Explicit owner direction from the discussion:
 - Consider recurring payment for API access and automation; compare successful-looking established product patterns rather than inventing arbitrary restrictions.
 - Preserve dependable primitives and coherent exploration across resource types.
 
-Owner examples included ten tags per bookmark and a purchase plus roughly $1/month. These were exploratory ideas. The owner later clarified that Free pinboards should offer three templates users can freely mix and match to display their groupings; Premium offers substantially more. This proposal recommends a simpler initial subscription, with prices and boundaries to be validated. Requesting this document is not approval to begin charging users, impose limits, or change the repository's software license.
+Owner examples included ten tags per bookmark and a purchase plus roughly $1/month. These were exploratory ideas. The owner later clarified that Free includes three boards and three templates, with templates mixable across boards; users can adjust text size and heading style using bundled fonts. Premium allows user-provided Google Fonts and offers substantially more creative range. The plan boundary and economics remain proposals to validate. Requesting this document is not approval to begin charging users, impose limits, or change the repository's software license.
 
 Product thesis: **Free helps a person work with individual things. Premium helps them work with their whole world.**
+
+The owner’s product-design principle is to conceive and build the complete coherent product first, then choose sustainable Free/Premium boundaries from the finished capability set and observed use. Do not begin by arbitrarily cutting features into a thin Free product, then contort architecture around the cuts. Establish the whole usable system and its invariants; assess costs, customer experience and real usage; then decide which expanded capabilities fund ongoing development. Plan entitlement seams in the architecture without prematurely stripping out the dream or compromising core reliability.
 
 ## 2. Recommended initial commercial structure
 
@@ -47,7 +49,7 @@ This is the intended commercial design, not the present feature inventory.
 | Standard previews and bookmark management | Included | Included |
 | Transfer individual files | Included | Included |
 | Basic notes and tags | Useful personal organization | Bulk editing, advanced filters and rules |
-| Pinboards | Three polished starting templates; freely mix and match them to display groupings | A much broader template and layout library, with more ways to arrange and present groupings |
+| Boards and templates | Three boards and three starting templates; users may mix and match templates across boards, display groupings, and adjust text size and heading style with bundled fonts | Much broader creative range: more boards, templates, layouts and presentation controls; support for user-provided Google Fonts |
 | Directories and projects | Individual-file transfer workflow | Recursive transfers, queues and portable project packages |
 | Groupings and relationships | Experience basic connections | Operate on whole groups while preserving meaning and structure |
 | Automation | Manual workflows | Saved workflows, scheduling and supported agent/API integrations |
