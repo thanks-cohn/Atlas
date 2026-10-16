@@ -39,10 +39,10 @@ try{
  await new Promise((resolve,reject)=>{const probe=net.createServer();probe.once('error',()=>reject(new Error('Port17892 occupied: run recovery integration when it is free.')));probe.listen(17892,'127.0.0.1',()=>probe.close(resolve));});
  const grant=execFileSync(python,['-c',setup,temp],{env,encoding:'utf8'}).trim();
  const first=worker();assert.equal((await first.send({type:'ensure-ready'})).paired,false);assert.equal(nativeCalls,0);
- assert.equal((await first.send({type:'native-connect'})).ok,true);assert.equal(local.nativeEnrolled,true);assert.equal(Object.keys(local).join(','),'nativeEnrolled');
- assert.ok(first.session.token);const originalToken=first.session.token;
+ assert.equal((await first.send({type:'native-connect'})).ok,true);assert.equal(local.nativeEnrolled,true);assert.deepEqual(Object.keys(local).sort(),['diagnosticEvents','nativeEnrolled']);assert.ok(Array.isArray(local.diagnosticEvents));
+ assert.ok(first.session.token);const originalToken=first.session.token;assert.ok(!JSON.stringify(local).includes(originalToken));
  assert.equal((await first.send({type:'api',path:'/v1/list',body:{grant,path:''}})).entries.length,2);
- console.log('PASS first explicit native enrollment: actual framed host wakes and proves real helper; local storage contains boolean only');
+ console.log('PASS first explicit native enrollment: actual framed host wakes and proves real helper; local storage contains enrollment hint and bounded secret-free diagnostics only');
  const returning=worker();assert.equal(returning.session.token,undefined);assert.equal((await returning.send({type:'ensure-ready'})).paired,true);assert.notEqual(returning.session.token,originalToken);
  console.log('PASS returning fresh worker/browser-session model: remembered authorization obtains rotated session-only token without prompt');
  await killFixtureHelpers();const before=nativeCalls;
