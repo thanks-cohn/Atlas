@@ -17,7 +17,7 @@ Explicit owner direction from the discussion:
 - Consider recurring payment for API access and automation; compare successful-looking established product patterns rather than inventing arbitrary restrictions.
 - Preserve dependable primitives and coherent exploration across resource types.
 
-Owner examples included ten tags per bookmark and a purchase plus roughly $1/month. These were exploratory ideas. This proposal recommends a simpler initial subscription, with prices and boundaries to be validated. Requesting this document is not approval to begin charging users, impose limits, or change the repository's software license.
+Owner examples included ten tags per bookmark and a purchase plus roughly $1/month. These were exploratory ideas. The owner later clarified that Free pinboards should offer three templates users can freely mix and match to display their groupings; Premium offers substantially more. This proposal recommends a simpler initial subscription, with prices and boundaries to be validated. Requesting this document is not approval to begin charging users, impose limits, or change the repository's software license.
 
 Product thesis: **Free helps a person work with individual things. Premium helps them work with their whole world.**
 
@@ -47,13 +47,13 @@ This is the intended commercial design, not the present feature inventory.
 | Standard previews and bookmark management | Included | Included |
 | Transfer individual files | Included | Included |
 | Basic notes and tags | Useful personal organization | Bulk editing, advanced filters and rules |
-| Pinboards | Three complete, attractive boards as an initial limit to test | No artificial board-count limit; advanced presentation tools |
+| Pinboards | Three polished starting templates; freely mix and match them to display groupings | A much broader template and layout library, with more ways to arrange and present groupings |
 | Directories and projects | Individual-file transfer workflow | Recursive transfers, queues and portable project packages |
 | Groupings and relationships | Experience basic connections | Operate on whole groups while preserving meaning and structure |
 | Automation | Manual workflows | Saved workflows, scheduling and supported agent/API integrations |
 | Data ownership | Read and export owned data | Read and export owned data |
 
-The earlier ten-tags-per-bookmark idea is not the recommended main conversion boundary. A finished board and an understandable whole-project action communicate value more directly than an arbitrary tag ceiling. Revisit limits using observed usage and user feedback.
+The three Free pinboard options are **templates**, not a cap on how many boards or groupings a person may create. Free users can mix and match those templates to present their groupings. Premium expands creative choice with many more layouts and presentation options. Do not make the Free experience feel like a tiny trial. The earlier ten-tags-per-bookmark idea is not the recommended main conversion boundary; revisit any limits only with observed usage and user feedback.
 
 Ordinary selection, navigation, error clarity, accessibility, repair, diagnostics, safe cancellation, security and data integrity should be high quality in both editions. Premium may improve workflow power and presentation options; Free should feel finished.
 
