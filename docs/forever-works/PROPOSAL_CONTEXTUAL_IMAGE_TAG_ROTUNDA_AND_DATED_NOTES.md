@@ -12,11 +12,20 @@ Preserve a beautiful, progressively disclosed visual page reached by clicking th
 
 1. **Hero image**, optionally one item within a navigable gallery. Image arrows switch between images.
 2. **Image-specific title and short text description** (normally one or two sentences) directly beneath the image, above the tag rotunda. This is not a full article. A reversible translucent white reading overlay can display that short description **over the image**; ensure readable contrast.
-3. **Tag-header rotunda**: a single horizontal carousel row, preferably with a visually prominent active header and neighboring headers receding gracefully. This entire row is contextual to the current image and changes when the displayed image changes. It is not a global all-tags listing.
-4. **Bookmark columns** beneath the active tag header: show bookmarks related to **both the image and this tag**. Each bookmark can pop open independently to reveal multiple notes directly underneath. Several columns can remain open. Their appearance may be responsive (e.g. fewer columns in a narrow shelf), but don't flatten the conceptual hierarchy.
-5. **No redundant bottom tag section.** Tags themselves are the rotunda's grouping headers.
+3. **Instant image-context search**, positioned directly beneath the title/short description and above the tag rotunda. Typing immediately produces and updates matching **bookmark columns beneath the search field**, without a separate Search button or destination page. Search is scoped to relationships and information associated with the currently displayed image by default. Matching bookmarks remain expandable to their notes. Clearing the query restores the ordinary tag-rotunda view and its previously selected tag/expanded-bookmark state.
+4. **Tag-header rotunda**: a single horizontal carousel row, preferably with a visually prominent active header and neighboring headers receding gracefully. This entire row is contextual to the current image and changes when the displayed image changes. It is not a global all-tags listing.
+5. **Bookmark columns** beneath the active tag header: show bookmarks related to **both the image and this tag**. Each bookmark can pop open independently to reveal multiple notes directly underneath. Several columns can remain open. Their appearance may be responsive (e.g. fewer columns in a narrow shelf), but don't flatten the conceptual hierarchy.
+6. **No redundant bottom tag section.** Tags themselves are the rotunda's grouping headers.
 
 An image may belong to multiple galleries, projects, pinboards and other compositions without duplicating its identity or destroying independently stored descriptions, relationships or presentation settings.
+
+### Search-specific display and verification
+
+Search is an **alternative live projection of the image's existing associated bookmarks**, not a separate list of unrelated global bookmarks, not a new membership relationship and not a mutation of the tag hierarchy. During an active query, render matching bookmark columns in the area immediately beneath the search box; the tag rotunda can recede or be temporarily hidden to prioritize matches. Search may match bookmark titles/URLs, image-context note contents and tags where indexed, with clear match provenance. A bookmark matching under several tags appears once by default in results, with its applicable tag labels available. Preserve each bookmark's note identity and parent association.
+
+Use fast local indexed/debounced matching and progressively bounded rendering for large datasets; avoid jumping layout or moving keyboard focus on every keystroke. Empty queries restore the previous rotunda, selection, ordering and expansion. No matches should show a quiet empty state. Changing gallery images updates the search scope and results to the newly selected image; decide whether to retain the query text (proposed default: retain it) with a clear indication of the new image scope. Keyboard navigation, screen reader result announcements and text-entry focus must remain functional.
+
+Acceptance: search bar sits **below image text**; typing yields matching columns **immediately below**; no Enter/search-submit required; bookmark expand/collapse and note focus/Esc still work; clearing restores the pre-search rotunda exactly; no unrelated bookmarks appear; rapidly typing or clearing causes no stale results.
 
 ### Entry from a particular bookmark
 
@@ -69,4 +78,4 @@ Keep independent stable identities for image, bookmark, tag, note, gallery membe
 
 Precise visual rotunda geometry/motion; number and arrangement of bookmark columns at various widths; whether notes shown are image-specific only or clearly labeled general bookmark notes; date display format and undated ordering; scheduling scope of date-sorting controls. These are implementation decisions to validate, not license to change the core behavior.
 
-**Invariant:** image → brief title/description → image-specific single-row tag rotunda → tag-and-image-associated bookmark columns → expandable dated notes → focused scrollable note, with exact restoration on Escape.
+**Invariant:** image → brief title/description → instant search (live bookmark columns on query) → image-specific single-row tag rotunda → tag-and-image-associated bookmark columns → expandable dated notes → focused scrollable note, with exact restoration on Escape.
