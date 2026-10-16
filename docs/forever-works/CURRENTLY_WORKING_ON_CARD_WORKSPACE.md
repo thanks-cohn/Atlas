@@ -210,3 +210,30 @@ Keep this WIP specification current, retain decision history, and mark implement
 - Liquid engine, execution/rendering boundaries and supported content.
 - Implementation/version/license and integration contract for the owner's rolodex component.
 - Feature entitlements mapped to existing economics decisions before implementation; do not invent new limits here.
+
+
+## Addendum — interchangeable modular compositions
+
+**Owner clarification, 2026-10-16:** the previously described image-first arrangement is an initial extension preset and a first attempt at interchangeable positioning. It is not Atlas's final structure or a permanent image → bookmarks → notes hierarchy. The durable goal is user-configurable modular composition with sensible, elegant defaults and a premium visual feel.
+
+Users should eventually be able to switch between **image-centric, video-centric, article-centric and gallery-centric** presentations. These are presentation choices over associated content, not separate silos requiring users to recreate their collections.
+
+Examples of supported design direction:
+- Start a column with notes, then reveal images connected to each note.
+- Start with a gallery and explore its related notes, media or other content.
+- Populate a column with objects related to the selected tags.
+- Present notes with their own attached tags.
+- Rearrange the composition into columns, rows or carousels.
+
+**Immediate starting direction:** begin with a carousel-style preset for the modular arrangement discussed here. Preserve the earlier masonry pinboard as another planned presentation; neither layout defines the underlying content model. Exact carousel controls, sizing and which initial surface uses it remain implementation decisions to resolve before coding.
+
+The initial release may provide a bounded set of polished presets. Its architecture must support later changes by both Atlas maintainers and users: exchange the lead content, related-content regions, arrangement and expansion behavior without losing data or rebuilding the collection. “Endless modularity” expresses extensibility, not a claim that every imaginable layout is implemented or that arbitrary executable plugins are authorized.
+
+**Architectural direction:** keep content identity, typed associations, selection/filter rules, component placement, presentation presets and interaction states separable. A column is a presentation region, not a hardcoded content type. Allow alternate components to render supported content and follow explicit associations without imposing implicit ownership, permission or tag inheritance.
+
+Existing ALL-tag matching remains the default search rule. Changing a visual preset must not silently change query meaning, mutate relationships, remove hidden information or expose private content. “Related to a tag” alone does not authorize traversing arbitrary relationship paths; query/traversal rules need explicit contracts.
+
+**Acceptance direction:** demonstrate the same underlying collection in at least two materially different compositions, including a note-first alternative to an image-first preset. Preserve identities, notes, tags, links and media associations through switching, save/reload and export/import. Show that users can change supported presentation settings without source edits. Visually review compact, expanded, empty and narrow-screen states. These checks are planned, not executed here.
+
+This clarification governs interpretation of the defaults below. The lasting requirement is beautiful, understandable, interchangeable composition; specific positions and the initially leading medium remain configurable mechanisms.
+
