@@ -55,7 +55,9 @@ This is the intended commercial design, not the present feature inventory.
 | Automation | Manual workflows | Saved workflows, scheduling and supported agent/API integrations |
 | Data ownership | Read and export owned data | Read and export owned data |
 
-The three Free pinboard options are **templates**, not a cap on how many boards or groupings a person may create. Free users can mix and match those templates to present their groupings. Premium expands creative choice with many more layouts and presentation options. Do not make the Free experience feel like a tiny trial. The earlier ten-tags-per-bookmark idea is not the recommended main conversion boundary; revisit any limits only with observed usage and user feedback.
+Free includes **three boards and three starting templates**. Users may mix and match those templates across their boards, using basic positioning, visibility, text sizing and heading styles with bundled fonts. Premium expands creative choice, including user-added Google Fonts. Define and enforce edition boundaries early as part of the complete product design. The earlier ten-tags-per-bookmark idea remains exploratory.
+
+See the [owner addendum on publishing, transfer allowances and durable exports](PUBLISHING_AND_COLLECTION_LONGEVITY_ADDENDUM.md) for later refinements, including a proposed two successful bulk transfer jobs per day in Free, guided Cloudflare setup, shared R2 storage, optional D1 acknowledgment and collection ownership after cancellation. Its Free bulk-transfer allowance expands the individual-file baseline described above.
 
 Ordinary selection, navigation, error clarity, accessibility, repair, diagnostics, safe cancellation, security and data integrity should be high quality in both editions. Premium may improve workflow power and presentation options; Free should feel finished.
 
