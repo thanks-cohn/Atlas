@@ -237,3 +237,11 @@ Existing ALL-tag matching remains the default search rule. Changing a visual pre
 
 This clarification governs interpretation of the defaults below. The lasting requirement is beautiful, understandable, interchangeable composition; specific positions and the initially leading medium remain configurable mechanisms.
 
+
+### Further owner clarification — any object can be the center
+
+Image-, video-, article- and gallery-centric presentations are examples, not an exhaustive list or a fixed set of allowed centers. A composition may equally be **project-centric, page-centric, note-centric, tag-centric, or centered on any other object supported by Atlas**. Future supported object types should be eligible without redefining this principle.
+
+The chosen object is the focal context from which the presentation arranges relevant content and associations. Centering is a view/composition choice: it does not change the object's type, make it the owner of everything shown, or create relationships implicitly. Which associations are displayed and how they are arranged remain explicit configurable presentation/query rules.
+
+**Purpose:** users should be able to organize exploration around whatever matters to them, rather than around a permanently privileged medium or container. Preserve sensible, elegant defaults and the existing privacy and search contracts. This is owner-directed design, not a claim of implemented functionality.
