@@ -65,3 +65,8 @@ The recovery architecture and exact Chute Windows v2.6.1 RC1 reference are docum
 [Download the verified Windows helper](https://github.com/thanks-cohn/Atlas/actions/runs/38779850667/artifacts/11995571257) (14-day Actions artifact retention), then see [installation and build instructions](packaging/WINDOWS.md). The unsigned x86_64 standalone build embeds Python and native location management. Install the exact Chrome extension identity once, explicitly authorize desired folders once, and connect from ATLAS once. Native demand wake restores the helper when ATLAS returns; optional per-user login recovery starts supervision immediately and registers it for later Windows sign-ins. Saved grants and operation receipts persist. Normal operations do not require token pasting or repeated location authorization. Revocation, changed extension identity and OS-denied access still require attention.
 
 Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/directory move and recoverable trash/restore. Directory copy and cross-volume move are explicitly unsupported in this increment. Do not treat process-kill/suspension tests as physical sleep, hibernation or reboot proof; current results and next verification steps are in [the latest handoff](codex/HANDOFF_LATEST.md).
+
+
+## Current card-workspace design
+
+[Currently Working On — Card Workspace and Publishing](docs/forever-works/CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) preserves the owner's card, shelf, tag-search, page composition and publishing decisions, reasoning, open questions and planned verification. This is a WIP specification, not shipped functionality. The pre-change source is pinned in [the baseline record](docs/releases/BASELINE_2026-10-16.md).

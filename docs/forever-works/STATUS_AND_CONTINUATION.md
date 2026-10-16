@@ -203,3 +203,8 @@ preserved order and browser event refresh. Local model/DOM-double tests, worker
 contracts and packaging pass; actual Chrome installation/rendering NOT_RUN here.
 See NATIVE_BOOKMARKS_FIRST_SLICE.md for interfaces, rationale and explicit scope
 limits. Full extended bookmark/grouping brief remains incomplete.
+
+
+## 2026-10-16 — preserve baseline and document card-workspace direction
+
+Pinned pre-change main 9c4ca96a4c7a1e0372661bf09508a323504e99cd on baseline/atlas-before-card-workspace-2026-10-16; see docs/releases/BASELINE_2026-10-16.md. Added CURRENTLY_WORKING_ON_CARD_WORKSPACE.md capturing explicit owner design, rationale, open questions and planned acceptance. No source, runtime behavior or schemas changed. Documentation links and baseline pointer checked; no new runtime test result claimed. Remote Git tag push unavailable due to missing shell credentials; baseline branch and exact commit preserved instead. Next: resolve the selected first vertical slice and inspect current code before implementing; full-gallery opening must not conflict with image-click disclosure. Other slices remain planned.

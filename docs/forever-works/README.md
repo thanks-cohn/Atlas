@@ -53,3 +53,8 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [PREVIEW_CONTINUITY.md](PREVIEW_CONTINUITY.md) — owner rationale, existing-preview navigation, defaults, acceptance and limits.
 
 - [DIAGNOSTICS_AND_SIMPLE_SETUP.md](DIAGNOSTICS_AND_SIMPLE_SETUP.md) — simple enrollment, stages, codes, debug APIs and privacy.
+
+
+## Active design work
+
+- [CURRENTLY_WORKING_ON_CARD_WORKSPACE.md](CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) — owner-directed WIP specification for cards, shelf hierarchy, progressive expansion, ALL-tag search, composition and publishing; includes rationale, unresolved choices and future acceptance checks. [Baseline source record](../releases/BASELINE_2026-10-16.md).
