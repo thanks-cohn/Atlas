@@ -1026,3 +1026,29 @@ footer .connection-state {
 #debug-fallback[hidden] { display: none; }
 #debug-dialog { width: min(820px, 94vw); max-height: 90vh; overflow: auto; }
 #debug-output { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 55vh; overflow: auto; font: 11px monospace; }
+
+/* Native bookmark workspace shares the existing shelf and remains usable offline. */
+body.bookmarks-mode main > :not(#bookmarks-workspace):not(footer) { display: none !important; }
+body.bookmarks-mode #details { display: none !important; }
+#bookmarks-workspace { overflow: auto; min-height: 0; flex: 1; padding: 16px; }
+#bookmarks-workspace[hidden] { display: none; }
+#bookmarks-workspace .heading { padding: 0; }
+#bookmarks-workspace .toolbar { padding: 8px 0; flex-wrap: wrap; }
+#bookmarks-search { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 7px; }
+#bookmarks-breadcrumbs { display: flex; flex-wrap: wrap; margin-top: 10px; }
+#bookmarks-status { color: var(--muted); }
+.bookmark-row { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 5px 0; }
+.bookmark-open { flex: 1; min-width: 0; text-align: left; }
+.bookmark-open strong, .bookmark-open small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bookmark-open small { color: var(--muted); }
+.bookmark-row details { position: relative; }
+.bookmark-row details[open] { background: var(--background); }
+.bookmark-row summary { cursor: pointer; padding: 10px; }
+.bookmark-actions { display: flex; flex-wrap: wrap; max-width: 180px; }
+
+.bookmark-open[aria-pressed='true'] { background: var(--soft); outline: 1px solid var(--accent); }
+
+#bookmarks-folders { margin-top: 10px; border: 1px solid var(--line); border-radius: 7px; padding: 8px; }
+#bookmarks-tree { max-height: 240px; overflow: auto; }
+#bookmarks-tree details { margin: 6px 0 6px 12px; }
+#bookmarks-tree summary { cursor: pointer; overflow-wrap: anywhere; }

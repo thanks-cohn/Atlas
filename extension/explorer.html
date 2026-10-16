@@ -26,6 +26,7 @@
         ><button id="library" class="nav-home">
           ◇ <span>Catalogs & links</span>
         </button>
+        <button id="bookmarks-open" class="nav-home">☆ <span>Bookmarks</span></button>
         <div class="section-label locations-label">
           AUTHORIZED FOLDERS
           <button id="reload-grants" title="Reload authorized folders">
@@ -44,6 +45,15 @@
         </div>
       </aside>
       <main>
+        <section id="bookmarks-workspace" hidden aria-label="Browser bookmarks">
+          <div class="heading"><div><div class="eyebrow">YOUR BROWSER</div><h1>Bookmarks</h1><p>Chrome folders and bookmarks, in their original order.</p></div></div>
+          <div class="toolbar"><button id="bookmarks-up" title="Parent bookmark folder">↑</button><button id="bookmarks-refresh">Refresh</button><button id="bookmarks-new">＋ Bookmark</button><button id="bookmarks-folder">＋ Folder</button></div>
+          <input id="bookmarks-search" type="search" placeholder="Search all bookmarks…" aria-label="Search all bookmarks" />
+          <details id="bookmarks-folders"><summary>Folders</summary><nav id="bookmarks-tree" aria-label="Bookmark folder tree"></nav></details>
+          <nav id="bookmarks-breadcrumbs" aria-label="Bookmark folder breadcrumbs"></nav>
+          <p id="bookmarks-status" role="status"></p>
+          <div id="bookmarks-list" role="list" aria-label="Bookmarks and folders"></div>
+        </section>
         <header class="topbar">
           <div class="navigation">
             <button id="back" title="Back (Alt+Left)">←</button
@@ -285,5 +295,6 @@
     <dialog id="activity-dialog"></dialog>
     <script type="module" src="activity.js"></script>
     <script src="explorer.js" type="module"></script>
+    <script src="bookmarks.js" type="module"></script>
   </body>
 </html>

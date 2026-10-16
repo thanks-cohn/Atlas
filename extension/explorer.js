@@ -1240,6 +1240,7 @@ for (const kind of Object.keys(previewDefaults)) {
 let typeQuery = "",
   typeAt = 0;
 document.addEventListener("keydown", (event) => {
+  if (document.body.classList.contains("bookmarks-mode")) return;
   if (!$("context-menu").hidden) {
     const key = event.key.toLowerCase(),
       items = [...$("context-menu").querySelectorAll("button:not(:disabled)")];

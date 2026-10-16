@@ -16,7 +16,9 @@ jobs:
         with:
           node-version: '22'
       - name: Verify extension worker authority contract
-        run: node scripts/test_extension_broker.mjs
+        run: |
+          node scripts/test_extension_broker.mjs
+          node scripts/test_bookmarks.mjs
       - name: Verify real CLI and filesystem integration
         run: python scripts/smoke_companion.py
       - name: Verify native wake and worker integration without replay

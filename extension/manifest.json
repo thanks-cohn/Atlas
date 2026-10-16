@@ -1,14 +1,28 @@
 {
   "manifest_version": 3,
   "minimum_chrome_version": "116",
-  "name": "ATLAS · Resource Explorer",
-  "version": "0.1.4",
+  "name": "ATLAS \u00b7 Resource Explorer",
+  "version": "0.1.5",
   "description": "Explore and organize explicitly authorized local folders with the separately installed ATLAS companion.",
-  "permissions": ["storage", "sidePanel", "nativeMessaging"],
-  "host_permissions": ["http://127.0.0.1:17892/*"],
-  "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_title": "Open ATLAS" },
-  "side_panel": { "default_path": "explorer.html" },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "nativeMessaging",
+    "bookmarks"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:17892/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open ATLAS"
+  },
+  "side_panel": {
+    "default_path": "explorer.html"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; frame-src blob:; connect-src http://127.0.0.1:17892"
   }

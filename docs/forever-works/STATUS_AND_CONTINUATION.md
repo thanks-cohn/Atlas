@@ -190,3 +190,16 @@ Owner refinement: package debug.exe as the separate original detailed setup/repa
 window. atlas-companion.exe remains the simple ID/home/other-folder normal flow.
 The debug filename dispatches to --desktop --advanced only on no-argument launch;
 command-line service/native modes remain unchanged. Both share existing state.
+
+
+## 2026-10-15 — native bookmark access in the existing side panel
+
+Owner confirmed companion works; see OWNER_ACCEPTANCE_2026-10-15.md for bounded
+user evidence and remaining clipped label/distribution issues. Owner next requested
+standard, intuitive native bookmark-manager exploration inside Atlas, with richer
+features added later. Extension 0.1.5 adds bookmarks permission and an independent
+shelf workspace for native folder navigation/search/open/create/edit/move/delete,
+preserved order and browser event refresh. Local model/DOM-double tests, worker
+contracts and packaging pass; actual Chrome installation/rendering NOT_RUN here.
+See NATIVE_BOOKMARKS_FIRST_SLICE.md for interfaces, rationale and explicit scope
+limits. Full extended bookmark/grouping brief remains incomplete.
