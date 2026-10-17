@@ -249,3 +249,8 @@ Focused local PASS: three real native-library HTTP tests, six existing HTTP/secu
 ### Hosted verification receipt for durable library
 
 Source d33c9b22e0355ce343ee53822283c3fe5cc36c13: hosted development run [38995372032](https://github.com/thanks-cohn/Atlas/actions/runs/38995372032) PASS; Windows run [38995372023](https://github.com/thanks-cohn/Atlas/actions/runs/38995372023) PASS including actual Windows library tests, build, widgets and frozen native/HTTP smoke. Matching Windows helper package: [artifact 12086164731](https://github.com/thanks-cohn/Atlas/actions/runs/38995372023/artifacts/12086164731), 14-day retention. Install matching helper and extension 0.1.8 together, preserving existing state and extension ID. Actual owner image/Chrome rendering and cloud publishing remain NOT_RUN. Receipt: evidence/DURABLE_LIBRARY_2026-10-16.json.
+
+
+### Gallery action placement — 2026-10-17
+
+Explicit owner correction: utility buttons belong together at the top right; they must not interrupt the gallery composition between header and content. Moved the existing library-save action into a labelled header action group beside Publishing Check and Edit Gallery, shortened its label to Save to Atlas Library, and reused the existing button styling. The group wraps with consistent spacing on narrow layouts. Button remains hidden until page state determines it is needed. Storage and pairing behavior are unchanged. Verification: node scripts/test_pages.mjs PASS (API/DOM doubles); actual Chrome visual rendering NOT_RUN. Uploaded screenshot was unavailable at its supplied scratch path; placement was confirmed from current HTML/CSS.

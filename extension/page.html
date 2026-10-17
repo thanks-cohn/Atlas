@@ -2,10 +2,9 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Page</title><link rel="stylesheet" href="page.css"></head>
 <body>
-  <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></header>
+  <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><div class="header-actions" role="group" aria-label="Gallery actions"><button id="backup-library" hidden>Save to Atlas Library</button><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></div></header>
   <main>
     <p id="library-location" role="status"></p>
-    <button id="backup-library">Save Existing Page to Atlas Library</button>
     <p id="status" role="status">Loading page…</p>
     <article id="page" hidden><div class="gallery-intro"><p class="eyebrow">CURATED IN ATLAS</p><h1 id="title"></h1><div id="text"></div><p id="image-count"></p></div><div id="gallery" aria-label="Gallery images"></div></article>
     <form id="editor" hidden>
