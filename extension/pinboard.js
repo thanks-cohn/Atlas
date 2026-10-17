@@ -31,9 +31,7 @@ function emptyCard(article,node){const row=el('div');row.className='pin-empty';c
 function localScroll(){return Math.max(0,-$('pins').getBoundingClientRect().top);}
 function columns(){
   const width=$('pins').clientWidth || 1100;
-  const responsive=window.innerWidth<=540 ? 2 : Math.max(1,Math.min(5,Math.floor((width+20)/230)));
-  // Reserve capacity for two batch boundaries as well as the visible rows.
-  return Math.max(1,Math.min(responsive,Math.floor(limit/(Math.ceil((window.innerHeight || 768)/96)+2)) || 1));
+  return window.innerWidth<=540 ? 2 : Math.max(1,Math.min(7,Math.floor((width+20)/230)));
 }
 function scheduleWindow(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow();});}
 function positionCard(element,position){if(!position)return;Object.assign(element.style,{position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'});}
@@ -55,7 +53,7 @@ function renderWindow(){
   if(anchor && oldAnchor!==undefined){const next=positionById.get(anchor.atlasNode.id);const prior=parseFloat(anchor.style.top);if(next && Number.isFinite(prior)){const delta=next.y-prior;if(Math.abs(delta)>1)window.scrollBy({top:delta,behavior:'instant'});}}
   const top=localScroll(),bottom=top+(window.innerHeight || 768);
   const visible=positions.filter(position=>position.y+position.height>=top && position.y<=bottom);
-  const chosen=new Set(visible.slice(0,limit).map(position=>position.index));
+  const chosen=new Set(visible.map(position=>position.index));
   // Fill the remaining budget with nearest neighbors, never whole remote batches.
   for(const position of [...positions].sort((a,b)=>Math.abs(a.y-top)-Math.abs(b.y-top))){if(chosen.size>=limit)break;chosen.add(position.index);}
   const selected=positions.filter(position=>chosen.has(position.index)),wantedBatches=new Set(selected.map(position=>Math.floor(position.index/BATCH)));

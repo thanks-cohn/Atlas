@@ -83,7 +83,8 @@ for(const cap of [24,48,72,96,144]){
  for(const top of [0,300,12000,6000,900,3000,0]){
   scroll=top;listeners.scroll();flush();
   const visible=vm.runInNewContext('positions.filter(p=>p.y+p.height>=localScroll() && p.y<=localScroll()+(window.innerHeight || 768)).map(p=>p.node.id)',context);
-  const mounted=new Set(cards().map(card=>card.atlasNode.id));assert.ok(cards().length<=cap);
+  const mounted=new Set(cards().map(card=>card.atlasNode.id));assert.ok(cards().length<=Math.max(cap,visible.length));
+  assert.ok(cards().every(card=>parseFloat(card.style.width)<=260),'Cards should remain compact');
   for(const id of visible)assert.ok(mounted.has(id),'Visible card '+id+' missing at '+top+' cap '+cap);
   assert.ok(cards().some(card=>{const r=card.getBoundingClientRect();return r.bottom>=0 && r.top<=768;}),'Empty viewport at '+top);
  }
@@ -100,4 +101,4 @@ const coverage=model.visibleBlocks(240,72,new Map(Array.from({length:10},(_,i)=>
 assert.equal(coverage.first,1);assert.equal(coverage.last,4);assert.equal(coverage.top,100);
 assert.ok(coverage.top<=150);assert.ok(coverage.sizes.slice(0,coverage.last).reduce((a,b)=>a+b,0)>=400);
 assert.equal(model.cardLimit(100000),72);assert.equal(model.visibleBlocks(0,72,new Map(),[],0).last,0);
-console.log('PASS: 1,000-bookmark scrolling window, distant-card eviction/rebuild, configurable hard cap, spacers, Atlas loading placeholder, image-only filter persistence and source/preview safety. DOM/API doubles; Chrome hardware QA NOT_RUN.');
+console.log('PASS: 1,000-bookmark viewport-first window, compact widths independent of buffer budget, eviction/rebuild, bounded overscan, loading geometry, filter persistence and source/preview safety. DOM/API doubles; Chrome hardware QA NOT_RUN.');
