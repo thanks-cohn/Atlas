@@ -142,10 +142,16 @@ vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),showcaseContext)
 for(let i=0;i<5;i++)await tick();
 const showcaseId='00000000-0000-4000-8000-000000000024';
 assert.equal((await store.readPage(storage,showcaseId)).images.length,24);
-assert.equal(els.get('title').textContent,DEMO_COLLECTION.title);
+assert.equal(els.get('title').textContent,DEMO_COLLECTION.images[0].title);
+assert.equal(els.get('collection-label').textContent,DEMO_COLLECTION.title);
+const showcaseGallery=els.get('gallery');
+showcaseGallery.onkeydown({key:'ArrowRight',preventDefault(){},stopPropagation(){}});
+assert.equal(els.get('title').textContent,DEMO_COLLECTION.images[1].title);
+assert.equal(document.title,DEMO_COLLECTION.images[1].title+' · Atlas');
 const customShowcase=await store.readPage(storage,showcaseId);
 await storage.set({[store.pageKey(showcaseId)]:{...customShowcase,title:'My own showcase'}});
 vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),{...context,location:{href:'chrome-extension://atlas/page.html'}});
 for(let i=0;i<5;i++)await tick();
-assert.equal(els.get('title').textContent,'My own showcase');
+assert.equal(els.get('title').textContent,DEMO_COLLECTION.images[0].title);
+assert.equal(els.get('collection-label').textContent,'My own showcase');
 assert.equal((await store.readPage(storage,id)).title,demoSaved.title);
