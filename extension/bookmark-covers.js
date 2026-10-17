@@ -6,6 +6,12 @@ export function safeCover(value) {
   return typeof value === 'string' && value.length <= MAX_COVER_LENGTH &&
     /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
 }
+// Explicit user-selected public image references are supported alongside local previews.
+export function safeCoverReference(value) {
+  if (safeCover(value)) return true;
+  if(typeof value!=='string' || value.length>8192)return false;
+  try { const url=new URL(value);return ['http:','https:'].includes(url.protocol) && !url.username && !url.password && ![...url.searchParams.keys()].some(key=>/^(x-amz-|x-goog-|token$|signature$)/i.test(key)); }catch{return false;}
+}
 export function directImage(url) {
   try {
     const parsed = new URL(url);
@@ -14,10 +20,10 @@ export function directImage(url) {
 }
 export function bookmarkCover(node, covers) {
   const saved = Object.hasOwn(covers, node.id) ? covers[node.id] : null;
-  return saved?.url === (node.url || '') && safeCover(saved.image) ? saved.image : directImage(node.url);
+  return saved?.url === (node.url || '') && safeCoverReference(saved.image) ? saved.image : directImage(node.url);
 }
 export function setBookmarkCover(covers, node, image) {
-  if (image !== null && !safeCover(image)) throw new Error('BOOKMARK_IMAGE_INVALID');
+  if (image !== null && !safeCoverReference(image)) throw new Error('BOOKMARK_IMAGE_INVALID');
   const result = {...covers};
   if (image === null) delete result[node.id];
   else Object.defineProperty(result, node.id, {value: {url: node.url || '', image}, enumerable: true, configurable: true});

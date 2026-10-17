@@ -30,3 +30,15 @@ export async function linkedPinboards(storage,node) {
 export async function removePinboard(storage,id) {
   const saved={...((await storage.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {})};delete saved[id];await storage.set({[PINBOARDS_KEY]:saved});
 }
+
+export const PINBOARD_SETTINGS='atlas.pinboard.settings.v1';
+export function cardLimit(value) { return [24,48,72,96,144].includes(Number(value)) ? Number(value) : 72; }
+// Window whole 24-card masonry blocks; keep geometry for removed blocks only.
+export function visibleBlocks(count,limit,heights,estimates,scrollTop) {
+  const total=Math.ceil(count/BATCH),sizes=Array.from({length:total},(_,i)=>heights.get(i) || estimates[i] || 800);
+  let visible=0,before=0;
+  while(visible<total-1 && before+sizes[visible]<=scrollTop){before+=sizes[visible++];}
+  const blocks=Math.min(total,cardLimit(limit)/BATCH);
+  const first=Math.max(0,Math.min(visible-Math.floor((blocks-1)/2),total-blocks)),last=first+blocks;
+  return {first,last,visible,top:sizes.slice(0,first).reduce((a,b)=>a+b,0),bottom:sizes.slice(last).reduce((a,b)=>a+b,0),sizes};
+}
