@@ -32,6 +32,10 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 [The Shelf-First Bookmarks, Composable Groupings, and Portable Publishing proposal](docs/forever-works/PROPOSAL_SHELF_FIRST_BOOKMARKS_COMPOSITIONS_AND_PORTABLE_PUBLISHING.md) records owner direction for a native Chrome bookmarks explorer in the Atlas shelf; group membership as resource access (not automatic association or display); individually annotated bookmarks, images, notes and documents; user-directed composition of grouped resources into pinboards, structured pages and Liquid canvases; Portfolio-inspired seven-visible-image gallery navigation; local-first editing; complete static-site/project export; and optional Cloudflare or GitHub Pages deployment. This is a **future-facing proposal**, not proof that these workflows exist yet.
 
+## Adaptive publishing and presentation — proposal
+
+[Adaptive Publishing and Presentation System](docs/forever-works/PROPOSAL_ADAPTIVE_PUBLISHING_AND_PRESENTATION_SYSTEM.md) proposes composable Pages, independently templated Gallery/Pinboard/Article objects, reusable referenced object Slices, coordinated Page-to-Slice template families with instance overrides, and premium publishing experiences. This is future product direction, **not implemented functionality**.
+
 ## Association-clustered spatial tags — proposal
 
 [Association-Clustered Spatial Tag Field](docs/forever-works/PROPOSAL_ASSOCIATION_CLUSTERED_SPATIAL_TAG_FIELD.md) records the owner-directed two-dimensional tag field: varied pill sizes, aesthetically controlled spacing, stable collision-free placement, proximity based on repeated tag co-occurrence across resources, keyboard navigation and viewport movement in both axes, mouse selection, optional scrolling, and explicit multi-tag AND search. It includes safeguards, test scenarios and open algorithmic decisions. This is a **proposal**, not an implemented feature.
