@@ -285,3 +285,7 @@ Owner rejected flat row/font composition and portrait side bands, requested diff
 ## 2026-10-17 — Nocturne padding and neutral graphite palette (0.1.12)
 
 Owner screenshot confirmed stage image touched top and controls/labels sat flush. Found padding:0 on collection plus inherited older green-black nocturne class on the gallery itself. Added 22–44px room inset, intro/caption spacing and coordinated neutral graphite header/body/room; image remains uncropped and height bounded. No data/native/helper change. Gallery behavior checks and package PASS; after Chrome visual review NOT_RUN. See GALLERY_STUDIO_V1.md. This supersedes 0.1.11 palette/spacing values.
+
+## 2026-10-17 — Nocturne editorial rail composition (0.1.13)
+
+Owner screenshot still felt basic: oversized heading and disconnected navigation left broad unused space. Replaced standalone full-width thumbnail footer with a unified title/caption/arrows/contact-strip rail alongside intrinsic uncropped image. Compact collection heading, subtle graphite light falloff, warm-paper edit action, hover/focus expand affordance; responsive stacking retained. Source is a composition change, not a claim of actual Chrome screenshot proof. Gallery and bookmark checks PASS (DOM/API doubles), package PASS. No native/data/helper change; previous full-native-suite limitations unchanged. Actual updated visual acceptance NOT_RUN. See GALLERY_STUDIO_V1.md addendum.

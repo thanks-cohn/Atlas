@@ -32,7 +32,7 @@ function renderCollection(container, images, style, preview = false) {
     let active = 0;
     const stage = element('div'); stage.className = 'nocturne-stage';
     const imageButton = element('button'); imageButton.type = 'button'; imageButton.className = 'cinema-image';
-    const img = element('img'); img.referrerPolicy = 'no-referrer'; imageButton.append(img);
+    const img = element('img'); img.referrerPolicy = 'no-referrer'; const expandLabel = element('span', 'EXPAND ↗'); expandLabel.className = 'expand-label'; imageButton.append(img,expandLabel);
     const meta = element('div'); meta.className = 'cinema-meta'; const title = element('h2'), caption = element('p'), count = element('span');
     meta.append(count, title, caption); stage.append(imageButton, meta);
     const controls = element('div'); controls.className = 'cinema-controls';
