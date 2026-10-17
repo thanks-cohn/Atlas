@@ -71,3 +71,6 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 
 
 - [ASSOCIATED_PAGES_AND_GALLERY.md](ASSOCIATED_PAGES_AND_GALLERY.md) — 0.1.7 Add Item → Page, default Gallery template, URL/local image editor/viewer, versioned local entities and future R2 publishing-transfer contract. Horizons is separate and not implemented.
+
+
+- [DURABLE_GALLERY_LIBRARY.md](DURABLE_GALLERY_LIBRARY.md) — 0.1.8 original-byte/page storage outside Chrome, migration/recovery, explicit import states, adaptive previews and future R2 adapter contract. Requires matching updated companion.

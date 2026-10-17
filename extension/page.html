@@ -4,16 +4,19 @@
 <body>
   <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></header>
   <main>
+    <p id="library-location" role="status"></p>
+    <button id="backup-library">Save Existing Page to Atlas Library</button>
     <p id="status" role="status">Loading page…</p>
     <article id="page" hidden><div class="gallery-intro"><p class="eyebrow">CURATED IN ATLAS</p><h1 id="title"></h1><div id="text"></div><p id="image-count"></p></div><div id="gallery" aria-label="Gallery images"></div></article>
     <form id="editor" hidden>
       <label>Title<input id="title-input" maxlength="200" required></label>
       <label>Text<textarea id="text-input" maxlength="100000" rows="16"></textarea></label>
-      <label class="upload-control">Add Images<input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <button id="choose-images" type="button">Choose Local Images</button><input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      <p id="import-status" role="status">No new images selected.</p>
       <div class="url-inputs"><label>Image URL<input id="image-url" type="url" placeholder="https://…"></label><button id="add-url" type="button">Add URL</button></div>
       <p>Gallery template · Up to 24 images, 4 MB of saved gallery data. Local images are resized for storage. Horizons is a separate planned template.</p>
       <div id="image-editor"></div>
-      <button id="save" type="submit">Save</button><button id="cancel" type="button">Cancel</button>
+      <button id="save" type="submit">Save to Atlas Library</button><button id="cancel" type="button">Cancel</button>
     </form>
   </main>
   <dialog id="viewer" aria-label="Expanded gallery image"><div class="viewer-toolbar"><button id="previous" aria-label="Previous image">←</button><span id="viewer-count"></span><button id="next" aria-label="Next image">→</button><button id="close-viewer" aria-label="Close expanded image">Close ×</button></div><img id="viewer-image" alt=""><p id="viewer-caption"></p></dialog>

@@ -14,6 +14,7 @@ from . import PROTOCOL
 from .filesystem import Provider, error
 from .security import APIError
 from .diagnostics import record, snapshot
+from .library import dispatch as library_dispatch
 
 MAX_BODY = 2 * 1024 * 1024
 
@@ -161,8 +162,9 @@ class Handler(BaseHTTPRequestHandler):
                 if self.headers.get('Content-Type', '').split(';')[0].strip() != 'application/json':
                     raise APIError('CONTENT_TYPE', 'Expected application/json.', 415)
                 length = int(self.headers['Content-Length'])
-                if length < 1 or length > MAX_BODY:
-                    raise APIError('BODY_TOO_LARGE', 'Request body must be 1 byte–2 MiB.', 413)
+                body_limit = 16 * 1024 * 1024 if self.path == '/v1/library' else MAX_BODY
+                if length < 1 or length > body_limit:
+                    raise APIError('BODY_TOO_LARGE', 'Request body exceeds the route limit.', 413)
                 def pairs(items):
                     d = {}
                     for key, value in items:
@@ -200,6 +202,8 @@ class Handler(BaseHTTPRequestHandler):
                 result = self.server.provider.hash(body)
             elif self.path == '/v1/operate' and post:
                 result = self.server.provider.operate(body)
+            elif self.path == '/v1/library' and post:
+                result = library_dispatch(self.server.state, body)
             elif self.path == '/v1/catalog':
                 if post:
                     with self.server.provider.lock:

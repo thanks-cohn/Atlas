@@ -27,7 +27,7 @@ class El {
  addEventListener(k,fn){this.handlers[k]=fn;}focus(){}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
 }
 const els=new Map(),events={};const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
-let sequence=0;const context={...store,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> (++sequence===1?'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb':'cccccccc-cccc-cccc-cccc-cccccccccccc')},window:{addEventListener:(k,fn)=>events[k]=fn}};
+let nativeFail=false;let sequence=0;const context={...store,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> (++sequence===1?'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb':'cccccccc-cccc-cccc-cccc-cccccccccccc')},window:{addEventListener:(k,fn)=>events[k]=fn}};
 vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(r=>setTimeout(r,0));await tick();
 assert.equal(els.get('title').textContent,'My Gallery');assert.equal(els.get('gallery').children.length,2);
@@ -44,4 +44,5 @@ await els.get('editor').onsubmit({preventDefault(){}});
 const saved=await store.readPage(storage,id);assert.equal(saved.images.length,4);assert.equal(saved.images[2].sourceKind,'url');assert.equal(saved.images[3].sourceKind,'local');
 assert.equal(els.get('title').textContent,'<script>not executed</script>');assert.equal(els.get('editor').hidden,true);
 assert.equal(els.get('gallery').children.length,4);
+nativeFail=true;els.get('edit').onclick();els.get('title-input').value='Unsaved';await els.get('editor').onsubmit({preventDefault(){}});assert.equal(els.get('editor').hidden,false);assert.equal((await store.readPage(storage,id)).title,'<script>not executed</script>');assert.match(els.get('status').textContent,/LIBRARY_OFFLINE/);
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

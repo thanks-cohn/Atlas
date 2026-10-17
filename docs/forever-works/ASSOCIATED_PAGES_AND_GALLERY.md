@@ -65,3 +65,8 @@ Owner acceptance: reload the same unpacked extension folder → explore bookmark
 
 Aesthetic quality is an owner acceptance goal, not established by DOM doubles. Refine it using actual rendered evidence while preserving the data, privacy and interaction contracts.
 
+
+
+## 0.1.8 durability correction
+
+The original browser-only storage above describes 0.1.7. [Durable Gallery Library](DURABLE_GALLERY_LIBRARY.md) supersedes that save path with matching-companion native persistence, original-byte imports, clear staging feedback and recovery. Existing browser-only pages need migration; originals never retained by 0.1.7 cannot be recreated. Local image import remains bounded to 10 MiB with specific failure codes. R2 remains future work.

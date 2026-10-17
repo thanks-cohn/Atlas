@@ -9,6 +9,7 @@ const routes = new Set([
   "/v1/hash",
   "/v1/operate",
   "/v1/catalog",
+  "/v1/library",
   "/v1/receipts",
 ]);
 const readRoutes = new Set([
@@ -253,7 +254,8 @@ async function ensureReady() {
 async function api(message) {
   const readOnly =
     readRoutes.has(message.path) ||
-    (message.path === "/v1/catalog" && message.body === undefined);
+    (message.path === "/v1/catalog" && message.body === undefined) ||
+    (message.path === "/v1/library" && ["location", "read-page", "list-pages", "read-asset"].includes(message.body?.action));
   // Recover readiness before submitting a mutation. This is a health read,
   // never a retry of the mutation; failure here proves no mutation was sent.
   if (!readOnly) {

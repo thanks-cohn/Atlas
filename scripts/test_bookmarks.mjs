@@ -35,8 +35,8 @@ const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return 
 let failRead=false;
 const bookmarks={getTree:async()=>{if(failRead)throw Error('denied');return tree;},update:async(id,changes)=>{calls.push(['update',id,changes]);Object.assign(nodes.get(id),changes);}};
 for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReordered','onImportEnded'])bookmarks[name]={addListener:fn=>events[name]=fn};
-const storage={};let storageListener;let paired=false;let catalog={resources:{},relations:[],tags:{}};
-const context={...model,...coversModule,...pagesModule,withPageLock:task=>task(),crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
+const storage={};let storageListener;let paired=false;const nativePages={};let catalog={resources:{},relations:[],tags:{}};
+const context={...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
 vm.runInNewContext(read('bookmarks.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 els.get('bookmarks-open').onclick();await tick();
@@ -88,6 +88,12 @@ await form.onsubmit({preventDefault(){}});await tick();
 assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
 const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');
 assert.equal(storedPage.title,'My Gallery');
+// Clearing Chrome cache does not destroy the separately saved native record.
+nativePages[storedPage.id]={...storedPage,libraryRevision:1};delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];
+preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();
+for(let i=0;i<5;i++)await tick();
+assert.equal(storage[pagesModule.PAGE_PREFIX+storedPage.id].title,'My Gallery');
+assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'));
 const esc={key:'Escape',target:new El(),preventDefault(){},stopPropagation(){}};
 els.get('bookmarks-workspace').handlers.keydown(esc);rows=els.get('bookmarks-list').children;assert.equal(rows.length,4);
 await rows[0].children[2].children[1].children[0].onclick();assert.equal(nodes.get('3').title,'Renamed');

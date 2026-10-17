@@ -74,3 +74,25 @@ Run `python scripts/check_project.py` and inspect the actual companion tests and
 The Windows provider traverses one component at a time through retained NT handles with reparse rejection and pinned volume/128-bit file identity. Directory handles resist rename/reparenting. Local fixed/removable/optical/RAM drives may be explicitly granted; UNC, mapped network, device/extended namespaces, ADS, ambiguous DOS names, trailing dots/spaces and regular hardlinks are rejected. Windows no-overwrite handle-based rename backs rename/move/publication; unsupported cross-volume moves fail safely. Trash is a private current-user/SYSTEM directory whose durable entry/directory identities must match the receipt on restore.
 
 Authority uses separate Windows schema1, current-SID ownership, protected DACLs and persistent rollback journals. State, runtime and enrolled manifests remain excluded even with explicitly approved broad root/volume access. Native wake and optional supervisor bind recovery to an HMAC-signed SID/executable/process-creation identity and retained process HANDLE. Login recovery uses a verified installed `--recover` command to fit Windows Run command limits. These platform mechanisms preserve the shared API and graph schemas; source or Server2025 tests alone do not prove Chrome callbacks or Windows10/11 sleep/hibernate/reboot.
+
+
+## Native gallery library — extension 0.1.8 / matching companion
+
+Authenticated POST `/v1/library` adds a versioned library in the existing private native state database. Normal exact origin/extension identity and bound bearer authentication remain mandatory. No supplied filesystem path or remote URL is opened. This is application-owned storage, not a new root grant.
+
+| Action | Arguments | Result |
+| --- | --- | --- |
+| `location` | none | Actual state directory, database filename and storage format |
+| `put-asset` | `mime`, `base64` | SHA-256 asset ID, MIME and byte count; original bytes preserved |
+| `read-asset` | SHA-256 `id` | MIME and base64 bytes after integrity check |
+| `save-page` | `page`, `expectedRevision` (null on initial migration) | Native `libraryRevision`, actual directory/database |
+| `read-page` | Page UUID `id` | Gallery page with hydrated preview data and native revision |
+| `list-pages` | Exact `bookmarkId`, `bookmarkUrl` | Up to 200 page descriptors, not full image bodies |
+
+Library-only request limit is 16 MiB; other routes retain their 2 MiB request limit. Assets are bounded to 10 MiB decoded PNG/JPEG/WebP/GIF with matching signatures. A signature check is not a complete image-decoder verification. Page previews remain bounded to 24 images, 700,000 encoded characters each and 4,000,000 serialized page characters; title/text/caption and identity validation match the gallery contract. Every asset/page action is transactional through existing private State.connect. No native path comes from the request.
+
+Identical save bodies return the existing native revision; conflicting content without the matching native revision fails with `LIBRARY_EDIT_CONFLICT`/409. New saves with an absent predecessor revision also fail rather than recreating a missing history silently. Corrupt asset hashes fail with `LIBRARY_CORRUPT`. Other stable codes include `LIBRARY_INVALID_ID`, `LIBRARY_INVALID_IMAGE`, `LIBRARY_INVALID_PAGE`, `LIBRARY_PAGE_LIMIT`, `LIBRARY_PAGE_NOT_FOUND`, `LIBRARY_ASSET_NOT_FOUND`, `LIBRARY_INVALID_BINDING`, `LIBRARY_INVALID_REVISION`, `LIBRARY_UNSUPPORTED` and `LIBRARY_UNSUPPORTED_VERSION`.
+
+The worker classifies location/read-page/list-pages/read-asset as read actions; put-asset/save-page are mutations. An uncertain mutation response is never automatically replayed. Explicit user retries can reconcile identical saved data; this is not a transaction across native storage and Chrome's cache.
+
+The current GUI saves originals and page manifests natively before updating browser cache. Remote URL assets are references only; no Cloudflare auth/upload/deploy exists yet. Existing Chrome-only pages require explicit migration; old previews cannot recreate lost originals. See [durability and recovery](forever-works/DURABLE_GALLERY_LIBRARY.md).

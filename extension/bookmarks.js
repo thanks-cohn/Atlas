@@ -1,6 +1,7 @@
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
 import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, withPageLock} from './pages-store.js';
+import {library, readLibraryPage} from './library-client.js';
 const $ = id => document.getElementById(id);
 let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
 let covers = {}, focused = null, trail = [];
@@ -49,7 +50,18 @@ function focusNode(node) {
 async function loadLocalItems(node) {
   const request = ++itemsEpoch;
   try {
-    const pages = await linkedPages(chrome.storage.local, node);
+    let pages = await linkedPages(chrome.storage.local, node);
+    try {
+      const state = await chrome.runtime.sendMessage({type:'state'});
+      if (state?.paired) {
+        const saved = await library('list-pages',{bookmarkId:node.id,bookmarkUrl:node.url || ''});
+        const known = new Set(pages.map(page=>page.id));
+        for (const item of saved.pages) if (!known.has(item.id)) { const page = await readLibraryPage(item.id); await chrome.storage.local.set({[PAGE_PREFIX+page.id]:page}); pages.push(page); known.add(page.id); }
+        const old = (await chrome.storage.local.get(ITEM_PREFIX+node.id))[ITEM_PREFIX+node.id];
+        if (pages.some(page=>page.libraryRevision) && (old?.bookmarkUrl !== (node.url || '') || JSON.stringify(old?.pageIds) !== JSON.stringify(pages.map(page=>page.id)))) await chrome.storage.local.set({[ITEM_PREFIX+node.id]:{version:1,bookmarkUrl:node.url || '',pageIds:pages.map(page=>page.id)}});
+      }
+    } catch { /* Offline/older companion: retain every browser copy. */ }
+    for (let i=0;i<pages.length;i++) if (!pages[i].sourceBookmark) { pages[i]={...pages[i],sourceBookmark:{id:node.id,url:node.url || ''}}; await chrome.storage.local.set({[PAGE_PREFIX+pages[i].id]:pages[i]}); }
     if (request !== itemsEpoch || focused !== node.id) return;
     localPages = pages; render();
   } catch { if (request === itemsEpoch) report('ASSOCIATED_ITEMS_READ_FAILED', 'Saved pages could not be read. Existing data has not been changed.'); }

@@ -45,7 +45,7 @@ export async function linkedPages(storage, node) {
   return pages;
 }
 export async function createLinkedPage(storage, node, {title, template = 'gallery'}, id) {
-  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text: '', template, images: [], revision: 1});
+  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text: '', template, images: [], revision: 1, sourceBookmark: {id: node.id, url: node.url || ''}});
   const key = ITEM_PREFIX + node.id, current = (await storage.get(key))[key];
   if (current && (current.version !== 1 || !Array.isArray(current.pageIds))) throw new Error('PAGE_ASSOCIATIONS_INVALID');
   const ids = current?.version === 1 && current.bookmarkUrl === (node.url || '') && Array.isArray(current.pageIds) ? current.pageIds : [];
@@ -54,11 +54,12 @@ export async function createLinkedPage(storage, node, {title, template = 'galler
   await storage.set({[pageKey(id)]: page, [key]: {version: 1, bookmarkUrl: node.url || '', pageIds: [...ids, id]}});
   return page;
 }
-export async function updatePage(storage, id, {title, text, images}, expectedRevision) {
+export async function updatePage(storage, id, {title, text, images}, expectedRevision, persist) {
   const current = await readPage(storage, id);
   if (!current) throw new Error('PAGE_NOT_FOUND');
   if (current.revision !== expectedRevision) throw new Error('PAGE_EDIT_CONFLICT');
   const next = validatePage({...current, title: title.trim(), text, images: images ?? current.images, revision: current.revision + 1});
-  await storage.set({[pageKey(id)]: next}); return next;
+  if (persist) { const saved = await persist(next); next.libraryRevision = saved.libraryRevision; next.libraryLocation = saved.location; }
+  try { await storage.set({[pageKey(id)]: next}); } catch(error) { if (persist) throw Object.assign(new Error('Saved to Atlas Library, but Chrome could not update its cache. Reload to recover the disk copy.'),{code:'PAGE_CACHE_WRITE_FAILED'}); throw error; } return next;
 }
 export function withPageLock(task) { return navigator.locks.request('atlas-pages-v1', task); }

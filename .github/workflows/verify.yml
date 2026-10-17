@@ -20,6 +20,7 @@ jobs:
           node scripts/test_extension_broker.mjs
           node scripts/test_bookmarks.mjs
           node scripts/test_pages.mjs
+          node scripts/test_image_file.mjs
       - name: Verify real CLI and filesystem integration
         run: python scripts/smoke_companion.py
       - name: Verify native wake and worker integration without replay

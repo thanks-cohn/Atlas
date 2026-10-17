@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const source=readFileSync(new URL('../extension/image-file.js',import.meta.url),'utf8').replace(/^export /gm,'');
+let encodes=0,closed=0;
+const context={Uint8Array,createImageBitmap:async()=>({width:2000,height:1500,close(){closed++;}}),document:{createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=>{encodes++;return 'data:image/webp;base64,'+'A'.repeat(encodes<5?800000:100);}})}};
+vm.runInNewContext(source,context);
+const png=new Blob([new Uint8Array([137,80,78,71,13,10,26,10,0,1,2])]);
+assert.equal(await context.imageType(png),'image/png');
+assert.equal((await context.rasterImage(png)).length,'data:image/webp;base64,'.length+100);assert.equal(encodes,5);assert.equal(closed,1);
+await assert.rejects(()=>context.rasterImage({size:11*1048576}),error=>error.code==='IMAGE_TOO_LARGE');
+await assert.rejects(()=>context.rasterImage(new Blob(['<svg/>'])),error=>error.code==='IMAGE_TYPE_UNSUPPORTED');
+context.createImageBitmap=async()=>{throw Error('decoder');};await assert.rejects(()=>context.rasterImage(png),error=>error.code==='IMAGE_DECODE_FAILED');
+console.log('PASS image signature sniffing without MIME, adaptive bounded encoding and actionable size/type/decode failures (browser primitives doubled).');
