@@ -14,7 +14,7 @@ await model.createPinboard(storage,node,'Research',id,'1');assert.equal((await m
 assert.equal((await model.linkedPinboards(storage,{...node,url:'https://changed.example/'})).length,0);
 await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards(storage,node)).length,0);
 
-let scroll=0,fetchOptions;const frames=[];const listeners={};
+let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
 class El{
  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.attrs={};this.handlers={};this.hidden=false;this.style={};this.classList={add:name=>this.ready=name};this.clientWidth=1100;}
  append(...nodes){for(const node of nodes)if(node.tag==='fragment')this.children.push(...node.children);else{this.children.push(node);node.parent=this;}}
@@ -32,7 +32,7 @@ class El{
 }
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
-const context={installTagEditor:()=>()=>{},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -158,3 +158,11 @@ await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0
 // Empty/unavailable metadata does not leave a useless empty palette or imply no saved tags exist.
 context.chrome.runtime.sendMessage=async()=>({ok:false,error:{code:'NEEDS_PAIRING'}});
 vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,false);assert.match($('status').textContent,/Connect your companion/);
+
+// Metadata saves preserve image nodes and neighboring cards instead of resetting the board.
+context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});
+vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='';$('tags-only').checked=false",context);
+await $('refresh').onclick();flush();const stable=cards(),stableImage=stable[0].children[0].children[0];
+vm.runInContext('tagsChangedURL=items[0].url',context);tagCatalog.tags.r=['Art','Updated'];await tagEditorOptions.onChanged(tagCatalog);flush();
+assert.equal(cards()[0],stable[0]);assert.equal(cards()[0].children[0].children[0],stableImage);assert.equal(cards()[1],stable[1]);
+assert.ok(cards()[1].children.some(c=>c.className.includes('empty-tag-edit')));

@@ -12,5 +12,10 @@ assert.equal(attached.children[0].textContent,'Art ×');assert.equal(add.disable
 select.value='Design';select.onchange();assert.equal(add.disabled,false);add.onclick();await new Promise(r=>setTimeout(r,0));
 assert.equal(changed,1);assert.deepEqual(data.tags.r,['Art','Design']);assert.equal(dialog.open,true);
 attached.children[0].onclick();await new Promise(r=>setTimeout(r,0));assert.deepEqual(data.tags.r,['Design']);assert.equal(mutations.at(-1).action,'untag');assert.equal(changed,2);
+select.scrollTop=120;select.onpointermove({target:{tagName:'OPTION',value:'Art'}});let prevented=false;
+select.onkeydown({key:'Enter',preventDefault(){prevented=true;},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));
+assert.equal(prevented,true);assert.ok(data.tags.r.includes('Art'));assert.equal(select.value,'Art');assert.equal(select.scrollTop,120);assert.equal(dialog.open,true);
 fail=true;await open({id:'1',url:'https://example.com'});assert.match(body.children.at(-1).children[5].textContent,/Connect/);assert.equal(body.children.at(-1).children[6].hidden,false);
 console.log('PASS: existing-tag picker, revision-checked add/remove, retained dialog and visible unavailable/retry state. DOM/API doubles; real Chrome NOT_RUN.');
+fail=false;const createForm=dialog.children.at(-1),newTags=createForm.children[0].children[0];newTags.value='New idea, New idea, Research';await createForm.onsubmit({preventDefault(){}});assert.ok(data.tags.r.includes('New idea'));assert.ok(data.tags.r.includes('Research'));assert.equal(data.tags.r.filter(t=>t==='New idea').length,1);assert.equal(newTags.value,'');assert.equal(dialog.open,true);
+fail=true;newTags.value='Keep my draft';await createForm.onsubmit({preventDefault(){}});assert.equal(newTags.value,'Keep my draft');assert.equal(dialog.open,true);
