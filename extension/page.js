@@ -38,11 +38,17 @@ function openStory(index, sourceImage) {
   const reveal = async () => {
     if (!current()) return;
     viewer.setAttribute('data-opening','image');
+    const target = hero.getBoundingClientRect();
+    if (!target.width || !target.height) { finish(); return; }
+    const viewportHeight = viewer.clientHeight || window.innerHeight || target.height;
+    const toolbarHeight = viewer.querySelector?.('.viewer-toolbar')?.getBoundingClientRect?.().height || 72;
+    const centeredY = toolbarHeight + (viewportHeight-toolbarHeight)/2;
+    const offsetY = centeredY - (target.top + target.height/2);
+    const centered = `translateY(${offsetY}px)`;
     let imageAnimation;
     if (nocturne) {
-      imageAnimation = hero.animate([{opacity:0},{opacity:1}],{duration:520,easing:'cubic-bezier(.25,.1,.25,1)'});
+      imageAnimation = hero.animate([{opacity:0,transform:centered},{opacity:1,transform:centered}],{duration:520,easing:'cubic-bezier(.25,.1,.25,1)',fill:'forwards'});
     } else {
-      const target = hero.getBoundingClientRect();
       const fit = (rect, image) => {
         const ratio = image.naturalWidth / image.naturalHeight;
         return {width:Math.min(rect.width,rect.height*ratio),x:rect.left+rect.width/2,y:rect.top+rect.height/2};
@@ -51,14 +57,19 @@ function openStory(index, sourceImage) {
       if (!Number.isFinite(from.width/to.width) || !to.width) { finish(); return; }
       imageAnimation = hero.animate([
         {transform:`translate(${from.x-to.x}px,${from.y-to.y}px) scale(${from.width/to.width})`,transformOrigin:'50% 50%'},
-        {transform:'translate(0,0) scale(1)',transformOrigin:'50% 50%'}
-      ],{duration:440,easing:'cubic-bezier(.22,1,.36,1)'});
+        {transform:`translate(0,${offsetY}px) scale(1)`,transformOrigin:'50% 50%'}
+      ],{duration:440,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
       openingMotion.push(viewer.animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#eeefed'}],{duration:440,easing:'ease-out'}));
     }
     openingMotion.push(imageAnimation);
     try {
       await imageAnimation.finished;
       if (!current()) return;
+      const settle = hero.animate([{transform:centered},{transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.22,1,.36,1)'});
+      openingMotion.push(settle);
+      await settle.finished;
+      if (!current()) return;
+      imageAnimation.cancel();
       viewer.setAttribute('data-opening','text');
       const heading = $('viewer-reading').querySelector('.reader-heading');
       const fades = [heading,$('viewer-article')].map(element => element.animate([{opacity:0},{opacity:1}],{duration:nocturne ? 380 : 220,easing:'ease-out'}));

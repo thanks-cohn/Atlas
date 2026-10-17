@@ -387,3 +387,7 @@ Owner accepts distinct image-first rhythms: Solstice expands/settles, then text 
 
 ### 0.1.34 — Unhurried Nocturne pacing
 Owner asks for slower, more elegant timing. Nocturne image opacity reveal increases from 280ms to 520ms with a gentle ease-in/out curve; the subsequent text fade increases from 220ms to 380ms. No additional effects or idle pause. Solstice timing remains 440ms image / 220ms text. Sequencing, cancellation and reduced-motion behavior retained. Focused page/bookmark tests and package PASS; actual Chrome aesthetic/performance verification NOT_RUN.
+
+
+### 0.1.35 — Whole image centered before the article
+Owner requires the clicked image to appear whole and centered before surrounding article content. Both styles now reveal the uncropped hero at the viewport center below the toolbar, then settle it into the article position over 240ms, then reveal heading/body. Nocturne keeps its 520ms image opacity reveal (no zoom/blur) and 380ms text fade; Solstice keeps source-image expansion and 220ms text fade. Transform-only settling preserves the image rather than changing layout. Existing contain sizing and max viewport height remain; reduced motion opens directly in the finished layout. Promise-order tests verify centering/settling precede text, cancellation and errors release visibility, and reduced motion bypasses. Page/bookmark tests and package PASS; real Chrome motion/visual and constrained-device verification NOT_RUN.
