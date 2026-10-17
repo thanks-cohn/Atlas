@@ -25,9 +25,7 @@ h1{font-size:clamp(45px,7.5vw,112px);line-height:1.05;margin:25px 0}
 #text,#preview-text{font-size:14px;line-height:1.8;color:#6d7363;max-width:640px;white-space:pre-wrap}
 #image-count{font-size:10px;letter-spacing:.12em;margin:28px 0 0;color:#777c6b}
 .collection-layout{min-width:0}
-.collection-layout.atelier{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:75px 7%;border-top:1px solid #79816b40;padding-top:40px}
 .collection-layout figure{margin:0;min-width:0}
-.collection-layout.atelier figure:nth-child(2n){padding-top:90px}
 .gallery-image{display:block;width:100%;padding:0;border:0;background:#e9e8df;border-radius:2px;overflow:hidden;cursor:zoom-in}
 .gallery-image img{display:block;width:100%;height:420px;object-fit:contain;transition:transform .5s ease}
 .gallery-image:hover img{transform:scale(1.015)}
@@ -35,18 +33,6 @@ figcaption{display:flex;gap:20px;border-top:1px solid #8a907a30;padding-top:17px
 .work-number{font:10px/2 system-ui;color:#8c927d;flex:none}
 .image-title{display:block;font:400 clamp(20px,2vw,28px)/1.2 Georgia,serif;letter-spacing:-.02em;color:#30352a}
 .image-caption{display:block;font-size:13px;line-height:1.7;color:#737b66;margin-top:8px;white-space:pre-wrap}
-.fieldnotes{background:#eee5d5;color:#392e26}
-.fieldnotes header{background:#f2eadd}
-.fieldnotes .gallery-intro{max-width:1000px}
-.fieldnotes h1,.fieldnotes .image-title{color:#8f492e}
-.collection-layout.fieldnotes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:65px 30px}
-.collection-layout.fieldnotes figure:first-child{grid-column:1/-1;display:grid;grid-template-columns:2fr 1fr;gap:40px;align-items:center}
-.fieldnotes .gallery-image{background:#e3d8c4}
-.fieldnotes .gallery-image img{height:440px}
-.collection-layout.fieldnotes figure:first-child img{height:550px}
-.collection-layout.fieldnotes figure:first-child figcaption{display:block;border:0}
-.collection-layout.fieldnotes figure:first-child .image-title{font-size:clamp(27px,3vw,46px);margin-top:20px}
-.collection-layout.fieldnotes figure:nth-child(4n){grid-column:1/-1}
 .nocturne{background:#101713;color:#f2f1e7;color-scheme:dark}
 .nocturne header{background:#121b15;border-color:#ffffff25}
 .nocturne header button{border-color:#7f8d7255}
@@ -103,13 +89,11 @@ textarea{resize:vertical}
 #preview{padding:0 20px 25px;container-type:inline-size;min-width:0}
 #preview .gallery-intro{padding:30px 0}
 #preview h1{font-size:clamp(28px,3vw,50px)}
-#preview-gallery.atelier{gap:30px}
 #preview-gallery .gallery-image img{height:230px}
-#preview-gallery.atelier figure:nth-child(2n){padding-top:35px}
 #preview-gallery .image-title{font-size:20px}
 #preview-gallery .image-caption{font-size:12px}
-#preview-gallery.fieldnotes figure:first-child{display:block}
-#preview-gallery.fieldnotes figure:first-child .image-title{font-size:24px}
+#preview-gallery.solstice figure:first-child{display:block}
+#preview-gallery.solstice figure:first-child .image-title{font-size:24px}
 #preview-gallery .cinema-image img{height:350px;min-height:0}
 #preview-gallery .cinema-meta{display:block}
 #preview-gallery .cinema-meta h2{font-size:26px}
@@ -125,9 +109,8 @@ dialog::backdrop{background:#0009}
 .viewer-meta{max-width:850px;margin:24px auto;text-align:center}
 #viewer-title{font:400 clamp(24px,3vw,34px)/1.3 Georgia,serif;margin:0}
 #viewer-caption{font-size:14px;line-height:1.7;color:#aab49c;margin:8px 0;white-space:pre-wrap}
-@container(max-width:430px){#preview-gallery.atelier,#preview-gallery.fieldnotes{grid-template-columns:1fr}
-#preview-gallery.atelier figure:nth-child(2n){padding:0}
-#preview-gallery.fieldnotes figure{grid-column:auto}
+@container(max-width:430px){#preview-gallery.solstice,#preview-gallery.solstice{grid-template-columns:1fr}
+#preview-gallery.solstice figure{grid-column:auto}
 }
 @media(max-width:760px){.studio-layout{grid-template-columns:1fr}
 .studio-settings{position:static}
@@ -136,12 +119,7 @@ dialog::backdrop{background:#0009}
 .studio-heading h2{font-size:36px}
 .gallery-intro{padding-top:45px}
 .header-actions{flex-basis:100%;margin-left:0;justify-content:flex-start}
-.collection-layout.atelier,.collection-layout.fieldnotes{grid-template-columns:1fr;gap:45px}
-.collection-layout.atelier figure:nth-child(2n){padding-top:0}
-.collection-layout.fieldnotes figure:first-child{display:block}
-.collection-layout.fieldnotes figure{grid-column:auto}
-.gallery-image img,.collection-layout.fieldnotes figure:first-child img{height:auto;max-height:600px}
-.collection-layout.fieldnotes figure:first-child .image-title{font-size:28px}
+.gallery-image img,.collection-layout.solstice figure:first-child img{height:auto;max-height:600px}
 .image-editor-row{grid-template-columns:70px minmax(0,1fr);gap:14px}
 .image-editor-row>img{width:70px;height:90px}
 .cinema-image img{height:50svh}
@@ -152,21 +130,34 @@ dialog::backdrop{background:#0009}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}
 }
 
-/* Atelier follows an exhibition sequence, rather than a discovery grid. */
-.collection-layout.atelier{grid-template-columns:minmax(0,1fr);gap:80px}
 
-.collection-layout.atelier figure{display:grid;grid-template-columns:minmax(0,3fr) minmax(150px,1fr);gap:35px;align-items:center}
 
-.collection-layout.atelier figure:nth-child(2n){padding-top:0}
 
-.collection-layout.atelier .gallery-image img{height:min(66svh,620px);min-height:220px}
 
-.collection-layout.atelier figcaption{margin:0;padding-top:22px;align-self:center}
 
-#preview-gallery.atelier figure{grid-template-columns:1fr;gap:16px}
-#preview-gallery.atelier figcaption{margin:0}
 
-@media(max-width:760px){.collection-layout.atelier figure{grid-template-columns:1fr;gap:20px}
-.collection-layout.atelier .gallery-image img{height:auto;min-height:0;max-height:70svh}
-.collection-layout.atelier figcaption{padding-top:16px}
+@media(max-width:760px){.collection-layout.solstice figure{grid-template-columns:1fr;gap:20px}
 }
+
+/* Solstice: an architectural contact sheet, deliberately opposite to Nocturne. */
+body.solstice { background:#fff; color:#111; color-scheme:light; }
+.solstice header { background:#fff; border-color:#1112; }
+.solstice .gallery-intro { max-width:none; padding:56px 0 30px; border-bottom:3px solid #111; margin-bottom:28px; }
+.solstice .gallery-intro h1 { font-family:Arial,Helvetica,sans-serif; font-size:clamp(44px,6.5vw,98px); font-weight:700; letter-spacing:-.07em; line-height:.98; max-width:1050px; }
+.solstice .eyebrow { color:#555; letter-spacing:.16em; }
+.solstice #text,.solstice #preview-text { color:#555; font-size:14px; max-width:680px; }
+.solstice #image-count { font-family:monospace; color:#111; letter-spacing:.1em; }
+.collection-layout.solstice { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px 22px; }
+.collection-layout.solstice figure { padding:0; margin:0; display:block; }
+.solstice .gallery-image { border:1px solid #1111; border-radius:0; background:#f4f4f1; padding:16px; }
+.collection-layout.solstice .gallery-image img { width:100%; height:clamp(180px,22vw,330px); min-height:0; object-fit:contain; }
+.solstice figcaption { display:flex; gap:14px; padding:14px 0 0; margin:0; border:0; }
+.solstice .work-number { color:#999; font-family:monospace; padding-top:1px; }
+.solstice .image-title { color:#171717; font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.4; font-weight:600; letter-spacing:-.025em; }
+.solstice .image-caption { color:#777; margin-top:5px; font-size:12px; }
+#preview.solstice { background:#fff; color:#111; }
+#preview-gallery.solstice { gap:24px 14px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+#preview-gallery.solstice .gallery-image img { height:190px; }
+@media(min-width:1600px){.collection-layout.solstice{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:900px){.collection-layout.solstice{grid-template-columns:repeat(2,minmax(0,1fr));}.collection-layout.solstice .gallery-image img{height:260px;}}
+@media(max-width:480px){.collection-layout.solstice{grid-template-columns:1fr;}.collection-layout.solstice .gallery-image img{height:auto;max-height:65svh;}.solstice .gallery-intro{padding-top:32px;}}

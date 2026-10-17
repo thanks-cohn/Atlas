@@ -6,14 +6,16 @@ const store=await import('data:text/javascript;base64,'+Buffer.from(read('pages-
 const data={};const storage={get:async key=>({[key]:structuredClone(data[key])}),set:async value=>Object.assign(data,structuredClone(value))};
 const id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',node={id:'17',url:'https://example.com/'};
 let page=await store.createLinkedPage(storage,node,{title:'A considered collection'},id);
-assert.equal(page.galleryStyle,'atelier');
+assert.equal(page.galleryStyle,'nocturne');
+assert.equal(store.displayGalleryStyle(undefined),'nocturne');
+for(const retired of ['atelier','fieldnotes']) { assert.equal(store.displayGalleryStyle(retired),'solstice'); assert.equal(store.validatePage({...page,galleryStyle:retired}).id,id); }
 delete data[store.pageKey(id)].galleryStyle;
 assert.equal((await store.readPage(storage,id)).galleryStyle,undefined);
 assert.equal(page.template,'gallery');assert.equal((await store.linkedPages(storage,node))[0].id,id);
 assert.equal((await store.linkedPages(storage,{...node,url:'https://other.example/'})).length,0);
 await assert.rejects(()=>store.createLinkedPage(storage,node,{title:'Duplicate'},id),/ALREADY_EXISTS/);
 const images=[{id:'local',sourceKind:'local',source:'data:image/webp;base64,AAAA',caption:'Local work'},{id:'remote',sourceKind:'url',source:'https://example.com/image.jpg',caption:'Remote work'}];
-page=await store.updatePage(storage,id,{title:'My Gallery',text:'A story.',images},1);
+page=await store.updatePage(storage,id,{title:'My Gallery',text:'A story.',images,galleryStyle:'solstice'},1);
 assert.equal(page.revision,2);assert.equal((await store.readPage(storage,id)).images[1].source,images[1].source);
 await assert.rejects(()=>store.updatePage(storage,id,{title:'Wrong overwrite',text:''},1),/CONFLICT/);
 assert.equal((await store.readPage(storage,id)).title,'My Gallery');
@@ -71,6 +73,6 @@ for (const style of store.GALLERY_STYLES) {
   }
 }
 // Cancel a style change: cached and durable state must not be overwritten.
-els.get('edit').onclick();els.get('style-input').value='atelier';els.get('cancel').onclick();
+els.get('edit').onclick();els.get('style-input').value='solstice';els.get('cancel').onclick();
 assert.equal((await store.readPage(storage,id)).galleryStyle,'nocturne');
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

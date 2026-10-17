@@ -76,8 +76,8 @@ function addItem(node) {
   for (const choice of PAGE_TEMPLATES) { const option = element('option', choice.label); option.value = choice.id; option.disabled = !choice.available; template.append(option); }
   template.value = 'gallery'; templateLabel.append(template);
   const styleLabel = element('label', 'Gallery style'), style = document.createElement('select');
-  for (const [value, label] of [['atelier','Atelier — the exhibition'],['fieldnotes','Fieldnotes — the visual essay'],['nocturne','Nocturne — the screening room']]) { const option = element('option',label); option.value=value; style.append(option); }
-  style.value='atelier'; styleLabel.append(style);
+  for (const [value, label] of [['nocturne','Nocturne — the screening room'],['solstice','Solstice — the contact sheet']]) { const option = element('option',label); option.value=value; style.append(option); }
+  style.value='nocturne'; styleLabel.append(style);
   const message = element('p', ''), save = element('button', 'Create Page'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
   form.append(kind, titleLabel, templateLabel, styleLabel, message, save, cancel); dialog.append(form);

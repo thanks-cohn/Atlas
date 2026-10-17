@@ -1,4 +1,4 @@
-import {readPage, updatePage, withPageLock, publicImageURL, publicationReadiness} from './pages-store.js';
+import {readPage, updatePage, withPageLock, publicImageURL, publicationReadiness, displayGalleryStyle} from './pages-store.js';
 import {rasterImage, imageType} from './image-file.js';
 import {library, saveLibraryPage, readLibraryPage, importOriginal} from './library-client.js';
 const $ = id => document.getElementById(id);
@@ -20,8 +20,8 @@ function render() {
   if (!page) return;
   document.title = page.title + ' · Atlas'; $('title').textContent = page.title; $('text').textContent = page.text;
   $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'image' : 'images'}`;
-  document.body.className = editing ? 'studio-mode' : (page.galleryStyle || 'atelier');
-  renderCollection($('gallery'), page.images, page.galleryStyle || 'atelier');
+  document.body.className = editing ? 'studio-mode' : displayGalleryStyle(page.galleryStyle);
+  renderCollection($('gallery'), page.images, displayGalleryStyle(page.galleryStyle));
 }
 function renderCollection(container, images, style, preview = false) {
   container.replaceChildren(); container.onkeydown = null; container.removeAttribute('tabindex'); container.className = 'collection-layout ' + style;
@@ -58,7 +58,7 @@ function renderPreview() {
   $('preview-text').textContent = $('text-input').value;
   $('preview').className = $('style-input').value;
   renderCollection($('preview-gallery'), draftImages, $('style-input').value, true);
-  const descriptions = {atelier:'Quiet space, whole images, and elegant exhibition labels.',fieldnotes:'A visual essay with a generous opening work and an editorial sequence.',nocturne:'A focused screening room with a single work, a filmstrip, and arrow navigation.'};
+  const descriptions = {solstice:'A bright contact sheet: clean architectural frames, bold typography, and the whole collection in view.',nocturne:'A focused screening room with a single work, a filmstrip, and arrow navigation.'};
   $('style-description').textContent = descriptions[$('style-input').value];
 }
 
@@ -83,7 +83,7 @@ async function load() {
     $('backup-library').hidden = !page || Boolean(page.libraryRevision); $('status').textContent = page ? '' : 'PAGE_NOT_FOUND: This page is unavailable in this installation.'; render(); }
   catch { $('status').textContent = 'PAGE_READ_FAILED: This page could not be loaded.'; }
 }
-$('edit').onclick = () => { editing = true; draftImages = page.images.map(image => ({...image})); originalFiles.clear(); $('title-input').value = page.title; $('text-input').value = page.text; $('style-input').value = page.galleryStyle || 'atelier'; $('preview').hidden = true; $('image-editor').hidden = false; $('sequence-tab').setAttribute('aria-pressed','true'); $('preview-tab').setAttribute('aria-pressed','false'); render(); renderImageEditor(); $('title-input').focus(); };
+$('edit').onclick = () => { editing = true; draftImages = page.images.map(image => ({...image})); originalFiles.clear(); $('title-input').value = page.title; $('text-input').value = page.text; $('style-input').value = displayGalleryStyle(page.galleryStyle); $('preview').hidden = true; $('image-editor').hidden = false; $('sequence-tab').setAttribute('aria-pressed','true'); $('preview-tab').setAttribute('aria-pressed','false'); render(); renderImageEditor(); $('title-input').focus(); };
 $('style-input').onchange = renderPreview;
 $('title-input').oninput = $('text-input').oninput = renderPreview;
 $('preview-tab').onclick = () => {renderPreview(); $('preview').hidden = false; $('image-editor').hidden = true; $('preview-tab').setAttribute('aria-pressed','true'); $('sequence-tab').setAttribute('aria-pressed','false');};
@@ -126,7 +126,7 @@ $('viewer').addEventListener('keydown', event => { if (['ArrowLeft', 'ArrowRight
 $('viewer').addEventListener('close', () => { $('viewer-image').removeAttribute('src'); });
 $('publishing-check').onclick = () => { const plan = publicationReadiness(page); $('publish-status').textContent = `${plan.localImages} local image(s) require transfer; ${plan.referencedImages} image(s) already use hosted URLs.`; $('publish-dialog').showModal(); };
 $('close-publish').onclick = () => $('publish-dialog').close();
-window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images) || $('style-input').value !== (page.galleryStyle || 'atelier'))) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images) || $('style-input').value !== displayGalleryStyle(page.galleryStyle))) { event.preventDefault(); event.returnValue = ''; } });
 $('backup-library').onclick = async () => {
   $('backup-library').disabled = true;
   try { const result = await saveLibraryPage(page); page = {...page,libraryRevision:result.libraryRevision,libraryLocation:result.location}; await chrome.storage.local.set({['atlas.page.v1.'+id]:page}); $('library-location').textContent='Saved outside Chrome: '+result.location; $('backup-library').hidden=true; $('status').textContent='Existing page backed up. Older local images contain resized previews only; reselect originals if required.'; }

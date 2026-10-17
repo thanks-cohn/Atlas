@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Page</title><link rel="stylesheet" href="page.css"></head>
-<body class="atelier">
+<body class="nocturne">
   <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><div class="header-actions" role="group" aria-label="Gallery actions"><details class="storage-details"><summary>Storage details</summary><p id="library-location"></p></details><button id="backup-library" hidden>Save to Atlas Library</button><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></div><p id="status" role="status">Loading page…</p></header>
   <main>
     <article id="page" hidden><div class="gallery-intro"><p class="eyebrow">CURATED IN ATLAS</p><h1 id="title"></h1><div id="text"></div><p id="image-count"></p></div><div id="gallery" aria-label="Gallery images"></div></article>
@@ -12,7 +12,7 @@
         <label>Collection title<input id="title-input" maxlength="200" required></label>
         <label>Introduction<textarea id="text-input" maxlength="100000" rows="5"></textarea></label>
         <p class="eyebrow">02 / THE PRESENTATION</p>
-        <label>Gallery style<select id="style-input"><option value="atelier">Atelier — the exhibition</option><option value="fieldnotes">Fieldnotes — the visual essay</option><option value="nocturne">Nocturne — the screening room</option></select></label>
+        <label>Gallery style<select id="style-input"><option value="solstice">Solstice — the contact sheet</option><option value="nocturne">Nocturne — the screening room</option></select></label>
         <p class="studio-help" id="style-description"></p>
         <button id="choose-images" class="image-drop" type="button">＋ Choose Local Images<span>PNG, JPEG, WebP or GIF · Up to 10 MB each</span></button><input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" hidden>
         <p id="import-status" role="status" class="studio-help">Your originals are kept when you save to Atlas Library.</p>
