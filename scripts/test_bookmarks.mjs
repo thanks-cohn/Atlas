@@ -81,12 +81,12 @@ assert.ok(preview.children.some(el=>el.tagName==='details'));
 assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associated Items'));
 preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
 const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
-const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Page title').children[0];titleControl.value='My Gallery';
+const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery title').children[0];titleControl.value='My Gallery';
 const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Template').children[0];
 const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery style').children[0];assert.equal(styleControl.value,'nocturne');styleControl.value='solstice';
 assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children[1].disabled,true);
 await form.onsubmit({preventDefault(){}});await tick();
-assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
+assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
 const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');assert.equal(storedPage.galleryStyle,'solstice');
 assert.equal(storedPage.title,'My Gallery');
 // Clearing Chrome cache does not destroy the separately saved native record.
@@ -94,7 +94,20 @@ nativePages[storedPage.id]={...storedPage,libraryRevision:1};delete storage[page
 preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();
 for(let i=0;i<5;i++)await tick();
 assert.equal(storage[pagesModule.PAGE_PREFIX+storedPage.id].title,'My Gallery');
-assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'));
+assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'));
+// Cancel preserves the gallery; confirmed deletion persists a marker and stays hidden after recovery.
+let deleteControl=preview.children.find(el=>el.className==='associated-gallery-row').children[1];
+await deleteControl.onclick();assert.equal(storage[pagesModule.PAGE_PREFIX+storedPage.id].deleted,undefined);
+context.confirm=()=>true;
+context.saveLibraryPage=async page=>{nativePages[page.id]={...page,libraryRevision:2};return {libraryRevision:2};};
+await deleteControl.onclick();await tick();
+assert.equal(nativePages[storedPage.id].deleted,true);
+assert.ok(!preview.children.some(el=>el.className==='associated-gallery-row'));
+delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];
+preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();
+for(let i=0;i<5;i++)await tick();
+assert.ok(!preview.children.some(el=>el.className==='associated-gallery-row'));
+context.confirm=()=>false;
 const esc={key:'Escape',target:new El(),preventDefault(){},stopPropagation(){}};
 els.get('bookmarks-workspace').handlers.keydown(esc);rows=els.get('bookmarks-list').children;assert.equal(rows.length,4);
 await rows[0].children[2].children[1].children[0].onclick();assert.equal(nodes.get('3').title,'Renamed');

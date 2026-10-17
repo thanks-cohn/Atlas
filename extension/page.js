@@ -97,6 +97,7 @@ async function load() {
   try {
     page = await readPage(chrome.storage.local, id);
     try { const disk = await readLibraryPage(id); if (!page || (disk.libraryRevision || 0) > (page.libraryRevision || 0)) { page = disk; await chrome.storage.local.set({['atlas.page.v1.'+id]: page}); } } catch { /* Existing browser copy remains accessible; never label it disk-backed. */ }
+    if (page?.deleted) page = null;
     $('library-location').textContent = page?.libraryRevision ? 'Atlas Library copy: ' + (page.libraryLocation || 'companion storage') : 'This page is currently saved only in Chrome. Save it to Atlas Library to protect it from extension removal.';
     $('backup-library').hidden = !page || Boolean(page.libraryRevision); $('status').textContent = page ? '' : 'PAGE_NOT_FOUND: This page is unavailable in this installation.'; render(); }
   catch { $('status').textContent = 'PAGE_READ_FAILED: This page could not be loaded.'; }
@@ -107,8 +108,6 @@ $('load-demo').onclick = () => {
   if (draftImages.length && !window.confirm('Replace this editor draft with the 24-image sample collection? Your saved gallery and library originals stay unchanged until you explicitly save.')) return;
   draftImages = DEMO_COLLECTION.images.map(image => ({...image, id: crypto.randomUUID()}));
   originalFiles.clear();
-  $('title-input').value = DEMO_COLLECTION.title;
-  $('text-input').value = DEMO_COLLECTION.text;
   $('preview').hidden = false; $('image-editor').hidden = true;
   $('preview-tab').setAttribute('aria-pressed','true'); $('sequence-tab').setAttribute('aria-pressed','false');
   renderImageEditor();

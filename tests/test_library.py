@@ -57,3 +57,17 @@ class LibraryTests(unittest.TestCase):
         self.assertEqual(self.call({'action':'save-page','page':changed,'expectedRevision':1})[1]['libraryRevision'],2)
         page['images'][0]['originalAssetId']='f'*64
         self.assertGreaterEqual(self.call({'action':'save-page','page':page,'expectedRevision':2})[0],400)
+
+    def test_gallery_deletion_marker_survives_restart_without_removing_assets(self):
+        page=self.page()
+        self.assertEqual(self.call({'action':'save-page','page':page,'expectedRevision':None})[0],200)
+        original=self.call({'action':'read-page','id':page['id']})[1]['page']
+        asset=original['images'][0]['assetId']
+        marker={**original,'deleted':True,'images':[],'text':'','revision':2}
+        self.assertEqual(self.call({'action':'save-page','page':marker,'expectedRevision':1})[0],200)
+        self.stop();self.close_state();self.state=self.make_state(self.root);self.start()
+        recovered=self.call({'action':'read-page','id':page['id']})[1]['page']
+        self.assertTrue(recovered['deleted'])
+        self.assertEqual(recovered['images'],[])
+        self.assertEqual(self.call({'action':'read-asset','id':asset})[0],200)
+        self.assertEqual(self.call({'action':'save-page','page':page,'expectedRevision':1})[0],409)

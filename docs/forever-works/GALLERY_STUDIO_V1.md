@@ -95,3 +95,15 @@ Owner's corrected screenshot showed two scrollbars: inner reading pane and backg
 Bundle Newsreader regular and semibold (Google Fonts, SIL OFL1.1) for editorial headline/deck/body. Files and complete OFL text are shipped under extension/fonts; there are no runtime Google Fonts requests. Packaging accepts explicit .ttf in addition to existing formats. Large readable type, narrow measure, distinct lead paragraph and ordinary full article flow replace the small text box. Estimated reading time is word count /220 rounded up, not a measured reading duration. No user text changed; no helper update.
 
 PASS: gallery/editor/bookmark DOM/API doubles, background lock attribute, close restores scroll, keyboard up/down targets reader, story navigation resets reader, full paragraphs remain available; reproducible 0.1.18 package includes fonts/license. Corrected owner screenshot inspected. Actual Chromium wheel/focus/font rendering and screen-reader testing NOT_RUN; do not claim mocked checks establish visual quality. Hosted Site unchanged in this extension-only revision.
+
+
+### 0.1.19 — Gallery / Story template and deletion
+Owner direction: keep Gallery as the object type; name its image-to-article template Story. Nocturne and Solstice remain visual styles. The existing wire representation kind=page/template=gallery is retained for companion compatibility; these UI terms do not promise a new general page composer.
+
+Delete beside each gallery under Associated Items records a versioned deletion marker. Native-backed galleries require a successful companion save before the browser copy is marked deleted. Imported originals and Chrome bookmarks remain. The deletion marker is stored through the existing save-page contract (no helper upgrade required); linked-page lists and direct readers hide it, and stale editors cannot save over a locally deleted page. Refresh reconciles newer disk revisions, including deletions. This is logical deletion, not physical erasure or a trash/restore interface; retained markers can be recovered manually. Old extension versions do not recognize markers. Offline devices or already-open readers can display stale state until refresh.
+
+Sample loading preserves the draft gallery title and introduction; it replaces image/story entries only, and still requires Save. No automatic guesses are made about names already overwritten.
+
+Verification: focused page/bookmark DOM and API-double tests, project checker, extension package. Actual Chrome visual/runtime verification NOT_RUN.
+
+0.1.19 evidence: page and bookmark scripts PASS; four real authenticated HTTP/SQLite library tests PASS including marker persistence across restart and retained image assets. Project checker: 22 linked records valid; broader 141-test run has 3 failures, 3 errors, 32 skips in existing native startup/supervisor areas. Thus full suite is not green. Extension ZIP packages successfully; Chrome/Windows UI verification NOT_RUN.

@@ -1066,3 +1066,7 @@ body.bookmarks-mode #details { display: none !important; }
 .associated-page:hover { background: var(--soft); }
 dialog label { display: block; margin: 12px 0; }
 dialog label input, dialog label select { display: block; width: 100%; margin-top: 6px; }
+
+.associated-gallery-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.associated-gallery-row .associated-page { flex: 1; min-width: 0; margin-top: 0; }
+.associated-gallery-row > button { flex-shrink: 0; }

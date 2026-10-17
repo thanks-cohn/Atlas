@@ -309,3 +309,15 @@ Owner clarified with expanded-view screenshot. Main page now first-sentence prev
 ## 2026-10-17 — single-scroll editorial reader (0.1.18)
 
 Corrected owner screenshot confirms inner article scrollbar plus outer background scroll. Replace fixed-image/nested reading pane with one full article dialog scroller; root/body explicitly locked while open and gallery scroll restored on close. ArrowUp/Down/Page/Home/End target dialog, Left/Right switches stories and resets scroll. Added collection/title/deck/reading-time/image/body/footer hierarchy and locally bundled OFL Newsreader font with full license. Main page remains preview-only. Gallery/bookmark contract checks PASS (DOM/API doubles), package PASS. Actual Chrome wheel/focus/font/aesthetic verification NOT_RUN. No storage/helper change; hosted study unchanged. See GALLERY_STUDIO_V1.md.
+
+
+### 0.1.19 — Gallery / Story template and deletion
+Owner direction: keep Gallery as the object type; name its image-to-article template Story. Nocturne and Solstice remain visual styles. The existing wire representation kind=page/template=gallery is retained for companion compatibility; these UI terms do not promise a new general page composer.
+
+Delete beside each gallery under Associated Items records a versioned deletion marker. Native-backed galleries require a successful companion save before the browser copy is marked deleted. Imported originals and Chrome bookmarks remain. The deletion marker is stored through the existing save-page contract (no helper upgrade required); linked-page lists and direct readers hide it, and stale editors cannot save over a locally deleted page. Refresh reconciles newer disk revisions, including deletions. This is logical deletion, not physical erasure or a trash/restore interface; retained markers can be recovered manually. Old extension versions do not recognize markers. Offline devices or already-open readers can display stale state until refresh.
+
+Sample loading preserves the draft gallery title and introduction; it replaces image/story entries only, and still requires Save. No automatic guesses are made about names already overwritten.
+
+Verification: focused page/bookmark DOM and API-double tests, project checker, extension package. Actual Chrome visual/runtime verification NOT_RUN.
+
+0.1.19 evidence: page and bookmark scripts PASS; four real authenticated HTTP/SQLite library tests PASS including marker persistence across restart and retained image assets. Project checker: 22 linked records valid; broader 141-test run has 3 failures, 3 errors, 32 skips in existing native startup/supervisor areas. Thus full suite is not green. Extension ZIP packages successfully; Chrome/Windows UI verification NOT_RUN.

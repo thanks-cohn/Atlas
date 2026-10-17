@@ -2,7 +2,7 @@
 export const PAGE_PREFIX = 'atlas.page.v1.';
 export const ITEM_PREFIX = 'atlas.items.v1.';
 export const GALLERY_STYLES = Object.freeze(['solstice', 'nocturne']);
-export const PAGE_TEMPLATES = Object.freeze([{id: 'gallery', label: 'Gallery', available: true}, {id: 'horizons-v1', label: 'Horizons v1 — planned', available: false}]);
+export const PAGE_TEMPLATES = Object.freeze([{id: 'gallery', label: 'Story', available: true}, {id: 'horizons-v1', label: 'Horizons v1 — planned', available: false}]);
 // Retired style IDs remain readable; content is never discarded for a visual change.
 export function displayGalleryStyle(style) { return style === 'nocturne' || style === undefined ? 'nocturne' : 'solstice'; }
 export function publicImageURL(value) {
@@ -45,7 +45,7 @@ export async function linkedPages(storage, node) {
   if (record.version !== 1 || !Array.isArray(record.pageIds) || record.pageIds.length > 200 || new Set(record.pageIds).size !== record.pageIds.length) throw new Error('PAGE_ASSOCIATIONS_INVALID');
   if (record.bookmarkUrl !== (node.url || '')) return [];
   const pages = [];
-  for (const id of record.pageIds) { const page = await readPage(storage, id); if (page) pages.push(page); }
+  for (const id of record.pageIds) { const page = await readPage(storage, id); if (page && !page.deleted) pages.push(page); }
   return pages;
 }
 export async function createLinkedPage(storage, node, {title, template = 'gallery', galleryStyle = 'nocturne'}, id) {
@@ -60,10 +60,25 @@ export async function createLinkedPage(storage, node, {title, template = 'galler
 }
 export async function updatePage(storage, id, {title, text, images, galleryStyle}, expectedRevision, persist) {
   const current = await readPage(storage, id);
-  if (!current) throw new Error('PAGE_NOT_FOUND');
+  if (!current || current.deleted) throw new Error('PAGE_NOT_FOUND');
   if (current.revision !== expectedRevision) throw new Error('PAGE_EDIT_CONFLICT');
   const next = validatePage({...current, title: title.trim(), text, images: images ?? current.images, galleryStyle: galleryStyle ?? current.galleryStyle ?? 'nocturne', revision: current.revision + 1});
   if (persist) { const saved = await persist(next); next.libraryRevision = saved.libraryRevision; next.libraryLocation = saved.location; }
   try { await storage.set({[pageKey(id)]: next}); } catch(error) { if (persist) throw Object.assign(new Error('Saved to Atlas Library, but Chrome could not update its cache. Reload to recover the disk copy.'),{code:'PAGE_CACHE_WRITE_FAILED'}); throw error; } return next;
 }
 export function withPageLock(task) { return navigator.locks.request('atlas-pages-v1', task); }
+
+// Persist a deletion marker using the existing companion page contract. Originals remain.
+export async function deletePage(storage, id, expectedRevision, persist) {
+  const current = await readPage(storage, id);
+  if (!current || current.deleted) throw new Error('PAGE_NOT_FOUND');
+  if (current.revision !== expectedRevision) throw new Error('PAGE_EDIT_CONFLICT');
+  let next = {...current, deleted: true, images: [], text: '', revision: current.revision + 1};
+  if (current.libraryRevision) {
+    if (!persist) throw new Error('LIBRARY_REQUIRED');
+    const saved = await persist(next);
+    next = {...next, libraryRevision: saved.libraryRevision, libraryLocation: saved.location};
+  }
+  await storage.set({[pageKey(id)]: next});
+  return next;
+}

@@ -1,7 +1,7 @@
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
-import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, withPageLock} from './pages-store.js';
-import {library, readLibraryPage} from './library-client.js';
+import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, deletePage, withPageLock} from './pages-store.js';
+import {library, readLibraryPage, saveLibraryPage} from './library-client.js';
 const $ = id => document.getElementById(id);
 let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
 let covers = {}, focused = null, trail = [];
@@ -55,8 +55,14 @@ async function loadLocalItems(node) {
       const state = await chrome.runtime.sendMessage({type:'state'});
       if (state?.paired) {
         const saved = await library('list-pages',{bookmarkId:node.id,bookmarkUrl:node.url || ''});
-        const known = new Set(pages.map(page=>page.id));
-        for (const item of saved.pages) if (!known.has(item.id)) { const page = await readLibraryPage(item.id); await chrome.storage.local.set({[PAGE_PREFIX+page.id]:page}); pages.push(page); known.add(page.id); }
+        for (const item of saved.pages) {
+          const oldPage = pages.find(page => page.id === item.id);
+          if (oldPage && oldPage.libraryRevision >= item.libraryRevision) continue;
+          const page = await readLibraryPage(item.id);
+          await chrome.storage.local.set({[PAGE_PREFIX+page.id]:page});
+          pages = pages.filter(existing => existing.id !== page.id);
+          if (!page.deleted) pages.push(page);
+        }
         const old = (await chrome.storage.local.get(ITEM_PREFIX+node.id))[ITEM_PREFIX+node.id];
         if (pages.some(page=>page.libraryRevision) && (old?.bookmarkUrl !== (node.url || '') || JSON.stringify(old?.pageIds) !== JSON.stringify(pages.map(page=>page.id)))) await chrome.storage.local.set({[ITEM_PREFIX+node.id]:{version:1,bookmarkUrl:node.url || '',pageIds:pages.map(page=>page.id)}});
       }
@@ -70,15 +76,15 @@ function addItem(node) {
   const dialog = document.createElement('dialog'), form = document.createElement('form');
   form.append(element('h2', 'Add Item'));
   const kind = document.createElement('select'); kind.setAttribute('aria-label', 'Item type');
-  const pageOption = element('option', 'Page'); pageOption.value = 'page'; kind.append(pageOption);
-  const titleLabel = element('label', 'Page title'), title = document.createElement('input'); title.required = true; title.maxLength = 200; titleLabel.append(title);
+  const pageOption = element('option', 'Gallery'); pageOption.value = 'page'; kind.append(pageOption);
+  const titleLabel = element('label', 'Gallery title'), title = document.createElement('input'); title.required = true; title.maxLength = 200; titleLabel.append(title);
   const templateLabel = element('label', 'Template'), template = document.createElement('select');
   for (const choice of PAGE_TEMPLATES) { const option = element('option', choice.label); option.value = choice.id; option.disabled = !choice.available; template.append(option); }
   template.value = 'gallery'; templateLabel.append(template);
   const styleLabel = element('label', 'Gallery style'), style = document.createElement('select');
   for (const [value, label] of [['nocturne','Nocturne — the screening room'],['solstice','Solstice — the contact sheet']]) { const option = element('option',label); option.value=value; style.append(option); }
   style.value='nocturne'; styleLabel.append(style);
-  const message = element('p', ''), save = element('button', 'Create Page'); save.type = 'submit';
+  const message = element('p', ''), save = element('button', 'Create Gallery'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
   form.append(kind, titleLabel, templateLabel, styleLabel, message, save, cancel); dialog.append(form);
   form.onsubmit = async event => {
@@ -159,7 +165,18 @@ function renderPreview() {
   host.append(element('h3', 'Associated Items'));
   const add = element('button', 'Add Item'); add.type = 'button'; add.onclick = () => addItem(node); host.append(add);
   for (const page of localPages) {
-    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL('page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page'; host.append(link);
+    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL('page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page';
+    const row = element('div', ''); row.className = 'associated-gallery-row';
+    const remove = element('button', 'Delete'); remove.type = 'button'; remove.setAttribute('aria-label', `Delete gallery ${page.title}`);
+    remove.onclick = async () => {
+      if (!confirm(`Delete gallery “${page.title}” from Atlas? Imported image originals and the Chrome bookmark will remain.`)) return;
+      remove.disabled = true;
+      try {
+        await withPageLock(() => deletePage(chrome.storage.local, page.id, page.revision, saveLibraryPage));
+        await loadLocalItems(node);
+      } catch (error) { report(error.code || 'GALLERY_DELETE_FAILED', 'Could not confirm deletion. Reconnect the companion and refresh before trying again.'); remove.disabled = false; }
+    };
+    row.append(link, remove); host.append(row);
   }
   if (associated) {
     for (const resource of associated.matches) if (resource.note) host.append(element('p', resource.note));
