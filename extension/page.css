@@ -404,3 +404,7 @@ html[data-presentation-preview] body > header #status { display:none !important;
 #viewer[data-opening="image"] #viewer-article { opacity:0; }
 #viewer[data-opening="waiting"] .reader-footer,
 #viewer[data-opening="image"] .reader-footer { visibility:hidden; }
+
+/* The opaque reader supplies its own canvas; allow the gallery to return beneath exit motion. */
+#viewer::backdrop { background:transparent; }
+#viewer .closing-image { border:0; border-radius:0; margin:0; padding:0; }

@@ -9,6 +9,7 @@ let page = null, editing = false, draftImages = [], viewerIndex = 0, loadingImag
 const originalFiles = new Map();
 const element = (tag, text = '') => { const el = document.createElement(tag); el.textContent = text; return el; };
 let galleryScrollY = 0;
+let closingReader = false, exitSource = null, exitIndex = 0;
 let openingMotion = [];
 let openingGeneration = 0;
 function cancelOpeningMotion() {
@@ -18,6 +19,8 @@ function cancelOpeningMotion() {
   $('viewer').removeAttribute('data-opening');
 }
 function openStory(index, sourceImage) {
+  if (closingReader) return;
+  exitSource = sourceImage; exitIndex = index;
   const origin = sourceImage?.getBoundingClientRect?.();
   galleryScrollY = window.scrollY || 0;
   document.documentElement.setAttribute('data-reader-open','');
@@ -85,6 +88,7 @@ function openStory(index, sourceImage) {
   }
 }
 function showImage(index) {
+  if (closingReader) return;
   cancelOpeningMotion();
   if (!page.images.length) return;
   viewerIndex = (index + page.images.length) % page.images.length;
@@ -251,8 +255,47 @@ $('editor').onsubmit = async event => {
   finally { loadingImages = false; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = false; if (editing) renderImageEditor(); }
 };
 $('previous').onclick = $('story-previous').onclick = () => showImage(viewerIndex - 1); $('next').onclick = $('story-next').onclick = () => showImage(viewerIndex + 1);
-$('close-viewer').onclick = () => $('viewer').close();
+async function closeStory() {
+  const viewer = $('viewer');
+  if (!viewer.open || closingReader) return;
+  if (!viewer.animate || viewer.hasAttribute('data-opening') || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { viewer.close(); return; }
+  closingReader = true;
+  const animations = []; let clone;
+  try {
+    const source = viewerIndex === exitIndex ? exitSource : $('gallery').querySelectorAll?.('.gallery-image img')[viewerIndex];
+    const hero = $('viewer-image'), from = hero.getBoundingClientRect?.(), to = source?.getBoundingClientRect?.();
+    const canShrink = document.body.classList?.contains('solstice') && from?.width && from?.height && to?.width && to?.height && from.top >= 0 && from.top < (window.innerHeight || viewer.clientHeight) && to.top >= 0 && to.top < (window.innerHeight || viewer.clientHeight);
+    if (canShrink) {
+      const fit = (rect,image) => { const ratio=image.naturalWidth/image.naturalHeight; const width=Math.min(rect.width,rect.height*ratio); return {width,height:width/ratio,x:rect.left+rect.width/2,y:rect.top+rect.height/2}; };
+      const start=fit(from,hero),end=fit(to,source);
+      if (!Number.isFinite(end.width/start.width)) throw new Error('EXIT_GEOMETRY');
+      clone = element('img'); clone.className='closing-image'; clone.alt=''; clone.src=hero.currentSrc || hero.src;
+      clone.style.cssText=`position:fixed;left:${start.x-start.width/2}px;top:${start.y-start.height/2}px;width:${start.width}px;height:${start.height}px;max-width:none;max-height:none;object-fit:contain;pointer-events:none;z-index:10;`;
+      viewer.append(clone);
+      const fade = [$('viewer-reading'),viewer.querySelector('.viewer-toolbar')].map(el=>el.animate([{opacity:1},{opacity:0}],{duration:140,fill:'forwards',easing:'ease-out'}));
+      animations.push(...fade); await Promise.all(fade.map(a=>a.finished));
+      const shrink=clone.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${end.x-start.x}px,${end.y-start.y}px) scale(${end.width/start.width})`}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      const backdrop=viewer.animate([{backgroundColor:'#eeefed'},{backgroundColor:'transparent'}],{duration:420,easing:'ease-out',fill:'forwards'});
+      animations.push(shrink,backdrop); await shrink.finished;
+    } else {
+      if (document.body.classList?.contains('nocturne')) {
+        const textFades = [$('viewer-reading').querySelector('.reader-heading'),$('viewer-article')].map(el=>el.animate([{opacity:1},{opacity:0}],{duration:160,easing:'ease-in',fill:'forwards'}));
+        animations.push(...textFades); await Promise.all(textFades.map(animation=>animation.finished));
+      }
+      const fade=viewer.animate([{opacity:1},{opacity:0}],{duration:document.body.classList?.contains('nocturne') ? 300 : 220,easing:'ease-in',fill:'forwards'});
+      animations.push(fade); await fade.finished;
+    }
+  } catch { /* Unsupported geometry or interrupted motion still closes reliably. */ }
+  finally {
+    viewer.close();
+    for (const animation of animations) animation.cancel();
+    clone?.remove(); closingReader=false;
+  }
+}
+$('close-viewer').onclick = closeStory;
+$('viewer').addEventListener('cancel', event => { event.preventDefault(); closeStory(); });
 $('viewer').addEventListener('keydown', event => {
+  if (closingReader) { event.preventDefault(); event.stopPropagation(); return; }
   if (['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key)) {
     event.preventDefault(); event.stopPropagation(); const reader=$('viewer');
     if(event.key==='Home'||event.key==='End') reader.scrollTo({top:event.key==='Home'?0:reader.scrollHeight,behavior:'auto'});
