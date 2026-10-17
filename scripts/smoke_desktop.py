@@ -47,6 +47,16 @@ def main():
                     buttons = {str(w.cget('text')): w for w in widgets if isinstance(w, ttk.Button)}
                     tabs = next(w for w in widgets if isinstance(w, ttk.Notebook))
                     buttons['Advanced / diagnostics'].invoke()
+                    # The uninstall action must remain reachable without maximizing.
+                    window.geometry('660x500')
+                    tabs.select(1); window.update()
+                    canvas = next(w for w in widgets if isinstance(w, tk.Canvas))
+                    canvas.yview_moveto(1); window.update()
+                    uninstall = buttons['Uninstall companion integration']
+                    assert uninstall.winfo_ismapped()
+                    assert uninstall.winfo_rooty() >= canvas.winfo_rooty()
+                    assert uninstall.winfo_rooty() + uninstall.winfo_height() <= canvas.winfo_rooty() + canvas.winfo_height()
+                    canvas.yview_moveto(0)
                     tabs.select(0); window.update()
                     buttons['Add location...'].invoke()
                     grant = state.grants()[0]

@@ -96,8 +96,35 @@ def _window_main(state, advanced_mode=False):
     style.configure('TLabel', background='#f5f7f6', foreground='#233c34', font=('sans', 11))
     style.configure('Title.TLabel', font=('sans', 23, 'bold'))
     style.configure('TButton', padding=(12, 7), font=('sans', 10))
-    frame = ttk.Frame(window, padding=24)
-    frame.pack(fill='both', expand=True)
+    # Keep every management action reachable at small window sizes and high DPI.
+    viewport = ttk.Frame(window)
+    viewport.pack(fill='both', expand=True)
+    viewport.rowconfigure(0, weight=1)
+    viewport.columnconfigure(0, weight=1)
+    canvas = tk.Canvas(viewport, background='#f5f7f6', highlightthickness=0)
+    vertical = ttk.Scrollbar(viewport, orient='vertical', command=canvas.yview)
+    horizontal = ttk.Scrollbar(viewport, orient='horizontal', command=canvas.xview)
+    canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+    canvas.grid(row=0, column=0, sticky='nsew')
+    vertical.grid(row=0, column=1, sticky='ns')
+    horizontal.grid(row=1, column=0, sticky='ew')
+    frame = ttk.Frame(canvas, padding=24)
+    content = canvas.create_window((0, 0), window=frame, anchor='nw')
+    def resize_content(_event=None):
+        canvas.itemconfigure(content, width=max(canvas.winfo_width(), frame.winfo_reqwidth()),
+                             height=max(canvas.winfo_height(), frame.winfo_reqheight()))
+        canvas.configure(scrollregion=canvas.bbox('all'))
+    frame.bind('<Configure>', resize_content)
+    canvas.bind('<Configure>', resize_content)
+    def scroll_management(event):
+        if isinstance(event.widget, (tk.Text, ttk.Treeview)):
+            return
+        steps = (-1 if event.num == 4 else 1) if event.num in (4, 5) else -int(event.delta / 120)
+        if steps:
+            canvas.yview_scroll(steps, 'units')
+    window.bind('<MouseWheel>', scroll_management)
+    window.bind('<Button-4>', scroll_management)
+    window.bind('<Button-5>', scroll_management)
     ttk.Label(frame, text='ATLAS Companion', style='Title.TLabel').pack(anchor='w')
     ttk.Label(frame, text='Install once. Choose your locations. Keep control.', padding=(0, 7)).pack(anchor='w')
     tabs = ttk.Notebook(frame)

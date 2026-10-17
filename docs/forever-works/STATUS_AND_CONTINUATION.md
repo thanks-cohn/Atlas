@@ -259,3 +259,8 @@ Explicit owner correction: utility buttons belong together at the top right; the
 ### Gallery utility text and captions — 2026-10-17
 
 Owner screenshot confirmed raw storage path and success message interrupted the gallery above its title. Keep operational information in the header: path now lives in a keyboard-accessible Storage details disclosure alongside actions; live feedback occupies a restrained right-aligned header line. Preserve errors and storage provenance rather than suppressing them. Improve image captions with 16px Georgia, comfortable line height, contrast and spacing; expanded-view captions use 17px. No external fonts/dependencies. Page behavior checks PASS (node scripts/test_pages.mjs; API/DOM doubles). Screenshot inspected; updated Chrome rendering NOT_RUN.
+
+
+### Companion diagnostics viewport — 2026-10-17
+
+Owner screenshot/report: Chrome connection Uninstall action clipped below the visible area unless maximized. Root cause confirmed in fixed, non-scrolling packed UI. Added scrollable management viewport with both scrollbars and mouse wheel support, keeping content at its requested minimum size rather than clipping actions at small window sizes/high DPI. Text and tree controls retain their own wheel handling. Actual Tk smoke now checks uninstall bounds after scrolling at 660x500. Local dispatch unit tests PASS (2); local Tk smoke NOT_RUN because xvfb-run unavailable. Windows hosted native-widget/build verification pending. debug.exe already dispatches directly to --desktop --advanced; no command prompt should be needed. Owner-observed launch delay cause UNKNOWN; dispatch test is not double-click timing proof.
