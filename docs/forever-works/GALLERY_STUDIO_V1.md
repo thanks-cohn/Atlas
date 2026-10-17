@@ -121,3 +121,7 @@ Owner correction: each image should show the same title as its associated articl
 
 ### 0.1.22 — Uncluttered Nocturne filmstrip
 Owner correction from screenshot: remove the repeated story title, count and sentence below the thumbnail strip; the focused story title already appears above the main image. The stage now contains the image alone. Hide the filmstrip's horizontal scrollbar while retaining horizontal overflow, thumbnail clicks and previous/next controls plus left/right keyboard navigation. This applies to the draft preview too. Full articles remain accessible by clicking the main image. Article reader scrolling and the main document's vertical scrolling are preserved. Page/bookmark checks and packaging PASS; actual browser visual verification NOT_RUN.
+
+
+### 0.1.23 — Gallery masthead and story terminology
+Owner requests a larger, more deliberate ATLAS / GALLERY identity and Stories rather than images in the gallery count. Masthead now separates prominent ATLAS lettering from the smaller tracked GALLERY designation, with responsive sizing. Legacy saved collection names exactly equal to Title (case insensitive) receive a display fallback: the sample collection title when all images match bundled sample URLs, otherwise Collected Stories. Real custom names and saved records remain untouched; this is presentation, not an inferred rename. Nocturne still shows the focused article title above its image, while Solstice retains a collection heading. Page/bookmark tests and packaging PASS; actual Chrome rendering NOT_RUN.

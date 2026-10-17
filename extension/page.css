@@ -317,3 +317,11 @@ html[data-reader-open],html[data-reader-open] body { overflow:hidden!important; 
 /* Keep the filmstrip browsable without visible scroll chrome. */
 .cinema-strip { scrollbar-width:none; -ms-overflow-style:none; padding-bottom:4px; }
 .cinema-strip::-webkit-scrollbar { display:none; width:0; height:0; }
+
+/* Gallery masthead: a clear brand signature across both visual styles. */
+header .gallery-wordmark { display:inline-flex; align-items:center; flex-wrap:nowrap; gap:15px; white-space:nowrap; color:inherit; }
+.gallery-wordmark .atlas-name { font:750 clamp(23px,2.5vw,31px)/1 system-ui,sans-serif; letter-spacing:-.065em; }
+.gallery-wordmark .wordmark-dot { padding:0; font:300 27px/1 system-ui,sans-serif; opacity:.6; }
+.gallery-wordmark .gallery-name { font:600 12px/1 system-ui,sans-serif; letter-spacing:.22em; }
+body > header { min-height:88px; }
+@media(max-width:480px){ header .gallery-wordmark { gap:11px; } .gallery-wordmark .gallery-name { font-size:10px; letter-spacing:.18em; } }

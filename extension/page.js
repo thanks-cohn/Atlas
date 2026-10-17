@@ -27,12 +27,16 @@ function showImage(index) {
   $('story-previous').disabled = $('story-next').disabled = page.images.length < 2;
   $('previous').disabled = $('next').disabled = page.images.length < 2;
 }
+function displayCollectionTitle() {
+  if (!/^title$/i.test(page.title.trim())) return page.title;
+  return page.images.length && page.images.every(image => DEMO_COLLECTION.images.some(sample => sample.source === image.source)) ? DEMO_COLLECTION.title : 'Collected Stories';
+}
 function render() {
   $('page').hidden = !page || editing; $('editor').hidden = !page || !editing; $('edit').hidden = $('publishing-check').hidden = !page || editing;
   $('backup-library').hidden = !page || editing || Boolean(page.libraryRevision);
   if (!page) return;
-  document.title = page.title + ' · Atlas'; $('title').textContent = page.title; $('collection-label').textContent = 'CURATED IN ATLAS'; $('text').textContent = page.text;
-  $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'image' : 'images'}`;
+  const collectionTitle = displayCollectionTitle(); document.title = collectionTitle + ' · Atlas'; $('title').textContent = collectionTitle; $('collection-label').textContent = 'CURATED IN ATLAS'; $('text').textContent = page.text;
+  $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'Story' : 'Stories'}`;
   document.body.className = editing ? 'studio-mode' : displayGalleryStyle(page.galleryStyle);
   renderCollection($('gallery'), page.images, displayGalleryStyle(page.galleryStyle));
 }
@@ -50,7 +54,7 @@ function renderCollection(container, images, style, preview = false) {
     const controls = element('div'); controls.className = 'cinema-controls';
     const previous = element('button', '←'), next = element('button', '→'); previous.type = next.type = 'button'; previous.setAttribute('aria-label', 'Previous work'); next.setAttribute('aria-label', 'Next work');
     const strip = element('div'); strip.className = 'cinema-strip';
-    const update = () => { const image = images[active]; if (!preview) { const storyTitle = image.title?.trim() || page.title; $('title').textContent = storyTitle; $('collection-label').textContent = page.title; document.title = storyTitle + ' · Atlas'; } img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show '+(image.title || 'work '+(index+1))); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
+    const update = () => { const image = images[active]; if (!preview) { const storyTitle = image.title?.trim() || page.title; $('title').textContent = storyTitle; $('collection-label').textContent = displayCollectionTitle(); document.title = storyTitle + ' · Atlas'; } img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show '+(image.title || 'work '+(index+1))); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
     previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
     imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { openStory(active); } };
     container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };

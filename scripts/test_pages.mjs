@@ -158,3 +158,12 @@ assert.equal((await store.readPage(storage,id)).title,demoSaved.title);
 
 assert.equal(els.get('gallery').children[0].children.length,1,'Focused stage contains only the image; no duplicate story text below the filmstrip');
 assert.match(read('page.css'),/\.cinema-strip \{ scrollbar-width:none/);
+
+// Legacy placeholder names are presentable without silently renaming saved data.
+const legacy=await store.readPage(storage,showcaseId);
+await storage.set({[store.pageKey(showcaseId)]:{...legacy,title:'Title',galleryStyle:'solstice'}});
+vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),{...context,location:{href:'chrome-extension://atlas/page.html'}});
+for(let i=0;i<5;i++)await tick();
+assert.equal(els.get('title').textContent,DEMO_COLLECTION.title);
+assert.equal(els.get('image-count').textContent,'24 Stories');
+assert.equal((await store.readPage(storage,showcaseId)).title,'Title');
