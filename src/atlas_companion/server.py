@@ -204,6 +204,9 @@ class Handler(BaseHTTPRequestHandler):
                 result = self.server.provider.operate(body)
             elif self.path == '/v1/library' and post:
                 result = library_dispatch(self.server.state, body)
+            elif self.path == '/v1/tagging-metrics' and not post:
+                from .tagging import metrics
+                result = metrics(self.server.state)
             elif self.path == '/v1/tag-image' and post:
                 from .tagging import run
                 result = run(self.server.state, body)
