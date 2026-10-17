@@ -37,7 +37,8 @@ const bookmarks={getTree:async()=>{if(failRead)throw Error('denied');return tree
 for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReordered','onImportEnded'])bookmarks[name]={addListener:fn=>events[name]=fn};
 const storage={};let storageListener;let paired=false;const nativePages={};let catalog={resources:{},relations:[],tags:{}};
 const {DEMO_COLLECTION}=await import('data:text/javascript;base64,'+Buffer.from(read('gallery-demo.js')).toString('base64'));
-const context={DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
+const pinboards=await import('data:text/javascript;base64,'+Buffer.from(read('pinboard-model.js')).toString('base64'));
+const context={...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
 vm.runInNewContext(read('bookmarks.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 els.get('bookmarks-open').onclick();await tick();
@@ -82,7 +83,7 @@ assert.ok(preview.children.some(el=>el.tagName==='details'));
 assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associated Items'));
 preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
 const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
-const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery title').children[0];titleControl.value='My Gallery';
+const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Title').children[0];titleControl.value='My Gallery';
 const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Template').children[0];
 const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery style').children[0];assert.equal(styleControl.value,'nocturne');styleControl.value='solstice';
 assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children[1].disabled,true);
@@ -93,6 +94,14 @@ assert.equal(storedPage.title,'My Gallery');
 assert.equal(storedPage.images.length,24);
 assert.ok(storedPage.images.every(image=>image.title&&image.article.split('\n\n').length===5));
 assert.equal(new Set(storedPage.images.map(image=>image.id)).size,24);
+// Pinboard is its own Add Item choice, not a gallery with a different label.
+const kindControl=form.children.find(el=>el.tagName==='select');kindControl.value='pinboard';kindControl.onchange();
+titleControl.value='My Pins';await form.onsubmit({preventDefault(){}});await tick();
+assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Pins'&&el.href.includes('pinboard.html?id=')));
+assert.equal((await pinboards.linkedPinboards(context.chrome.storage.local,nodes.get('3'))).length,1);
+const pinRow=preview.children.find(el=>el.className==='associated-gallery-row'&&el.children[0].textContent==='▧ My Pins');
+context.confirm=()=>true;await pinRow.children[1].onclick();context.confirm=()=>false;
+assert.equal((await pinboards.linkedPinboards(context.chrome.storage.local,nodes.get('3'))).length,0);
 // Clearing Chrome cache does not destroy the separately saved native record.
 nativePages[storedPage.id]={...storedPage,libraryRevision:1};delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];
 preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();

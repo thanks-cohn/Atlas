@@ -1,3 +1,4 @@
+import {createPinboard,linkedPinboards,removePinboard} from './pinboard-model.js';
 import {DEMO_COLLECTION} from './gallery-demo.js';
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
@@ -69,32 +70,40 @@ async function loadLocalItems(node) {
       }
     } catch { /* Offline/older companion: retain every browser copy. */ }
     for (let i=0;i<pages.length;i++) if (!pages[i].sourceBookmark) { pages[i]={...pages[i],sourceBookmark:{id:node.id,url:node.url || ''}}; await chrome.storage.local.set({[PAGE_PREFIX+pages[i].id]:pages[i]}); }
+    const boards=await linkedPinboards(chrome.storage.local,node);
     if (request !== itemsEpoch || focused !== node.id) return;
-    localPages = pages; render();
+    localPages = [...pages,...boards.map(board=>({...board,kind:'pinboard'}))]; render();
   } catch { if (request === itemsEpoch) report('ASSOCIATED_ITEMS_READ_FAILED', 'Saved pages could not be read. Existing data has not been changed.'); }
 }
 function addItem(node) {
   const dialog = document.createElement('dialog'), form = document.createElement('form');
   form.append(element('h2', 'Add Item'));
   const kind = document.createElement('select'); kind.setAttribute('aria-label', 'Item type');
-  const pageOption = element('option', 'Gallery'); pageOption.value = 'page'; kind.append(pageOption);
-  const titleLabel = element('label', 'Gallery title'), title = document.createElement('input'); title.required = true; title.maxLength = 200; titleLabel.append(title);
+  const pageOption = element('option', 'Gallery'); pageOption.value = 'page'; kind.append(pageOption); const pinOption=element('option','Pinboard');pinOption.value='pinboard';kind.append(pinOption);
+  const titleLabel = element('label', 'Title'), title = document.createElement('input'); title.required = true; title.maxLength = 200; titleLabel.append(title);
   const templateLabel = element('label', 'Template'), template = document.createElement('select');
   for (const choice of PAGE_TEMPLATES) { const option = element('option', choice.label); option.value = choice.id; option.disabled = !choice.available; template.append(option); }
   template.value = 'gallery'; templateLabel.append(template);
   const styleLabel = element('label', 'Gallery style'), style = document.createElement('select');
   for (const [value, label] of [['nocturne','Nocturne — the screening room'],['solstice','Solstice — the contact sheet']]) { const option = element('option',label); option.value=value; style.append(option); }
   style.value='nocturne'; styleLabel.append(style);
+  const sourceLabel=element('label','Bookmark collection'), source=document.createElement('select');
+  const all=element('option','All bookmarks');all.value='all';source.append(all);
+  for(const target of folderTargets(nodes)){const option=element('option',bookmarkTrail(nodes,target.id).slice(1).map(n=>n.title || 'Untitled').join(' / '));option.value=target.id;source.append(option);}
+  source.value='all';sourceLabel.append(source);sourceLabel.hidden=true;
   const message = element('p', ''), save = element('button', 'Create Gallery'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
-  form.append(kind, titleLabel, templateLabel, styleLabel, element('p', 'Starts with 24 sample stories. Edit or replace them with your own.'), message, save, cancel); dialog.append(form);
+  const hint=element('p','Starts with 24 sample stories. Edit or replace them with your own.');
+  form.append(kind, titleLabel, templateLabel, styleLabel, sourceLabel, hint, message, save, cancel); dialog.append(form);
+  kind.onchange=()=>{const pin=kind.value==='pinboard';templateLabel.hidden=styleLabel.hidden=pin;sourceLabel.hidden=!pin;hint.textContent=pin?'Uses your real bookmarks and their existing images. No re-upload needed.':'Starts with 24 sample stories. Edit or replace them with your own.';save.textContent=pin?'Create Pinboard':'Create Gallery';};
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = true;
     try {
       if (!nodes.has(node.id) || nodes.get(node.id).url !== node.url) throw new Error('BOOKMARK_CHANGED');
-      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value, galleryStyle: style.value, text: DEMO_COLLECTION.text, images: DEMO_COLLECTION.images.map((image,index)=>({...image,id:'sample-'+index}))}, crypto.randomUUID()));
+      if(kind.value==='pinboard') await withPageLock(()=>createPinboard(chrome.storage.local,node,title.value,crypto.randomUUID(),source.value));
+      else await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value, galleryStyle: style.value, text: DEMO_COLLECTION.text, images: DEMO_COLLECTION.images.map((image,index)=>({...image,id:'sample-'+index}))}, crypto.randomUUID()));
       await loadLocalItems(node); dialog.close();
-    } catch { message.textContent = 'PAGE_CREATE_FAILED: Enter a title and check available local storage. Your existing pages are unchanged.'; }
+    } catch { message.textContent = `${kind.value==='pinboard'?'PINBOARD_CREATE_FAILED':'PAGE_CREATE_FAILED'}: Enter a title and check available local storage. Your existing items are unchanged.`; }
     finally { save.disabled = false; }
   };
   dialog.addEventListener('close', () => dialog.remove(), {once: true}); document.body.append(dialog); dialog.showModal(); title.focus();
@@ -121,10 +130,11 @@ function returnFromPreview() {
 }
 async function saveCover(node, image) {
   // Merge the current stored map, rather than overwrite a stale copy from another shelf.
-  const stored = await chrome.storage.local.get(COVER_KEY);
-  const next = setBookmarkCover(stored[COVER_KEY] || {}, node, image);
-  await chrome.storage.local.set({[COVER_KEY]: next});
-  covers = next;
+  await withPageLock(async()=>{
+    const stored = await chrome.storage.local.get(COVER_KEY);
+    covers = setBookmarkCover(stored[COVER_KEY] || {}, node, image);
+    await chrome.storage.local.set({[COVER_KEY]: covers});
+  });
   render();
 }
 function chooseCover(node) {
@@ -166,14 +176,15 @@ function renderPreview() {
   host.append(element('h3', 'Associated Items'));
   const add = element('button', 'Add Item'); add.type = 'button'; add.onclick = () => addItem(node); host.append(add);
   for (const page of localPages) {
-    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL('page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page';
+    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL(page.kind==='pinboard'?'pinboard.html':'page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page';
     const row = element('div', ''); row.className = 'associated-gallery-row';
-    const remove = element('button', 'Delete'); remove.type = 'button'; remove.setAttribute('aria-label', `Delete gallery ${page.title}`);
+    const remove = element('button', 'Delete'); remove.type = 'button'; remove.setAttribute('aria-label', `Delete ${page.kind==='pinboard'?'pinboard':'gallery'} ${page.title}`);
     remove.onclick = async () => {
-      if (!confirm(`Delete gallery “${page.title}” from Atlas? Imported image originals and the Chrome bookmark will remain.`)) return;
+      if (!confirm(`Delete ${page.kind==='pinboard'?'pinboard':'gallery'} “${page.title}” from Atlas? Imported image originals and the Chrome bookmark will remain.`)) return;
       remove.disabled = true;
       try {
-        await withPageLock(() => deletePage(chrome.storage.local, page.id, page.revision, saveLibraryPage));
+        if(page.kind==='pinboard') await withPageLock(()=>removePinboard(chrome.storage.local,page.id));
+        else await withPageLock(() => deletePage(chrome.storage.local, page.id, page.revision, saveLibraryPage));
         await loadLocalItems(node);
       } catch (error) { report(error.code || 'GALLERY_DELETE_FAILED', 'Could not confirm deletion. Reconnect the companion and refresh before trying again.'); remove.disabled = false; }
     };
