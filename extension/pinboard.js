@@ -37,14 +37,14 @@ function card(node){
     const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;imageGeometry.set(image,ratio);button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow();};img.src=image;button.onclick=()=>openDetail(node);
     img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow();};
     const copy=el('div');copy.className='pin-copy';const strip=tagStrip(node),copyHeight=strip?138:78;copy.style.height=copyHeight+'px';button.style.height='calc(100% - '+copyHeight+'px)';const title=link(node,node.title || new URL(node.url).hostname);title.className='pin-title';const url=link(node,new URL(node.url).hostname);url.className='pin-url';copy.append(title,url);if(strip)copy.append(strip);article.append(button,copy);
-    const tagEdit=el('button');tagEdit.className='image-tag-edit';tagEdit.type='button';tagEdit.style.bottom=(copyHeight+12)+'px';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);
+    const tagEdit=el('button');tagEdit.className='image-tag-edit';tagEdit.type='button';tagEdit.style.bottom=(copyHeight+16)+'px';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);
     let idle;const reveal=()=>{tagEdit.setAttribute('data-visible','');clearTimeout(idle);idle=setTimeout(()=>tagEdit.removeAttribute('data-visible'),1600);};
     button.addEventListener('pointermove',reveal);button.addEventListener('pointerenter',reveal);tagEdit.addEventListener('pointermove',reveal);article.addEventListener('pointerleave',()=>{clearTimeout(idle);tagEdit.removeAttribute('data-visible');});
     tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=node.url;editTags(node);};article.append(tagEdit);
   }else emptyCard(article,node);
   return article;
 }
-function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button','Fetch');fetch.className='fetch-one';fetch.setAttribute('aria-label','Fetch cover for '+(node.title || node.url));fetch.onclick=()=>coverFetch.request(node);article.append(fetch);const strip=tagStrip(node);const tagEdit=el('button');tagEdit.className='image-tag-edit empty-tag-edit';tagEdit.type='button';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=node.url;editTags(node);};article.append(tagEdit);if(strip){tagEdit.style.bottom='64px';article.className+=' pin-with-tags';article.append(strip);}}
+function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button','Fetch');fetch.className='fetch-one';fetch.setAttribute('aria-label','Fetch cover for '+(node.title || node.url));fetch.onclick=()=>coverFetch.request(node);article.append(fetch);const strip=tagStrip(node);const tagEdit=el('button');tagEdit.className='image-tag-edit empty-tag-edit';tagEdit.type='button';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=node.url;editTags(node);};article.append(tagEdit);if(strip){tagEdit.style.bottom='68px';article.className+=' pin-with-tags';article.append(strip);}}
 function localScroll(){return Math.max(0,-$('pins').getBoundingClientRect().top);}
 function columns(){
   const width=$('pins').clientWidth || 1100;
@@ -62,7 +62,7 @@ function renderWindow(){
   positions=items.map((node,index)=>{
     const image=imageFor(node),parts=(imageGeometry.get(image) || '4 / 3').split('/').map(Number),ratio=parts[0]/parts[1];
     const visual=image?Math.max(window.innerWidth<=540?120:160,Math.min(480,width/ratio)):0;
-    const extra=tagsFor(node).length?60:0;const height=image?visual+78+extra:96+extra,column=ends.indexOf(Math.min(...ends));
+    const extra=tagsFor(node).length?60:0;const height=image?visual+78+extra:108+extra,column=ends.indexOf(Math.min(...ends));
     const position={node,index,x:column*(width+gap),y:ends[column],width,height};ends[column]+=height+24;return position;
   });
   positionById=new Map(positions.map(position=>[position.node.id,position]));
@@ -117,8 +117,8 @@ function updateTagCard(node){
   const copy=[...article.children].find(child=>child.className==='pin-copy'),host=copy || article;
   const old=[...host.children].find(child=>child.className==='pin-tags');old?.remove();const strip=tagStrip(node);if(strip)host.append(strip);
   const overlay=[...article.children].find(child=>child.className.includes('image-tag-edit'));
-  if(copy){const height=strip?138:78;copy.style.height=height+'px';article.children[0].style.height='calc(100% - '+height+'px)';if(overlay)overlay.style.bottom=(height+12)+'px';}
-  else{article.className=strip?'pin pin-with-tags':'pin';if(overlay)overlay.style.bottom=strip?'64px':'5px';}
+  if(copy){const height=strip?138:78;copy.style.height=height+'px';article.children[0].style.height='calc(100% - '+height+'px)';if(overlay)overlay.style.bottom=(height+16)+'px';}
+  else{article.className=strip?'pin pin-with-tags':'pin';if(overlay)overlay.style.bottom=strip?'68px':'8px';}
 }
 function updateCoverCard(node){
   const block=[...blocks.values()].find(block=>[...block.children].some(element=>element.atlasNode?.id===node.id));if(!block)return;
