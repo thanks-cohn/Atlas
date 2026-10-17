@@ -411,3 +411,7 @@ Owner also requests + to support URL versus local image sources: implemented a s
 
 ### 0.1.39 — Compact white/red pinboard identity
 Owner requests more professional spacing, structure and a red/white visual direction. Refined the Atlas mark, heading scale, input spacing, image-led card captions and URL/+ tiles. Settings content now opens as an anchored popover rather than expanding the toolbar and pushing cards below the fold. Filter and settings remain aligned in one compact responsive row; technical window counts are removed from the primary status sentence (the cap remains explicit in settings). Rendering/window logic and stored data unchanged. Existing pinboard/bookmark/gallery checks and extension packaging PASS; actual Chrome aesthetics and responsive visual QA NOT_RUN.
+
+
+### 0.1.40 — Balanced bookmark cover chooser
+Owner identifies low plus glyphs and an unbalanced image-source dialog. The URL-card plus is now drawn with two centered CSS strokes, retaining its button text and accessible name. Replaced the floating Cancel and nested detail padding with a shared-inset header, named close button, full-width upload/URL actions and a divided pair of source choices. Narrow screens retain consistent insets. Existing IDs and source/save behavior are unchanged; no storage or permission changes. Pinboard/bookmark/gallery checks and packaging PASS with DOM/API doubles; actual Chrome visual/focus verification NOT_RUN.
