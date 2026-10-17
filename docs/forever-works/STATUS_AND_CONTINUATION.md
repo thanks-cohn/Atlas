@@ -293,3 +293,7 @@ Owner screenshot still felt basic: oversized heading and disconnected navigation
 ## 2026-10-17 — make twenty-image import practical (0.1.14)
 
 Owner clarified 20-image layout test is goal, not a 200MB preference. Shared gallery preview budget now allocated over current+incoming local works, with adaptive re-encoding of oversized existing previews and finer encoder fallback steps. Originals/identity/annotations unchanged; batch failure leaves prior draft intact. 20-encoder and 20-file import-to-24/save tests PASS (browser primitives/DOM doubles), existing gallery tests PASS, package PASS. Current 24-image and 10MiB/input limits remain; no helper change. Actual owner batch/Chrome NOT_RUN. See GALLERY_STUDIO_V1.md for quality tradeoff and future original-resolution loading gap.
+
+## 2026-10-17 — include showcase content in main (0.1.15)
+
+Corrected Site-only delivery mismatch: extension now includes same 24-image URL/title/caption sample collection, available in Edit Gallery → Try 24 sample images. Draft-only load/preview, confirmation before replacing nonempty draft, Cancel preserves saved page; explicit Save persists sample content. Both current gallery styles supported. Samples do not auto-overwrite real pages or import native originals. Gallery/bookmark checks PASS (DOM/API doubles), package PASS; actual Chrome visuals NOT_RUN. Existing helper compatible. See GALLERY_STUDIO_V1.md.

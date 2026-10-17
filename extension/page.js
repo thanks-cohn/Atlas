@@ -1,3 +1,4 @@
+import {DEMO_COLLECTION} from './gallery-demo.js';
 import {readPage, updatePage, withPageLock, publicImageURL, publicationReadiness, displayGalleryStyle} from './pages-store.js';
 import {rasterImage, imageType} from './image-file.js';
 import {library, saveLibraryPage, readLibraryPage, importOriginal} from './library-client.js';
@@ -84,6 +85,19 @@ async function load() {
   catch { $('status').textContent = 'PAGE_READ_FAILED: This page could not be loaded.'; }
 }
 $('edit').onclick = () => { editing = true; draftImages = page.images.map(image => ({...image})); originalFiles.clear(); $('title-input').value = page.title; $('text-input').value = page.text; $('style-input').value = displayGalleryStyle(page.galleryStyle); $('preview').hidden = true; $('image-editor').hidden = false; $('sequence-tab').setAttribute('aria-pressed','true'); $('preview-tab').setAttribute('aria-pressed','false'); render(); renderImageEditor(); $('title-input').focus(); };
+$('load-demo').onclick = () => {
+  if (loadingImages || !editing) return;
+  if (draftImages.length && !window.confirm('Replace this editor draft with the 24-image sample collection? Your saved gallery and library originals stay unchanged until you explicitly save.')) return;
+  draftImages = DEMO_COLLECTION.images.map(image => ({...image, id: crypto.randomUUID()}));
+  originalFiles.clear();
+  $('title-input').value = DEMO_COLLECTION.title;
+  $('text-input').value = DEMO_COLLECTION.text;
+  $('preview').hidden = false; $('image-editor').hidden = true;
+  $('preview-tab').setAttribute('aria-pressed','true'); $('sequence-tab').setAttribute('aria-pressed','false');
+  renderImageEditor();
+  $('import-status').textContent = '24 URL images loaded into this draft. Switch gallery style to compare Nocturne and Solstice.';
+  $('status').textContent = 'Sample draft only. Cancel keeps your saved gallery; Save explicitly replaces its content.';
+};
 $('style-input').onchange = renderPreview;
 $('title-input').oninput = $('text-input').oninput = renderPreview;
 $('preview-tab').onclick = () => {renderPreview(); $('preview').hidden = false; $('image-editor').hidden = true; $('preview-tab').setAttribute('aria-pressed','true'); $('sequence-tab').setAttribute('aria-pressed','false');};
