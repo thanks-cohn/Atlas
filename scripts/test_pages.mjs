@@ -99,14 +99,18 @@ assert.equal(demoSaved.title,DEMO_COLLECTION.title);assert.equal(demoSaved.galle
 assert.ok(demoSaved.images.every(i=>i.article.split('\n\n').length===5));
 assert.throws(()=>store.validatePage({...demoSaved,images:[{...demoSaved.images[0],article:'x'.repeat(20001)}]}),/INVALID/);
 assert.ok(demoSaved.images.every(i=>i.sourceKind==='url'&&i.title&&i.caption&&i.source.startsWith('https://images.unsplash.com/')));
-// Long article stays collapsed and follows selected work without HTML injection.
+// Main page is sentence-only; image expansion reveals the full reading view.
 els.get('edit').onclick();els.get('style-input').value='nocturne';
 await els.get('editor').onsubmit({preventDefault(){}});
-const articleDetails=els.get('gallery').children[3].children[0];
-assert.equal(articleDetails.tagName,'details');assert.ok(!articleDetails.open);
-assert.equal(articleDetails.children[1].children.length,5);
+assert.equal(els.get('gallery').children.length,3);
 assert.equal(els.get('gallery').children[0].children[1].children[2].textContent,DEMO_COLLECTION.images[0].article.split('.')[0]+'.');
-articleDetails.open=true;els.get('gallery').children[1].children[1].onclick();
-assert.notEqual(els.get('gallery').children[3].children[0],articleDetails);
-assert.ok(!els.get('gallery').children[3].children[0].open);
+els.get('gallery').children[0].children[0].onclick();
+assert.equal(els.get('viewer').open,true);
+assert.equal(els.get('viewer-article').children.length,5);
+assert.equal(els.get('viewer-article').children[0].textContent,DEMO_COLLECTION.images[0].article.split('\n\n')[0]);
+assert.equal(els.get('viewer-caption').hidden,true);
+els.get('viewer-reading').scrollTop=200;
+els.get('next').onclick();assert.equal(els.get('viewer-reading').scrollTop,0);
+assert.equal(els.get('viewer-article').children[0].textContent,DEMO_COLLECTION.images[1].article.split('\n\n')[0]);
+els.get('close-viewer').onclick();assert.equal(els.get('viewer').open,false);
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

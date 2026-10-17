@@ -13,6 +13,7 @@ function showImage(index) {
   const image = page.images[viewerIndex];
   $('viewer-image').referrerPolicy = 'no-referrer'; $('viewer-image').src = image.source; $('viewer-image').alt = image.title || image.caption || page.title;
   $('viewer-title').textContent = image.title || ''; $('viewer-title').hidden = !image.title; $('viewer-caption').textContent = image.caption; $('viewer-count').textContent = `${viewerIndex + 1} / ${page.images.length}`;
+  renderArticle($('viewer-article'), image.article); $('viewer-caption').hidden = Boolean(image.article); $('viewer-reading').scrollTop = 0;
   $('previous').disabled = $('next').disabled = page.images.length < 2;
 }
 function render() {
@@ -39,12 +40,11 @@ function renderCollection(container, images, style, preview = false) {
     const controls = element('div'); controls.className = 'cinema-controls';
     const previous = element('button', '←'), next = element('button', '→'); previous.type = next.type = 'button'; previous.setAttribute('aria-label', 'Previous work'); next.setAttribute('aria-label', 'Next work');
     const strip = element('div'); strip.className = 'cinema-strip';
-    const articleSlot = element('div'); articleSlot.className = 'article-slot';
-    const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || 'Work '+String(active+1).padStart(2,'0'); caption.textContent = image.article ? firstSentence(image.article) : image.caption; renderArticle(articleSlot,image.article); count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
+    const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || 'Work '+String(active+1).padStart(2,'0'); caption.textContent = image.article ? firstSentence(image.article) : image.caption; count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
     previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
     imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { showImage(active); $('viewer').showModal(); } };
     container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };
-    const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip,articleSlot); update(); return;
+    const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip); update(); return;
   }
   images.forEach((image, index) => {
     const figure = element('figure'), button = element('button'); button.className = 'gallery-image'; button.type = 'button'; button.setAttribute('aria-label', `Expand ${image.title || image.caption || 'image ' + (index + 1)}`);
@@ -52,18 +52,14 @@ function renderCollection(container, images, style, preview = false) {
     img.onerror = () => { img.hidden = true; button.append(element('span', 'Image unavailable · Edit Gallery to replace its source')); }; button.append(img);
     button.onclick = () => { if (!preview) {showImage(index); $('viewer').showModal();} };
     const figcaption = element('figcaption'); const number = element('span', String(index+1).padStart(2,'0')); number.className = 'work-number'; figcaption.append(number);
-    const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption || image.article) { const description = element('span', image.article ? firstSentence(image.article) : image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); if (image.article) { const slot=element('div'); slot.className='article-slot'; renderArticle(slot,image.article); figure.append(slot); } container.append(figure);
+    const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption || image.article) { const description = element('span', image.article ? firstSentence(image.article) : image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); container.append(figure);
   });
 }
 function firstSentence(text) { return text.trim().match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] || text.split('\n')[0]; }
 function renderArticle(container, text) {
   container.replaceChildren(); container.hidden = !text;
   if (!text) return;
-  const details = element('details'); details.className = 'work-article';
-  const summary = element('summary', 'Read full article');
-  const body = element('div'); body.className = 'article-body';
-  for (const paragraph of text.split(/\n\s*\n/).filter(part=>part.trim())) body.append(element('p',paragraph.trim()));
-  details.append(summary,body); container.append(details);
+  for (const paragraph of text.split(/\n\s*\n/).filter(part=>part.trim())) container.append(element('p',paragraph.trim()));
 }
 function renderPreview() {
   $('preview-title').textContent = $('title-input').value;

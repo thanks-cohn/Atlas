@@ -265,3 +265,24 @@ body.nocturne { background:#15161b; color:#eeece6; }
 #preview-gallery.nocturne .cinema-strip { display:flex; }
 #preview-gallery.nocturne .cinema-meta { padding-top:25px; }
 @media(max-width:760px){.collection-layout.nocturne{padding-top:18px}.cinema-meta{padding-top:25px}.article-body p{font-size:16px;line-height:1.85}.cinema-strip button{flex-basis:75px;width:75px}.cinema-strip img{width:63px;height:50px}}
+
+/* Image click opens the story. Main collection remains a sentence-only preview. */
+html:has(body.nocturne) { background:#15161b; color-scheme:dark; scrollbar-color:#55525e #15161b; scrollbar-width:thin; }
+body { min-height:100svh; }
+html:has(body.solstice) { background:#fff; color-scheme:light; scrollbar-color:#b7b5af #fff; scrollbar-width:thin; }
+.cinema-image img { max-height:min(57svh,570px); }
+.cinema-strip { scrollbar-width:thin; scrollbar-color:#64606c transparent; }
+#viewer { background:#15161b; color:#eeece6; overflow:hidden; padding:20px clamp(18px,5vw,72px); }
+#viewer[open] { display:grid; grid-template-rows:auto minmax(120px,39svh) minmax(0,1fr); gap:20px; }
+#viewer::backdrop { background:#15161b; }
+.viewer-toolbar { margin:0; }
+#viewer-image { width:100%; height:100%; min-height:0; max-height:none; object-fit:contain; align-self:center; }
+#viewer-reading { width:100%; max-width:800px; min-height:0; overflow-y:auto; overscroll-behavior:contain; margin:0 auto; padding:0 20px 25px; text-align:left; scrollbar-width:thin; scrollbar-color:#55525e transparent; scrollbar-gutter:stable; }
+#viewer-title { font:550 clamp(24px,3vw,34px)/1.25 system-ui,sans-serif; letter-spacing:-.04em; margin:5px 0 22px; }
+#viewer-caption { text-align:left; font:400 16px/1.85 system-ui,sans-serif; color:#b5b0be; }
+#viewer-article { padding:0; color:#c5c0cd; }
+#viewer-article p { font:400 17px/1.9 system-ui,sans-serif; margin:0 0 1.45em; }
+html::-webkit-scrollbar,.cinema-strip::-webkit-scrollbar,#viewer-reading::-webkit-scrollbar { width:7px; height:6px; }
+html::-webkit-scrollbar-track,.cinema-strip::-webkit-scrollbar-track,#viewer-reading::-webkit-scrollbar-track { background:transparent; }
+html::-webkit-scrollbar-thumb,.cinema-strip::-webkit-scrollbar-thumb,#viewer-reading::-webkit-scrollbar-thumb { background:#77717e88; border-radius:8px; }
+@media(max-width:600px){#viewer{padding:14px}#viewer[open]{grid-template-rows:auto minmax(100px,33svh) minmax(0,1fr);gap:16px}#viewer-reading{padding-inline:8px}#viewer-article p{font-size:16px;line-height:1.85}.cinema-image img{max-height:52svh}}
