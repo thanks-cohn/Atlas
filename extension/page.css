@@ -395,3 +395,12 @@ html[data-presentation-preview] body > header #status { display:none !important;
 
 /* Nocturne's opening uses one opacity fade, with no backdrop sampling. */
 .nocturne #viewer .viewer-toolbar { backdrop-filter:none; background:#101116; }
+
+/* Explicit opening phases: no late hide/reveal and no overlapping text motion. */
+#viewer[data-opening="waiting"] #viewer-image,
+#viewer[data-opening="waiting"] .reader-heading,
+#viewer[data-opening="waiting"] #viewer-article,
+#viewer[data-opening="image"] .reader-heading,
+#viewer[data-opening="image"] #viewer-article { opacity:0; }
+#viewer[data-opening="waiting"] .reader-footer,
+#viewer[data-opening="image"] .reader-footer { visibility:hidden; }

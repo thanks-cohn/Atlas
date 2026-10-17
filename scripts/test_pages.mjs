@@ -185,43 +185,37 @@ assert.equal(els.get('text').children.length,2);
 assert.equal(els.get('text').children[0].textContent,DEMO_COLLECTION.text.split('\n\n')[0]);
 assert.equal(els.get('text').children[1].textContent,DEMO_COLLECTION.text.split('\n\n')[1]);
 
-// Real opening-motion branch: interpolation, cancellation and reduced-motion fallback.
+
+// Both styles finish image motion before starting text; loading never reveals then hides.
 const motionCalls=[];
-const animate=(frames,options)=>{const animation={cancelled:false,cancel(){this.cancelled=true}};motionCalls.push({frames,options,animation});return animation;};
+const animate=(frames,options)=>{let resolve,reject;const finished=new Promise((yes,no)=>{resolve=yes;reject=no});finished.catch(()=>{});const animation={finished,cancelled:false,finish:resolve,cancel(){this.cancelled=true;reject(new Error('cancelled'));}};motionCalls.push({frames,options,animation});return animation;};
 document.body.classList={contains:name=>name==='solstice'};
 context.window.matchMedia=()=>({matches:false});
 const hero=els.get('viewer-image');hero.complete=true;hero.naturalWidth=1200;hero.naturalHeight=800;
 hero.getBoundingClientRect=()=>({left:100,top:200,width:900,height:600});hero.animate=animate;
 els.get('viewer').animate=animate;els.get('viewer-article').animate=animate;
 document.getElementById('viewer-reading').querySelector=()=>({animate});
-const clicked=els.get('gallery').children[0].children[0];
-const source=clicked.children[0];source.naturalWidth=1200;source.naturalHeight=800;
+const clicked=els.get('gallery').children[0].children[0],source=clicked.children[0];
+source.naturalWidth=1200;source.naturalHeight=800;
 source.getBoundingClientRect=()=>({left:20,top:50,width:300,height:250});
-clicked.onclick();assert.equal(motionCalls.length,4);
-assert.equal(motionCalls[1].frames[1].backgroundColor,'#eeefed');
-assert.match(motionCalls[0].frames[0].transform,/scale\(0\.333/);
-els.get('next').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
+clicked.onclick();assert.equal(motionCalls.length,2);
+assert.equal(els.get('viewer').attrs['data-opening'],'image');
+motionCalls[0].animation.finish();await tick();assert.equal(motionCalls.length,4);
+assert.equal(els.get('viewer').attrs['data-opening'],'text');
+motionCalls[2].animation.finish();motionCalls[3].animation.finish();await tick();
+assert.ok(!els.get('viewer').hasAttribute('data-opening'));
 els.get('close-viewer').onclick();
-context.window.matchMedia=()=>({matches:true});
-clicked.onclick();assert.equal(motionCalls.length,4);
-els.get('close-viewer').onclick();
-context.window.matchMedia=()=>({matches:false});
-hero.complete=false;
-clicked.onclick();const staleLoad=hero.handlers.load;
-els.get('close-viewer').onclick();staleLoad();assert.equal(motionCalls.length,4);
-
-
-// Nocturne starts one inexpensive fade immediately, even before the image loads.
 document.body.classList={contains:name=>name==='nocturne'};
-const reading=document.getElementById('viewer-reading');reading.animate=animate;
-hero.complete=false;
-clicked.onclick();assert.equal(motionCalls.length,5);
-assert.equal(motionCalls[4].frames[0].opacity,.92);
-assert.equal(motionCalls[4].options.duration,180);
-assert.ok(!motionCalls[4].frames.some(frame=>'filter' in frame || 'transform' in frame));
-assert.equal(hero.width,source.naturalWidth);assert.equal(hero.height,source.naturalHeight);
-staleLoad();assert.equal(motionCalls.length,5,'Old image load cannot restart opening');
-els.get('close-viewer').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
-context.window.matchMedia=()=>({matches:true});
-clicked.onclick();assert.equal(motionCalls.length,5);
+hero.complete=false;clicked.onclick();assert.equal(motionCalls.length,4);
+assert.equal(els.get('viewer').attrs['data-opening'],'waiting');
+const staleLoad=hero.handlers.load;hero.handlers.load();assert.equal(motionCalls.length,5);
+assert.deepEqual(Object.keys(motionCalls[4].frames[0]),['opacity']);
+motionCalls[4].animation.finish();await tick();assert.equal(motionCalls.length,7);
+assert.equal(els.get('viewer').attrs['data-opening'],'text');
+els.get('close-viewer').onclick();await tick();
+assert.ok(!els.get('viewer').hasAttribute('data-opening'));staleLoad();assert.equal(motionCalls.length,7);
+hero.complete=false;clicked.onclick();hero.handlers.error();assert.ok(!els.get('viewer').hasAttribute('data-opening'));
+els.get('close-viewer').onclick();
+context.window.matchMedia=()=>({matches:true});clicked.onclick();assert.equal(motionCalls.length,7);
+assert.ok(!els.get('viewer').hasAttribute('data-opening'));
 els.get('close-viewer').onclick();

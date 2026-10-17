@@ -11,49 +11,67 @@ const element = (tag, text = '') => { const el = document.createElement(tag); el
 let galleryScrollY = 0;
 let openingMotion = [];
 let openingGeneration = 0;
-function cancelOpeningMotion() { openingGeneration++; for (const animation of openingMotion) animation.cancel(); openingMotion = []; }
+function cancelOpeningMotion() {
+  openingGeneration++;
+  for (const animation of openingMotion) animation.cancel();
+  openingMotion = [];
+  $('viewer').removeAttribute('data-opening');
+}
 function openStory(index, sourceImage) {
   const origin = sourceImage?.getBoundingClientRect?.();
   galleryScrollY = window.scrollY || 0;
   document.documentElement.setAttribute('data-reader-open','');
   showImage(index);
-  const hero = $('viewer-image');
+  const viewer = $('viewer'), hero = $('viewer-image');
   if (sourceImage?.naturalWidth && sourceImage?.naturalHeight) {
     hero.width = sourceImage.naturalWidth; hero.height = sourceImage.naturalHeight;
   }
-  $('viewer').showModal();
   const nocturne = document.body.classList?.contains('nocturne');
   const solstice = document.body.classList?.contains('solstice');
-  if ((!nocturne && (!solstice || !origin?.width || !origin?.height)) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  if (nocturne) {
-    const reading = $('viewer-reading');
-    if (reading.animate) openingMotion.push(reading.animate([{opacity:.92},{opacity:1}],{duration:180,easing:'ease-out'}));
-    return;
-  }
+  const enabled = hero.animate && (nocturne || (solstice && origin?.width && origin?.height)) && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (enabled) viewer.setAttribute('data-opening','waiting');
+  viewer.showModal();
+  if (!enabled) return;
   const generation = openingGeneration;
-  const reveal = () => {
-    if (generation !== openingGeneration || !$('viewer').open || viewerIndex !== index || !hero.animate) return;
-    const target = hero.getBoundingClientRect();
-    if (!target.width || !target.height) return;
-    // Compare the painted image, rather than its contain/letterbox bounds.
-    const fit = (rect, image) => {
-      const ratio = image.naturalWidth / image.naturalHeight;
-      const width = Math.min(rect.width, rect.height * ratio);
-      return {width, x:rect.left + rect.width/2, y:rect.top + rect.height/2};
-    };
-    const from = fit(origin, sourceImage), to = fit(target, hero);
-    if (!Number.isFinite(from.width/to.width)) return;
-    const timing = {duration:520,easing:'cubic-bezier(.22,1,.36,1)',fill:'none'};
-    openingMotion.push(hero.animate([
-      {transform:`translate(${from.x-to.x}px,${from.y-to.y}px) scale(${from.width/to.width})`,transformOrigin:'50% 50%'},
-      {transform:'translate(0,0) scale(1)',transformOrigin:'50% 50%'}
-    ], timing));
-    openingMotion.push($('viewer').animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#eeefed'}],{duration:480,easing:'ease-out'}));
-    openingMotion.push($('viewer-reading').querySelector('.reader-heading').animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:350,delay:140,fill:'backwards',easing:'ease-out'}));
-    openingMotion.push($('viewer-article').animate([{opacity:0},{opacity:1}],{duration:350,delay:200,fill:'backwards'}));
+  const current = () => generation === openingGeneration && viewer.open && viewerIndex === index;
+  const finish = () => { if (current()) viewer.removeAttribute('data-opening'); };
+  const reveal = async () => {
+    if (!current()) return;
+    viewer.setAttribute('data-opening','image');
+    let imageAnimation;
+    if (nocturne) {
+      imageAnimation = hero.animate([{opacity:0},{opacity:1}],{duration:280,easing:'ease-out'});
+    } else {
+      const target = hero.getBoundingClientRect();
+      const fit = (rect, image) => {
+        const ratio = image.naturalWidth / image.naturalHeight;
+        return {width:Math.min(rect.width,rect.height*ratio),x:rect.left+rect.width/2,y:rect.top+rect.height/2};
+      };
+      const from = fit(origin, sourceImage), to = fit(target, hero);
+      if (!Number.isFinite(from.width/to.width) || !to.width) { finish(); return; }
+      imageAnimation = hero.animate([
+        {transform:`translate(${from.x-to.x}px,${from.y-to.y}px) scale(${from.width/to.width})`,transformOrigin:'50% 50%'},
+        {transform:'translate(0,0) scale(1)',transformOrigin:'50% 50%'}
+      ],{duration:440,easing:'cubic-bezier(.22,1,.36,1)'});
+      openingMotion.push(viewer.animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#eeefed'}],{duration:440,easing:'ease-out'}));
+    }
+    openingMotion.push(imageAnimation);
+    try {
+      await imageAnimation.finished;
+      if (!current()) return;
+      viewer.setAttribute('data-opening','text');
+      const heading = $('viewer-reading').querySelector('.reader-heading');
+      const fades = [heading,$('viewer-article')].map(element => element.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'}));
+      openingMotion.push(...fades);
+      await Promise.all(fades.map(animation=>animation.finished));
+      finish();
+    } catch { finish(); } // Cancellation never leaves invisible content behind.
   };
   if (hero.complete && hero.naturalWidth) reveal();
-  else hero.addEventListener('load',reveal,{once:true});
+  else {
+    hero.addEventListener('load',reveal,{once:true});
+    hero.addEventListener('error',finish,{once:true});
+  }
 }
 function showImage(index) {
   cancelOpeningMotion();
