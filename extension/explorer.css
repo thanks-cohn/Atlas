@@ -1052,3 +1052,13 @@ body.bookmarks-mode #details { display: none !important; }
 #bookmarks-tree { max-height: 240px; overflow: auto; }
 #bookmarks-tree details { margin: 6px 0 6px 12px; }
 #bookmarks-tree summary { cursor: pointer; overflow-wrap: anywhere; }
+
+/* Image remains above its related hierarchy; disclosure never navigates the tab. */
+#bookmarks-preview { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+#bookmarks-preview[hidden] { display: none; }
+#bookmarks-preview h2 { font-size: 18px; overflow-wrap: anywhere; }
+#bookmarks-preview h3 { font-size: 13px; margin: 16px 0 0; }
+#bookmarks-preview img { display: block; width: 100%; max-height: 42vh; object-fit: contain; border-radius: 6px; margin: 12px 0; }
+.bookmark-disclosure { flex: 0 0 36px; min-width: 36px; min-height: 36px; }
+.bookmark-image-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bookmark-row button:focus-visible, #bookmarks-preview button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

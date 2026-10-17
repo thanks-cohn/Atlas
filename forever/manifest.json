@@ -6,6 +6,7 @@
       "project.intent.json"
     ],
     "capabilities": [
+      "capabilities/bookmark-disclosure.json",
       "capabilities/authorized-files.json",
       "capabilities/companion-lifecycle.json",
       "capabilities/companion-supervisor.json",
@@ -28,6 +29,7 @@
       "constraints/power-lifecycle.json"
     ],
     "decisions": [
+      "decisions/bookmark-disclosure.json",
       "decisions/chute-rc1-reference.json",
       "decisions/mechanism-fluidity.json",
       "decisions/preview-continuity.json"

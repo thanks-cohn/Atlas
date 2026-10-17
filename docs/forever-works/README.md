@@ -63,3 +63,8 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Horizons v1 — first extension presentation
 
 - [PROPOSAL_HORIZONS_V1.md](PROPOSAL_HORIZONS_V1.md) — owner-directed first-party hero/knowledge carousel page, searchable tag columns, reversible note/article expansion and distinct article pages. Includes module/state recommendations, rationale, open decisions and planned verification. No carousel/UI library runtime is proposed; external examples may inform motion only. Specification, not shipped implementation.
+
+
+## Bookmark images and exploration
+
+- [BOOKMARK_IMAGE_DISCLOSURE.md](BOOKMARK_IMAGE_DISCLOSURE.md) — 0.1.6 first slice: right-triangle exploration, image above associated items, left-arrow return, current-tab title navigation and saved covers. Includes owner rationale, metadata contract and actual-browser limitations.

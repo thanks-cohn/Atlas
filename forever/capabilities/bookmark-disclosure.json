@@ -1,0 +1,28 @@
+{
+  "foreverVersion": "0.1",
+  "id": "capability.bookmark-disclosure",
+  "kind": "capability",
+  "name": "Separate bookmark exploration from current-tab navigation",
+  "statement": "Users explore a bookmark through a disclosure control showing its available representative image above associated content, return without losing context, or visit its URL through the title in the current tab.",
+  "requiredProperties": [
+    "Separate disclosure and title activation",
+    "Image above associated content",
+    "Right triangle becomes left return arrow",
+    "Available representative images visible by default",
+    "Do not fabricate Chrome bookmark notes or tags",
+    "Preserve permission boundaries and native bookmark identity"
+  ],
+  "relatedInvariants": [
+    "invariant.authority",
+    "invariant.identity"
+  ],
+  "verification": [],
+  "criticality": "important",
+  "status": "planned",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner discussion 2026-10-16: arrow explores image above associated items and becomes left return arrow; bookmark title updates current tab; show available images by default",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}

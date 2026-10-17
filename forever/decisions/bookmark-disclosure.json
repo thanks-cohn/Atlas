@@ -1,0 +1,24 @@
+{
+  "foreverVersion": "0.1",
+  "id": "decision.bookmark-disclosure",
+  "kind": "decision",
+  "title": "Keep exploration reversible and website navigation explicit",
+  "status": "accepted",
+  "context": "The owner clarified that the image belongs above the shelf hierarchy; expansion must not be confused with visiting the saved URL.",
+  "decision": "Use independent controls: triangle explores, left arrow returns, title navigates the active browser tab. Show available covers automatically.",
+  "rationale": "Preserve orientation and make actions predictable while revealing a bookmark's richer associated information. An image is an entry to exploration, not a reason to force website navigation.",
+  "relatedEntities": [
+    "capability.bookmark-disclosure"
+  ],
+  "mustSurvive": [
+    "invariant.authority",
+    "invariant.identity"
+  ],
+  "dateVersion": "2026-10-16",
+  "provenance": {
+    "sourceType": "explicit",
+    "sourceReference": "Owner discussion 2026-10-16: arrow explores image above associated items and becomes left return arrow; bookmark title updates current tab; show available images by default",
+    "confidence": 1,
+    "reviewStatus": "accepted"
+  }
+}

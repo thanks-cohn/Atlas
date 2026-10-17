@@ -1,6 +1,9 @@
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
+import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
 const $ = id => document.getElementById(id);
 let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
+let covers = {}, focused = null, trail = [];
+let associated = null, associationEpoch = 0;
 const active = () => document.body.classList.contains('bookmarks-mode');
 const element = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
 function report(code, message) { $('bookmarks-status').textContent = `${code}: ${message}`; }
@@ -15,17 +18,104 @@ async function refresh() {
   const request = ++epoch;
   try {
     const roots = await chrome.bookmarks.getTree();
+    const stored = await chrome.storage.local.get(COVER_KEY);
     if (request !== epoch) return;
+    covers = stored[COVER_KEY] && typeof stored[COVER_KEY] === 'object' && !Array.isArray(stored[COVER_KEY]) ? stored[COVER_KEY] : {};
+    const priorURL = nodes.get(focused)?.url;
     nodes = indexBookmarks(roots);
+    if (nodes.get(focused)?.url !== priorURL) { associated = null; associationEpoch++; }
+    if (!nodes.has(focused)) { focused = null; trail = []; }
     if (!nodes.has(folder) || nodes.get(folder).url) folder = roots[0]?.id;
     render();
   } catch { report('BOOKMARK_READ_FAILED', 'Bookmark access is unavailable. Reload the updated extension and accept Chrome’s bookmark permission if prompted.'); }
 }
-function navigate(id) { selected = null; folder = id; $('bookmarks-search').value = ''; render(); }
+function navigate(id) { selected = null; focused = null; associated = null; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
 async function openNode(node) {
   if (!node.url) { navigate(node.id); return; }
   if (!openableBookmark(node.url)) { report('BOOKMARK_URL_BLOCKED', 'This saved URL type cannot be opened here. Use Chrome’s bookmark manager for special or executable URLs.'); return false; }
-  await chrome.tabs.create({url: node.url});
+  const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
+  if (tab?.id === undefined) { report('BOOKMARK_TAB_UNAVAILABLE', 'Select a browser tab and try again.'); return false; }
+  await chrome.tabs.update(tab.id, {url: node.url});
+}
+function focusNode(node) {
+  trail.push({focused, associated, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
+  focused = node.id; associated = null; selected = node.id; render(); $('bookmarks-workspace').scrollTop = 0;
+  loadAssociations(node);
+}
+async function loadAssociations(node) {
+  const request = ++associationEpoch;
+  if (!node.url) return;
+  try {
+    const state = await chrome.runtime.sendMessage({type: 'state'});
+    if (!state?.paired || request !== associationEpoch) return;
+    const snapshot = await chrome.runtime.sendMessage({type: 'api', path: '/v1/catalog'});
+    if (request !== associationEpoch || focused !== node.id || snapshot?.ok === false || !snapshot?.data) return;
+    associated = bookmarkAssociations(node, snapshot.data); render();
+  } catch { /* Native bookmarks and saved covers remain usable while the companion is offline. */ }
+}
+function returnFromPreview() {
+  associationEpoch++;
+  const state = trail.pop(); focused = state?.focused ?? null; selected = state?.selected ?? null;
+  associated = state?.associated ?? null;
+  if (!nodes.has(focused)) focused = null;
+  render(); $('bookmarks-workspace').scrollTop = state?.scroll || 0;
+  [...$('bookmarks-list').querySelectorAll('.bookmark-disclosure')].find(el => el.dataset.bookmarkId === selected)?.focus();
+}
+async function saveCover(node, image) {
+  // Merge the current stored map, rather than overwrite a stale copy from another shelf.
+  const stored = await chrome.storage.local.get(COVER_KEY);
+  const next = setBookmarkCover(stored[COVER_KEY] || {}, node, image);
+  await chrome.storage.local.set({[COVER_KEY]: next});
+  covers = next;
+  render();
+}
+function chooseCover(node) {
+  const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/png,image/jpeg,image/webp,image/gif';
+  input.onchange = async () => {
+    let bitmap;
+    try {
+      const file = input.files?.[0]; if (!file) return;
+      if (file.size > 10 * 1024 * 1024 || !['image/png','image/jpeg','image/webp','image/gif'].includes(file.type)) throw new Error('BOOKMARK_IMAGE_TYPE_OR_SIZE');
+      bitmap = await createImageBitmap(file);
+      if (!bitmap.width || !bitmap.height || bitmap.width * bitmap.height > 40000000) throw new Error('BOOKMARK_IMAGE_DIMENSIONS');
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      await saveCover(node, canvas.toDataURL('image/webp', 0.82));
+    } catch (error) { report('BOOKMARK_IMAGE_SAVE_FAILED', 'Use a smaller PNG, JPEG, WebP or GIF (up to 10 MB). Image storage may be full. Existing covers are unchanged.'); }
+    finally { bitmap?.close(); input.remove(); }
+  };
+  input.click();
+}
+function renderPreview() {
+  const host = $('bookmarks-preview'); host.replaceChildren();
+  const node = nodes.get(focused); host.hidden = !node;
+  if (!node) return;
+  const back = element('button', '←'); back.type = 'button'; back.className = 'bookmark-disclosure';
+  back.setAttribute('aria-label', 'Return to previous bookmark view'); back.setAttribute('aria-expanded', 'true'); back.onclick = returnFromPreview;
+  const heading = element('h2', node.title || 'Untitled');
+  host.append(back, heading);
+  const source = bookmarkCover(node, covers) || associated?.image;
+  if (source) {
+    const image = document.createElement('img'); image.alt = node.title || 'Bookmark image'; image.referrerPolicy = 'no-referrer'; image.decoding = 'async';
+    image.onerror = () => { image.remove(); host.append(element('p', 'This image is unavailable. Choose another image below.')); };
+    image.src = source; host.append(image);
+  } else host.append(element('p', 'No representative image yet. Choose one to show it here.'));
+  const actions = element('div', ''); actions.className = 'bookmark-image-actions';
+  const choose = element('button', 'Choose image'); choose.type = 'button'; choose.onclick = () => chooseCover(node); actions.append(choose);
+  if (Object.hasOwn(covers, node.id)) actions.append(button('Remove chosen image', () => saveCover(node, null)));
+  host.append(actions);
+  host.append(element('h3', node.url ? 'Associated items' : 'Bookmarks in this folder'));
+  if (associated) {
+    for (const resource of associated.matches) if (resource.note) host.append(element('p', resource.note));
+    if (associated.tags.length) host.append(element('p', associated.tags.map(t => '#' + t).join(' ')));
+    for (const item of associated.related) {
+      const details = document.createElement('details');
+      details.append(element('summary', `${item.relation} · ${item.resource.title || 'Untitled'}`));
+      if (item.resource.note) details.append(element('p', item.resource.note));
+      host.append(details);
+    }
+  }
 }
 async function move(node) {
   const targets = folderTargets(nodes, node.id);
@@ -68,16 +158,20 @@ function renderFolders() {
 function render() {
   const parent = nodes.get(folder); if (!parent) return;
   renderFolders();
+  renderPreview();
   const query = $('bookmarks-search').value.trim();
-  const list = query ? findBookmarks(nodes, query) : parent.children || [];
+  const focusedNode = nodes.get(focused);
+  const list = focusedNode ? focusedNode.children || [] : query ? findBookmarks(nodes, query) : parent.children || [];
   $('bookmarks-list').replaceChildren(); $('bookmarks-breadcrumbs').replaceChildren();
   for (const node of bookmarkTrail(nodes, folder)) {
     $('bookmarks-breadcrumbs').append(button(node.title || 'All bookmarks', async () => navigate(node.id)));
   }
-  $('bookmarks-up').disabled = parent.parentId === undefined;
-  const canCreate = parent.parentId !== undefined && !parent.unmodifiable && !query;
+  $('bookmarks-up').disabled = !focused && parent.parentId === undefined;
+  const destination = focusedNode || parent;
+  const canCreate = !destination.url && destination.parentId !== undefined && !destination.unmodifiable && !query;
   $('bookmarks-new').disabled = $('bookmarks-folder').disabled = !canCreate;
-  report('BOOKMARKS_READY', `${list.length} ${query ? 'matching item(s)' : 'item(s)'} · Double-click or press Enter to open · Live Chrome bookmarks`);
+  report('BOOKMARKS_READY', `${list.length} item(s) · Title opens in this tab · Triangle explores · Live Chrome bookmarks`);
+  if (focusedNode && !list.length && !associated?.matches.length) $('bookmarks-list').append(element('p', 'No associated items loaded. Linked Atlas notes and tags appear here when the companion is connected.'));
   for (const node of list) {
     const row = document.createElement('div'); row.className = 'bookmark-row'; row.setAttribute('role', 'listitem');
     const open = element('button', ''); open.className = 'bookmark-open'; open.type = 'button';
@@ -87,14 +181,14 @@ function render() {
       for (const sibling of $('bookmarks-list').querySelectorAll('.bookmark-open')) sibling.setAttribute('aria-pressed','false');
       open.setAttribute('aria-pressed','true');
     };
-    open.onclick = choose; open.onfocus = choose;
-    open.ondblclick = () => operation(() => openNode(node));
-    open.onkeydown = event => {
-      if (event.key === 'Enter') { event.preventDefault(); operation(() => openNode(node)); }
-    };
+    open.onclick = () => operation(() => openNode(node)); open.onfocus = choose;
     open.append(element('strong', `${node.url ? '☆' : '▰'} ${node.title || 'Untitled'}`));
     open.append(element('small', node.url || `${(node.children || []).length} item(s)`));
-    row.append(open);
+    const arrow = element('button', '▶'); arrow.type = 'button'; arrow.className = 'bookmark-disclosure'; arrow.dataset.bookmarkId = node.id;
+    arrow.setAttribute('aria-label', `Explore ${node.title || 'Untitled'}`); arrow.setAttribute('aria-expanded', 'false');
+    arrow.setAttribute('aria-controls', 'bookmarks-preview');
+    arrow.onclick = () => focusNode(node);
+    row.append(arrow, open);
     if (editableBookmark(node, nodes)) {
       const menu = document.createElement('details'); menu.append(element('summary', 'Actions'));
       const actions = document.createElement('div'); actions.className = 'bookmark-actions';
@@ -117,7 +211,7 @@ function render() {
   }
 }
 async function create(isFolder) {
-  const parent = nodes.get(folder); if (!parent || parent.parentId === undefined || parent.unmodifiable) return;
+  const parent = nodes.get(focused) || nodes.get(folder); if (!parent || parent.url || parent.parentId === undefined || parent.unmodifiable) return;
   const title = prompt(isFolder ? 'New folder name' : 'New bookmark title'); if (title === null) return;
   const details = {parentId: folder, title};
   if (!isFolder) {
@@ -139,8 +233,8 @@ function leave() {
 for (const id of ['home','activity','library','add-location']) $(id).addEventListener('click',leave);
 $('roots').addEventListener('click', leave);
 $('bookmarks-refresh').onclick = refresh;
-$('bookmarks-up').onclick = () => { const id = nodes.get(folder)?.parentId; if (id !== undefined) navigate(id); };
-$('bookmarks-search').oninput = render;
+$('bookmarks-up').onclick = () => { if (focused) { returnFromPreview(); return; } const id = nodes.get(folder)?.parentId; if (id !== undefined) navigate(id); };
+$('bookmarks-search').oninput = () => { focused = null; associated = null; associationEpoch++; trail = []; render(); };
 $('bookmarks-new').onclick = () => operation(() => create(false));
 $('bookmarks-folder').onclick = () => operation(() => create(true));
 $('bookmarks-list').addEventListener('keydown', event => {
@@ -158,3 +252,9 @@ if (chrome.bookmarks) {
   }
 }
 window.addEventListener('focus', () => { if (active()) refresh(); });
+$('bookmarks-workspace').addEventListener('keydown', event => {
+  if (event.key === 'Escape' && focused && !event.target.closest('dialog')) { event.preventDefault(); event.stopPropagation(); returnFromPreview(); }
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes[COVER_KEY]) { covers = changes[COVER_KEY].newValue || {}; if (active()) render(); }
+});
