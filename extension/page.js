@@ -16,22 +16,23 @@ function openStory(index, sourceImage) {
   const origin = sourceImage?.getBoundingClientRect?.();
   galleryScrollY = window.scrollY || 0;
   document.documentElement.setAttribute('data-reader-open','');
-  showImage(index); $('viewer').showModal();
+  showImage(index);
+  const hero = $('viewer-image');
+  if (sourceImage?.naturalWidth && sourceImage?.naturalHeight) {
+    hero.width = sourceImage.naturalWidth; hero.height = sourceImage.naturalHeight;
+  }
+  $('viewer').showModal();
   const nocturne = document.body.classList?.contains('nocturne');
   const solstice = document.body.classList?.contains('solstice');
   if ((!nocturne && (!solstice || !origin?.width || !origin?.height)) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  const hero = $('viewer-image');
+  if (nocturne) {
+    const reading = $('viewer-reading');
+    if (reading.animate) openingMotion.push(reading.animate([{opacity:.92},{opacity:1}],{duration:180,easing:'ease-out'}));
+    return;
+  }
   const generation = openingGeneration;
   const reveal = () => {
     if (generation !== openingGeneration || !$('viewer').open || viewerIndex !== index || !hero.animate) return;
-    if (nocturne) {
-      // A darkroom reveal: restrained depth and staggered editorial arrival.
-      openingMotion.push($('viewer').animate([{opacity:0,backgroundColor:'#0f1014'},{opacity:1,backgroundColor:'#17181e'}],{duration:340,easing:'ease-out'}));
-      openingMotion.push(hero.animate([{opacity:0,transform:'scale(1.025)',filter:'blur(2px)'},{opacity:1,transform:'scale(1)',filter:'blur(0px)'}],{duration:650,delay:60,fill:'backwards',easing:'cubic-bezier(.16,1,.3,1)'}));
-      openingMotion.push($('viewer-reading').querySelector('.reader-heading').animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:480,delay:170,fill:'backwards',easing:'cubic-bezier(.16,1,.3,1)'}));
-      openingMotion.push($('viewer-article').animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,delay:260,fill:'backwards',easing:'ease-out'}));
-      return;
-    }
     const target = hero.getBoundingClientRect();
     if (!target.width || !target.height) return;
     // Compare the painted image, rather than its contain/letterbox bounds.
@@ -59,6 +60,7 @@ function showImage(index) {
   if (!page.images.length) return;
   viewerIndex = (index + page.images.length) % page.images.length;
   const image = page.images[viewerIndex];
+  $('viewer-image').removeAttribute('width'); $('viewer-image').removeAttribute('height');
   $('viewer-image').referrerPolicy = 'no-referrer'; $('viewer-image').src = image.source; $('viewer-image').alt = image.title || image.caption || page.title;
   $('viewer-title').textContent = image.title || ''; $('viewer-title').hidden = !image.title; $('viewer-caption').textContent = image.caption; $('viewer-count').textContent = `${viewerIndex + 1} / ${page.images.length}`;
   renderArticle($('viewer-article'), image.article); $('viewer-caption').hidden = !image.caption; $('viewer').scrollTop = 0;
@@ -98,7 +100,7 @@ function renderCollection(container, images, style, preview = false) {
     const strip = element('div'); strip.className = 'cinema-strip';
     const update = () => { const image = images[active]; if (!preview) { const storyTitle = image.title?.trim() || page.title; $('title').textContent = storyTitle; $('collection-label').textContent = displayCollectionTitle(); document.title = storyTitle + ' · Atlas'; } img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show '+(image.title || 'work '+(index+1))); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
     previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
-    imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { openStory(active); } };
+    imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { openStory(active, img); } };
     container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };
     const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip); update(); return;
   }

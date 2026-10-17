@@ -210,14 +210,18 @@ hero.complete=false;
 clicked.onclick();const staleLoad=hero.handlers.load;
 els.get('close-viewer').onclick();staleLoad();assert.equal(motionCalls.length,4);
 
-// Nocturne uses its own darkroom reveal, not Solstice's source-rectangle growth.
+
+// Nocturne starts one inexpensive fade immediately, even before the image loads.
 document.body.classList={contains:name=>name==='nocturne'};
-hero.complete=true;
-clicked.onclick();assert.equal(motionCalls.length,8);
-assert.equal(motionCalls[4].frames[0].opacity,0);
-assert.equal(motionCalls[5].frames[0].transform,'scale(1.025)');
-assert.equal(motionCalls[5].frames[0].filter,'blur(2px)');
+const reading=document.getElementById('viewer-reading');reading.animate=animate;
+hero.complete=false;
+clicked.onclick();assert.equal(motionCalls.length,5);
+assert.equal(motionCalls[4].frames[0].opacity,.92);
+assert.equal(motionCalls[4].options.duration,180);
+assert.ok(!motionCalls[4].frames.some(frame=>'filter' in frame || 'transform' in frame));
+assert.equal(hero.width,source.naturalWidth);assert.equal(hero.height,source.naturalHeight);
+staleLoad();assert.equal(motionCalls.length,5,'Old image load cannot restart opening');
 els.get('close-viewer').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
 context.window.matchMedia=()=>({matches:true});
-clicked.onclick();assert.equal(motionCalls.length,8);
+clicked.onclick();assert.equal(motionCalls.length,5);
 els.get('close-viewer').onclick();

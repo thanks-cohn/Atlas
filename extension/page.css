@@ -392,3 +392,6 @@ html[data-presentation-preview] body > header #status { display:none !important;
 .solstice #viewer::-webkit-scrollbar-track { background:#eeefed; }
 .solstice #viewer::-webkit-scrollbar-thumb { background:#b5bab8; }
 @media(max-width:600px){.solstice #viewer-reading{border-inline:0}}
+
+/* Nocturne's opening uses one opacity fade, with no backdrop sampling. */
+.nocturne #viewer .viewer-toolbar { backdrop-filter:none; background:#101116; }
