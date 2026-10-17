@@ -119,7 +119,7 @@ def _append_metric(state, event):
         # Owner-only data. The companion state directory is already private.
         fd = os.open(path, os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o600)
         try:
-            encoded = (json.dumps(event, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\\n").encode("utf-8")
+            encoded = (json.dumps(event, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode("utf-8")
             while encoded:
                 written = os.write(fd, encoded)
                 if written <= 0:
