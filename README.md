@@ -44,6 +44,10 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 [Contextual Image Pages, Tag Rotunda, Bookmark Columns and Dated Notes](docs/forever-works/PROPOSAL_CONTEXTUAL_IMAGE_TAG_ROTUNDA_AND_DATED_NOTES.md) preserves the design for image-led extension pages, contextual tag-header carousel, qualifying bookmark columns, focused notes with Escape restoration, and optional user-authored dates with chronological sorting. Proposed, **not yet implemented**.
 
+## Capture, clipboard history and verified R2 offload — proposal
+
+[Capture, Persistent Clipboard and Verified R2 Archive](docs/forever-works/PROPOSAL_CAPTURE_CLIPBOARD_AND_VERIFIED_R2_ARCHIVE.md) records the owner-directed design for independent Windows/Atlas screenshot shortcuts, screenshot-to-clipboard, Atlas-controlled file destinations, readily accessible browser-shelf clipboard history, independently configured local text and remote media retention, and automatic deletion of Atlas-managed local media only after cryptographically verified, recoverable R2 archival. This is a **proposal**, not implemented functionality.
+
 ## Future portable environment proposal
 
 [Portable Personal Environment and WebVM](docs/forever-works/PROPOSAL_PORTABLE_PERSONAL_ENVIRONMENT_AND_WEBVM.md) explores restoring one's browser-centered workspace, assets, workflows and compatible tools across Windows, Linux, Android and future hosts, without making WebVM a mandatory dependency. This is a non-normative proposal, not implemented runtime or sync functionality.
