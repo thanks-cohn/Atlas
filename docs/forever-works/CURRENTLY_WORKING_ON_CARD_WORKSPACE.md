@@ -245,3 +245,82 @@ Image-, video-, article- and gallery-centric presentations are examples, not an 
 The chosen object is the focal context from which the presentation arranges relevant content and associations. Centering is a view/composition choice: it does not change the object's type, make it the owner of everything shown, or create relationships implicitly. Which associations are displayed and how they are arranged remain explicit configurable presentation/query rules.
 
 **Purpose:** users should be able to organize exploration around whatever matters to them, rather than around a permanently privileged medium or container. Preserve sensible, elegant defaults and the existing privacy and search contracts. This is owner-directed design, not a claim of implemented functionality.
+
+
+## Addendum — personal curation becomes durable publishing potential
+
+**Owner direction, 2026-10-16 (America/Chicago). Status: product intent and proposed acceptance, not shipped behavior.**
+
+### Time invested should remain useful
+
+Atlas should turn time voluntarily spent collecting, organizing, writing, tagging and connecting material into genuine publishing possibilities. A note written ten years earlier should remain available for a new project, article, presentation or curated site without forcing its author to recreate it in a current editor. Age alone does not reduce the value of someone's thought or expression.
+
+This is a promise about preserving access, authorship, meaning and reuse—not an assertion that every old factual claim, external link or permission remains current. Retain dates, provenance and privacy; allow review without treating old material as disposable.
+
+The intended journey is: select/create a project from existing collections → choose a landing destination → connect sections and destination pages → preview → publish. The first three reuse the structure built during ordinary personal organization. Exact hosting and preview controls remain implementation work under the existing publishing contracts.
+
+Atlas should enable people who already enjoy organizing information to become publishers without repeatedly rebuilding their work as websites. A modest collection should be publishable; larger collections should remain navigable without rendering everything at once. The discussion of hundreds of thousands of saved sites over a lifetime is a motivation for scalable organization, not a benchmark already achieved.
+
+### World-class presentation from interchangeable templates
+
+Owner quality target: premium, professional, elegant presentation across supported combinations, including use as a presentation website, portfolio, article collection or personal explorer.
+
+Users choose what matters and how they wish to explore it. Templates should handle composition, typography, proportions, responsive layout, media sizing and coherent expansion. The supported combinations must work together without requiring the user to design every detail.
+
+Build a small, dependable set of excellent templates first, with a structure that permits replacement and extension. This does not authorize a bloated editor or an unlimited set of untested combinations. “World-class” is an acceptance ambition requiring visual and usability evidence, not a certification made by this document.
+
+Any supported object can be the focal context. Switching presentation must retain its content, identity, relationships and access boundaries. Defaults are starting compositions, not permanent restrictions on what may lead or appear beneath them.
+
+### Initial gallery-centric carousel and article slice
+
+These clarify the initial preferred template, not the universal navigation rules for every future template:
+
+1. The user iterates through galleries.
+2. Selecting a gallery changes the carousel's active scope to that gallery's contents; Left/Right then iterates through its images.
+3. Associated content underneath changes with the current selection. Regions may contain tags, notes with tags, or notes with further galleries presented as expandable rows.
+4. Clicking the focused image can open an associated horizontal slice. In the preferred initial template, this slice presents iterable article cards, each with an image and a title/text overlay near the bottom.
+5. Clicking an article card opens a distinct full article extension page. It has its own navigable page identity and place in the hierarchy; filling the viewport must not erase that distinction. Navigation history and return context must remain recoverable.
+
+Do not conflate this template-specific full-article navigation with the earlier compact shelf's image → text → tags sequence. Both are contextual presets; define unambiguous controls and state transitions before implementation.
+
+**Carousel visibility during expansion:** begin with a single-image carousel at the top for implementation simplicity. Also support the planned multi-image presentation: a larger focused center image, with two preview images on the left and two on the right by default. When the slice opens, the top carousel shrinks and moves upward while staying visible. In multi-image mode, all five images remain visible rather than side previews disappearing.
+
+The numbers and placement are preset defaults, not the content model. Small-screen fitting, available-image boundaries, input focus between independently iterable regions and accessible controls still need explicit design. The earlier confirmed article behavior also keeps the top image visible while the user scrolls within the article content region; size and scrolling must preserve readability and keyboard access.
+
+### Dependable code with traceable reasons
+
+Owner engineering goal: modest, dependable code whose behavior and reasons can be traced. Treat “100% traceable” as a goal to demonstrate through an explicit coverage inventory, not an unsupported claim that every line is already explained or every failure eliminated.
+
+For the first functional outline, establish links among:
+- Accepted purpose and user outcomes.
+- Required behavior, invariants and compatibility obligations.
+- Decisions, alternatives considered and reasons.
+- Components, storage/format contracts and current implementation.
+- Verification artifacts, actual results, limitations and unresolved questions.
+
+Use the Forever Works framework and versioned records alongside concise narrative explanations. Preserve the difference between explicit owner reasoning, implementation observations, agent inference and proposed decisions. Extend the vocabulary when real recurring distinctions justify it; do not multiply terms merely to sound architectural.
+
+The first outline should pair working behavior with this inheritance material from the beginning. Record where trace links are missing and update the relevant descriptions when upgrades change behavior. Existing mechanisms may be replaced when the successor preserves accepted outcomes.
+
+### Reconstruction across future technology
+
+The enduring goal is that a capable future agent can inherit the repository cold—even decades later—recover Atlas's purpose, meaning, mechanics and obligations, and recreate a working Atlas experience using suitable contemporary technology.
+
+Preserve both the current source and sufficient explanation: content/schema semantics, identities, associations, ordering, presets, expansion/navigation state, publication hierarchy, privacy, export/migrations and evidence. No particular UI framework, database, cloud or carousel algorithm should be mistaken for Atlas's purpose.
+
+Reconstruction may change its mechanisms and revalidate outdated environmental assumptions. It must retain meaningful content and the accepted user experience: enjoyable exploration, modular composition, dependable organization and polished publishing.
+
+The documentation-only inheritance experiment is one useful stress test, not a guarantee that this repository already supplies a complete blueprint. Verify the actual reconstruction against fixtures and held-out behavior; keep unknowns visible.
+
+### Planned acceptance evidence
+
+- Reuse an old note/collection in a newly composed site without losing dates, text, tags or relationships; publication includes only explicitly selected public material.
+- Present one collection in distinct supported templates without data duplication or destructive conversion.
+- Verify gallery → image → article navigation, separate article page identity, active Left/Right scope and return history.
+- Verify single/multi-image carousel persistence through slice expansion, and the two-left/two-right focused preset where applicable.
+- Visually and interactively inspect normal, expanded, empty, long-text, missing-media and narrow-screen states; preserve media proportions and readable overlays.
+- Publish the selected hierarchy with a required landing destination and default generated navigation, according to the existing contract.
+- Inventory purpose-to-implementation-to-evidence trace coverage and explicitly report gaps.
+- Run a fresh-agent reconstruction of a bounded component with declared access and independent acceptance checks before making broader inheritance claims.
+
+All checks above remain planned unless separately linked to executed evidence. This addendum changes documentation only.
