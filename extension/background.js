@@ -10,6 +10,7 @@ const routes = new Set([
   "/v1/operate",
   "/v1/catalog",
   "/v1/tag-image",
+  "/v1/tagging-metrics",
   "/v1/library",
   "/v1/receipts",
 ]);
@@ -21,6 +22,7 @@ const readRoutes = new Set([
   "/v1/read",
   "/v1/hash",
   "/v1/receipts",
+  "/v1/tagging-metrics",
 ]);
 let diagnosticQueue = Promise.resolve();
 const safeDiagnosticCode = value => typeof value === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(value) ? value : "UNCLASSIFIED_ERROR";
