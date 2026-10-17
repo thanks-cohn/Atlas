@@ -15,7 +15,15 @@ function metadata(node){return associations.get(node.url) || {note:'',tags:[],im
 function imageFor(node){const value=bookmarkCover(node,covers) || metadata(node).image;if(failedImages.has(value))return null;return value?.startsWith('data:')?value:publicImageURL(value);}
 function link(node,label){const a=el('a',label);a.href=node.url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 function pickImage(node){selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
-function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;$('detail-image').src=imageFor(node);$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...metadata(node).tags.map(tag=>{const span=el('span',tag);span.className='tag';return span;}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
+function tagsFor(node){return [...new Set(metadata(node).tags.filter(tag=>typeof tag==='string').map(tag=>tag.trim()).filter(Boolean))];}
+function tagStrip(node){
+  const tags=tagsFor(node);if(!tags.length)return null;
+  const strip=el('div');strip.className='pin-tags';strip.setAttribute('aria-label','Bookmark tags');
+  for(const tag of tags.slice(0,5)){const pill=el('span',tag);pill.className='pin-tag';pill.title=tag;strip.append(pill);}
+  if(tags.length>5){const more=el('button','+'+(tags.length-5));more.className='pin-tag pin-tag-more';more.setAttribute('aria-label','Show all '+tags.length+' tags');more.onclick=()=>openDetail(node);strip.append(more);}
+  return strip;
+}
+function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{const span=el('span',tag);span.className='tag';return span;}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
 function card(node){
   const article=el('article');article.className='pin';article.atlasNode=node;const image=imageFor(node);
   if(image){
@@ -23,11 +31,11 @@ function card(node){
     const geometry=imageGeometry.get(image);button.style.aspectRatio=geometry || '4 / 3';
     const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;imageGeometry.set(image,ratio);button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow();};img.src=image;button.onclick=()=>openDetail(node);
     img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow();};
-    const copy=el('div');copy.className='pin-copy';const title=link(node,node.title || new URL(node.url).hostname);title.className='pin-title';const url=link(node,new URL(node.url).hostname);url.className='pin-url';copy.append(title,url);article.append(button,copy);
+    const copy=el('div');copy.className='pin-copy';const strip=tagStrip(node),copyHeight=strip?138:78;copy.style.height=copyHeight+'px';button.style.height='calc(100% - '+copyHeight+'px)';const title=link(node,node.title || new URL(node.url).hostname);title.className='pin-title';const url=link(node,new URL(node.url).hostname);url.className='pin-url';copy.append(title,url);if(strip)copy.append(strip);article.append(button,copy);
   }else emptyCard(article,node);
   return article;
 }
-function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button','Fetch');fetch.className='fetch-one';fetch.setAttribute('aria-label','Fetch cover for '+(node.title || node.url));fetch.onclick=()=>coverFetch.request(node);article.append(fetch);}
+function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button','Fetch');fetch.className='fetch-one';fetch.setAttribute('aria-label','Fetch cover for '+(node.title || node.url));fetch.onclick=()=>coverFetch.request(node);article.append(fetch);const strip=tagStrip(node);if(strip){article.className+=' pin-with-tags';article.append(strip);}}
 function localScroll(){return Math.max(0,-$('pins').getBoundingClientRect().top);}
 function columns(){
   const width=$('pins').clientWidth || 1100;
@@ -44,7 +52,7 @@ function renderWindow(){
   positions=items.map((node,index)=>{
     const image=imageFor(node),parts=(imageGeometry.get(image) || '4 / 3').split('/').map(Number),ratio=parts[0]/parts[1];
     const visual=image?Math.max(window.innerWidth<=540?120:160,Math.min(480,width/ratio)):0;
-    const height=image?visual+78:96,column=ends.indexOf(Math.min(...ends));
+    const extra=tagsFor(node).length?60:0;const height=image?visual+78+extra:96+extra,column=ends.indexOf(Math.min(...ends));
     const position={node,index,x:column*(width+gap),y:ends[column],width,height};ends[column]+=height+24;return position;
   });
   positionById=new Map(positions.map(position=>[position.node.id,position]));
@@ -89,13 +97,17 @@ function indexAssociations(data){
   for(const relation of data?.relations || []){const entry=byResource.get(relation.from),target=data.resources?.[relation.to];if(!entry || !target)continue;if(target.kind==='image' && !entry.image)entry.image=(target.locators || []).map(l=>l.provider==='web'?directImage(l.reference):null).find(Boolean) || null;if(target.kind==='note' && target.note)entry.note+=(entry.note?'\n\n':'')+target.note;}
   return result;
 }
+async function refreshAssociations(){
+  // Tags belong to exact Atlas bookmark URLs; never infer tags from titles/domains.
+  try{const state=await chrome.runtime.sendMessage({type:'state'});if(state?.paired){const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.data)associations=indexAssociations(result.data);}}catch{}
+}
 async function refresh(){
   try{
     const chosen=$('folder').value || 'all';roots=await chrome.bookmarks.getTree();covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
     $('folder').replaceChildren();const all=el('option','All bookmarks');all.value='all';$('folder').append(all);
     function folders(nodes,path=[]){for(const node of nodes)if(!node.url){const trail=[...path,node.title].filter(Boolean);if(node.id && node.parentId!==undefined){const option=el('option',trail.join(' / '));option.value=node.id;$('folder').append(option);}folders(node.children || [],trail);}}
     folders(roots);$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
-    render();
+    await refreshAssociations();render();
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
 const fetchDock=$('fetch-dock');let hoverOpened=false;
@@ -151,7 +163,6 @@ async function start(){
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;}catch{}
   await refresh();
   if(boardId){try{const board=boardRecord((await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY]?.[boardId]);$('title').textContent=board.title;document.title=board.title+' · Atlas Pinboard';const exists=[...$('folder').options].some(o=>o.value===board.folderId);$('folder').value=exists?board.folderId:'all';if(!exists){items=[];resetBlocks();status('PINBOARD_FOLDER_MISSING: Choose another folder to browse.');}else render();}catch{items=[];resetBlocks();status('PINBOARD_NOT_FOUND: This saved pinboard is unavailable.');}}
-  // Optional exact Atlas relationships; no network scraping or per-bookmark requests.
-  try{const state=await chrome.runtime.sendMessage({type:'state'});if(state?.paired){const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.data){associations=indexAssociations(result.data);render();}}}catch{}
+
 }
 start();

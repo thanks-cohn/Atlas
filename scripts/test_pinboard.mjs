@@ -92,6 +92,17 @@ for(const cap of [24,48,72,96,144]){
 // Pointer hover has a native click/keyboard fallback; leaving doesn't trap the dock open.
 const dock=$('fetch-dock');dock.handlers.pointerenter({pointerType:'mouse'});assert.equal(dock.open,true);dock.handlers.pointerleave();assert.equal(dock.open,false);
 dock.handlers.pointerenter({pointerType:'touch'});assert.equal(dock.open,false);
+// Exact Atlas bookmark tags appear on image and URL-only cards, safely and bounded.
+const taggedImage=roots[0].children[0].children[0],taggedURL=roots[0].children[0].children[1];
+const tagCatalog={resources:{r:{id:'r',kind:'bookmark',locators:[{provider:'web',reference:taggedImage.url}]},q:{id:'q',kind:'bookmark',locators:[{provider:'web',reference:taggedURL.url}]}},relations:[],tags:{r:['Design','Travel','Art','<img src=x onerror=alert(1)>','Architecture','Photography','Ideas','Design',' Travel '],q:['Notes','Personal']}};
+context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired:true}:{data:tagCatalog};
+await $('refresh').onclick();flush();
+let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
+assert.equal(tagged.children[1].style.height,'138px');
+strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);$('close').onclick();
+const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
+// Refresh retrieves edits to the existing catalog rather than requiring a new tab.
+tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].textContent,'Updated');
 // Window calculation stays bounded at any position, including huge scroll jumps and boundaries.
 for(const limit of [24,48,72,96,144])for(const top of [0,1,5000,1e8]){
  const plan=model.visibleBlocks(1000,limit,new Map(),[],top);
