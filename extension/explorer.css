@@ -1081,3 +1081,4 @@ dialog label input, dialog label select { display: block; width: 100%; margin-to
 
 /* Brand doubles as the single home control in the shelf and full explorer. */
 button.brand-mark{border:0;padding:0;flex:0 0 32px;cursor:pointer;font-family:inherit;line-height:1}button.brand-mark:hover{background:#244b3d}button.brand-mark:focus-visible{outline:2px solid #315c4d;outline-offset:4px}button.brand-mark.active{box-shadow:0 0 0 4px #dfeae4}
+.bookmark-copy-dialog{width:min(440px,calc(100vw - 32px));padding:28px}.bookmark-copy-dialog h2{margin:0 0 10px;letter-spacing:-.03em}.bookmark-copy-dialog form>p{overflow-wrap:anywhere;color:#738278;font-size:12px}.bookmark-copy-dialog label{display:flex;flex-direction:column;gap:8px;margin:20px 0;font-size:12px}.bookmark-copy-dialog input,.bookmark-copy-dialog select{width:100%;padding:11px;border:1px solid #dce5df;border-radius:9px;background:#fff;font:inherit}.bookmark-copy-dialog button{margin:8px 8px 0 0}

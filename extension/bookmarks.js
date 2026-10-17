@@ -313,14 +313,15 @@ function render() {
   $('bookmarks-up').disabled = !focused && parent.parentId === undefined;
   const destination = focusedNode || parent;
   const canCreate = !destination.url && destination.parentId !== undefined && !destination.unmodifiable && !query;
-  $('bookmarks-new').disabled = $('bookmarks-folder').disabled = !canCreate;
+  $('bookmarks-folder').disabled = !canCreate;
+  $('bookmarks-new').disabled = !canCreate && !nodes.get(selected)?.url && !focusedNode?.url;
   report('BOOKMARKS_READY', `${list.length} item(s) · Title opens in this tab · Triangle explores · Live Chrome bookmarks`);
   for (const node of list) {
     const row = document.createElement('div'); row.className = 'bookmark-row'; row.setAttribute('role', 'listitem');
     const open = element('button', ''); open.className = 'bookmark-open'; open.type = 'button';
     open.setAttribute('aria-pressed', String(selected === node.id));
     const choose = () => {
-      selected = node.id;
+      selected = node.id;if(node.url)$('bookmarks-new').disabled=false;
       for (const sibling of $('bookmarks-list').querySelectorAll('.bookmark-open')) sibling.setAttribute('aria-pressed','false');
       open.setAttribute('aria-pressed','true');
     };
@@ -353,6 +354,33 @@ function render() {
     $('bookmarks-list').append(row);
   }
 }
+function addExistingBookmark(node){
+  const dialog=element('dialog',''),form=element('form','');dialog.className='bookmark-copy-dialog';
+  form.append(element('h2','Add bookmark to folder'),element('p',node.title || node.url));
+  const destinationLabel=element('label','Location'),destination=element('select','');
+  for(const target of folderTargets(nodes)){const option=element('option',bookmarkTrail(nodes,target.id).slice(1).map(n=>n.title || 'Untitled').join(' / '));option.value=target.id;destination.append(option);}
+  destination.value=node.parentId;destinationLabel.append(destination);
+  const newLabel=element('label','New folder · optional'),newName=element('input','');newName.maxLength=200;newName.placeholder='Create inside the selected location';newLabel.append(newName);
+  const message=element('p',''),save=element('button','Add Bookmark');message.setAttribute('role','status');save.type='submit';
+  const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();
+  form.append(destinationLabel,newLabel,message,save,cancel);dialog.append(form);
+  form.onsubmit=async event=>{
+    event.preventDefault();if(save.disabled)return;save.disabled=true;
+    try{
+      const current=(await chrome.bookmarks.get(node.id))[0];if(!current || !openableBookmark(current.url) || current.url!==node.url)throw Error('The selected bookmark changed. Close and select it again.');
+      const latest=indexBookmarks(await chrome.bookmarks.getTree());let parent=latest.get(destination.value);
+      if(!parent || parent.url || parent.parentId===undefined || parent.unmodifiable)throw Error('Choose a writable bookmark folder.');
+      if(newName.value.trim()){
+        parent=await chrome.bookmarks.create({parentId:parent.id,title:newName.value.trim()});
+        const option=element('option',parent.title);option.value=parent.id;destination.append(option);destination.value=parent.id;newName.value='';
+      }
+      if(![...latest.values()].some(n=>n.parentId===parent.id && n.url===current.url))await chrome.bookmarks.create({parentId:parent.id,title:current.title,url:current.url});
+      await refresh();dialog.close();
+    }catch(error){message.textContent=error.message || 'Could not add this bookmark. Your original remains.';}
+    finally{save.disabled=false;}
+  };
+  dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();destination.focus();
+}
 async function create(isFolder) {
   const parent = nodes.get(focused) || nodes.get(folder); if (!parent || parent.url || parent.parentId === undefined || parent.unmodifiable) return;
   const title = prompt(isFolder ? 'New folder name' : 'New bookmark title'); if (title === null) return;
@@ -377,8 +405,8 @@ for (const id of ['home','library','add-location']) $(id).addEventListener('clic
 $('roots').addEventListener('click', leave);
 $('bookmarks-refresh').onclick = refresh;
 $('bookmarks-up').onclick = () => { if (focused) { returnFromPreview(); return; } const id = nodes.get(folder)?.parentId; if (id !== undefined) navigate(id); };
-$('bookmarks-search').oninput = () => { focused = null; associated = null; associationEpoch++; trail = []; render(); };
-$('bookmarks-new').onclick = () => operation(() => create(false));
+$('bookmarks-search').oninput = () => { selected = null; focused = null; associated = null; associationEpoch++; trail = []; render(); };
+$('bookmarks-new').onclick = () => {const node=nodes.get(selected) || nodes.get(focused);if(node?.url)addExistingBookmark(node);else operation(() => create(false));};
 $('bookmarks-folder').onclick = () => operation(() => create(true));
 $('bookmarks-list').addEventListener('keydown', event => {
   if (!['ArrowDown','ArrowUp','Home','End'].includes(event.key) || event.target.closest('details')) return;

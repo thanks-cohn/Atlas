@@ -2,11 +2,11 @@
 export const PINBOARDS_KEY='atlas.pinboards.v1';
 export const BATCH=24, WINDOW=96;
 export function pinItems(roots,folderId='all',query='') {
-  const result=[];const q=query.trim().toLocaleLowerCase();
+  const result=[],seen=new Set();const q=query.trim().toLocaleLowerCase();
   function visit(node,inside) {
     inside=inside || folderId==='all' || node.id===folderId;
     if(inside && node.url) {
-      try { const url=new URL(node.url);if(['http:','https:'].includes(url.protocol) && !url.username && !url.password && (!q || (node.title+' '+node.url).toLocaleLowerCase().includes(q))) result.push(node); } catch {}
+      try { const url=new URL(node.url);if(['http:','https:'].includes(url.protocol) && !url.username && !url.password && (!q || (node.title+' '+node.url).toLocaleLowerCase().includes(q))) {if(folderId!=='all' || !seen.has(node.url)){result.push(node);seen.add(node.url);}} } catch {}
     }
     for(const child of node.children || [])visit(child,inside);
   }

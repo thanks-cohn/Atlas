@@ -145,3 +145,5 @@ context.crypto={randomUUID:()=> 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'};
 $('new-pinboard').onclick();assert.equal($('new-board-dialog').open,true);
 $('new-board-title').value='My new board';await $('new-board-form').onsubmit({preventDefault(){}});
 assert.equal(data[model.PINBOARDS_KEY]['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'].folderId,'blank');assert.match(context.location.href,/id=bbbb/);
+const repeats=[{id:'root',children:[{id:'f1',children:[{id:'a',title:'First',url:'https://example.com/item'}]},{id:'f2',children:[{id:'b',title:'Second',url:'https://example.com/item'},{id:'c',title:'Other query',url:'https://example.com/item?x=1'},{id:'d',title:'Fragment',url:'https://example.com/item#part'}]}]}];
+assert.equal(model.pinItems(repeats,'all').length,3);assert.equal(model.pinItems(repeats,'f2').length,3);assert.equal(model.pinItems(repeats,'all','Second')[0].id,'b');

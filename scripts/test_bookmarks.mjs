@@ -180,3 +180,18 @@ assert.throws(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),dataIma
 assert.doesNotThrow(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),dataImage,16));
 // Lowering the budget must never prevent explicit cover removal, even while over budget.
 assert.doesNotThrow(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),null,8));
+
+// + Bookmark copies the highlighted item to an existing or newly created folder.
+failRead=false;await els.get('bookmarks-refresh').onclick();
+let newId=100;
+bookmarks.create=async details=>{const node={id:String(newId++),...details,...(!details.url?{children:[]}:{} )};nodes.set(node.id,node);nodes.get(details.parentId).children.push(node);calls.push(['create',details]);return node;};
+vm.runInContext("selected='3';folder='1';focused=null;render()",context);
+els.get('bookmarks-new').onclick();
+let copyDialog=created.filter(e=>e.tagName==='dialog').at(-1),copyForm=copyDialog.children[0];
+copyForm.children[2].children[0].value='4';await copyForm.onsubmit({preventDefault(){}});
+assert.equal(nodes.get('3').parentId,'1');assert.ok(nodes.get('4').children.some(n=>n.url===nodes.get('3').url));
+const beforeCopies=calls.filter(c=>c[0]==='create').length;
+vm.runInContext("selected='3'",context);els.get('bookmarks-new').onclick();copyForm=created.filter(e=>e.tagName==='dialog').at(-1).children[0];copyForm.children[2].children[0].value='4';await copyForm.onsubmit({preventDefault(){}});
+assert.equal(calls.filter(c=>c[0]==='create').length,beforeCopies,'Same folder must not gain a duplicate');
+vm.runInContext("selected='3'",context);els.get('bookmarks-new').onclick();copyForm=created.filter(e=>e.tagName==='dialog').at(-1).children[0];copyForm.children[2].children[0].value='1';copyForm.children[3].children[0].value='New destination';await copyForm.onsubmit({preventDefault(){}});
+const newFolder=[...nodes.values()].find(n=>n.title==='New destination');assert.ok(newFolder.children.some(n=>n.url===nodes.get('3').url));
