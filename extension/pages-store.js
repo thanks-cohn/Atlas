@@ -26,7 +26,7 @@ export function validatePage(page) {
       typeof page.title !== 'string' || !page.title.trim() || page.title.length > 200 ||
       typeof page.text !== 'string' || page.text.length > 100000 || !Number.isSafeInteger(page.revision) || page.revision < 1) throw new Error('PAGE_DATA_INVALID');
   if (!Array.isArray(page.images) || page.images.length > 24 || page.images.some(image =>
-    typeof image.id !== 'string' || (image.title !== undefined && (typeof image.title !== 'string' || image.title.length > 200)) || typeof image.caption !== 'string' || image.caption.length > 300 ||
+    typeof image.id !== 'string' || (image.article !== undefined && (typeof image.article !== 'string' || image.article.length > 20000)) || (image.title !== undefined && (typeof image.title !== 'string' || image.title.length > 200)) || typeof image.caption !== 'string' || image.caption.length > 300 ||
     typeof image.source !== 'string' || image.source.length > 700000 ||
     !(image.sourceKind === 'url' ? publicImageURL(image.source) && image.source.length <= 8192 : image.sourceKind === 'local' && /^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(image.source))) ||
     new Set(page.images.map(image => image.id)).size !== page.images.length || JSON.stringify(page).length > 4000000) throw new Error('PAGE_IMAGES_INVALID');

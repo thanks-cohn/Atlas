@@ -39,11 +39,12 @@ function renderCollection(container, images, style, preview = false) {
     const controls = element('div'); controls.className = 'cinema-controls';
     const previous = element('button', '←'), next = element('button', '→'); previous.type = next.type = 'button'; previous.setAttribute('aria-label', 'Previous work'); next.setAttribute('aria-label', 'Next work');
     const strip = element('div'); strip.className = 'cinema-strip';
-    const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || 'Work '+String(active+1).padStart(2,'0'); caption.textContent = image.caption; count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
+    const articleSlot = element('div'); articleSlot.className = 'article-slot';
+    const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || 'Work '+String(active+1).padStart(2,'0'); caption.textContent = image.article ? firstSentence(image.article) : image.caption; renderArticle(articleSlot,image.article); count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
     previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
     imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { showImage(active); $('viewer').showModal(); } };
     container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };
-    const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip); update(); return;
+    const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip,articleSlot); update(); return;
   }
   images.forEach((image, index) => {
     const figure = element('figure'), button = element('button'); button.className = 'gallery-image'; button.type = 'button'; button.setAttribute('aria-label', `Expand ${image.title || image.caption || 'image ' + (index + 1)}`);
@@ -51,8 +52,18 @@ function renderCollection(container, images, style, preview = false) {
     img.onerror = () => { img.hidden = true; button.append(element('span', 'Image unavailable · Edit Gallery to replace its source')); }; button.append(img);
     button.onclick = () => { if (!preview) {showImage(index); $('viewer').showModal();} };
     const figcaption = element('figcaption'); const number = element('span', String(index+1).padStart(2,'0')); number.className = 'work-number'; figcaption.append(number);
-    const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption) { const description = element('span', image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); container.append(figure);
+    const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption || image.article) { const description = element('span', image.article ? firstSentence(image.article) : image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); if (image.article) { const slot=element('div'); slot.className='article-slot'; renderArticle(slot,image.article); figure.append(slot); } container.append(figure);
   });
+}
+function firstSentence(text) { return text.trim().match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] || text.split('\n')[0]; }
+function renderArticle(container, text) {
+  container.replaceChildren(); container.hidden = !text;
+  if (!text) return;
+  const details = element('details'); details.className = 'work-article';
+  const summary = element('summary', 'Read full article');
+  const body = element('div'); body.className = 'article-body';
+  for (const paragraph of text.split(/\n\s*\n/).filter(part=>part.trim())) body.append(element('p',paragraph.trim()));
+  details.append(summary,body); container.append(details);
 }
 function renderPreview() {
   $('preview-title').textContent = $('title-input').value;
@@ -68,7 +79,7 @@ function renderImageEditor() {
   draftImages.forEach((image, index) => {
     const row = element('div'); row.className = 'image-editor-row';
     const thumbnail = element('img'); thumbnail.referrerPolicy = 'no-referrer'; thumbnail.src = image.source; thumbnail.alt = 'Selected image ' + (index + 1);
-    const fields = element('div'); fields.className = 'image-editor-fields'; const titleLabel = element('label', 'Image title (optional)'), titleInput = element('input'); titleInput.maxLength = 200; titleInput.disabled = loadingImages; titleInput.value = image.title || ''; titleInput.oninput = () => { image.title = titleInput.value; }; titleLabel.append(titleInput); const label = element('label', 'Caption (optional)'), caption = element('input'); caption.maxLength = 300; caption.disabled = loadingImages; caption.value = image.caption; caption.oninput = () => { image.caption = caption.value; }; label.append(caption); fields.append(titleLabel, label);
+    const fields = element('div'); fields.className = 'image-editor-fields'; const titleLabel = element('label', 'Image title (optional)'), titleInput = element('input'); titleInput.maxLength = 200; titleInput.disabled = loadingImages; titleInput.value = image.title || ''; titleInput.oninput = () => { image.title = titleInput.value; }; titleLabel.append(titleInput); const label = element('label', 'Caption (optional)'), caption = element('input'); caption.maxLength = 300; caption.disabled = loadingImages; caption.value = image.caption; caption.oninput = () => { image.caption = caption.value; }; label.append(caption); const articleLabel = element('label', 'Article (optional)'), article = element('textarea'); article.maxLength = 20000; article.rows = 6; article.disabled = loadingImages; article.value = image.article || ''; article.oninput = () => {image.article=article.value;}; articleLabel.append(article); fields.append(titleLabel, label, articleLabel);
     const up = element('button', '↑'); up.type = 'button'; up.disabled = loadingImages || index === 0; up.setAttribute('aria-label', 'Move image earlier'); up.onclick = () => { [draftImages[index - 1], draftImages[index]] = [draftImages[index], draftImages[index - 1]]; renderImageEditor(); };
     const remove = element('button', 'Remove from page'); remove.type = 'button'; remove.disabled = loadingImages; remove.onclick = () => { draftImages.splice(index, 1); renderImageEditor(); };
     const down = element('button', '↓'); down.type = 'button'; down.disabled = loadingImages || index === draftImages.length - 1; down.setAttribute('aria-label', 'Move image later'); down.onclick = () => { [draftImages[index], draftImages[index + 1]] = [draftImages[index + 1], draftImages[index]]; renderImageEditor(); };

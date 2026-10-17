@@ -39,11 +39,12 @@ class LibraryTests(unittest.TestCase):
     def test_bytes_restart_and_chrome_independent_recovery(self):
         raw=b'\x89PNG\r\n\x1a\noriginal bytes\x00\xff';ident=hashlib.sha256(raw).hexdigest()
         status,result=self.call({'action':'put-asset','mime':'image/png','base64':base64.b64encode(raw).decode()});self.assertEqual(status,200);self.assertEqual(result['asset']['id'],ident)
-        page=self.page();page['galleryStyle']='nocturne';page['images'][0]['originalAssetId']=ident
+        page=self.page();page['galleryStyle']='nocturne';page['images'][0]['article']='One.\n\nTwo.\n\nThree.\n\nFour.\n\nFive.';page['images'][0]['originalAssetId']=ident
         self.assertEqual(self.call({'action':'save-page','page':page,'expectedRevision':None})[0],200)
         self.stop();self.close_state();self.state=self.make_state(self.root);self.start()
         status,result=self.call({'action':'read-page','id':page['id']});self.assertEqual(status,200);self.assertEqual(result['page']['images'][0]['source'],page['images'][0]['source'])
         self.assertEqual(result['page']['galleryStyle'],'nocturne')
+        self.assertEqual(result['page']['images'][0]['article'],page['images'][0]['article'])
         status,result=self.call({'action':'read-asset','id':ident});self.assertEqual(status,200);self.assertEqual(base64.b64decode(result['base64']),raw)
         status,result=self.call({'action':'list-pages','bookmarkId':'17','bookmarkUrl':'https://example.com/'});self.assertEqual(len(result['pages']),1)
         self.assertTrue(self.state.path.is_file())
