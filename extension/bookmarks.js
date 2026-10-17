@@ -1,3 +1,4 @@
+import {DEMO_COLLECTION} from './gallery-demo.js';
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
 import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, deletePage, withPageLock} from './pages-store.js';
@@ -86,12 +87,12 @@ function addItem(node) {
   style.value='nocturne'; styleLabel.append(style);
   const message = element('p', ''), save = element('button', 'Create Gallery'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
-  form.append(kind, titleLabel, templateLabel, styleLabel, message, save, cancel); dialog.append(form);
+  form.append(kind, titleLabel, templateLabel, styleLabel, element('p', 'Starts with 24 sample stories. Edit or replace them with your own.'), message, save, cancel); dialog.append(form);
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = true;
     try {
       if (!nodes.has(node.id) || nodes.get(node.id).url !== node.url) throw new Error('BOOKMARK_CHANGED');
-      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value, galleryStyle: style.value}, crypto.randomUUID()));
+      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value, galleryStyle: style.value, text: DEMO_COLLECTION.text, images: DEMO_COLLECTION.images.map((image,index)=>({...image,id:'sample-'+index}))}, crypto.randomUUID()));
       await loadLocalItems(node); dialog.close();
     } catch { message.textContent = 'PAGE_CREATE_FAILED: Enter a title and check available local storage. Your existing pages are unchanged.'; }
     finally { save.disabled = false; }

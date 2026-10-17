@@ -48,8 +48,8 @@ export async function linkedPages(storage, node) {
   for (const id of record.pageIds) { const page = await readPage(storage, id); if (page && !page.deleted) pages.push(page); }
   return pages;
 }
-export async function createLinkedPage(storage, node, {title, template = 'gallery', galleryStyle = 'nocturne'}, id) {
-  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text: '', template, galleryStyle, images: [], revision: 1, sourceBookmark: {id: node.id, url: node.url || ''}});
+export async function createLinkedPage(storage, node, {title, template = 'gallery', galleryStyle = 'nocturne', text = '', images = []}, id) {
+  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text, template, galleryStyle, images, revision: 1, sourceBookmark: {id: node.id, url: node.url || ''}});
   const key = ITEM_PREFIX + node.id, current = (await storage.get(key))[key];
   if (current && (current.version !== 1 || !Array.isArray(current.pageIds))) throw new Error('PAGE_ASSOCIATIONS_INVALID');
   const ids = current?.version === 1 && current.bookmarkUrl === (node.url || '') && Array.isArray(current.pageIds) ? current.pageIds : [];
