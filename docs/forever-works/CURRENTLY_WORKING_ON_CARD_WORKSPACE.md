@@ -324,3 +324,10 @@ The documentation-only inheritance experiment is one useful stress test, not a g
 - Run a fresh-agent reconstruction of a bounded component with declared access and independent acceptance checks before making broader inheritance claims.
 
 All checks above remain planned unless separately linked to executed evidence. This addendum changes documentation only.
+
+
+## Focused first-page proposal — Horizons v1
+
+See [Atlas — Horizons v1](PROPOSAL_HORIZONS_V1.md) for the latest concrete initial extension-page composition: centered hero with one preview per side, search between two carousel regions, three visible tag-headed columns on wide screens, row focus/expansion, article slice and distinct article-page identity. Typed search selects distinct best matches; browsing retains the query and Enter restores the initial best-match trio. Optional note preview settings are separate from default click behavior. This is a first modular preset, not the end-state Atlas architecture.
+
+**Owner implementation clarification:** build this page's logic, components and traversal from scratch using browser standards and existing suitable Atlas interfaces. Carousel libraries may be consulted as motion references, but are not runtime dependencies or code to vendor. This supersedes the assistant's prior Swiper suggestion. Preserve this choice and its traceability/bug-investigation rationale alongside future implementation evidence.

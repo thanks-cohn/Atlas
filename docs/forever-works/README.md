@@ -58,3 +58,8 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Active design work
 
 - [CURRENTLY_WORKING_ON_CARD_WORKSPACE.md](CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) — owner-directed WIP specification for cards, shelf hierarchy, progressive expansion, ALL-tag search, composition and publishing; includes rationale, unresolved choices and future acceptance checks. [Baseline source record](../releases/BASELINE_2026-10-16.md).
+
+
+## Horizons v1 — first extension presentation
+
+- [PROPOSAL_HORIZONS_V1.md](PROPOSAL_HORIZONS_V1.md) — owner-directed first-party hero/knowledge carousel page, searchable tag columns, reversible note/article expansion and distinct article pages. Includes module/state recommendations, rationale, open decisions and planned verification. No carousel/UI library runtime is proposed; external examples may inform motion only. Specification, not shipped implementation.
