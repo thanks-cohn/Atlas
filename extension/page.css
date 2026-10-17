@@ -80,7 +80,7 @@ figcaption { margin: 10px 1px 0; line-height: 1.45; overflow-wrap: anywhere; }
   header { align-items: flex-start; }
   .header-actions { flex: 1 1 100%; justify-content: flex-start; }
   .header-actions button { padding: 8px 10px; }
-  #gallery { column-width: 100%; }
+  #gallery { column-count: 1; }
   #viewer { padding: 12px; }
   #viewer-image { height: min(65dvh, calc(100dvh - 185px)); }
 }
