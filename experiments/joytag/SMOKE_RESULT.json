@@ -1,0 +1,58 @@
+{
+  "format": "atlas.tag-suggestions.v1",
+  "model": "fancyfeast/joytag",
+  "revision": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+  "threshold": 0.4,
+  "suggestions": [
+    {
+      "tag": "fake_screenshot",
+      "score": 0.72817
+    },
+    {
+      "tag": "english_text",
+      "score": 0.59927
+    },
+    {
+      "tag": "blood",
+      "score": 0.5787
+    },
+    {
+      "tag": "multiple_girls",
+      "score": 0.54133
+    },
+    {
+      "tag": "bed",
+      "score": 0.47939
+    },
+    {
+      "tag": "multiple_boys",
+      "score": 0.47552
+    },
+    {
+      "tag": "screencap",
+      "score": 0.46434
+    },
+    {
+      "tag": "2girls",
+      "score": 0.45678
+    },
+    {
+      "tag": "photoshop_(medium)",
+      "score": 0.43679
+    },
+    {
+      "tag": "real_life_insert",
+      "score": 0.42712
+    },
+    {
+      "tag": "third-party_edit",
+      "score": 0.42574
+    }
+  ],
+  "threads": 1,
+  "device": "CPU",
+  "model_bytes": 366116154,
+  "load_seconds": 0.671,
+  "inference_seconds": 1.635,
+  "peak_process_mib": 684.9
+}

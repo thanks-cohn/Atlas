@@ -86,3 +86,7 @@ Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/
 ## Current card-workspace design
 
 [Currently Working On — Card Workspace and Publishing](docs/forever-works/CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) preserves the owner's card, shelf, tag-search, page composition and publishing decisions, reasoning, open questions and planned verification. This is a WIP specification, not shipped functionality. The pre-change source is pinned in [the baseline record](docs/releases/BASELINE_2026-10-16.md).
+
+## Optional model experiment
+
+[JoyTag single-image experiment](experiments/joytag/README.md) is isolated from the extension and companion. Baseline `base-1.3` predates it. Model suggestions require review; no automatic tagging or recommendations are enabled.
