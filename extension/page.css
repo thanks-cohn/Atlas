@@ -49,3 +49,44 @@ header { position: relative; row-gap: 8px; }
 .storage-details summary:focus-visible { outline: 2px solid #8a6d36; outline-offset: 3px; }
 .storage-details p { position: absolute; z-index: 2; right: 0; width: min(320px, 80vw); margin: 8px 0 0; padding: 16px; border: 1px solid #e6e2d9; border-radius: 6px; background: #fffefa; box-shadow: 0 8px 24px #26252112; overflow-wrap: anywhere; }
 #viewer-caption { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.6; color: #e6e0d5; }
+
+/* Responsive gallery composition: intrinsic widths rather than device assumptions. */
+html { min-width: 0; }
+body { min-width: 0; overflow-wrap: break-word; }
+header { gap: clamp(8px, 1.5vw, 20px); }
+header > strong { flex: 0 0 auto; }
+.header-actions { min-width: 0; }
+main { min-width: 0; margin-block: clamp(16px, 3vw, 36px); }
+.gallery-intro { margin-block: clamp(28px, 5vw, 58px) clamp(32px, 5vw, 64px); }
+#gallery { columns: auto; column-width: 260px; column-gap: clamp(14px, 2.5vw, 28px); }
+#gallery figure { max-width: 100%; margin-bottom: clamp(22px, 3vw, 36px); }
+.gallery-image { min-width: 0; }
+.gallery-image img { max-width: 100%; }
+figcaption { margin: 10px 1px 0; line-height: 1.45; overflow-wrap: anywhere; }
+.image-title { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(16px, 1.45vw, 19px); line-height: 1.35; font-weight: 500; color: #282621; text-wrap: pretty; }
+.image-caption { display: block; font-family: system-ui, sans-serif; font-size: 13px; line-height: 1.55; color: #706b62; text-wrap: pretty; }
+.image-title + .image-caption { margin-top: 4px; }
+.image-editor-row { min-width: 0; flex-wrap: wrap; align-items: flex-start; }
+.image-editor-fields { flex: 1 1 250px; min-width: 0; }
+.image-editor-fields label { margin-bottom: 10px; }
+#editor { width: 100%; min-width: 0; }
+#viewer { overflow: auto; }
+.viewer-toolbar { flex-wrap: wrap; }
+#viewer-image { height: min(70dvh, calc(100dvh - 175px)); min-height: 100px; }
+.viewer-meta { text-align: center; margin: 10px auto 0; max-width: 800px; }
+#viewer-title { font: 500 clamp(18px, 3vw, 26px)/1.35 Georgia, serif; margin: 0; overflow-wrap: anywhere; }
+#viewer-caption { margin: 4px 0 0; }
+@media (max-width: 600px) {
+  header { align-items: flex-start; }
+  .header-actions { flex: 1 1 100%; justify-content: flex-start; }
+  .header-actions button { padding: 8px 10px; }
+  #gallery { column-width: 100%; }
+  #viewer { padding: 12px; }
+  #viewer-image { height: min(65dvh, calc(100dvh - 185px)); }
+}
+@media (max-width: 360px) {
+  main { padding-inline: 14px; }
+  header { padding-inline: 14px; }
+  .gallery-intro { margin-block: 24px 32px; }
+  .viewer-toolbar { gap: 6px; }
+}
