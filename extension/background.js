@@ -115,7 +115,7 @@ function nativeError(error) {
   if (/not found|not registered|specified native|host.*missing/i.test(message))
     return fail(
       "NEEDS_INSTALL",
-      "Install the ATLAS companion once, then connect it here.",
+      "The native host registration or executable is unavailable. If Atlas is already installed, open debug.exe and repair its Chrome connection.",
     );
   if (
     /forbidden|not allowed|unauthorized|unenrolled|revoked|pair/i.test(message)

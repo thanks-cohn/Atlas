@@ -38,7 +38,7 @@ class WindowsInstallationTests(unittest.TestCase):
         result = self.install_runtime()
         manifest = json.loads(Path(result['paths'][2]).read_text())
         self.assertEqual(manifest['allowed_origins'], ['chrome-extension://' + self.extension + '/'])
-        self.assertEqual(manifest['path'], str(self.directory / 'atlas-native.exe'))
+        self.assertEqual(manifest['path'], str(self.directory / ('atlas-native-' + self.install._digest(self.binary)[:20] + '.exe')))
         self.assertEqual(self.install._registration(self.registry), result['paths'][2])
         from atlas_companion.windows_state import WindowsState
         state = WindowsState(self.state)
@@ -82,6 +82,35 @@ class WindowsInstallationTests(unittest.TestCase):
         self.binary.write_bytes(b'not PE')
         with self.assertRaises(ValueError):
             self.install_runtime()
+
+
+class WindowsImageUpdateDecisionTests(unittest.TestCase):
+    """Portable installer decisions only; Windows image locks need Windows CI."""
+    def test_repair_keeps_identical_native_image_and_upgrade_uses_a_new_path(self):
+        from types import SimpleNamespace
+        from atlas_companion import windows_install as install
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);binary=root/'source.exe';binary.write_bytes(b'MZfirst')
+            app=root/'app';state=root/'state';registration=[None]
+            def secure(path): Path(path).mkdir(parents=True,exist_ok=True)
+            def registry(key,value=None,remove=False):
+                if value is not None: registration[0]=str(value)
+                return registration[0]
+            fake_state=Mock(return_value=SimpleNamespace(protect_path=lambda path:None,pair=lambda identity:None,close=lambda:None))
+            with patch.object(install.sys,'platform','win32'), patch.object(install,'_state_api',return_value=(fake_state,secure)), patch.object(install,'_registration',side_effect=registry), patch.object(install,'_quiesce'):
+                result=install.install_runtime('a'*32,state_dir=state,install_dir=app,binary=binary)
+                manifest=Path(result['paths'][2]);first=Path(json.loads(manifest.read_text())['path'])
+                original_unlink=install._unlink
+                def forbid_running(path,**kwargs):
+                    if Path(path)==first: raise PermissionError('simulated running image')
+                    return original_unlink(path,**kwargs)
+                with patch.object(install,'_unlink',side_effect=forbid_running):
+                    install.install_runtime('a'*32,state_dir=state,install_dir=app,binary=binary,upgrade=True)
+                    binary.write_bytes(b'MZsecond')
+                    install.install_runtime('a'*32,state_dir=state,install_dir=app,binary=binary,upgrade=True)
+                second=Path(json.loads(manifest.read_text())['path'])
+                self.assertNotEqual(first,second);self.assertEqual(first.read_bytes(),b'MZfirst');self.assertEqual(second.read_bytes(),b'MZsecond')
 
 
 class WindowsSupervisorContractTests(unittest.TestCase):

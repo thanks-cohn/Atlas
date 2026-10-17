@@ -32,6 +32,16 @@ def launch_arguments(arguments, executable):
     return arguments
 
 
+def native_arguments(arguments, executable):
+    """Only the exact native image names accept Chrome's fixed origin invocation."""
+    if re.fullmatch(r'atlas-native(?:-[a-f0-9]{20})?\.exe', Path(executable).name.lower()) and arguments and arguments[0].startswith('chrome-extension://'):
+        origin = arguments[0]
+        if len(arguments) > 2 or (len(arguments) == 2 and not re.fullmatch(r'--parent-window=\d+', arguments[1])):
+            raise ValueError('Invalid native browser invocation.')
+        return ['--native', str(Path(executable).with_name('native.json')), origin]
+    return arguments
+
+
 def main(arguments=None):
     if os.name != 'nt':
         raise OSError('This entry requires an actual Windows host.')
@@ -57,11 +67,7 @@ def main(arguments=None):
         from .windows_supervisor import main as supervisor_main
         return supervisor_main(['--state-dir', receipt['state_dir'], '--extension-id', receipt['extension_id'],
                                 '--port', '17892', 'run'])
-    if Path(sys.executable).name.lower() == 'atlas-native.exe' and arguments and arguments[0].startswith('chrome-extension://'):
-        origin = arguments[0]
-        if len(arguments) > 2 or (len(arguments) == 2 and not re.fullmatch(r'--parent-window=\d+', arguments[1])):
-            raise ValueError('Invalid native browser invocation.')
-        arguments = ['--native', str(Path(sys.executable).with_name('native.json')), origin]
+    arguments = native_arguments(arguments, sys.executable)
     if arguments and arguments[0] == '--native':
         from atlas_native.__main__ import main as native_main
         sys.argv = [sys.argv[0], *arguments[1:]]

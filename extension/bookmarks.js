@@ -228,7 +228,7 @@ function renderPreview() {
         if(page.kind==='pinboard') await withPageLock(()=>removePinboard(chrome.storage.local,page.id));
         else await withPageLock(() => deletePage(chrome.storage.local, page.id, page.revision, saveLibraryPage));
         await loadLocalItems(node);
-      } catch (error) { report(error.code || 'GALLERY_DELETE_FAILED', 'Could not confirm deletion. Reconnect the companion and refresh before trying again.'); remove.disabled = false; }
+      } catch (error) { report(error.code || 'GALLERY_DELETE_FAILED', 'Could not confirm deletion. Open Activity & recovery → Reconnect companion or Open Debug Helper, then refresh before trying again.'); remove.disabled = false; }
     };
     row.append(link, remove); host.append(row);
   }
@@ -354,7 +354,7 @@ function leave() {
   $('bookmarks-open').removeAttribute('aria-current');
 }
 // Existing file navigation keeps ownership of its own controls and state.
-for (const id of ['home','activity','library','add-location']) $(id).addEventListener('click',leave);
+for (const id of ['home','library','add-location']) $(id).addEventListener('click',leave);
 $('roots').addEventListener('click', leave);
 $('bookmarks-refresh').onclick = refresh;
 $('bookmarks-up').onclick = () => { if (focused) { returnFromPreview(); return; } const id = nodes.get(folder)?.parentId; if (id !== undefined) navigate(id); };

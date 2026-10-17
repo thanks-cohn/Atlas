@@ -55,7 +55,7 @@ def main():
             src = state.grant(source, writable=True); dst = state.grant(target, writable=True)
             def connect():
                 frame = b'{"action":"connect"}'
-                proc = subprocess.run([str(app / 'atlas-native.exe'), origin + '/'],
+                proc = subprocess.run([json.loads(Path(receipt['manifest']).read_text())['path'], origin + '/'],
                     input=struct.pack('<I', len(frame)) + frame, env=env, capture_output=True, timeout=35)
                 if proc.returncode:
                     # Only diagnostics for this disposable installed fixture. Never

@@ -46,6 +46,14 @@ async function load() {
   const status = node("p", "Loading activity…");
   status.setAttribute("role", "status");
   dialog.append(status);
+  const recovery=node('div');recovery.className='activity-recovery-controls';
+  const reconnect=node('button','Reconnect companion'),debug=node('button','Open Debug Helper');
+  const launchStatus=node('p','');launchStatus.setAttribute('role','status');
+  const fallback=node('details'),summary=node('summary','Helper will not open?');fallback.append(summary,node('p','Run debug.exe from your downloaded Atlas companion folder. Choose Chrome connection → Install / repair, then return here and reconnect. Chrome cannot launch an executable if its native host registration is missing or broken.'));
+  const identity=node('code',chrome.runtime.id);fallback.append(node('p','Your exact extension ID:'),identity);
+  reconnect.onclick=async()=>{reconnect.disabled=true;launchStatus.textContent='Reconnecting…';try{const response=await chrome.runtime.sendMessage({type:'native-connect'});if(!response?.ok)throw Error((response?.error?.code || 'RECONNECT_FAILED')+': '+(response?.error?.message || 'Could not reconnect.'));loading=false;await load();window.dispatchEvent(new CustomEvent('atlas:refresh'));}catch(error){launchStatus.textContent=error.message;fallback.open=true;}finally{reconnect.disabled=false;}};
+  debug.onclick=async()=>{debug.disabled=true;launchStatus.textContent='Opening the installed debug helper…';try{const response=await chrome.runtime.sendMessage({type:'native-manage'});if(!response?.ok)throw Error((response?.error?.code || 'DEBUG_LAUNCH_FAILED')+': '+(response?.error?.message || 'Could not launch the native helper.'));launchStatus.textContent='Debug helper launch requested. Check your desktop/taskbar; repair the connection there, then reconnect here.';}catch(error){launchStatus.textContent=error.message;fallback.open=true;}finally{debug.disabled=false;}};
+  recovery.append(reconnect,debug,launchStatus,fallback);dialog.append(recovery);
   try {
     const [{ receipts }, { grants }] = await Promise.all([
       api("/v1/receipts"),

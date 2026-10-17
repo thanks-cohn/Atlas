@@ -210,7 +210,7 @@ def main():
         if not state.known_origin(origin):
             raise APIError('NEEDS_PAIRING', 'Extension is not enrolled.')
         if message['action'] == 'manage':
-            subprocess.Popen(command('--desktop', '--state-dir', str(state.directory)),
+            subprocess.Popen(command('--desktop', *(['--advanced'] if os.name == 'nt' else []), '--state-dir', str(state.directory)),
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                              close_fds=True, env=child_environment(), **launch_options())
             response = {'ok': True, 'state': 'MANAGE_OPENED'}

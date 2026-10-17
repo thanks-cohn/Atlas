@@ -49,7 +49,7 @@ const context={...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesMod
 vm.runInNewContext(read('bookmarks.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 els.get('bookmarks-open').onclick();await tick();
-assert.equal(classes.has('bookmarks-mode'),true);
+assert.equal(classes.has('bookmarks-mode'),true);assert.equal(els.get('activity')?.handlers.click,undefined,'Activity must not exit the bookmark workspace');
 assert.equal(els.get('bookmarks-list').children.length,1);
 // Folder title navigates once; URL title navigates current tab once.
 await els.get('bookmarks-list').children[0].children[1].onclick();await tick();

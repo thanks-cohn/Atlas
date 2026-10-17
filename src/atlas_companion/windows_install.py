@@ -115,7 +115,6 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
     secure_directory(directory)
     state_dir = Path(state_dir or Path(os.environ['LOCALAPPDATA']) / 'Atlas').absolute()
     config, manifest = directory / 'native.json', directory / (HOST + '.json')
-    native = directory / 'atlas-native.exe'
     receipt_path = directory / 'installation.json'
     source = Path(binary or sys.executable)
     if not (binary or getattr(sys, 'frozen', False)):
@@ -124,6 +123,7 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
         raise ValueError('Runtime must be a Windows PE executable')
     digest = _digest(source)
     runtime = directory / ('atlas-' + digest[:20] + '.exe')
+    native = directory / ('atlas-native-' + digest[:20] + '.exe')
     outputs = [config, manifest, native]
     previous = None
     if receipt_path.exists():
@@ -159,6 +159,9 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
     created = []
     try:
         for path, data in documents.items():
+            encoded = data.encode('utf-8') if isinstance(data, str) else data
+            if path.exists() and path.read_bytes() == encoded:
+                continue  # Repair does not unlink a running identical executable.
             if path.exists():
                 _unlink(path)
             created.append(path)
