@@ -1,3 +1,4 @@
+import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,visibleBlocks} from './pinboard-model.js';
 import {COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
@@ -14,7 +15,7 @@ function link(node,label){const a=el('a',label);a.href=node.url;a.target='_blank
 function pickImage(node){selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;$('detail-image').src=imageFor(node);$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...metadata(node).tags.map(tag=>{const span=el('span',tag);span.className='tag';return span;}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
 function card(node){
-  const article=el('article');article.className='pin';const image=imageFor(node);
+  const article=el('article');article.className='pin';article.atlasNode=node;const image=imageFor(node);
   if(image){
     const button=el('button');button.className='pin-visual';button.setAttribute('aria-label','Preview '+(node.title || node.url));
     const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{button.classList.add('is-ready');scheduleWindow();};img.src=image;button.onclick=()=>openDetail(node);
@@ -23,7 +24,7 @@ function card(node){
   }else emptyCard(article,node);
   return article;
 }
-function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);}
+function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url);url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button','Fetch');fetch.className='fetch-one';fetch.setAttribute('aria-label','Fetch cover for '+(node.title || node.url));fetch.onclick=()=>coverFetch.request(node);article.append(fetch);}
 function localScroll(){return Math.max(0,-$('pins').getBoundingClientRect().top);}
 function columns(){const width=$('pins').clientWidth || 1100;return window.innerWidth<=540 ? 2 : Math.max(1,Math.min(5,Math.floor((width+22)/232)));}
 function estimateBlocks(){const cols=columns();estimates=Array.from({length:Math.ceil(items.length/BATCH)},(_,i)=>Math.max(80,items.slice(i*BATCH,(i+1)*BATCH).reduce((sum,node)=>sum+(imageFor(node)?330:85),0)/cols));}
@@ -48,6 +49,7 @@ function renderWindow(){
   // Move only when the block range changes; repeated scroll events keep existing image nodes.
   const wanted=[topSpacer,...ordered,bottomSpacer];const current=[...$('pins').children];
   if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
+  coverFetch.discover();
   const shown=Math.max(0,Math.min(items.length,plan.last*BATCH)-plan.first*BATCH);
   status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : 'No matching bookmarks. Try another collection or turn off the image filter.');
 }
@@ -71,7 +73,7 @@ async function refresh(){
     render();
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
-$('folder').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>render(),160);};
+$('folder').onchange=()=>{coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{coverFetch.stop();clearTimeout(searchTimer);searchTimer=setTimeout(()=>render(),160);};
 $('refresh').onclick=refresh;
 $('images-only').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();saveSettings();};
 $('card-limit').onchange=()=>{limit=cardLimit($('card-limit').value);renderWindow();saveSettings();};
@@ -102,6 +104,19 @@ $('image-file').onchange=async()=>{
     await saveImage(node,image);
   }catch(error){status((error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Try a smaller image; existing bookmarks are unchanged.');}
 };
+const coverFetch=installCoverFetch({
+  getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim()]),
+  getNodes:()=>pinItems(roots,$('folder').value,$('search').value),
+  getMounted:()=>[...blocks.values()].flatMap(block=>[...block.children].map(element=>({element,node:element.atlasNode}))),
+  hasCover:node=>!!imageFor(node),raster:rasterImage,
+  saveCover:async(node,image)=>navigator.locks.request('atlas-pages-v1',async()=>{
+    const current=await chrome.bookmarks.get(node.id);if(current[0]?.url!==node.url)return false;
+    const latest=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
+    if(bookmarkCover(node,latest)){covers=latest;return false;}
+    const next=setBookmarkCover(latest,node,image);await chrome.storage.local.set({[COVER_KEY]:next});covers=next;return true;
+  }),
+  onSaved:()=>render()
+});
 async function start(){
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;}catch{}
   if('ResizeObserver' in window)resizeObserver=new ResizeObserver(scheduleWindow);

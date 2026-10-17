@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "minimum_chrome_version": "116",
   "name": "ATLAS \u00b7 Resource Explorer",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "Explore and organize explicitly authorized local folders with the separately installed ATLAS companion.",
   "permissions": [
     "storage",
@@ -24,6 +24,10 @@
     "default_path": "explorer.html"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; frame-src blob:; connect-src http://127.0.0.1:17892"
-  }
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src blob:; connect-src http: https:"
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }
