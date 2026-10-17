@@ -32,7 +32,7 @@ class El {
  addEventListener(k,fn){this.handlers[k]=fn;}focus(){}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
 }
 const els=new Map(),events={};const document={body:new El('body'),getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
-let nativeFail=false;let sequence=0;const context={...store,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> (++sequence===1?'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb':'cccccccc-cccc-cccc-cccc-cccccccccccc')},window:{addEventListener:(k,fn)=>events[k]=fn}};
+let nativeFail=false;let sequence=0;const context={...store,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> 'bbbbbbbb-bbbb-bbbb-bbbb-'+String(++sequence).padStart(12,'0')},window:{addEventListener:(k,fn)=>events[k]=fn}};
 vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(r=>setTimeout(r,0));await tick();
 assert.equal(els.get('title').textContent,'My Gallery');assert.equal(els.get('gallery').children.length,2);
@@ -75,4 +75,11 @@ for (const style of store.GALLERY_STYLES) {
 // Cancel a style change: cached and durable state must not be overwritten.
 els.get('edit').onclick();els.get('style-input').value='solstice';els.get('cancel').onclick();
 assert.equal((await store.readPage(storage,id)).galleryStyle,'nocturne');
+// A 20-file batch can fill the remaining slots without the old per-image budget.
+nativeFail=false;els.get('edit').onclick();
+els.get('images-input').files=Array.from({length:20},(_,i)=>({size:1000,type:'image/png',name:'layout-'+i+'.png'}));
+await els.get('images-input').onchange();
+assert.match(els.get('import-status').textContent,/20 image/);
+await els.get('editor').onsubmit({preventDefault(){}});
+assert.equal((await store.readPage(storage,id)).images.length,24);
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

@@ -98,10 +98,24 @@ $('images-input').onchange = async () => {
   if (draftImages.length + files.length > 24) { $('status').textContent = 'IMAGE_LIMIT: Use up to 24 images in this gallery.'; $('images-input').value = ''; return; }
   loadingImages = true; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = true; renderImageEditor();
   try {
+    // Share the preview budget across the complete collection, not each image.
+    // Keep originals separate; changing a preview never replaces original bytes.
+    const count = draftImages.filter(image => image.sourceKind === 'local').length + files.length;
+    const maxChars = Math.min(700000, Math.floor(3500000 / count));
+    const prepared = [];
+    for (const existing of draftImages) {
+      const image = {...existing};
+      if (image.sourceKind === 'local' && image.source.length > maxChars) {
+        const encoded = image.source.split(',')[1], binary = atob(encoded);
+        const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+        image.source = await rasterImage(new Blob([bytes]), maxChars);
+      }
+      prepared.push(image);
+    }
     const additions = [];
-    for (const file of files) { const image = {id: crypto.randomUUID(), source: await rasterImage(file), sourceKind: 'local', title: '', caption: ''}; additions.push(image); originalFiles.set(image.id,file); }
-    if (JSON.stringify([...draftImages, ...additions]).length > 3900000) throw Object.assign(new Error('This gallery preview cache is full. Add fewer images or use smaller previews.'),{code:'GALLERY_PREVIEW_BUDGET'});
-    draftImages.push(...additions); $('import-status').textContent = `${files.length} image(s) added to this draft: ${files.map(file=>file.name || 'Selected image').join(', ')}. Save to Atlas Library to keep originals outside Chrome.`; $('status').textContent = 'Images are staged, not yet saved to disk.';
+    for (const file of files) { const image = {id: crypto.randomUUID(), source: await rasterImage(file, maxChars), sourceKind: 'local', title: '', caption: ''}; additions.push(image); originalFiles.set(image.id,file); }
+    if (JSON.stringify([...prepared, ...additions]).length > 3900000) throw Object.assign(new Error('These previews could not fit in the gallery. Your selected originals have not been changed.'),{code:'GALLERY_PREVIEW_BUDGET'});
+    draftImages = [...prepared, ...additions]; $('import-status').textContent = `${files.length} image(s) added to this draft: ${files.map(file=>file.name || 'Selected image').join(', ')}. Save to Atlas Library to keep originals outside Chrome.`; $('status').textContent = 'Images are staged, not yet saved to disk.';
   } catch (error) { const message = `${error.code || error.message || 'IMAGE_ADD_FAILED'}: ${error.code ? error.message : 'The selected batch could not be prepared.'} Your previous images remain.`; $('status').textContent = message; $('import-status').textContent = message; }
   finally { loadingImages = false; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = false; $('images-input').value = ''; renderImageEditor(); }
 };

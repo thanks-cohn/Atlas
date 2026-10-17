@@ -289,3 +289,7 @@ Owner screenshot confirmed stage image touched top and controls/labels sat flush
 ## 2026-10-17 — Nocturne editorial rail composition (0.1.13)
 
 Owner screenshot still felt basic: oversized heading and disconnected navigation left broad unused space. Replaced standalone full-width thumbnail footer with a unified title/caption/arrows/contact-strip rail alongside intrinsic uncropped image. Compact collection heading, subtle graphite light falloff, warm-paper edit action, hover/focus expand affordance; responsive stacking retained. Source is a composition change, not a claim of actual Chrome screenshot proof. Gallery and bookmark checks PASS (DOM/API doubles), package PASS. No native/data/helper change; previous full-native-suite limitations unchanged. Actual updated visual acceptance NOT_RUN. See GALLERY_STUDIO_V1.md addendum.
+
+## 2026-10-17 — make twenty-image import practical (0.1.14)
+
+Owner clarified 20-image layout test is goal, not a 200MB preference. Shared gallery preview budget now allocated over current+incoming local works, with adaptive re-encoding of oversized existing previews and finer encoder fallback steps. Originals/identity/annotations unchanged; batch failure leaves prior draft intact. 20-encoder and 20-file import-to-24/save tests PASS (browser primitives/DOM doubles), existing gallery tests PASS, package PASS. Current 24-image and 10MiB/input limits remain; no helper change. Actual owner batch/Chrome NOT_RUN. See GALLERY_STUDIO_V1.md for quality tradeoff and future original-resolution loading gap.
