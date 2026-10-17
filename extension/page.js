@@ -9,12 +9,43 @@ let page = null, editing = false, draftImages = [], viewerIndex = 0, loadingImag
 const originalFiles = new Map();
 const element = (tag, text = '') => { const el = document.createElement(tag); el.textContent = text; return el; };
 let galleryScrollY = 0;
-function openStory(index) {
+let openingMotion = [];
+let openingGeneration = 0;
+function cancelOpeningMotion() { openingGeneration++; for (const animation of openingMotion) animation.cancel(); openingMotion = []; }
+function openStory(index, sourceImage) {
+  const origin = sourceImage?.getBoundingClientRect?.();
   galleryScrollY = window.scrollY || 0;
   document.documentElement.setAttribute('data-reader-open','');
   showImage(index); $('viewer').showModal();
+  if (!origin || !origin.width || !origin.height || !document.body.classList.contains('solstice') || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const hero = $('viewer-image');
+  const generation = openingGeneration;
+  const reveal = () => {
+    if (generation !== openingGeneration || !$('viewer').open || viewerIndex !== index || !hero.animate) return;
+    const target = hero.getBoundingClientRect();
+    if (!target.width || !target.height) return;
+    // Compare the painted image, rather than its contain/letterbox bounds.
+    const fit = (rect, image) => {
+      const ratio = image.naturalWidth / image.naturalHeight;
+      const width = Math.min(rect.width, rect.height * ratio);
+      return {width, x:rect.left + rect.width/2, y:rect.top + rect.height/2};
+    };
+    const from = fit(origin, sourceImage), to = fit(target, hero);
+    if (!Number.isFinite(from.width/to.width)) return;
+    const timing = {duration:520,easing:'cubic-bezier(.22,1,.36,1)',fill:'none'};
+    openingMotion.push(hero.animate([
+      {transform:`translate(${from.x-to.x}px,${from.y-to.y}px) scale(${from.width/to.width})`,transformOrigin:'50% 50%'},
+      {transform:'translate(0,0) scale(1)',transformOrigin:'50% 50%'}
+    ], timing));
+    openingMotion.push($('viewer').animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#17181e'}],{duration:480,easing:'ease-out'}));
+    openingMotion.push($('viewer-reading').querySelector('.reader-heading').animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:350,delay:140,fill:'backwards',easing:'ease-out'}));
+    openingMotion.push($('viewer-article').animate([{opacity:0},{opacity:1}],{duration:350,delay:200,fill:'backwards'}));
+  };
+  if (hero.complete && hero.naturalWidth) reveal();
+  else hero.addEventListener('load',reveal,{once:true});
 }
 function showImage(index) {
+  cancelOpeningMotion();
   if (!page.images.length) return;
   viewerIndex = (index + page.images.length) % page.images.length;
   const image = page.images[viewerIndex];
@@ -65,7 +96,7 @@ function renderCollection(container, images, style, preview = false) {
     const figure = element('figure'), button = element('button'); button.className = 'gallery-image'; button.type = 'button'; button.setAttribute('aria-label', `Expand ${image.title || image.caption || 'image ' + (index + 1)}`);
     const img = element('img'); img.referrerPolicy = 'no-referrer'; img.src = image.source; img.alt = image.title || image.caption || page.title; img.loading = 'lazy'; img.decoding = 'async';
     img.onerror = () => { img.hidden = true; button.append(element('span', 'Image unavailable · Edit Gallery to replace its source')); }; button.append(img);
-    button.onclick = () => { if (!preview) {openStory(index);} };
+    button.onclick = () => { if (!preview) {openStory(index, img);} };
     const figcaption = element('figcaption'); const number = element('span', String(index+1).padStart(2,'0')); number.className = 'work-number'; figcaption.append(number);
     const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption || image.article) { const description = element('span', image.article ? firstSentence(image.article) : image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); container.append(figure);
   });
@@ -188,7 +219,7 @@ $('viewer').addEventListener('keydown', event => {
     return;
   }
   if (['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); showImage(viewerIndex + (event.key === 'ArrowLeft' ? -1 : 1)); } });
-$('viewer').addEventListener('close', () => { $('viewer-image').removeAttribute('src'); document.documentElement.removeAttribute('data-reader-open'); window.scrollTo({top:galleryScrollY,behavior:'instant'}); });
+$('viewer').addEventListener('close', () => { cancelOpeningMotion(); $('viewer-image').removeAttribute('src'); document.documentElement.removeAttribute('data-reader-open'); window.scrollTo({top:galleryScrollY,behavior:'instant'}); });
 $('publishing-check').onclick = () => { const plan = publicationReadiness(page); $('publish-status').textContent = `${plan.localImages} local image(s) require transfer; ${plan.referencedImages} image(s) already use hosted URLs.`; $('publish-dialog').showModal(); };
 $('close-publish').onclick = () => $('publish-dialog').close();
 window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images) || $('style-input').value !== displayGalleryStyle(page.galleryStyle))) { event.preventDefault(); event.returnValue = ''; } });

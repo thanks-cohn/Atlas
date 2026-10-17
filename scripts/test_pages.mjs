@@ -184,3 +184,27 @@ assert.ok(!read('page.html').includes('Story template'));
 assert.equal(els.get('text').children.length,2);
 assert.equal(els.get('text').children[0].textContent,DEMO_COLLECTION.text.split('\n\n')[0]);
 assert.equal(els.get('text').children[1].textContent,DEMO_COLLECTION.text.split('\n\n')[1]);
+
+// Real opening-motion branch: interpolation, cancellation and reduced-motion fallback.
+const motionCalls=[];
+const animate=(frames,options)=>{const animation={cancelled:false,cancel(){this.cancelled=true}};motionCalls.push({frames,options,animation});return animation;};
+document.body.classList={contains:name=>name==='solstice'};
+context.window.matchMedia=()=>({matches:false});
+const hero=els.get('viewer-image');hero.complete=true;hero.naturalWidth=1200;hero.naturalHeight=800;
+hero.getBoundingClientRect=()=>({left:100,top:200,width:900,height:600});hero.animate=animate;
+els.get('viewer').animate=animate;els.get('viewer-article').animate=animate;
+document.getElementById('viewer-reading').querySelector=()=>({animate});
+const clicked=els.get('gallery').children[0].children[0];
+const source=clicked.children[0];source.naturalWidth=1200;source.naturalHeight=800;
+source.getBoundingClientRect=()=>({left:20,top:50,width:300,height:250});
+clicked.onclick();assert.equal(motionCalls.length,4);
+assert.match(motionCalls[0].frames[0].transform,/scale\(0\.333/);
+els.get('next').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
+els.get('close-viewer').onclick();
+context.window.matchMedia=()=>({matches:true});
+clicked.onclick();assert.equal(motionCalls.length,4);
+els.get('close-viewer').onclick();
+context.window.matchMedia=()=>({matches:false});
+hero.complete=false;
+clicked.onclick();const staleLoad=hero.handlers.load;
+els.get('close-viewer').onclick();staleLoad();assert.equal(motionCalls.length,4);

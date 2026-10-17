@@ -364,3 +364,11 @@ html[data-presentation-preview] body > header #status { display:none !important;
 #viewer-article { width:100%; max-width:980px; }
 .reader-footer { max-width:980px; }
 @media(max-width:600px){#viewer-reading{padding:30px 22px 50px}.reader-heading{margin-bottom:26px}#viewer #viewer-title{font-size:40px}#viewer-image{max-height:50svh}.reader-figure{margin-bottom:30px}}
+
+/* Expanded reader masthead: Stories is the editorial signature. */
+.reader-wordmark { display:inline-flex; align-items:center; gap:14px; white-space:nowrap; }
+.reader-atlas { font:650 11px/1 system-ui,sans-serif; letter-spacing:.12em; color:#b5b0bc; }
+.reader-slash { font:300 24px/1 system-ui,sans-serif; color:#77707e; }
+.reader-stories { font:600 clamp(25px,3vw,36px)/1 'Atlas Newsreader',Georgia,serif; letter-spacing:.015em; color:#f0ede6; }
+#viewer .viewer-toolbar { flex-wrap:wrap; }
+@media(max-width:600px){.reader-wordmark{gap:9px}.reader-atlas{font-size:9px}.reader-slash{font-size:20px}.reader-stories{font-size:25px}}
