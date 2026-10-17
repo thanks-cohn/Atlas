@@ -75,14 +75,17 @@ function addItem(node) {
   const templateLabel = element('label', 'Template'), template = document.createElement('select');
   for (const choice of PAGE_TEMPLATES) { const option = element('option', choice.label); option.value = choice.id; option.disabled = !choice.available; template.append(option); }
   template.value = 'gallery'; templateLabel.append(template);
+  const styleLabel = element('label', 'Gallery style'), style = document.createElement('select');
+  for (const [value, label] of [['atelier','Atelier — the exhibition'],['fieldnotes','Fieldnotes — the visual essay'],['nocturne','Nocturne — the screening room']]) { const option = element('option',label); option.value=value; style.append(option); }
+  style.value='atelier'; styleLabel.append(style);
   const message = element('p', ''), save = element('button', 'Create Page'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
-  form.append(kind, titleLabel, templateLabel, message, save, cancel); dialog.append(form);
+  form.append(kind, titleLabel, templateLabel, styleLabel, message, save, cancel); dialog.append(form);
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = true;
     try {
       if (!nodes.has(node.id) || nodes.get(node.id).url !== node.url) throw new Error('BOOKMARK_CHANGED');
-      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value}, crypto.randomUUID()));
+      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value, galleryStyle: style.value}, crypto.randomUUID()));
       await loadLocalItems(node); dialog.close();
     } catch { message.textContent = 'PAGE_CREATE_FAILED: Enter a title and check available local storage. Your existing pages are unchanged.'; }
     finally { save.disabled = false; }

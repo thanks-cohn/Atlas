@@ -1,6 +1,7 @@
 // Page content and bookmark placement are separate, versioned extension-local records.
 export const PAGE_PREFIX = 'atlas.page.v1.';
 export const ITEM_PREFIX = 'atlas.items.v1.';
+export const GALLERY_STYLES = Object.freeze(['atelier', 'fieldnotes', 'nocturne']);
 export const PAGE_TEMPLATES = Object.freeze([{id: 'gallery', label: 'Gallery', available: true}, {id: 'horizons-v1', label: 'Horizons v1 — planned', available: false}]);
 export function publicImageURL(value) {
   try {
@@ -19,6 +20,7 @@ export function pageKey(id) {
 }
 export function validatePage(page) {
   if (page?.version !== 1 || page.kind !== 'page' || page.template !== 'gallery' ||
+      (page.galleryStyle !== undefined && !GALLERY_STYLES.includes(page.galleryStyle)) ||
       typeof page.title !== 'string' || !page.title.trim() || page.title.length > 200 ||
       typeof page.text !== 'string' || page.text.length > 100000 || !Number.isSafeInteger(page.revision) || page.revision < 1) throw new Error('PAGE_DATA_INVALID');
   if (!Array.isArray(page.images) || page.images.length > 24 || page.images.some(image =>
@@ -44,8 +46,8 @@ export async function linkedPages(storage, node) {
   for (const id of record.pageIds) { const page = await readPage(storage, id); if (page) pages.push(page); }
   return pages;
 }
-export async function createLinkedPage(storage, node, {title, template = 'gallery'}, id) {
-  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text: '', template, images: [], revision: 1, sourceBookmark: {id: node.id, url: node.url || ''}});
+export async function createLinkedPage(storage, node, {title, template = 'gallery', galleryStyle = 'atelier'}, id) {
+  const page = validatePage({version: 1, id, kind: 'page', title: title.trim(), text: '', template, galleryStyle, images: [], revision: 1, sourceBookmark: {id: node.id, url: node.url || ''}});
   const key = ITEM_PREFIX + node.id, current = (await storage.get(key))[key];
   if (current && (current.version !== 1 || !Array.isArray(current.pageIds))) throw new Error('PAGE_ASSOCIATIONS_INVALID');
   const ids = current?.version === 1 && current.bookmarkUrl === (node.url || '') && Array.isArray(current.pageIds) ? current.pageIds : [];
@@ -54,11 +56,11 @@ export async function createLinkedPage(storage, node, {title, template = 'galler
   await storage.set({[pageKey(id)]: page, [key]: {version: 1, bookmarkUrl: node.url || '', pageIds: [...ids, id]}});
   return page;
 }
-export async function updatePage(storage, id, {title, text, images}, expectedRevision, persist) {
+export async function updatePage(storage, id, {title, text, images, galleryStyle}, expectedRevision, persist) {
   const current = await readPage(storage, id);
   if (!current) throw new Error('PAGE_NOT_FOUND');
   if (current.revision !== expectedRevision) throw new Error('PAGE_EDIT_CONFLICT');
-  const next = validatePage({...current, title: title.trim(), text, images: images ?? current.images, revision: current.revision + 1});
+  const next = validatePage({...current, title: title.trim(), text, images: images ?? current.images, galleryStyle: galleryStyle ?? current.galleryStyle ?? 'atelier', revision: current.revision + 1});
   if (persist) { const saved = await persist(next); next.libraryRevision = saved.libraryRevision; next.libraryLocation = saved.location; }
   try { await storage.set({[pageKey(id)]: next}); } catch(error) { if (persist) throw Object.assign(new Error('Saved to Atlas Library, but Chrome could not update its cache. Reload to recover the disk copy.'),{code:'PAGE_CACHE_WRITE_FAILED'}); throw error; } return next;
 }

@@ -6,6 +6,9 @@ const store=await import('data:text/javascript;base64,'+Buffer.from(read('pages-
 const data={};const storage={get:async key=>({[key]:structuredClone(data[key])}),set:async value=>Object.assign(data,structuredClone(value))};
 const id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',node={id:'17',url:'https://example.com/'};
 let page=await store.createLinkedPage(storage,node,{title:'A considered collection'},id);
+assert.equal(page.galleryStyle,'atelier');
+delete data[store.pageKey(id)].galleryStyle;
+assert.equal((await store.readPage(storage,id)).galleryStyle,undefined);
 assert.equal(page.template,'gallery');assert.equal((await store.linkedPages(storage,node))[0].id,id);
 assert.equal((await store.linkedPages(storage,{...node,url:'https://other.example/'})).length,0);
 await assert.rejects(()=>store.createLinkedPage(storage,node,{title:'Duplicate'},id),/ALREADY_EXISTS/);
@@ -26,7 +29,7 @@ class El {
  append(...v){this.children.push(...v);}replaceChildren(...v){this.children=v;}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];delete this[k];}
  addEventListener(k,fn){this.handlers[k]=fn;}focus(){}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
 }
-const els=new Map(),events={};const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
+const els=new Map(),events={};const document={body:new El('body'),getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
 let nativeFail=false;let sequence=0;const context={...store,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> (++sequence===1?'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb':'cccccccc-cccc-cccc-cccc-cccccccccccc')},window:{addEventListener:(k,fn)=>events[k]=fn}};
 vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(r=>setTimeout(r,0));await tick();
@@ -45,4 +48,29 @@ const saved=await store.readPage(storage,id);assert.equal(saved.images.length,4)
 assert.equal(els.get('title').textContent,'<script>not executed</script>');assert.equal(els.get('editor').hidden,true);
 assert.equal(els.get('gallery').children.length,4);
 nativeFail=true;els.get('edit').onclick();els.get('title-input').value='Unsaved';await els.get('editor').onsubmit({preventDefault(){}});assert.equal(els.get('editor').hidden,false);assert.equal((await store.readPage(storage,id)).title,'<script>not executed</script>');assert.match(els.get('status').textContent,/LIBRARY_OFFLINE/);
+// Style changes are presentation-only: identity, source and originals survive.
+assert.throws(()=>store.validatePage({...saved,galleryStyle:'unknown-future'}),/INVALID/);
+for (const style of store.GALLERY_STYLES) {
+  nativeFail=false;els.get('cancel').onclick();els.get('edit').onclick();
+  els.get('style-input').value=style;els.get('style-input').onchange();
+  els.get('preview-tab').onclick();assert.equal(els.get('preview').hidden,false);
+  assert.equal(els.get('preview-gallery').className,'collection-layout '+style);
+  assert.equal(els.get('preview-title').textContent,saved.title);
+  await els.get('editor').onsubmit({preventDefault(){}});
+  const switched=await store.readPage(storage,id);
+  assert.equal(switched.id,saved.id);assert.equal(switched.galleryStyle,style);
+  assert.deepEqual(switched.images,saved.images);
+  assert.equal(document.body.className,style);
+  if(style==='nocturne') {
+    const stage=els.get('gallery').children[0],image=stage.children[0].children[0];
+    assert.equal(image.src,saved.images[0].source);
+    els.get('gallery').children[1].children[0].onclick();
+    assert.equal(image.src,saved.images.at(-1).source);
+    els.get('gallery').onkeydown({key:'ArrowRight',preventDefault(){},stopPropagation(){}});
+    assert.equal(image.src,saved.images[0].source);
+  }
+}
+// Cancel a style change: cached and durable state must not be overwritten.
+els.get('edit').onclick();els.get('style-input').value='atelier';els.get('cancel').onclick();
+assert.equal((await store.readPage(storage,id)).galleryStyle,'nocturne');
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

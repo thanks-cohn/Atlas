@@ -1,0 +1,34 @@
+# Gallery Studio v1 — Atelier, Fieldnotes, Nocturne
+
+## Explicit owner purpose
+
+Replace the previous masonry gallery presentation with three original gallery styles. A gallery must be recognizably different from Atlas's Pinterest-inspired discovery pinboard: it gives a deliberately chosen collection a presentation, a sequence and room for attention. Capture durable publishing conventions of this era rather than copy a branded interface. The user should be able to add a few images and have a considered local presentation, with no layout coding. Editing must feel like a professional creative studio, not a bare upload form.
+
+“Premium tier” in this request describes presentation quality. It does not authorize a new paywall, price or entitlement rule. Existing economics proposals remain separate.
+
+## Fixed, constrained and fluid
+
+Fixed: retain page UUIDs, exact bookmark associations, titles/text, image identity/order/sources, local originals, library revisions, permission boundaries and explicit native save. Removing a work from a page does not delete its native asset. Source content is separate from presentation. Local and public URL images have the same layout behavior.
+
+Constrained: current gallery remains version 1, `kind: page`, `template: gallery`. Optional `galleryStyle` accepts `atelier`, `fieldnotes`, `nocturne`; absent means Atelier without rewriting the stored document during read. Unknown styles fail browser validation rather than silently pretending to support a future format. Switching is persisted by the existing revision-checked native-save and browser-cache sequence. The existing helper preserves this optional document field; this release needs no new native API or replacement helper.
+
+Fluid: layout, fonts, colors, sequence rhythm, future presentation profiles and editor structure. Do not confuse these first three templates with the final set of possible Atlas compositions. Horizons remains a distinct planned composition, not renamed as one of these gallery styles.
+
+## Implemented extension experience
+
+- Atelier: sequential exhibition; one large uncropped work with a separate numbered caption/title label. Narrow layouts stack the label below the image. No masonry discovery grid.
+- Fieldnotes: warm editorial visual essay; lead work with adjacent text, followed by ordered paired works and periodic full-width works. Whole image proportions are contained, not destructively cropped.
+- Nocturne: dark screening room, one contained image with title/caption below rather than overlaying potentially illegible text; looping previous/next, keyboard arrows within the focusable gallery and an accessible thumbnail filmstrip. Expanded viewer retains Left/Right and Escape.
+- Add Item → Page also offers all three gallery styles at creation, with Atelier as default.
+- Collection Studio: story panel, named style selector with explanation, local import and public URL controls; independently editable image title/caption; earlier/later/remove-from-page actions; sequence and live-preview tabs. Live preview reflects draft title/text/style/images without saving. Save explicitly commits originals and page through the existing native library. Cancel restores saved presentation. Failed save retains the editor/draft. Existing input/size/preview budgets remain in force.
+- Operational paths stay in header Storage details, feedback stays in header. No external font, CSS framework, runtime package, image demo or hosted-site script is introduced into the extension.
+
+## Demonstration Site
+
+Three separately addressable styles at https://atlas-gallery-trilogy.officialmahasbiz.chatgpt.site (Atelier root, `/fieldnotes.html`, `/nocturne.html`). First-party buildless HTML/CSS/JS; bundled illustrative Unsplash nature photographs. Hosted Site is a design demonstrator, not the extension or native library. It has its own browser IndexedDB collection and studio; uploaded browser images are not sent to a server and are not a durable backup. Site and extension intentionally have separate persistence adapters. R2, Pages publishing, cross-device sync, marketplace and membership enforcement are not delivered by this change.
+
+## Evidence and limitations
+
+Local PASS: `node scripts/test_pages.mjs` covers all three styles, absent-style legacy documents, invalid style rejection, style save/round-trip with stable identity/images, live preview, cancel, Nocturne wrap/keyboard, existing failure preservation; DOM/API doubles, not Chrome rendering. `node scripts/test_bookmarks.mjs` PASS, worker contract suite 20/20 PASS. `tests/test_library.py` 3 real HTTP/SQLite tests PASS, including optional style surviving native restart and exact image/original recovery. Reproducible unsigned extension package 0.1.9. Site JavaScript syntax and local links/assets checked. Hosted deployment success proves deployment only.
+
+Actual Chrome/screen-reader/touch/visual review NOT_RUN: Sites managed environment has no control-browser capability, so no alternate browser was installed/launched. Full Python suite outcome is in the status ledger; platform-native failure must not be hidden by passing focused tests. Next acceptance: owner opens existing page, edits all styles, saves/reloads each, checks long titles, mixed image proportions and narrow screen, then verifies offline/native recovery. Browser demo uploads remain browser-owned and must not be described as native library saves.

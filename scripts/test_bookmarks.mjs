@@ -83,10 +83,11 @@ preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').on
 const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
 const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Page title').children[0];titleControl.value='My Gallery';
 const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Template').children[0];
+const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery style').children[0];assert.equal(styleControl.value,'atelier');styleControl.value='fieldnotes';
 assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children[1].disabled,true);
 await form.onsubmit({preventDefault(){}});await tick();
 assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
-const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');
+const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');assert.equal(storedPage.galleryStyle,'fieldnotes');
 assert.equal(storedPage.title,'My Gallery');
 // Clearing Chrome cache does not destroy the separately saved native record.
 nativePages[storedPage.id]={...storedPage,libraryRevision:1};delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];

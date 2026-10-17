@@ -1,19 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Page</title><link rel="stylesheet" href="page.css"></head>
-<body>
+<body class="atelier">
   <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><div class="header-actions" role="group" aria-label="Gallery actions"><details class="storage-details"><summary>Storage details</summary><p id="library-location"></p></details><button id="backup-library" hidden>Save to Atlas Library</button><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></div><p id="status" role="status">Loading page…</p></header>
   <main>
     <article id="page" hidden><div class="gallery-intro"><p class="eyebrow">CURATED IN ATLAS</p><h1 id="title"></h1><div id="text"></div><p id="image-count"></p></div><div id="gallery" aria-label="Gallery images"></div></article>
     <form id="editor" hidden>
-      <label>Title<input id="title-input" maxlength="200" required></label>
-      <label>Text<textarea id="text-input" maxlength="100000" rows="16"></textarea></label>
-      <button id="choose-images" type="button">Choose Local Images</button><input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-      <p id="import-status" role="status">No new images selected.</p>
-      <div class="url-inputs"><label>Image URL<input id="image-url" type="url" placeholder="https://…"></label><button id="add-url" type="button">Add URL</button></div>
-      <p>Gallery template · Up to 24 images, 4 MB of saved gallery data. Local images are resized for storage. Horizons is a separate planned template.</p>
-      <div id="image-editor"></div>
-      <button id="save" type="submit">Save to Atlas Library</button><button id="cancel" type="button">Cancel</button>
+      <div class="studio-heading"><div><p class="eyebrow">ATLAS / COLLECTION STUDIO</p><h2>Make it your own.</h2><p>A collection deserves a point of view.</p></div><div class="studio-actions"><button id="cancel" type="button">Cancel</button><button id="save" type="submit" class="primary">Save to Atlas Library ↗</button></div></div>
+      <div class="studio-layout"><aside class="studio-settings">
+        <p class="eyebrow">01 / THE STORY</p>
+        <label>Collection title<input id="title-input" maxlength="200" required></label>
+        <label>Introduction<textarea id="text-input" maxlength="100000" rows="5"></textarea></label>
+        <p class="eyebrow">02 / THE PRESENTATION</p>
+        <label>Gallery style<select id="style-input"><option value="atelier">Atelier — the exhibition</option><option value="fieldnotes">Fieldnotes — the visual essay</option><option value="nocturne">Nocturne — the screening room</option></select></label>
+        <p class="studio-help" id="style-description"></p>
+        <button id="choose-images" class="image-drop" type="button">＋ Choose Local Images<span>PNG, JPEG, WebP or GIF · Up to 10 MB each</span></button><input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <p id="import-status" role="status" class="studio-help">Your originals are kept when you save to Atlas Library.</p>
+        <details class="url-disclosure"><summary>Add an image URL</summary><div class="url-inputs"><label>Public image URL<input id="image-url" type="url" placeholder="https://…"></label><button id="add-url" type="button">Add URL</button></div></details>
+        <p class="studio-help">Up to 24 images per collection. Removing an image from this page does not delete its saved original. Local previews use a 4 MB gallery budget.</p>
+      </aside><section class="studio-content"><div class="studio-tabs"><button type="button" id="sequence-tab" aria-pressed="true">Sequence &amp; details</button><button type="button" id="preview-tab" aria-pressed="false">Live preview ↗</button></div><div id="image-editor"></div><div id="preview" hidden><div class="gallery-intro"><p class="eyebrow">DRAFT PREVIEW</p><h1 id="preview-title"></h1><div id="preview-text"></div></div><div id="preview-gallery"></div></div></section></div>
     </form>
   </main>
   <dialog id="viewer" aria-label="Expanded gallery image"><div class="viewer-toolbar"><button id="previous" aria-label="Previous image">←</button><span id="viewer-count"></span><button id="next" aria-label="Next image">→</button><button id="close-viewer" aria-label="Close expanded image">Close ×</button></div><img id="viewer-image" alt=""><div class="viewer-meta"><p id="viewer-title" hidden></p><p id="viewer-caption"></p></div></dialog>

@@ -20,18 +20,48 @@ function render() {
   if (!page) return;
   document.title = page.title + ' · Atlas'; $('title').textContent = page.title; $('text').textContent = page.text;
   $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'image' : 'images'}`;
-  $('gallery').replaceChildren();
-  if (!page.images.length) {
-    const empty = element('div'); empty.className = 'gallery-empty'; empty.append(element('h2', 'A place for your collection'), element('p', 'Choose Edit Gallery to add images and tell their story.')); $('gallery').append(empty);
+  document.body.className = editing ? 'studio-mode' : (page.galleryStyle || 'atelier');
+  renderCollection($('gallery'), page.images, page.galleryStyle || 'atelier');
+}
+function renderCollection(container, images, style, preview = false) {
+  container.replaceChildren(); container.onkeydown = null; container.removeAttribute('tabindex'); container.className = 'collection-layout ' + style;
+  if (!images.length) {
+    const empty = element('div'); empty.className = 'gallery-empty'; empty.append(element('h2', 'A place for your collection'), element('p', 'Choose Edit Gallery to add images and tell their story.')); container.append(empty); return;
   }
-  page.images.forEach((image, index) => {
+  if (style === 'nocturne') {
+    let active = 0;
+    const stage = element('div'); stage.className = 'nocturne-stage';
+    const imageButton = element('button'); imageButton.type = 'button'; imageButton.className = 'cinema-image';
+    const img = element('img'); img.referrerPolicy = 'no-referrer'; imageButton.append(img);
+    const meta = element('div'); meta.className = 'cinema-meta'; const title = element('h2'), caption = element('p'), count = element('span');
+    meta.append(count, title, caption); stage.append(imageButton, meta);
+    const controls = element('div'); controls.className = 'cinema-controls';
+    const previous = element('button', '←'), next = element('button', '→'); previous.type = next.type = 'button'; previous.setAttribute('aria-label', 'Previous work'); next.setAttribute('aria-label', 'Next work');
+    const strip = element('div'); strip.className = 'cinema-strip';
+    const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || ''; caption.textContent = image.caption; count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
+    previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
+    imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { showImage(active); $('viewer').showModal(); } };
+    container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };
+    controls.append(previous,next); container.append(stage,controls,strip); update(); return;
+  }
+  images.forEach((image, index) => {
     const figure = element('figure'), button = element('button'); button.className = 'gallery-image'; button.type = 'button'; button.setAttribute('aria-label', `Expand ${image.title || image.caption || 'image ' + (index + 1)}`);
     const img = element('img'); img.referrerPolicy = 'no-referrer'; img.src = image.source; img.alt = image.title || image.caption || page.title; img.loading = 'lazy'; img.decoding = 'async';
     img.onerror = () => { img.hidden = true; button.append(element('span', 'Image unavailable · Edit Gallery to replace its source')); }; button.append(img);
-    button.onclick = () => { showImage(index); $('viewer').showModal(); };
-    figure.append(button); if (image.title || image.caption) { const figcaption = element('figcaption'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; figcaption.append(heading); } if (image.caption) { const description = element('span', image.caption); description.className = 'image-caption'; figcaption.append(description); } figure.append(figcaption); } $('gallery').append(figure);
+    button.onclick = () => { if (!preview) {showImage(index); $('viewer').showModal();} };
+    const figcaption = element('figcaption'); const number = element('span', String(index+1).padStart(2,'0')); number.className = 'work-number'; figcaption.append(number);
+    const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption) { const description = element('span', image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); container.append(figure);
   });
 }
+function renderPreview() {
+  $('preview-title').textContent = $('title-input').value;
+  $('preview-text').textContent = $('text-input').value;
+  $('preview').className = $('style-input').value;
+  renderCollection($('preview-gallery'), draftImages, $('style-input').value, true);
+  const descriptions = {atelier:'Quiet space, whole images, and elegant exhibition labels.',fieldnotes:'A visual essay with a generous opening work and an editorial sequence.',nocturne:'A focused screening room with a single work, a filmstrip, and arrow navigation.'};
+  $('style-description').textContent = descriptions[$('style-input').value];
+}
+
 function renderImageEditor() {
   $('image-editor').replaceChildren();
   draftImages.forEach((image, index) => {
@@ -39,9 +69,11 @@ function renderImageEditor() {
     const thumbnail = element('img'); thumbnail.referrerPolicy = 'no-referrer'; thumbnail.src = image.source; thumbnail.alt = 'Selected image ' + (index + 1);
     const fields = element('div'); fields.className = 'image-editor-fields'; const titleLabel = element('label', 'Image title (optional)'), titleInput = element('input'); titleInput.maxLength = 200; titleInput.disabled = loadingImages; titleInput.value = image.title || ''; titleInput.oninput = () => { image.title = titleInput.value; }; titleLabel.append(titleInput); const label = element('label', 'Caption (optional)'), caption = element('input'); caption.maxLength = 300; caption.disabled = loadingImages; caption.value = image.caption; caption.oninput = () => { image.caption = caption.value; }; label.append(caption); fields.append(titleLabel, label);
     const up = element('button', '↑'); up.type = 'button'; up.disabled = loadingImages || index === 0; up.setAttribute('aria-label', 'Move image earlier'); up.onclick = () => { [draftImages[index - 1], draftImages[index]] = [draftImages[index], draftImages[index - 1]]; renderImageEditor(); };
-    const remove = element('button', 'Remove'); remove.type = 'button'; remove.disabled = loadingImages; remove.onclick = () => { draftImages.splice(index, 1); renderImageEditor(); };
-    row.append(thumbnail, fields, up, remove); $('image-editor').append(row);
+    const remove = element('button', 'Remove from page'); remove.type = 'button'; remove.disabled = loadingImages; remove.onclick = () => { draftImages.splice(index, 1); renderImageEditor(); };
+    const down = element('button', '↓'); down.type = 'button'; down.disabled = loadingImages || index === draftImages.length - 1; down.setAttribute('aria-label', 'Move image later'); down.onclick = () => { [draftImages[index], draftImages[index + 1]] = [draftImages[index + 1], draftImages[index]]; renderImageEditor(); };
+    const actions = element('div'); actions.className = 'image-row-actions'; actions.append(up, down, remove); row.append(thumbnail, fields, actions); $('image-editor').append(row);
   });
+  renderPreview();
 }
 async function load() {
   try {
@@ -51,7 +83,12 @@ async function load() {
     $('backup-library').hidden = !page || Boolean(page.libraryRevision); $('status').textContent = page ? '' : 'PAGE_NOT_FOUND: This page is unavailable in this installation.'; render(); }
   catch { $('status').textContent = 'PAGE_READ_FAILED: This page could not be loaded.'; }
 }
-$('edit').onclick = () => { editing = true; draftImages = page.images.map(image => ({...image})); originalFiles.clear(); $('title-input').value = page.title; $('text-input').value = page.text; render(); renderImageEditor(); $('title-input').focus(); };
+$('edit').onclick = () => { editing = true; draftImages = page.images.map(image => ({...image})); originalFiles.clear(); $('title-input').value = page.title; $('text-input').value = page.text; $('style-input').value = page.galleryStyle || 'atelier'; $('preview').hidden = true; $('image-editor').hidden = false; $('sequence-tab').setAttribute('aria-pressed','true'); $('preview-tab').setAttribute('aria-pressed','false'); render(); renderImageEditor(); $('title-input').focus(); };
+$('style-input').onchange = renderPreview;
+$('title-input').oninput = $('text-input').oninput = renderPreview;
+$('preview-tab').onclick = () => {renderPreview(); $('preview').hidden = false; $('image-editor').hidden = true; $('preview-tab').setAttribute('aria-pressed','true'); $('sequence-tab').setAttribute('aria-pressed','false');};
+$('sequence-tab').onclick = () => {$('preview').hidden = true; $('image-editor').hidden = false; $('preview-tab').setAttribute('aria-pressed','false'); $('sequence-tab').setAttribute('aria-pressed','true');};
+$('editor').addEventListener('input', renderPreview);
 $('cancel').onclick = () => { if (!loadingImages) { editing = false; render(); } };
 $('choose-images').onclick = () => $('images-input').click();
 $('images-input').onchange = async () => {
@@ -78,7 +115,7 @@ $('editor').onsubmit = async event => {
   event.preventDefault(); if (loadingImages) return; loadingImages = true; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = true; renderImageEditor(); $('status').textContent = 'Saving originals and gallery to Atlas Library…';
   try {
     for (const image of draftImages) { const file = originalFiles.get(image.id); if (file && !image.originalAssetId) image.originalAssetId = (await importOriginal(file, await imageType(file))).id; }
-    page = await withPageLock(() => updatePage(chrome.storage.local, id, {title: $('title-input').value, text: $('text-input').value, images: draftImages}, page.revision, saveLibraryPage));
+    page = await withPageLock(() => updatePage(chrome.storage.local, id, {title: $('title-input').value, text: $('text-input').value, images: draftImages, galleryStyle: $('style-input').value}, page.revision, saveLibraryPage));
     editing = false; originalFiles.clear(); render(); $('status').textContent = 'Gallery and imported originals saved in Atlas Library.'; $('library-location').textContent = 'Saved outside Chrome: ' + page.libraryLocation; $('backup-library').hidden = true;
   } catch (error) { $('status').textContent = error.message === 'PAGE_EDIT_CONFLICT' ? 'PAGE_EDIT_CONFLICT: Another window saved a newer version. Copy your changes, then reload before editing again.' : `${error.code || 'PAGE_SAVE_FAILED'}: ${error.code ? error.message : 'Your changes remain in the editor. Connect the updated companion and check available storage.'}`; }
   finally { loadingImages = false; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = false; if (editing) renderImageEditor(); }
@@ -89,7 +126,7 @@ $('viewer').addEventListener('keydown', event => { if (['ArrowLeft', 'ArrowRight
 $('viewer').addEventListener('close', () => { $('viewer-image').removeAttribute('src'); });
 $('publishing-check').onclick = () => { const plan = publicationReadiness(page); $('publish-status').textContent = `${plan.localImages} local image(s) require transfer; ${plan.referencedImages} image(s) already use hosted URLs.`; $('publish-dialog').showModal(); };
 $('close-publish').onclick = () => $('publish-dialog').close();
-window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images))) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images) || $('style-input').value !== (page.galleryStyle || 'atelier'))) { event.preventDefault(); event.returnValue = ''; } });
 $('backup-library').onclick = async () => {
   $('backup-library').disabled = true;
   try { const result = await saveLibraryPage(page); page = {...page,libraryRevision:result.libraryRevision,libraryLocation:result.location}; await chrome.storage.local.set({['atlas.page.v1.'+id]:page}); $('library-location').textContent='Saved outside Chrome: '+result.location; $('backup-library').hidden=true; $('status').textContent='Existing page backed up. Older local images contain resized previews only; reselect originals if required.'; }

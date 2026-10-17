@@ -74,3 +74,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 
 
 - [DURABLE_GALLERY_LIBRARY.md](DURABLE_GALLERY_LIBRARY.md) — 0.1.8 original-byte/page storage outside Chrome, migration/recovery, explicit import states, adaptive previews and future R2 adapter contract. Requires matching updated companion.
+
+- [Gallery Studio v1](GALLERY_STUDIO_V1.md): three presentations, studio workflow, preserved content, migration and proof limits.
