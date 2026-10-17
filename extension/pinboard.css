@@ -99,3 +99,15 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 @media(hover:none){.image-tag-edit{opacity:1;pointer-events:auto}}@media(prefers-reduced-motion:reduce){.image-tag-edit{transition:none}}
 .empty-tag-edit{opacity:1;pointer-events:auto;right:17px;bottom:8px;width:28px;height:28px;box-shadow:none;border-color:#eddee5;background:#fcf6f9;color:#865d70}.empty-tag-edit:hover{border-color:#d8a9bd;background:#f9eaf1}.empty-tag-edit .image-tag-icon{width:15px;height:15px}.pin:has(.empty-tag-edit) .fetch-one{padding-right:58px}.pin-tag-editor select{min-height:160px;scrollbar-width:thin}.pin-tag-editor select option{padding:7px 10px;border-radius:5px;font-size:13px}.pin-tag-editor select option:checked{background:#f4dfe8;color:#8f214b}
 .pin-tag-editor>form{margin-top:22px;padding-top:2px;border-top:1px solid #eee1e8}.pin-tag-editor input{width:100%;padding:11px 12px;border:1px solid #e5d7de;border-radius:10px;font:inherit}.pin-tag-editor>form button{background:var(--pin-red);border-color:var(--pin-red);color:#fff}
+
+/* Preview title remains outside the single scrolling content area. Images only scale down. */
+#detail{padding:0;overflow:hidden;max-height:90svh;width:min(960px,calc(100vw - 32px));border:1px solid #e9e1e5}
+#detail[open]{display:flex;flex-direction:column}
+.detail-heading{flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:24px 28px 20px;border-bottom:1px solid #eee6ea;background:#fff}
+.detail-heading h2{margin:0;color:#32252c;font-size:clamp(19px,2.4vw,28px);font-weight:650;line-height:1.3;letter-spacing:-.035em;overflow-wrap:anywhere}
+.detail-heading #close{flex:0 0 32px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;background:#f8f2f5;color:#856b78;font-size:23px;line-height:1}
+.detail-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d9c5cf transparent}
+.detail-media{padding:24px 28px 0;display:flex;justify-content:center;align-items:flex-start}
+#detail-image{display:block;width:auto;height:auto;max-width:100%;max-height:60svh;object-fit:contain;object-position:center top;border-radius:10px;background:transparent}
+#detail .detail-copy{padding:22px 28px 28px}#detail .detail-copy p:empty{display:none}
+@media(max-width:540px){.detail-heading{padding:20px;gap:15px}.detail-media{padding:20px 20px 0}#detail .detail-copy{padding:20px}}
