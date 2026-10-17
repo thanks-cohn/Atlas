@@ -1,7 +1,7 @@
 import {createPinboard,linkedPinboards,removePinboard} from './pinboard-model.js';
 import {DEMO_COLLECTION} from './gallery-demo.js';
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
-import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
+import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
 import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, deletePage, withPageLock} from './pages-store.js';
 import {library, readLibraryPage, saveLibraryPage} from './library-client.js';
 const $ = id => document.getElementById(id);
@@ -137,7 +137,7 @@ async function saveCover(node, image) {
   // Merge the current stored map, rather than overwrite a stale copy from another shelf.
   await withPageLock(async()=>{
     const stored = await chrome.storage.local.get(COVER_KEY);
-    covers = setBookmarkCover(stored[COVER_KEY] || {}, node, image);
+    covers = setBookmarkCover(stored[COVER_KEY] || {}, node, image,(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY]);
     await chrome.storage.local.set({[COVER_KEY]: covers});
   });
   render();

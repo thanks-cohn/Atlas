@@ -171,3 +171,12 @@ const largerCovers=coversModule.setBookmarkCover({padding:'x'.repeat(4000001)},n
 assert.ok(coversModule.coverStorageBytes(largerCovers)>4000000);
 assert.equal(coversModule.coverStorageBytes({label:'é'}),new TextEncoder().encode(JSON.stringify({label:'é'})).length);
 assert.ok(JSON.parse(readFileSync(new URL('../extension/manifest.json',import.meta.url),'utf8')).permissions.includes('unlimitedStorage'));
+assert.equal(coversModule.coverBudgetMiB(undefined),64);
+assert.equal(coversModule.coverBudgetMiB(128),128);
+assert.equal(coversModule.coverBudgetMiB(-1),64);
+assert.equal(coversModule.coverBudgetMiB(512.5),64);
+const overSmall={padding:'x'.repeat(9*1024*1024)};
+assert.throws(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),dataImage,8),/STORAGE_FULL/);
+assert.doesNotThrow(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),dataImage,16));
+// Lowering the budget must never prevent explicit cover removal, even while over budget.
+assert.doesNotThrow(()=>coversModule.setBookmarkCover(overSmall,nodes.get('3'),null,8));

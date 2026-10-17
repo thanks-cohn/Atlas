@@ -135,3 +135,8 @@ $('active-tags').children.at(-1).onclick();assert.equal(cards().length,2);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
 assert.equal(fetchOptions.getNodes().length,2);
 console.log('PASS: all-tag intersection, cross-card staging, applied chip removal, tags clauses, search scoping and tagged-only persistence.');
+
+// Cover storage is a shared persisted setting, independent of visible card budget.
+$('cover-budget').value='128';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-usage').textContent,/128 MiB limit/);
+$('cover-budget').value='0';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-budget-status').textContent,/8 to 512/);
+$('cover-budget').value='64';await $('save-cover-budget').onclick();

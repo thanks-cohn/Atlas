@@ -1,7 +1,7 @@
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags} from './pinboard-model.js';
-import {COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
+import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
@@ -134,6 +134,15 @@ const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.st
 $('apply-tags').onclick=applyTags;
 window.addEventListener('keydown',event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
+async function refreshCoverUsage(){
+  try{const saved=(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY];$('cover-budget').value=String(coverBudgetMiB(saved));const bytes=coverStorageBytes((await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {});$('cover-usage').textContent=(bytes/1048576).toFixed(1)+' MiB saved · '+coverBudgetMiB(saved)+' MiB limit';}catch{$('cover-usage').textContent='Usage unavailable';}
+}
+$('save-cover-budget').onclick=async()=>{
+  const value=Number($('cover-budget').value);if(!Number.isInteger(value) || value<8 || value>512){$('cover-budget-status').textContent='Enter a whole number from 8 to 512 MiB.';return;}
+  $('save-cover-budget').disabled=true;
+  try{await navigator.locks.request('atlas-pages-v1',()=>chrome.storage.local.set({[COVER_BUDGET_KEY]:value}));await refreshCoverUsage();$('cover-budget-status').textContent='Saved. Existing images are kept.';}catch{$('cover-budget-status').textContent='Could not save. Your previous limit remains.';}finally{$('save-cover-budget').disabled=false;}
+};
+refreshCoverUsage();
 const fetchDock=$('fetch-dock');let hoverOpened=false;
 fetchDock.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse' && !fetchDock.open){hoverOpened=true;fetchDock.open=true;}});
 fetchDock.addEventListener('pointerleave',()=>{if(hoverOpened && !fetchDock.contains(document.activeElement)){fetchDock.open=false;hoverOpened=false;}});
@@ -151,7 +160,7 @@ $('cancel-image').onclick=()=>$('image-source').close();
 $('image-source').addEventListener('close',()=>{if(!$('detail').open)document.documentElement.removeAttribute('data-pin-open');});
 $('upload-image').onclick=()=>{$('image-source').close();$('image-file').value='';$('image-file').click();};
 async function saveImage(node,image){
-  await navigator.locks.request('atlas-pages-v1',async()=>{const latest=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};covers=setBookmarkCover(latest,node,image);await chrome.storage.local.set({[COVER_KEY]:covers});});
+  await navigator.locks.request('atlas-pages-v1',async()=>{const latest=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};covers=setBookmarkCover(latest,node,image,(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY]);await chrome.storage.local.set({[COVER_KEY]:covers});});refreshCoverUsage();
   if($('detail').open && selected?.id===node.id)$('detail-image').src=image;
   render();status('Bookmark image saved. The shelf and this pinboard use the same cover.');
 }
@@ -179,9 +188,9 @@ const coverFetch=installCoverFetch({
     const current=await chrome.bookmarks.get(node.id);if(current[0]?.url!==node.url)return false;
     const latest=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
     if(bookmarkCover(node,latest)){covers=latest;return false;}
-    const next=setBookmarkCover(latest,node,image);await chrome.storage.local.set({[COVER_KEY]:next});covers=next;return true;
+    const next=setBookmarkCover(latest,node,image,(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY]);await chrome.storage.local.set({[COVER_KEY]:next});covers=next;return true;
   }),
-  onSaved:node=>updateCoverCard(node)
+  onSaved:node=>{updateCoverCard(node);refreshCoverUsage();}
 });
 async function start(){
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;$('tags-only').checked=saved?.tagsOnly===true;}catch{}

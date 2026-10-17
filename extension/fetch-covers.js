@@ -60,7 +60,7 @@ export function installCoverFetch({getScope,getNodes,getMounted,hasCover,saveCov
       }else done[id]='skipped';
     }catch(error){
       if(epoch!==generation || !running)return;
-      if(String(error.message).toUpperCase().includes('STORAGE') || String(error.message).toUpperCase().includes('QUOTA')){notice='Storage full; free space before resuming.';stop();return;}
+      if(String(error.message).toUpperCase().includes('STORAGE') || String(error.message).toUpperCase().includes('QUOTA')){notice='Image storage is full. Increase Saved image storage in Board settings, or remove covers, then resume.';stop();return;}
       done[id]=error.name==='AbortError'?'COVER_TIMEOUT':(error.message || 'COVER_FETCH_FAILED');notice=done[id];
     }finally{
       clearTimeout(timeout);pending.delete(id);busy=false;

@@ -89,3 +89,5 @@ body:has(#blank-board:not([hidden])) .storage-note,body:has(#blank-board:not([hi
 .active-tags{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 0 20px}.active-tags>span{font-size:11px;color:#a18b95;margin-right:6px}.active-tags button{font-size:11px;color:#a92340;background:#fceff3;border:1px solid #f2d9e2;padding:7px 13px}
 .pin-tag{cursor:pointer}.pin-tag:hover{border-color:#c795a9}.tag-browser:focus-visible{outline:2px solid var(--pin-red);outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.tag-field{transition:none}}
+.cover-budget-setting{margin-top:18px;padding-top:16px;border-top:1px solid #eee4e8}.cover-budget-setting>div{display:flex;gap:8px;margin-top:10px}.cover-budget-setting input{min-width:0;width:100%;padding:9px 12px;border:1px solid #e6dbe0;border-radius:9px;background:#fff}.cover-budget-setting button{padding:8px 15px;color:var(--pin-red)}.board-options .cover-budget-setting>label{display:block;font-size:12px}.board-options #cover-usage{color:#795463;font-weight:650}.board-options #cover-budget-status:empty{display:none}
+.settings-panel{max-height:75svh;overflow-y:auto;overscroll-behavior:contain}
