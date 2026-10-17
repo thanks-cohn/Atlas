@@ -63,3 +63,17 @@ dialog{border-radius:20px;box-shadow:0 24px 100px #250c2430}dialog::backdrop{bac
 .pin-with-tags>.pin-tags{padding-inline:10px;border:1px solid #eee5e7;border-top:0;border-radius:0 0 15px 15px}
 .pin-with-tags .fetch-one{border-radius:0}
 @media(max-width:540px){.pin-tag{font-size:9px;padding-inline:4px}.pin-tags{gap:4px}}
+
+/* 2010s: a quiet, tactile authoring card on the same white pinboard canvas. */
+#blank-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),300px));gap:28px;align-items:start;margin:32px 0 64px}
+.pin-composer,.authored-pin{min-width:0;border:1px solid #eae3e6;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 12px 36px #41213009}
+.pin-composer{padding:14px;display:flex;flex-direction:column;gap:16px}
+.composer-image{aspect-ratio:1;width:100%;padding:0;overflow:hidden;border:1px dashed #d8cdd2;border-radius:14px;background:#f4f2f3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#9a7f8b}
+.composer-image>span{font:300 46px/1 system-ui}.composer-image>small{font-size:12px;letter-spacing:.02em}.composer-image img{width:100%;height:100%;object-fit:contain}
+.pin-composer label{display:flex;flex-direction:column;gap:7px;padding:0 4px;font-size:11px;font-weight:650;color:#796871}
+.pin-composer input,.pin-composer textarea{width:100%;min-width:0;border:0;border-bottom:1px solid #eee7ea;background:white;padding:9px 0 11px;font:400 14px/1.6 system-ui;color:#30242a;resize:vertical;border-radius:0}.pin-composer input::placeholder,.pin-composer textarea::placeholder{color:#b1a2a9}
+.composer-save{background:var(--pin-red);color:white;border:0;margin:0 2px 2px}.composer-save:hover{background:var(--pin-red-dark)}
+.authored-pin>img{width:100%;display:block;height:auto;max-height:440px;object-fit:contain;background:#f5f2f3}.authored-copy{padding:22px}.authored-copy h2{font-size:19px;line-height:1.35;letter-spacing:-.025em;margin:0 0 12px;overflow-wrap:anywhere}.authored-copy p{font-size:14px;line-height:1.8;color:#7b6972;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}.authored-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.authored-tags span{font-size:10px;padding:4px 9px;border-radius:20px;color:#97717f;background:#faf0f3;overflow-wrap:anywhere}
+body:has(#blank-board:not([hidden])) .storage-note,body:has(#blank-board:not([hidden])) .search{display:none}body:has(.is-preview) .tools,body:has(.is-preview) #refresh{display:none}#blank-status:empty{display:none}#blank-status{font-size:13px;color:#a82e45}header #preview-board{margin-left:auto}header #preview-board:not([hidden])+#refresh{margin-left:0}
+
+#blank-board.is-preview .pin-composer{display:none}

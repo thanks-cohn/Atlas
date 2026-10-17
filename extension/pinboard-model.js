@@ -18,7 +18,7 @@ export function boardRecord(value) {
   return value;
 }
 export async function createPinboard(storage,node,title,id,folderId='all') {
-  const board=boardRecord({version:1,id,title:title.trim(),folderId,sourceBookmark:{id:node.id,url:node.url || ''}});
+  const board=boardRecord({version:1,template:'2010s',id,title:title.trim(),folderId,sourceBookmark:{id:node.id,url:node.url || ''}});
   const saved=(await storage.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};
   if(Object.keys(saved).length>=100)throw Error('PINBOARD_LIMIT');
   if(Object.hasOwn(saved,id))throw Error('PINBOARD_EXISTS');

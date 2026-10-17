@@ -1,3 +1,4 @@
+import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit} from './pinboard-model.js';
 import {COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
@@ -44,6 +45,7 @@ function columns(){
 function scheduleWindow(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow();});}
 function positionCard(element,position){if(!position)return;Object.assign(element.style,{position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'});}
 function renderWindow(){
+  if($('folder').value==='blank')return;
   const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
   const anchor=mounted.find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
   const oldAnchor=anchor?.getBoundingClientRect().top;
@@ -82,7 +84,7 @@ function renderWindow(){
   status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : 'No matching bookmarks. Try another collection or turn off the image filter.');
 }
 function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
-function render(){items=pinItems(roots,$('folder').value,$('search').value).filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
+function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=blank;$('fetch-dock').hidden=blank;$('status').hidden=blank;document.querySelector('.board-options').hidden=blank;if(blank){blocks.clear();$('pins').replaceChildren();return;}items=pinItems(roots,$('folder').value,$('search').value).filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
 function updateCoverCard(node){
   const block=[...blocks.values()].find(block=>[...block.children].some(element=>element.atlasNode?.id===node.id));if(!block)return;
   const old=[...block.children].find(element=>element.atlasNode.id===node.id);if(old.atlasNode.url!==node.url)return;
@@ -104,12 +106,13 @@ async function refreshAssociations(){
 async function refresh(){
   try{
     const chosen=$('folder').value || 'all';roots=await chrome.bookmarks.getTree();covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
-    $('folder').replaceChildren();const all=el('option','All bookmarks');all.value='all';$('folder').append(all);
+    $('folder').replaceChildren();const blank=el('option','Create Blank');blank.value='blank';$('folder').append(blank);const all=el('option','All Bookmarks');all.value='all';$('folder').append(all);
     function folders(nodes,path=[]){for(const node of nodes)if(!node.url){const trail=[...path,node.title].filter(Boolean);if(node.id && node.parentId!==undefined){const option=el('option',trail.join(' / '));option.value=node.id;$('folder').append(option);}folders(node.children || [],trail);}}
     folders(roots);$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
     await refreshAssociations();render();
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
+const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage});
 const fetchDock=$('fetch-dock');let hoverOpened=false;
 fetchDock.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse' && !fetchDock.open){hoverOpened=true;fetchDock.open=true;}});
 fetchDock.addEventListener('pointerleave',()=>{if(hoverOpened && !fetchDock.contains(document.activeElement)){fetchDock.open=false;hoverOpened=false;}});

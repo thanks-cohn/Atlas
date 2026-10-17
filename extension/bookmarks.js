@@ -93,14 +93,14 @@ function addItem(node) {
   for (const [value, label] of [['nocturne','Nocturne — the screening room'],['solstice','Solstice — the contact sheet']]) { const option = element('option',label); option.value=value; style.append(option); }
   style.value='nocturne'; styleLabel.append(style);
   const sourceLabel=element('label','Bookmark collection'), source=document.createElement('select');
-  const all=element('option','All bookmarks');all.value='all';source.append(all);
+  const blank=element('option','Create Blank');blank.value='blank';source.append(blank);const all=element('option','All Bookmarks');all.value='all';source.append(all);
   for(const target of folderTargets(nodes)){const option=element('option',bookmarkTrail(nodes,target.id).slice(1).map(n=>n.title || 'Untitled').join(' / '));option.value=target.id;source.append(option);}
   source.value='all';sourceLabel.append(source);sourceLabel.hidden=true;
   const message = element('p', ''), save = element('button', 'Create Gallery'); save.type = 'submit';
   const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
   const hint=element('p','Starts with 24 sample stories. Edit or replace them with your own.');
   form.append(kind, titleLabel, templateLabel, styleLabel, sourceLabel, hint, message, save, cancel); dialog.append(form);
-  kind.onchange=()=>{const pin=kind.value==='pinboard';templateLabel.hidden=styleLabel.hidden=pin;sourceLabel.hidden=!pin;hint.textContent=pin?'Uses your real bookmarks and their existing images. No re-upload needed.':'Starts with 24 sample stories. Edit or replace them with your own.';save.textContent=pin?'Create Pinboard':'Create Gallery';};
+  kind.onchange=()=>{const pin=kind.value==='pinboard';styleLabel.hidden=pin;templateLabel.hidden=false;template.replaceChildren();for(const choice of (pin?[{id:'2010s',label:'2010s',available:true}]:PAGE_TEMPLATES)){const option=element('option',choice.label);option.value=choice.id;option.disabled=!choice.available;template.append(option);}template.value=pin?'2010s':'gallery';sourceLabel.hidden=!pin;hint.textContent=pin?'Choose a blank board or a bookmark collection.':'Starts with 24 sample stories. Edit or replace them with your own.';save.textContent=pin?'Create Pinboard':'Create Gallery';};
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = true;
     try {
