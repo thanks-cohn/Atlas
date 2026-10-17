@@ -169,3 +169,7 @@ Replace Nocturne opening with one immediate 180ms opacity .92-to-1 fade on readi
 
 ### 0.1.33 — Sequential image then text
 Owner accepts distinct image-first rhythms: Solstice expands/settles, then text fades; Nocturne image emerges from darkness, then text fades. Opening now has explicit waiting/image/text phases set before the dialog is displayed. Nocturne uses only a 280ms image opacity fade; Solstice uses 440ms geometry/background motion. Text starts after the image animation's finished promise, fading heading and body together for 220ms with no translation, blur or stagger. Image errors/cancellation clear visibility gates; generation guards discard stale loads/completions. Reduced-motion bypass remains. Tests verify actual promise ordering, cold image waiting, cancellation, stale callbacks, error release and reduced motion using DOM/API doubles. Page/bookmark checks and packaging PASS; real Chrome motion / constrained hardware frame-time validation NOT_RUN.
+
+
+### 0.1.34 — Unhurried Nocturne pacing
+Owner asks for slower, more elegant timing. Nocturne image opacity reveal increases from 280ms to 520ms with a gentle ease-in/out curve; the subsequent text fade increases from 220ms to 380ms. No additional effects or idle pause. Solstice timing remains 440ms image / 220ms text. Sequencing, cancellation and reduced-motion behavior retained. Focused page/bookmark tests and package PASS; actual Chrome aesthetic/performance verification NOT_RUN.

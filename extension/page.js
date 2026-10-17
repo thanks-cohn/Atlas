@@ -40,7 +40,7 @@ function openStory(index, sourceImage) {
     viewer.setAttribute('data-opening','image');
     let imageAnimation;
     if (nocturne) {
-      imageAnimation = hero.animate([{opacity:0},{opacity:1}],{duration:280,easing:'ease-out'});
+      imageAnimation = hero.animate([{opacity:0},{opacity:1}],{duration:520,easing:'cubic-bezier(.25,.1,.25,1)'});
     } else {
       const target = hero.getBoundingClientRect();
       const fit = (rect, image) => {
@@ -61,7 +61,7 @@ function openStory(index, sourceImage) {
       if (!current()) return;
       viewer.setAttribute('data-opening','text');
       const heading = $('viewer-reading').querySelector('.reader-heading');
-      const fades = [heading,$('viewer-article')].map(element => element.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'}));
+      const fades = [heading,$('viewer-article')].map(element => element.animate([{opacity:0},{opacity:1}],{duration:nocturne ? 380 : 220,easing:'ease-out'}));
       openingMotion.push(...fades);
       await Promise.all(fades.map(animation=>animation.finished));
       finish();
