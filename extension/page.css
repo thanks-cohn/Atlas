@@ -161,3 +161,52 @@ body.solstice { background:#fff; color:#111; color-scheme:light; }
 @media(min-width:1600px){.collection-layout.solstice{grid-template-columns:repeat(4,minmax(0,1fr));}}
 @media(max-width:900px){.collection-layout.solstice{grid-template-columns:repeat(2,minmax(0,1fr));}.collection-layout.solstice .gallery-image img{height:260px;}}
 @media(max-width:480px){.collection-layout.solstice{grid-template-columns:1fr;}.collection-layout.solstice .gallery-image img{height:auto;max-height:65svh;}.solstice .gallery-intro{padding-top:32px;}}
+
+/* Nocturne / a composed viewing room: chrome, stage and labels have distinct roles. */
+body.nocturne { background:#181c20; color:#eae8e2; }
+.nocturne header { background:#0d1013; border-bottom:1px solid #ffffff12; padding-block:18px; }
+.nocturne header strong { color:#f0eee8; }
+.nocturne .wordmark-dot { color:#b9a57d; }
+.nocturne header>span,.nocturne #status { color:#8c9399; }
+.nocturne header button { border-color:#ffffff24; background:#ffffff03; }
+.nocturne header button:hover { background:#ffffff0c; }
+.nocturne main { max-width:1480px; }
+.nocturne .gallery-intro { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,320px); column-gap:40px; align-items:end; max-width:none; padding:34px 0 26px; margin-bottom:32px; border-bottom:1px solid #ffffff19; }
+.nocturne .gallery-intro .eyebrow { grid-column:1; margin:0 0 12px; color:#ac9a78; font-size:9px; }
+.nocturne .gallery-intro h1 { grid-column:1; font-size:clamp(32px,4.2vw,58px); margin:0; line-height:1.12; letter-spacing:-.035em; }
+.nocturne #text { grid-column:2; grid-row:1/3; color:#a0a6aa; font-size:13px; line-height:1.8; }
+.nocturne #text:empty { display:none; }
+.nocturne #image-count { grid-column:1/-1; margin:16px 0 0; font:10px/1.5 system-ui,sans-serif; text-transform:uppercase; letter-spacing:.16em; color:#737c82; }
+.collection-layout.nocturne { padding:0; }
+.nocturne-stage { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,245px); align-items:center; gap:clamp(24px,4vw,58px); min-width:0; }
+/* The image's actual edges define its frame. No darker full-width letterbox. */
+.cinema-image { width:fit-content; max-width:100%; justify-self:center; padding:0; background:transparent; border:0; border-radius:0; line-height:0; box-shadow:0 15px 45px #0002; }
+.cinema-image:hover { background:transparent; }
+.cinema-image img { display:block; width:auto; height:auto; max-width:100%; max-height:66svh; min-height:0; object-fit:contain; }
+.cinema-meta { display:flex; flex-direction:column; align-items:flex-start; gap:0; padding:24px 0 24px 24px; border-left:1px solid #ffffff20; min-width:0; }
+.cinema-meta span { grid-row:auto; padding:0; margin:0 0 25px; font:10px/1.5 monospace; letter-spacing:.16em; color:#b7a47b; }
+.cinema-meta h2 { font:400 clamp(24px,2.6vw,38px)/1.15 Georgia,serif; letter-spacing:-.025em; margin:0; color:#ece9e1; }
+.cinema-meta p { font-size:13px; line-height:1.85; color:#9ba3a8; margin:16px 0 0; }
+.cinema-meta p:empty { display:none; }
+.cinema-controls { display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:30px 0 0; padding:20px 0; border-top:1px solid #ffffff19; }
+.cinema-controls button { width:40px; height:40px; border-color:#ffffff28; border-radius:50%; color:#ddd8cc; }
+.cinema-controls .sequence-label { margin-right:auto; order:-1; font-size:9px; letter-spacing:.16em; color:#8c969d; }
+.cinema-strip { gap:12px; padding:0 0 18px; scrollbar-width:thin; scrollbar-color:#525b62 transparent; }
+.cinema-strip button { flex:0 0 84px; padding:5px; border:1px solid transparent; opacity:.5; border-radius:2px; background:transparent; }
+.cinema-strip button[aria-pressed=true] { border-color:#b8a47a; opacity:1; background:#ffffff04; }
+.cinema-strip img { width:72px; height:58px; object-fit:contain; }
+#preview.nocturne { background:#181c20; color:#eae8e2; }
+#preview-gallery.nocturne .nocturne-stage { grid-template-columns:minmax(0,1fr); gap:22px; }
+#preview-gallery.nocturne .cinema-image img { width:auto; height:auto; max-height:350px; }
+#preview-gallery.nocturne .cinema-meta { display:flex; padding:0 0 0 18px; }
+#preview-gallery.nocturne .cinema-meta span { margin-bottom:12px; }
+@media(max-width:760px) {
+ .nocturne .gallery-intro { grid-template-columns:minmax(0,1fr); gap:0; padding:28px 0 22px; margin-bottom:26px; }
+ .nocturne #text { grid-column:1; grid-row:auto; margin-top:15px; }
+ .nocturne-stage { grid-template-columns:minmax(0,1fr); gap:25px; }
+ .cinema-image img { width:auto; height:auto; max-height:62svh; }
+ .cinema-meta { padding:0 0 0 18px; }
+ .cinema-meta span { margin-bottom:12px; }
+ .cinema-meta p { margin-top:10px; }
+ .cinema-controls { margin-top:25px; }
+}
