@@ -26,7 +26,40 @@ function tagStrip(node){
   if(tags.length>5){const more=el('button','+'+(tags.length-5));more.className='pin-tag pin-tag-more';more.setAttribute('aria-label','Show all '+tags.length+' tags');more.onclick=()=>openDetail(node);strip.append(more);}
   return strip;
 }
-function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;}
+const TAGGING_UI_PREFS='atlas-image-tagging-choices-v1';
+const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
+function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
+async function loadTaggingChoices(node){
+  const key=node.url;
+  $('tag-anime-wrap').hidden=true;
+  $('tag-anime-choice').checked=false;
+  $('tag-image-choice').checked=true;
+  $('tag-face-choice').checked=false;
+  setTaggingChoiceStatus('Tagging selections only — generation is not connected yet.');
+  try{
+    const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
+    if(selected?.url!==key)return;
+    const prefs=saved[TAGGING_UI_PREFS]?.[key] || {};
+    $('tag-image-choice').checked=prefs.general!==false;
+    $('tag-face-choice').checked=prefs.face===true;
+    const joytagEnabled=saved[JOYTAG_ACTIVATED]===true;
+    $('tag-anime-wrap').hidden=!joytagEnabled;
+    $('tag-anime-choice').checked=joytagEnabled && prefs.anime===true;
+  }catch{setTaggingChoiceStatus('Unable to load saved tagging selections.');}
+}
+async function saveTaggingChoices(){
+  if(!selected?.url)return;
+  const key=selected.url;
+  const choice={general:$('tag-image-choice').checked,face:$('tag-face-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
+  setTaggingChoiceStatus('Saving selections…');
+  try{
+    const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};
+    await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[key]:choice}});
+    if(selected?.url===key)setTaggingChoiceStatus('Selections saved for this image · Tag generation not connected yet.');
+  }catch{setTaggingChoiceStatus('Could not save tagging selections.');}
+}
+for(const id of ['tag-image-choice','tag-face-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
+function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);}
 const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
 let tagsChangedURL=null;
 function card(node){
