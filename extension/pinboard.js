@@ -35,7 +35,7 @@ async function loadTaggingChoices(node){
   $('tag-anime-choice').checked=false;
   $('tag-image-choice').checked=true;
   $('tag-face-choice').checked=false;
-  setTaggingChoiceStatus('Tagging selections only — generation is not connected yet.');
+  setTaggingChoiceStatus('Choose models, then Generate tags.');
   try{
     const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
     if(selected?.url!==key)return;
@@ -55,10 +55,50 @@ async function saveTaggingChoices(){
   try{
     const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};
     await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[key]:choice}});
-    if(selected?.url===key)setTaggingChoiceStatus('Selections saved for this image · Tag generation not connected yet.');
+    if(selected?.url===key)setTaggingChoiceStatus('Selections saved.');
   }catch{setTaggingChoiceStatus('Could not save tagging selections.');}
 }
 for(const id of ['tag-image-choice','tag-face-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
+const TAGGING_RESULTS='atlas-image-tagging-runs-v1';
+function imagePayload(image){
+  return new Promise((resolve,reject)=>{
+    if(!image?.complete || !image.naturalWidth)return reject(Error('Open a loaded image first.'));
+    const canvas=document.createElement('canvas'),scale=Math.min(1,1024/Math.max(image.naturalWidth,image.naturalHeight));
+    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    try{
+      canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+      const data=canvas.toDataURL('image/jpeg',0.78);
+      if(data.length>1990000)throw Error('Image is too large for local tagging.');
+      resolve(data);
+    }catch{reject(Error('This image cannot be read for local tagging. Try an uploaded or locally saved cover.'));}
+  });
+}
+$('run-image-tagging').onclick=async()=>{
+  if(!selected)return;
+  const key=selected.url;
+  const models=[...($('tag-image-choice').checked?['objects']:[]),...($('tag-face-choice').checked?['face']:[])];
+  if(!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked){
+    setTaggingChoiceStatus('JoyTag integration is not yet available here; other selected models can run.');
+  }
+  if(!models.length){setTaggingChoiceStatus('Select an available model first.');return;}
+  const button=$('run-image-tagging');button.disabled=true;
+  try{
+    const image=await imagePayload($('detail-image'));
+    for(const model of models){
+      setTaggingChoiceStatus('Running '+(model==='objects'?'object detection':'facial expression detection')+' locally…');
+      const response=await chrome.runtime.sendMessage({type:'api',path:'/v1/tag-image',body:{model,image}});
+      if(response?.ok===false || !Array.isArray(response?.suggestions)){
+        throw Error(response?.error?.message || 'Companion tagging unavailable. Install the optional model and restart the companion.');
+      }
+      const saved=(await chrome.storage.local.get(TAGGING_RESULTS))[TAGGING_RESULTS]||{};
+      const item=saved[key]||{};
+      item[model]={model:response.model,source:model,suggestions:response.suggestions,generated_at:new Date().toISOString(),image_url:key};
+      await chrome.storage.local.set({[TAGGING_RESULTS]:{...saved,[key]:item}});
+      if(selected?.url===key)setTaggingChoiceStatus(model+' results saved: '+response.suggestions.map(s=>s.tag).join(', ').slice(0,160) || 'No matching tags detected.');
+    }
+  }catch(e){if(selected?.url===key)setTaggingChoiceStatus(e.message||'Tagging failed.');}
+  finally{button.disabled=false;}
+};
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);}
 const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
 let tagsChangedURL=null;
