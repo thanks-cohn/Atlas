@@ -10,6 +10,7 @@ const tree=[{id:'0',title:'',children:[{id:'1',parentId:'0',title:'Bar',folderTy
   {id:'7',parentId:'1',title:'Script',url:'javascript:alert(1)'},
 ]}]}];
 const coversModule = await import('data:text/javascript;base64,'+Buffer.from(read('bookmark-covers.js')).toString('base64'));
+const pagesModule = await import('data:text/javascript;base64,'+Buffer.from(read('pages-store.js')).toString('base64'));
 const nodes=model.indexBookmarks(tree);
 assert.deepEqual([...nodes.keys()],['0','1','3','4','5','6','7']);
 assert.deepEqual(model.findBookmarks(nodes,'A.EXAMPLE').map(n=>n.id),['5']);
@@ -27,15 +28,15 @@ class El {
   querySelectorAll(selector){return this.children.flatMap(child=>[...(selector.startsWith('.') && child.className === selector.slice(1) ? [child] : []),...child.querySelectorAll(selector)]);}
   setAttribute(k,v){this.attrs[k]=v;} removeAttribute(k){delete this.attrs[k];}
   addEventListener(k,fn){this.handlers[k]=fn;}
-  focus(){document.activeElement=this;this.onfocus?.();} remove(){this.removed=true;} closest(){return null;}
+  showModal(){this.open=true;} close(){this.open=false;this.handlers.close?.();} focus(){document.activeElement=this;this.onfocus?.();} remove(){this.removed=true;} closest(){return null;}
 }
 const created=[];const els=new Map();const classes=new Set();const events={};const calls=[];
-const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>{const el=new El(tag);created.push(el);if(tag==='canvas'){el.getContext=()=>({drawImage(){}});el.toDataURL=()=> 'data:image/webp;base64,BBBB';}el.click=()=>{};return el;},body:{classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}}};
+const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>{const el=new El(tag);created.push(el);if(tag==='canvas'){el.getContext=()=>({drawImage(){}});el.toDataURL=()=> 'data:image/webp;base64,BBBB';}el.click=()=>{};return el;},body:{append(...items){created.push(...items);},classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}}};
 let failRead=false;
 const bookmarks={getTree:async()=>{if(failRead)throw Error('denied');return tree;},update:async(id,changes)=>{calls.push(['update',id,changes]);Object.assign(nodes.get(id),changes);}};
 for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReordered','onImportEnded'])bookmarks[name]={addListener:fn=>events[name]=fn};
 const storage={};let storageListener;let paired=false;let catalog={resources:{},relations:[],tags:{}};
-const context={...model,...coversModule,document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
+const context={...model,...coversModule,...pagesModule,withPageLock:task=>task(),crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
 vm.runInNewContext(read('bookmarks.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 els.get('bookmarks-open').onclick();await tick();
@@ -76,6 +77,17 @@ rows[0].children[0].onclick();await tick();await tick();
 assert.ok(preview.children.some(el=>el.textContent==='My note'));
 assert.ok(preview.children.some(el=>el.textContent==='#example'));
 assert.ok(preview.children.some(el=>el.tagName==='details'));
+// Add Item creates a durable gallery page with a visible link below the image.
+assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associated Items'));
+preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
+const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
+const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Page title').children[0];titleControl.value='My Gallery';
+const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Template').children[0];
+assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children[1].disabled,true);
+await form.onsubmit({preventDefault(){}});await tick();
+assert.ok(preview.children.some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
+const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');
+assert.equal(storedPage.title,'My Gallery');
 const esc={key:'Escape',target:new El(),preventDefault(){},stopPropagation(){}};
 els.get('bookmarks-workspace').handlers.keydown(esc);rows=els.get('bookmarks-list').children;assert.equal(rows.length,4);
 await rows[0].children[2].children[1].children[0].onclick();assert.equal(nodes.get('3').title,'Renamed');

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Page</title><link rel="stylesheet" href="page.css"></head>
+<body>
+  <header><strong>ATLAS <span class="wordmark-dot">/</span> GALLERY</strong><span>A personal collection</span><button id="publishing-check" hidden>Publishing Check</button><button id="edit" hidden>Edit Gallery</button></header>
+  <main>
+    <p id="status" role="status">Loading page…</p>
+    <article id="page" hidden><div class="gallery-intro"><p class="eyebrow">CURATED IN ATLAS</p><h1 id="title"></h1><div id="text"></div><p id="image-count"></p></div><div id="gallery" aria-label="Gallery images"></div></article>
+    <form id="editor" hidden>
+      <label>Title<input id="title-input" maxlength="200" required></label>
+      <label>Text<textarea id="text-input" maxlength="100000" rows="16"></textarea></label>
+      <label class="upload-control">Add Images<input id="images-input" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <div class="url-inputs"><label>Image URL<input id="image-url" type="url" placeholder="https://…"></label><button id="add-url" type="button">Add URL</button></div>
+      <p>Gallery template · Up to 24 images, 4 MB of saved gallery data. Local images are resized for storage. Horizons is a separate planned template.</p>
+      <div id="image-editor"></div>
+      <button id="save" type="submit">Save</button><button id="cancel" type="button">Cancel</button>
+    </form>
+  </main>
+  <dialog id="viewer" aria-label="Expanded gallery image"><div class="viewer-toolbar"><button id="previous" aria-label="Previous image">←</button><span id="viewer-count"></span><button id="next" aria-label="Next image">→</button><button id="close-viewer" aria-label="Close expanded image">Close ×</button></div><img id="viewer-image" alt=""><p id="viewer-caption"></p></dialog>
+  <dialog id="publish-dialog" aria-labelledby="publish-title"><h2 id="publish-title">Prepare for Publishing</h2><p id="publish-status"></p><p>Before publishing, local images must be sent to your chosen R2 bucket and location, then referenced by their hosted URLs. Atlas will require your approval for that transfer.</p><p>R2 upload and deployment are not available in this build. Nothing has been uploaded or published.</p><button id="close-publish">Close</button></dialog>
+  <script type="module" src="page.js"></script>
+</body></html>

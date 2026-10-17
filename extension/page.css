@@ -1,0 +1,41 @@
+:root { color-scheme: light; font: 16px/1.65 system-ui, sans-serif; color: #262521; background: #faf9f6; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding: 18px clamp(18px, 5vw, 72px); border-bottom: 1px solid #e6e2d9; background: #fffefa; }
+header strong { font-size: 12px; letter-spacing: .17em; }
+.wordmark-dot { color: #ae8b4d; padding: 0 10px; }
+header > span, #status { color: #716d63; font-size: 12px; }
+header button { margin-left: auto; }
+header button + button { margin-left: 0; }
+main { width: min(1440px, 100%); margin: 36px auto; padding: 0 clamp(18px, 5vw, 72px) 72px; }
+.gallery-intro { max-width: 760px; margin: 58px auto 64px; text-align: center; }
+.eyebrow { color: #8a6d36; font-size: 10px; letter-spacing: .22em; font-weight: 600; }
+h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; line-height: 1.1; font-size: clamp(36px, 6vw, 76px); letter-spacing: -.035em; margin: 20px 0; overflow-wrap: anywhere; }
+#text { white-space: pre-wrap; overflow-wrap: anywhere; color: #605c52; max-width: 600px; margin: auto; }
+#image-count { margin-top: 24px; color: #8a8273; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+#gallery { columns: 3 260px; column-gap: 28px; }
+figure { margin: 0 0 28px; break-inside: avoid; }
+.gallery-image { display: block; width: 100%; padding: 0; border: 0; border-radius: 3px; overflow: hidden; background: #eeeae1; cursor: zoom-in; }
+.gallery-image img { display: block; width: 100%; height: auto; transition: transform 220ms ease-out; }
+.gallery-image:hover img { transform: scale(1.015); }
+figcaption { font-size: 12px; line-height: 1.5; margin-top: 10px; color: #716b5f; overflow-wrap: anywhere; }
+.gallery-empty { column-span: all; padding: 64px 24px; border: 1px solid #e4dfd4; text-align: center; }
+.gallery-empty h2 { font: 400 28px Georgia, serif; }.gallery-empty p { color: #716b5f; }
+#editor { max-width: 800px; margin: 40px auto; }
+label { display: block; margin-bottom: 18px; font-size: 13px; font-weight: 600; }
+input, textarea { display: block; width: 100%; margin-top: 6px; padding: 12px; border: 1px solid #d8d1c4; border-radius: 4px; font: inherit; background: white; }
+textarea { resize: vertical; }
+button { padding: 9px 16px; border: 1px solid #d3cbbb; border-radius: 4px; background: #fffefa; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #8a6d36; outline-offset: 4px; }
+.image-editor-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #e4dfd4; }
+.image-editor-row img { width: 72px; height: 72px; object-fit: contain; }.image-editor-row label { flex: 1; margin: 0; min-width: 0; }
+#viewer { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 20px; border: 0; background: #151513; color: #f6f2e9; }
+#viewer::backdrop { background: #151513; }.viewer-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+#viewer button { background: transparent; color: inherit; border-color: #57554e; }#close-viewer { margin-left: auto; }
+#viewer-image { display: block; width: 100%; height: calc(100% - 120px); object-fit: contain; }#viewer-caption { text-align: center; margin: 12px auto; max-width: 800px; overflow-wrap: anywhere; font-size: 13px; }
+[hidden] { display: none !important; }
+.url-inputs { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }.url-inputs label { flex: 1; min-width: 150px; margin: 0; }.url-inputs select { width: 100%; padding: 12px; margin-top: 6px; font: inherit; }
+#publish-dialog { width: min(560px, 94vw); border: 1px solid #d3cbbb; border-radius: 8px; padding: 28px; color: #262521; background: #fffefa; }#publish-dialog::backdrop { background: #0007; }
+@media(max-width: 540px) { .gallery-intro { margin: 32px auto 36px; }#gallery { columns: 1; }.image-editor-row { flex-wrap: wrap; }header > span { display: none; } }
+@media(prefers-reduced-motion: reduce) { .gallery-image img { transition: none; } }

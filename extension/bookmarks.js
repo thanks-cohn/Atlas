@@ -1,9 +1,11 @@
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
+import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, withPageLock} from './pages-store.js';
 const $ = id => document.getElementById(id);
 let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
 let covers = {}, focused = null, trail = [];
 let associated = null, associationEpoch = 0;
+let localPages = [], itemsEpoch = 0;
 const active = () => document.body.classList.contains('bookmarks-mode');
 const element = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
 function report(code, message) { $('bookmarks-status').textContent = `${code}: ${message}`; }
@@ -27,9 +29,10 @@ async function refresh() {
     if (!nodes.has(focused)) { focused = null; trail = []; }
     if (!nodes.has(folder) || nodes.get(folder).url) folder = roots[0]?.id;
     render();
+    if (focused) loadLocalItems(nodes.get(focused));
   } catch { report('BOOKMARK_READ_FAILED', 'Bookmark access is unavailable. Reload the updated extension and accept Chrome’s bookmark permission if prompted.'); }
 }
-function navigate(id) { selected = null; focused = null; associated = null; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
+function navigate(id) { selected = null; focused = null; associated = null; localPages = []; itemsEpoch++; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
 async function openNode(node) {
   if (!node.url) { navigate(node.id); return; }
   if (!openableBookmark(node.url)) { report('BOOKMARK_URL_BLOCKED', 'This saved URL type cannot be opened here. Use Chrome’s bookmark manager for special or executable URLs.'); return false; }
@@ -38,9 +41,41 @@ async function openNode(node) {
   await chrome.tabs.update(tab.id, {url: node.url});
 }
 function focusNode(node) {
-  trail.push({focused, associated, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
-  focused = node.id; associated = null; selected = node.id; render(); $('bookmarks-workspace').scrollTop = 0;
+  trail.push({focused, associated, localPages, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
+  focused = node.id; associated = null; localPages = []; selected = node.id; render(); $('bookmarks-workspace').scrollTop = 0;
   loadAssociations(node);
+  loadLocalItems(node);
+}
+async function loadLocalItems(node) {
+  const request = ++itemsEpoch;
+  try {
+    const pages = await linkedPages(chrome.storage.local, node);
+    if (request !== itemsEpoch || focused !== node.id) return;
+    localPages = pages; render();
+  } catch { if (request === itemsEpoch) report('ASSOCIATED_ITEMS_READ_FAILED', 'Saved pages could not be read. Existing data has not been changed.'); }
+}
+function addItem(node) {
+  const dialog = document.createElement('dialog'), form = document.createElement('form');
+  form.append(element('h2', 'Add Item'));
+  const kind = document.createElement('select'); kind.setAttribute('aria-label', 'Item type');
+  const pageOption = element('option', 'Page'); pageOption.value = 'page'; kind.append(pageOption);
+  const titleLabel = element('label', 'Page title'), title = document.createElement('input'); title.required = true; title.maxLength = 200; titleLabel.append(title);
+  const templateLabel = element('label', 'Template'), template = document.createElement('select');
+  for (const choice of PAGE_TEMPLATES) { const option = element('option', choice.label); option.value = choice.id; option.disabled = !choice.available; template.append(option); }
+  template.value = 'gallery'; templateLabel.append(template);
+  const message = element('p', ''), save = element('button', 'Create Page'); save.type = 'submit';
+  const cancel = element('button', 'Cancel'); cancel.type = 'button'; cancel.onclick = () => dialog.close();
+  form.append(kind, titleLabel, templateLabel, message, save, cancel); dialog.append(form);
+  form.onsubmit = async event => {
+    event.preventDefault(); save.disabled = true;
+    try {
+      if (!nodes.has(node.id) || nodes.get(node.id).url !== node.url) throw new Error('BOOKMARK_CHANGED');
+      await withPageLock(() => createLinkedPage(chrome.storage.local, node, {title: title.value, template: template.value}, crypto.randomUUID()));
+      await loadLocalItems(node); dialog.close();
+    } catch { message.textContent = 'PAGE_CREATE_FAILED: Enter a title and check available local storage. Your existing pages are unchanged.'; }
+    finally { save.disabled = false; }
+  };
+  dialog.addEventListener('close', () => dialog.remove(), {once: true}); document.body.append(dialog); dialog.showModal(); title.focus();
 }
 async function loadAssociations(node) {
   const request = ++associationEpoch;
@@ -57,6 +92,7 @@ function returnFromPreview() {
   associationEpoch++;
   const state = trail.pop(); focused = state?.focused ?? null; selected = state?.selected ?? null;
   associated = state?.associated ?? null;
+  localPages = state?.localPages ?? []; itemsEpoch++;
   if (!nodes.has(focused)) focused = null;
   render(); $('bookmarks-workspace').scrollTop = state?.scroll || 0;
   [...$('bookmarks-list').querySelectorAll('.bookmark-disclosure')].find(el => el.dataset.bookmarkId === selected)?.focus();
@@ -105,7 +141,11 @@ function renderPreview() {
   const choose = element('button', 'Choose image'); choose.type = 'button'; choose.onclick = () => chooseCover(node); actions.append(choose);
   if (Object.hasOwn(covers, node.id)) actions.append(button('Remove chosen image', () => saveCover(node, null)));
   host.append(actions);
-  host.append(element('h3', node.url ? 'Associated items' : 'Bookmarks in this folder'));
+  host.append(element('h3', 'Associated Items'));
+  const add = element('button', 'Add Item'); add.type = 'button'; add.onclick = () => addItem(node); host.append(add);
+  for (const page of localPages) {
+    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL('page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page'; host.append(link);
+  }
   if (associated) {
     for (const resource of associated.matches) if (resource.note) host.append(element('p', resource.note));
     if (associated.tags.length) host.append(element('p', associated.tags.map(t => '#' + t).join(' ')));
@@ -171,7 +211,7 @@ function render() {
   const canCreate = !destination.url && destination.parentId !== undefined && !destination.unmodifiable && !query;
   $('bookmarks-new').disabled = $('bookmarks-folder').disabled = !canCreate;
   report('BOOKMARKS_READY', `${list.length} item(s) · Title opens in this tab · Triangle explores · Live Chrome bookmarks`);
-  if (focusedNode && !list.length && !associated?.matches.length) $('bookmarks-list').append(element('p', 'No associated items loaded. Linked Atlas notes and tags appear here when the companion is connected.'));
+  if (focusedNode && !list.length && !associated?.matches.length && !localPages.length) $('bookmarks-list').append(element('p', 'No associated items yet. Use Add Item to create a page. Linked Atlas notes and tags also appear when the companion is connected.'));
   for (const node of list) {
     const row = document.createElement('div'); row.className = 'bookmark-row'; row.setAttribute('role', 'listitem');
     const open = element('button', ''); open.className = 'bookmark-open'; open.type = 'button';
@@ -257,4 +297,5 @@ $('bookmarks-workspace').addEventListener('keydown', event => {
 });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[COVER_KEY]) { covers = changes[COVER_KEY].newValue || {}; if (active()) render(); }
+  if (area === 'local' && focused && Object.keys(changes).some(key => key.startsWith(PAGE_PREFIX) || key.startsWith(ITEM_PREFIX))) loadLocalItems(nodes.get(focused));
 });

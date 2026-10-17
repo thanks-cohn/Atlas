@@ -68,3 +68,6 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Bookmark images and exploration
 
 - [BOOKMARK_IMAGE_DISCLOSURE.md](BOOKMARK_IMAGE_DISCLOSURE.md) — 0.1.6 first slice: right-triangle exploration, image above associated items, left-arrow return, current-tab title navigation and saved covers. Includes owner rationale, metadata contract and actual-browser limitations.
+
+
+- [ASSOCIATED_PAGES_AND_GALLERY.md](ASSOCIATED_PAGES_AND_GALLERY.md) — 0.1.7 Add Item → Page, default Gallery template, URL/local image editor/viewer, versioned local entities and future R2 publishing-transfer contract. Horizons is separate and not implemented.
