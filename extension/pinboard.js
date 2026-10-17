@@ -1,6 +1,6 @@
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
-import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags} from './pinboard-model.js';
+import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags,createPinboard} from './pinboard-model.js';
 import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
@@ -126,11 +126,11 @@ async function refresh(){
     const chosen=$('folder').value || 'all';roots=await chrome.bookmarks.getTree();covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
     $('folder').replaceChildren();const blank=el('option','Create Blank');blank.value='blank';$('folder').append(blank);const all=el('option','All Bookmarks');all.value='all';$('folder').append(all);
     function folders(nodes,path=[]){for(const node of nodes)if(!node.url){const trail=[...path,node.title].filter(Boolean);if(node.id && node.parentId!==undefined){const option=el('option',trail.join(' / '));option.value=node.id;$('folder').append(option);}folders(node.children || [],trail);}}
-    folders(roots);$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
+    folders(roots);const savedBoards=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};for(const saved of Object.values(savedBoards)){try{const board=boardRecord(saved);const option=el('option',board.title);option.value='board:'+board.id;$('folder').append(option);}catch{}}$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
     await refreshAssociations();render();
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
-const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage});
+const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
 $('apply-tags').onclick=applyTags;
 window.addEventListener('keydown',event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
@@ -148,8 +148,11 @@ fetchDock.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'
 fetchDock.addEventListener('pointerleave',()=>{if(hoverOpened && !fetchDock.contains(document.activeElement)){fetchDock.open=false;hoverOpened=false;}});
 fetchDock.addEventListener('focusout',()=>{setTimeout(()=>{if(hoverOpened && !fetchDock.contains(document.activeElement) && !fetchDock.matches(':hover')){fetchDock.open=false;hoverOpened=false;}},0);});
 fetchDock.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();event.preventDefault();fetchDock.open=false;hoverOpened=false;fetchDock.querySelector('summary').focus();}});
-$('folder').onchange=()=>{coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{coverFetch.stop();clearTimeout(searchTimer);searchTimer=setTimeout(()=>render(),160);};
+$('folder').onchange=()=>{if($('folder').value.startsWith('board:')){location.href='pinboard.html?id='+encodeURIComponent($('folder').value.slice(6));return;}coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{coverFetch.stop();clearTimeout(searchTimer);searchTimer=setTimeout(()=>render(),160);};
 $('refresh').onclick=refresh;
+$('new-pinboard').onclick=()=>{$('new-board-title').value='';$('new-board-status').textContent='';$('new-board-dialog').showModal();$('new-board-title').focus();};
+$('cancel-new-board').onclick=()=>$('new-board-dialog').close();
+$('new-board-form').onsubmit=async event=>{event.preventDefault();const title=$('new-board-title').value.trim();if(!title)return;try{const id=crypto.randomUUID();await navigator.locks.request('atlas-pages-v1',()=>createPinboard(chrome.storage.local,{id:'',url:''},title,id,'blank'));location.href='pinboard.html?id='+encodeURIComponent(id);}catch{$('new-board-status').textContent='Could not create this pinboard. Please try again.';}};
 $('images-only').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();saveSettings();};
 $('card-limit').onchange=()=>{limit=cardLimit($('card-limit').value);renderWindow();saveSettings();};
 window.addEventListener('scroll',scheduleWindow,{passive:true});

@@ -4,9 +4,9 @@ export function cleanCard(value){
   const title=String(value.title || '').trim(),text=String(value.text || '').trim();
   const tags=[...new Set(String(value.tags || '').split(',').map(t=>t.trim()).filter(Boolean))];
   if(!title || title.length>200 || text.length>20000 || tags.length>100 || tags.some(t=>t.length>80))throw Error('Use a title, up to 100 tags, and shorter text.');
-  return {id:value.id,title,text,tags,image:value.image || null};
+  return {id:value.id,title,text,tags,image:value.image || null,url:value.url || null};
 }
-export function installBlankBoard({scope,storage,publicImageURL,rasterImage}){
+export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getBookmarks=()=>[],describeBookmark=()=>({})}){
   const $=id=>document.getElementById(id),make=(tag,text='',cls='')=>{const e=document.createElement(tag);e.textContent=text;e.className=cls;return e;};
   let cards=[],loaded=false,preview=false,image=null,active=false,busy=false;
   const region=$('blank-board'),message=$('blank-status');
@@ -20,10 +20,11 @@ export function installBlankBoard({scope,storage,publicImageURL,rasterImage}){
       const article=make('article','','authored-pin');
       if(card.image){const img=make('img');img.src=card.image;img.alt=card.title;img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';article.append(img);}
       const copy=make('div','','authored-copy');copy.append(make('h2',card.title),make('p',card.text));
+      if(card.url){const link=make('a','Visit source ↗');link.href=card.url;link.target='_blank';link.rel='noopener noreferrer';copy.append(link);}
       const tags=make('div','','authored-tags');for(const tag of card.tags)tags.append(make('span',tag));copy.append(tags);article.append(copy);region.append(article);
     }
     if(preview){if(!cards.length)region.append(make('p','Your board is ready for its first card.','blank-empty'));return;}
-    const form=make('form','','pin-composer');
+    const form=make('form','','pin-composer');let bookmark=null;
     const imageButton=make('button','','composer-image');imageButton.type='button';imageButton.setAttribute('aria-label','Choose card image');
     imageButton.append(make('span','+'),make('small','Add an image'));
     const file=make('input');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';file.hidden=true;imageButton.onclick=()=>file.click();
@@ -34,12 +35,15 @@ export function installBlankBoard({scope,storage,publicImageURL,rasterImage}){
     const title=field('Title','input',200,'Give your card a title');title.required=true;
     const text=field('Text','textarea',20000,'A thought, a story, a little context…');text.rows=3;
     const tags=field('Tags','input',8000,'Design, inspiration, ideas');
+    const bookmarkLabel=make('label','Existing Bookmark'),picker=make('select');const none=make('option','Choose a bookmark · optional');none.value='';picker.append(none);
+    const bookmarks=getBookmarks();for(const node of bookmarks){const option=make('option',(node.title || node.url)+' — '+node.url);option.value=node.id;picker.append(option);}bookmarkLabel.append(picker);form.insertBefore(bookmarkLabel,imageButton);
+    picker.onchange=()=>{bookmark=bookmarks.find(n=>n.id===picker.value) || null;if(!bookmark)return;const details=describeBookmark(bookmark);title.value=bookmark.title || bookmark.url;text.value=details.note || '';tags.value=(details.tags || []).join(', ');image=details.image || null;url.value='';imageButton.replaceChildren();if(image){const img=make('img');img.src=image;img.alt=title.value;imageButton.append(img);}else imageButton.append(make('span','+'),make('small','Add an image'));};
     const add=make('button','Add Card +','composer-save');add.type='submit';form.append(add);
     form.onsubmit=async event=>{
       event.preventDefault();if(busy)return;busy=true;add.disabled=true;
       try{
         const remote=url.value.trim();if(remote && !publicImageURL(remote))throw Error('Use a public image URL without credentials or signed tokens.');
-        const card=cleanCard({id:crypto.randomUUID(),title:title.value,text:text.value,tags:tags.value,image:image || (remote?publicImageURL(remote):null)});
+        const card=cleanCard({id:crypto.randomUUID(),url:bookmark?.url || null,title:title.value,text:text.value,tags:tags.value,image:image || (remote?publicImageURL(remote):null)});
         await navigator.locks.request('atlas-pages-v1',async()=>{
           const all=(await storage.get(BLANK_KEY))[BLANK_KEY] || {},current=all[scope] || [];
           if(current.length>=100)throw Error('This board has reached its 100-card authoring limit.');

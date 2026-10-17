@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const code=readFileSync('extension/pinboard-blank.js','utf8');
 class E{
  constructor(tag){this.tag=tag;this.children=[];this.value='';this.classList={toggle(){}};}
- append(...n){this.children.push(...n);}replaceChildren(...n){this.children=n;}setAttribute(){}focus(){}querySelector(){return null;}
+ append(...n){this.children.push(...n);}insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);}replaceChildren(...n){this.children=n;}setAttribute(){}focus(){}querySelector(){return null;}
  get lastElementChild(){return this.children.at(-1);}
 }
 const elements=new Map(),events={};const document={getElementById:id=>{if(!elements.has(id))elements.set(id,new E('div'));return elements.get(id);},createElement:tag=>new E(tag),addEventListener:(type,fn)=>events[type]=fn};
@@ -15,8 +15,8 @@ assert.throws(()=>context.clean({title:' ',tags:''}));
 assert.equal(context.clean({title:' Name ',tags:'Art, Art, Design'}).tags.length,2);
 const args={scope:'one',storage,publicImageURL:url=>url.startsWith('https://')?url:null,rasterImage:async()=> 'data:image/png;base64,AA'};
 const board=context.install(args),$=id=>document.getElementById(id),tick=()=>new Promise(r=>setTimeout(r,0));board.show(true);await tick();
-const region=$('blank-board'),form=region.children[0],fields=form.children.filter(n=>n.tag==='label').map(n=>n.children[0]);
-assert.equal(form.tag,'form');assert.equal(form.children[0].className,'composer-image');
+const region=$('blank-board'),form=region.children[0],fields=form.children.filter(n=>n.tag==='label' && n.children[0].tag!=='select').map(n=>n.children[0]);
+assert.equal(form.tag,'form');assert.equal(form.children[1].className,'composer-image');
 fields[1].value='My card';fields[2].value='First paragraph.\n\nSecond paragraph.';fields[3].value='Art, Design, Art';
 // Preview keeps the actual draft form and Escape restores editing.
 $('preview-board').onclick();assert.equal(region.children[0],form);events.keydown({key:'Escape',preventDefault(){}});assert.equal(region.children[0],form);
@@ -27,3 +27,9 @@ const reload=context.install(args);reload.show(true);await tick();assert.equal(r
 const other=context.install({...args,scope:'two'});other.show(true);await tick();assert.equal(region.children.length,1);
 assert.match(readFileSync('extension/pinboard.css','utf8'),/\.is-preview \.pin-composer\{display:none\}/);
 console.log('PASS: blank-board cards persist by board, comma tags, preview draft retention, Escape, save failure retention and fresh adjacent starter. DOM/storage doubles; Chrome visual QA NOT_RUN.');
+const chosen={id:'b',title:'Chosen bookmark',url:'https://example.com/chosen'};
+const linked=context.install({...args,scope:'linked',getBookmarks:()=>[chosen],describeBookmark:()=>({image:'https://example.com/cover.jpg',note:'My note',tags:['Design']})});linked.show(true);await tick();
+const linkedForm=region.children[0],picker=linkedForm.children[0].children[0];picker.value='b';picker.onchange();
+await linkedForm.onsubmit({preventDefault(){}});
+const saved=data['atlas.pinboard.cards.v1'].linked[0];assert.equal(saved.title,'Chosen bookmark');assert.equal(saved.url,chosen.url);assert.equal(saved.image,'https://example.com/cover.jpg');assert.equal(saved.text,'My note');assert.equal(saved.tags[0],'Design');
+assert.equal(region.children[0].children[1].children[2].href,chosen.url);

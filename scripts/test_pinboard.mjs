@@ -140,3 +140,8 @@ console.log('PASS: all-tag intersection, cross-card staging, applied chip remova
 $('cover-budget').value='128';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-usage').textContent,/128 MiB limit/);
 $('cover-budget').value='0';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-budget-status').textContent,/8 to 512/);
 $('cover-budget').value='64';await $('save-cover-budget').onclick();
+assert.match(read('pinboard.html'),/value="all" selected/);
+context.crypto={randomUUID:()=> 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'};
+$('new-pinboard').onclick();assert.equal($('new-board-dialog').open,true);
+$('new-board-title').value='My new board';await $('new-board-form').onsubmit({preventDefault(){}});
+assert.equal(data[model.PINBOARDS_KEY]['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'].folderId,'blank');assert.match(context.location.href,/id=bbbb/);
