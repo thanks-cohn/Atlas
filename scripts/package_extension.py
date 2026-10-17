@@ -7,7 +7,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'extension'
-ALLOWED = {'.json', '.html', '.css', '.js', '.svg', '.png', '.webp', '.woff2'}
+ALLOWED = {'.json', '.html', '.css', '.js', '.svg', '.png', '.webp', '.woff2', '.ttf'}
 
 
 def main():

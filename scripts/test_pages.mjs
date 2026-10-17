@@ -30,10 +30,11 @@ assert.throws(()=>store.pageKey('../secret'),/INVALID/);
 class El {
  constructor(tag='div'){this.tagName=tag;this.children=[];this.hidden=false;this.value='';this.attrs={};this.handlers={};this.files=[];}
  append(...v){this.children.push(...v);}replaceChildren(...v){this.children=v;}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];delete this[k];}
+ scrollBy({top}){this.scrollTop=(this.scrollTop||0)+top;}scrollTo({top}){this.scrollTop=top;}
  addEventListener(k,fn){this.handlers[k]=fn;}focus(){}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
 }
-const els=new Map(),events={};const document={body:new El('body'),getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
-let nativeFail=false;let sequence=0;const context={...store,DEMO_COLLECTION,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> 'bbbbbbbb-bbbb-bbbb-bbbb-'+String(++sequence).padStart(12,'0')},window:{confirm:()=>true,addEventListener:(k,fn)=>events[k]=fn}};
+const els=new Map(),events={};const document={body:new El('body'),documentElement:new El('html'),getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>new El(tag)};
+let nativeFail=false;let sequence=0;const context={...store,DEMO_COLLECTION,withPageLock:fn=>fn(),rasterImage:async()=> 'data:image/webp;base64,BBBB',imageType:async()=> 'image/png',readLibraryPage:async()=>{throw Error('offline');},saveLibraryPage:async()=>{if(nativeFail)throw Object.assign(new Error('Connect companion'),{code:'LIBRARY_OFFLINE'});return {libraryRevision:1,location:'Atlas data folder'};},importOriginal:async()=>({id:'a'.repeat(64)}),document,chrome:{storage:{local:storage}},URL,location:{href:'chrome-extension://atlas/page.html?id='+id},crypto:{randomUUID:()=> 'bbbbbbbb-bbbb-bbbb-bbbb-'+String(++sequence).padStart(12,'0')},window:{scrollY:125,scrollTo:options=>{context.restoredScroll=options.top;},confirm:()=>true,addEventListener:(k,fn)=>events[k]=fn}};
 vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(r=>setTimeout(r,0));await tick();
 assert.equal(els.get('title').textContent,'My Gallery');assert.equal(els.get('gallery').children.length,2);
@@ -108,9 +109,16 @@ els.get('gallery').children[0].children[0].onclick();
 assert.equal(els.get('viewer').open,true);
 assert.equal(els.get('viewer-article').children.length,5);
 assert.equal(els.get('viewer-article').children[0].textContent,DEMO_COLLECTION.images[0].article.split('\n\n')[0]);
-assert.equal(els.get('viewer-caption').hidden,true);
-els.get('viewer-reading').scrollTop=200;
-els.get('next').onclick();assert.equal(els.get('viewer-reading').scrollTop,0);
+assert.equal(els.get('viewer-caption').hidden,false);assert.equal(document.documentElement.attrs['data-reader-open'],'');
+els.get('viewer').scrollTop=200;
+els.get('next').onclick();assert.equal(els.get('viewer').scrollTop,0);
 assert.equal(els.get('viewer-article').children[0].textContent,DEMO_COLLECTION.images[1].article.split('\n\n')[0]);
 els.get('close-viewer').onclick();assert.equal(els.get('viewer').open,false);
+assert.equal(document.documentElement.attrs['data-reader-open'],undefined);assert.equal(context.restoredScroll,125);
+assert.match(els.get('reader-meta').textContent,/MIN READ/);
+els.get('viewer').scrollTop=0;
+els.get('viewer').handlers.keydown({key:'ArrowDown',preventDefault(){},stopPropagation(){}});
+assert.equal(els.get('viewer').scrollTop,55);
+els.get('viewer').handlers.keydown({key:'ArrowUp',preventDefault(){},stopPropagation(){}});
+assert.equal(els.get('viewer').scrollTop,0);
 console.log('PASS: gallery-page creation/linking, template default, edit conflicts, URL/local data, publishing readiness, source rejection and gallery editor/viewer (API/DOM doubles; Chrome rendering NOT_RUN).');

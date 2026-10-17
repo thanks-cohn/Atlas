@@ -7,13 +7,23 @@ const id = new URL(location.href).searchParams.get('id');
 let page = null, editing = false, draftImages = [], viewerIndex = 0, loadingImages = false;
 const originalFiles = new Map();
 const element = (tag, text = '') => { const el = document.createElement(tag); el.textContent = text; return el; };
+let galleryScrollY = 0;
+function openStory(index) {
+  galleryScrollY = window.scrollY || 0;
+  document.documentElement.setAttribute('data-reader-open','');
+  showImage(index); $('viewer').showModal();
+}
 function showImage(index) {
   if (!page.images.length) return;
   viewerIndex = (index + page.images.length) % page.images.length;
   const image = page.images[viewerIndex];
   $('viewer-image').referrerPolicy = 'no-referrer'; $('viewer-image').src = image.source; $('viewer-image').alt = image.title || image.caption || page.title;
   $('viewer-title').textContent = image.title || ''; $('viewer-title').hidden = !image.title; $('viewer-caption').textContent = image.caption; $('viewer-count').textContent = `${viewerIndex + 1} / ${page.images.length}`;
-  renderArticle($('viewer-article'), image.article); $('viewer-caption').hidden = Boolean(image.article); $('viewer-reading').scrollTop = 0;
+  renderArticle($('viewer-article'), image.article); $('viewer-caption').hidden = !image.caption; $('viewer').scrollTop = 0;
+  $('reader-collection').textContent = page.title;
+  const words = (image.article || image.caption || '').trim().split(/\s+/).filter(Boolean).length;
+  $('reader-meta').textContent = 'STORY '+String(viewerIndex+1).padStart(2,'0')+' / '+String(page.images.length).padStart(2,'0')+(words ? '  ·  '+Math.max(1,Math.ceil(words/220))+' MIN READ' : '');
+  $('story-previous').disabled = $('story-next').disabled = page.images.length < 2;
   $('previous').disabled = $('next').disabled = page.images.length < 2;
 }
 function render() {
@@ -42,7 +52,7 @@ function renderCollection(container, images, style, preview = false) {
     const strip = element('div'); strip.className = 'cinema-strip';
     const update = () => { const image = images[active]; img.src = image.source; img.alt = image.title || image.caption || 'Gallery image'; title.textContent = image.title || 'Work '+String(active+1).padStart(2,'0'); caption.textContent = image.article ? firstSentence(image.article) : image.caption; count.textContent = String(active+1).padStart(2,'0')+' / '+String(images.length).padStart(2,'0'); strip.replaceChildren(); images.forEach((image, index) => { const thumb = element('button'); thumb.type = 'button'; thumb.setAttribute('aria-label', 'Show work '+(index+1)); thumb.setAttribute('aria-pressed', String(index===active)); const tiny = element('img'); tiny.referrerPolicy = 'no-referrer'; tiny.src = image.source; tiny.alt = ''; thumb.append(tiny); thumb.onclick = () => {active=index;update();}; strip.append(thumb); }); };
     previous.onclick = () => { active=(active-1+images.length)%images.length; update(); }; next.onclick = () => {active=(active+1)%images.length;update();}; previous.disabled = next.disabled = images.length<2;
-    imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { showImage(active); $('viewer').showModal(); } };
+    imageButton.setAttribute('aria-label', preview ? 'Draft image preview' : 'Expand current work'); imageButton.onclick = () => { if (!preview) { openStory(active); } };
     container.tabIndex = 0; container.onkeydown = event => { if (['ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault(); event.stopPropagation(); active=(active+(event.key==='ArrowLeft'?-1:1)+images.length)%images.length;update();} };
     const sequenceLabel = element('span', 'THE COLLECTION'); sequenceLabel.className = 'sequence-label'; controls.append(previous,next,sequenceLabel); container.append(stage,controls,strip); update(); return;
   }
@@ -50,7 +60,7 @@ function renderCollection(container, images, style, preview = false) {
     const figure = element('figure'), button = element('button'); button.className = 'gallery-image'; button.type = 'button'; button.setAttribute('aria-label', `Expand ${image.title || image.caption || 'image ' + (index + 1)}`);
     const img = element('img'); img.referrerPolicy = 'no-referrer'; img.src = image.source; img.alt = image.title || image.caption || page.title; img.loading = 'lazy'; img.decoding = 'async';
     img.onerror = () => { img.hidden = true; button.append(element('span', 'Image unavailable · Edit Gallery to replace its source')); }; button.append(img);
-    button.onclick = () => { if (!preview) {showImage(index); $('viewer').showModal();} };
+    button.onclick = () => { if (!preview) {openStory(index);} };
     const figcaption = element('figcaption'); const number = element('span', String(index+1).padStart(2,'0')); number.className = 'work-number'; figcaption.append(number);
     const copy = element('div'); if (image.title) { const heading = element('span', image.title); heading.className = 'image-title'; copy.append(heading); } if (image.caption || image.article) { const description = element('span', image.article ? firstSentence(image.article) : image.caption); description.className = 'image-caption'; copy.append(description); } figcaption.append(copy); figure.append(button,figcaption); container.append(figure);
   });
@@ -155,10 +165,17 @@ $('editor').onsubmit = async event => {
   } catch (error) { $('status').textContent = error.message === 'PAGE_EDIT_CONFLICT' ? 'PAGE_EDIT_CONFLICT: Another window saved a newer version. Copy your changes, then reload before editing again.' : `${error.code || 'PAGE_SAVE_FAILED'}: ${error.code ? error.message : 'Your changes remain in the editor. Connect the updated companion and check available storage.'}`; }
   finally { loadingImages = false; $('save').disabled = $('cancel').disabled = $('images-input').disabled = $('choose-images').disabled = false; if (editing) renderImageEditor(); }
 };
-$('previous').onclick = () => showImage(viewerIndex - 1); $('next').onclick = () => showImage(viewerIndex + 1);
+$('previous').onclick = $('story-previous').onclick = () => showImage(viewerIndex - 1); $('next').onclick = $('story-next').onclick = () => showImage(viewerIndex + 1);
 $('close-viewer').onclick = () => $('viewer').close();
-$('viewer').addEventListener('keydown', event => { if (['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); showImage(viewerIndex + (event.key === 'ArrowLeft' ? -1 : 1)); } });
-$('viewer').addEventListener('close', () => { $('viewer-image').removeAttribute('src'); });
+$('viewer').addEventListener('keydown', event => {
+  if (['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key)) {
+    event.preventDefault(); event.stopPropagation(); const reader=$('viewer');
+    if(event.key==='Home'||event.key==='End') reader.scrollTo({top:event.key==='Home'?0:reader.scrollHeight,behavior:'auto'});
+    else reader.scrollBy({top:(['ArrowUp','PageUp'].includes(event.key)?-1:1)*(event.key.startsWith('Page')?reader.clientHeight*.85:55),behavior:'auto'});
+    return;
+  }
+  if (['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); showImage(viewerIndex + (event.key === 'ArrowLeft' ? -1 : 1)); } });
+$('viewer').addEventListener('close', () => { $('viewer-image').removeAttribute('src'); document.documentElement.removeAttribute('data-reader-open'); window.scrollTo({top:galleryScrollY,behavior:'instant'}); });
 $('publishing-check').onclick = () => { const plan = publicationReadiness(page); $('publish-status').textContent = `${plan.localImages} local image(s) require transfer; ${plan.referencedImages} image(s) already use hosted URLs.`; $('publish-dialog').showModal(); };
 $('close-publish').onclick = () => $('publish-dialog').close();
 window.addEventListener('beforeunload', event => { if (editing && (loadingImages || $('title-input').value !== page.title || $('text-input').value !== page.text || JSON.stringify(draftImages) !== JSON.stringify(page.images) || $('style-input').value !== displayGalleryStyle(page.galleryStyle))) { event.preventDefault(); event.returnValue = ''; } });

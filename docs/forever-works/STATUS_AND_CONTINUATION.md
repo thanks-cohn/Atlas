@@ -305,3 +305,7 @@ Owner asked for five-paragraph texts but clarified full articles must appear onl
 ## 2026-10-17 — full article in image viewer, not main-page disclosure (0.1.17)
 
 Owner clarified with expanded-view screenshot. Main page now first-sentence preview only, no Read full article/+ control. Image click shows complete article in focusable independent scrolling reading region under smaller fixed-in-view image; previous/next resets reading scroll and changes both. Dark/light main scrollbar and viewer/thumbnail scrollbars slim/theme-matched. No data/helper change. Gallery and bookmark checks PASS (DOM/API doubles); package PASS. Actual Chrome visual/scroll behavior NOT_RUN. Hosted design study unchanged this revision. See GALLERY_STUDIO_V1.md correction.
+
+## 2026-10-17 — single-scroll editorial reader (0.1.18)
+
+Corrected owner screenshot confirms inner article scrollbar plus outer background scroll. Replace fixed-image/nested reading pane with one full article dialog scroller; root/body explicitly locked while open and gallery scroll restored on close. ArrowUp/Down/Page/Home/End target dialog, Left/Right switches stories and resets scroll. Added collection/title/deck/reading-time/image/body/footer hierarchy and locally bundled OFL Newsreader font with full license. Main page remains preview-only. Gallery/bookmark contract checks PASS (DOM/API doubles), package PASS. Actual Chrome wheel/focus/font/aesthetic verification NOT_RUN. No storage/helper change; hosted study unchanged. See GALLERY_STUDIO_V1.md.
