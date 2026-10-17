@@ -29,7 +29,7 @@ assert.throws(()=>store.validatePage({...page,images:[images[0],images[0]]}),/IN
 assert.throws(()=>store.pageKey('../secret'),/INVALID/);
 class El {
  constructor(tag='div'){this.tagName=tag;this.children=[];this.hidden=false;this.value='';this.attrs={};this.handlers={};this.files=[];}
- append(...v){this.children.push(...v);}replaceChildren(...v){this.children=v;}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];delete this[k];}
+ append(...v){this.children.push(...v);}replaceChildren(...v){this.children=v;}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];delete this[k];}hasAttribute(k){return Object.hasOwn(this.attrs,k);}
  scrollBy({top}){this.scrollTop=(this.scrollTop||0)+top;}scrollTo({top}){this.scrollTop=top;}
  addEventListener(k,fn){this.handlers[k]=fn;}focus(){}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
 }
@@ -167,3 +167,16 @@ for(let i=0;i<5;i++)await tick();
 assert.equal(els.get('title').textContent,DEMO_COLLECTION.title);
 assert.equal(els.get('image-count').textContent,'24 Stories');
 assert.equal((await store.readPage(storage,showcaseId)).title,'Title');
+
+// Escape closes the reader first, and presentation preview on the following Escape.
+els.get('viewer').open=false;els.get('publish-dialog').open=false;
+assert.equal(els.get('presentation-preview').hidden,false);
+els.get('presentation-preview').onclick();
+assert.ok(document.documentElement.hasAttribute('data-presentation-preview'));
+els.get('viewer').open=true;
+events.keydown({key:'Escape',preventDefault(){}});
+assert.ok(document.documentElement.hasAttribute('data-presentation-preview'));
+els.get('viewer').open=false;
+events.keydown({key:'Escape',preventDefault(){}});
+assert.ok(!document.documentElement.hasAttribute('data-presentation-preview'));
+assert.ok(!read('page.html').includes('Story template'));

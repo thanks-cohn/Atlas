@@ -325,3 +325,7 @@ header .gallery-wordmark { display:inline-flex; align-items:center; flex-wrap:no
 .gallery-wordmark .gallery-name { font:600 12px/1 system-ui,sans-serif; letter-spacing:.22em; }
 body > header { min-height:88px; }
 @media(max-width:480px){ header .gallery-wordmark { gap:11px; } .gallery-wordmark .gallery-name { font-size:10px; letter-spacing:.18em; } }
+
+/* Presentation mode keeps the identity and content, hides authoring chrome. */
+html[data-presentation-preview] body > header .header-actions,
+html[data-presentation-preview] body > header #status { display:none !important; }

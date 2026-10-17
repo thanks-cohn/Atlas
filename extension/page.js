@@ -34,6 +34,7 @@ function displayCollectionTitle() {
 function render() {
   $('page').hidden = !page || editing; $('editor').hidden = !page || !editing; $('edit').hidden = $('publishing-check').hidden = !page || editing;
   $('backup-library').hidden = !page || editing || Boolean(page.libraryRevision);
+  $('presentation-preview').hidden = !page || editing;
   if (!page) return;
   const collectionTitle = displayCollectionTitle(); document.title = collectionTitle + ' · Atlas'; $('title').textContent = collectionTitle; $('collection-label').textContent = 'CURATED IN ATLAS'; $('text').textContent = page.text;
   $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'Story' : 'Stories'}`;
@@ -194,3 +195,17 @@ $('backup-library').onclick = async () => {
   finally { $('backup-library').disabled=false; }
 };
 load();
+
+// Presentation preview is local UI state; it neither saves nor publishes.
+$('presentation-preview').onclick = () => {
+  if (!page || editing) return;
+  document.documentElement.setAttribute('data-presentation-preview','');
+  $('gallery').focus();
+};
+window.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || $('viewer').open || $('publish-dialog').open) return;
+  if (!document.documentElement.hasAttribute('data-presentation-preview')) return;
+  document.documentElement.removeAttribute('data-presentation-preview');
+  $('presentation-preview').focus();
+  event.preventDefault();
+});
