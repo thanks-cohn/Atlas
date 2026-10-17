@@ -342,3 +342,25 @@ html[data-presentation-preview] body > header #status { display:none !important;
  .nocturne .gallery-intro { grid-template-columns:1fr; gap:12px; padding-block:28px 22px; }
  .nocturne #text { grid-column:1; grid-row:auto; width:100%; max-width:55ch; margin-top:10px; padding-left:18px; font-size:13px; }
 }
+
+/* Refine each contact-sheet card while preserving the established grid. */
+.collection-layout.solstice figure { min-width:0; border:1px solid #dfdcd5; background:#fff; padding:12px; }
+.solstice .gallery-image { border:0; background:#f4f3ef; padding:14px; }
+.solstice figcaption { display:grid; grid-template-columns:30px minmax(0,1fr); gap:14px; padding:22px 10px 18px; margin-top:12px; border-top:1px solid #e7e4dd; text-align:left; }
+.solstice .work-number { display:block; width:auto; margin:4px 0 0; padding:0; font:500 11px/1.5 system-ui,sans-serif; letter-spacing:.1em; color:#8a7051; }
+.solstice figcaption > div { min-width:0; }
+.solstice .image-title { display:block; font:600 clamp(23px,2.1vw,29px)/1.14 'Atlas Newsreader',Georgia,serif; letter-spacing:-.025em; color:#20201f; text-wrap:balance; }
+.solstice .image-caption { display:block; max-width:38ch; margin:11px 0 0; font:400 14px/1.65 system-ui,sans-serif; letter-spacing:0; color:#686863; }
+#preview-gallery.solstice .image-title { font-size:24px; }
+@media(max-width:600px){.collection-layout.solstice figure{padding:10px}.solstice figcaption{gap:10px;padding:18px 6px 14px}.solstice .image-title{font-size:26px}}
+
+/* Article pages use a generous desktop canvas with aligned editorial elements. */
+#viewer-reading { max-width:1320px; padding:52px clamp(20px,4vw,60px) 80px; }
+.reader-heading { max-width:980px; margin-bottom:38px; }
+#viewer #viewer-title { max-width:20ch; font-size:clamp(40px,5.2vw,76px); line-height:1.04; }
+#viewer #viewer-caption { max-width:70ch; }
+.reader-figure { margin:0 0 48px; }
+#viewer-image { max-height:65svh; }
+#viewer-article { width:100%; max-width:980px; }
+.reader-footer { max-width:980px; }
+@media(max-width:600px){#viewer-reading{padding:30px 22px 50px}.reader-heading{margin-bottom:26px}#viewer #viewer-title{font-size:40px}#viewer-image{max-height:50svh}.reader-figure{margin-bottom:30px}}
