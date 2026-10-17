@@ -90,3 +90,46 @@ figcaption { margin: 10px 1px 0; line-height: 1.45; overflow-wrap: anywhere; }
   .gallery-intro { margin-block: 24px 32px; }
   .viewer-toolbar { gap: 6px; }
 }
+
+/* Gallery editorial captions: quiet hierarchy and intentional spacing. */
+#gallery {
+  column-gap: clamp(18px, 2.5vw, 32px);
+}
+#gallery figure {
+  margin-block-end: clamp(28px, 3.5vw, 44px);
+}
+#gallery figcaption {
+  display: grid;
+  gap: 0;
+  margin: 12px 2px 0;
+  padding: 0 6px 0 0;
+  color: #38342e;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+#gallery .image-title {
+  display: block;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(19px, 1.65vw, 23px);
+  line-height: 1.24;
+  font-weight: 400;
+  letter-spacing: -.022em;
+  color: #292620;
+}
+#gallery .image-caption {
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #726d64;
+}
+#gallery .image-title + .image-caption { margin-block-start: 6px; }
+@media (max-width: 600px) {
+  #gallery figcaption { margin-block-start: 11px; }
+  #gallery .image-title { font-size: 20px; }
+}
