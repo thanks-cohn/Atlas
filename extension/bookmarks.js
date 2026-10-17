@@ -197,7 +197,7 @@ function addMetadata(node,kind){
         else await catalogRequest({action:'update_resource',args:{resource:resource.id,note:value},expected_revision:snapshot.revision});
       });
       if(focused===node.id && nodes.get(node.id)?.url===node.url)await loadAssociations(node);
-      if(isTag){input.value='';message.textContent=value.length+' tag'+(value.length===1?'':'s')+' saved. Add more, or close with ×. Refresh your pinboard to see changes.';input.focus();}else dialog.close();report('BOOKMARK_METADATA_SAVED',isTag?'Tags saved. Refresh your pinboard to see them.':'Note saved in Atlas.');
+      if(isTag){input.value='';message.textContent=value.length+' tag'+(value.length===1?'':'s')+' saved. Add more, or close with ×. Refresh your pinboard to see changes.';input.focus();}else dialog.close();$('bookmarks-status').textContent='';
     }catch(error){message.textContent=(error.message || 'BOOKMARK_METADATA_SAVE_FAILED')+(isTag?' ('+confirmed+' of '+value.length+' confirmed)':'')+': Could not confirm the save. Your input remains here. Connect the companion, or reopen this editor if the bookmark or note changed.';}
     finally{save.disabled=false;}
   };
