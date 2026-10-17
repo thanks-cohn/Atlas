@@ -77,3 +77,15 @@ dialog{border-radius:20px;box-shadow:0 24px 100px #250c2430}dialog::backdrop{bac
 body:has(#blank-board:not([hidden])) .storage-note,body:has(#blank-board:not([hidden])) .search{display:none}body:has(.is-preview) .tools,body:has(.is-preview) #refresh{display:none}#blank-status:empty{display:none}#blank-status{font-size:13px;color:#a82e45}header #preview-board{margin-left:auto}header #preview-board:not([hidden])+#refresh{margin-left:0}
 
 #blank-board.is-preview .pin-composer{display:none}
+
+/* The tag palette grows in place; card selection never navigates away. */
+.tag-browser{margin:0 0 18px;padding:16px 18px;border:1px solid #eee5e9;border-radius:16px;background:#fdfafb;max-width:100%}
+.tag-browser-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:#927580;font-size:11px;font-weight:650;letter-spacing:.04em}
+#apply-tags{padding:7px 13px;border-color:#efd9e0;color:var(--pin-red);font-size:11px;background:#fff}
+.tag-field{display:flex;flex-wrap:wrap;align-content:flex-start;gap:7px;max-height:57px;overflow:auto;scrollbar-width:thin;scrollbar-color:#e4d5dc transparent;transition:max-height .22s ease}
+.tag-browser:hover .tag-field,.tag-browser:focus-within .tag-field{max-height:185px}
+.browse-tag{font-size:11px;font-weight:500;line-height:16px;height:25px;padding:4px 11px;background:#fff;border:1px solid #eaddE3;color:#8a6d7a;white-space:nowrap}
+.pin-tag[aria-pressed=true],.tag[aria-pressed=true],.browse-tag[aria-pressed=true]{background:var(--pin-red);color:white;border-color:var(--pin-red)}
+.active-tags{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 0 20px}.active-tags>span{font-size:11px;color:#a18b95;margin-right:6px}.active-tags button{font-size:11px;color:#a92340;background:#fceff3;border:1px solid #f2d9e2;padding:7px 13px}
+.pin-tag{cursor:pointer}.pin-tag:hover{border-color:#c795a9}.tag-browser:focus-visible{outline:2px solid var(--pin-red);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.tag-field{transition:none}}

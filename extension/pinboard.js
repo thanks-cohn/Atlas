@@ -1,10 +1,11 @@
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
-import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit} from './pinboard-model.js';
+import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags} from './pinboard-model.js';
 import {COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
+let pendingTags=new Set(),activeTags=[];
 let roots=[],covers={},items=[],selected=null,associations=new Map();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
@@ -20,11 +21,11 @@ function tagsFor(node){return [...new Set(metadata(node).tags.filter(tag=>typeof
 function tagStrip(node){
   const tags=tagsFor(node);if(!tags.length)return null;
   const strip=el('div');strip.className='pin-tags';strip.setAttribute('aria-label','Bookmark tags');
-  for(const tag of tags.slice(0,5)){const pill=el('span',tag);pill.className='pin-tag';pill.title=tag;strip.append(pill);}
+  for(const tag of tags.slice(0,5)){const pill=tagButton(tag,'pin-tag');strip.append(pill);}
   if(tags.length>5){const more=el('button','+'+(tags.length-5));more.className='pin-tag pin-tag-more';more.setAttribute('aria-label','Show all '+tags.length+' tags');more.onclick=()=>openDetail(node);strip.append(more);}
   return strip;
 }
-function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{const span=el('span',tag);span.className='tag';return span;}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
+function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
 function card(node){
   const article=el('article');article.className='pin';article.atlasNode=node;const image=imageFor(node);
   if(image){
@@ -84,13 +85,30 @@ function renderWindow(){
   status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : 'No matching bookmarks. Try another collection or turn off the image filter.');
 }
 function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
-function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=blank;$('fetch-dock').hidden=blank;$('status').hidden=blank;document.querySelector('.board-options').hidden=blank;if(blank){blocks.clear();$('pins').replaceChildren();return;}items=pinItems(roots,$('folder').value,$('search').value).filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
+function isSelectedTag(tag){return pendingTags.has(tag) || activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);}
+function removeTag(tag){activeTags=activeTags.filter(t=>t!==tag);pendingTags.delete(tag);const q=tagQuery($('search').value);const rest=q.tags.filter(t=>t!==tag);$('search').value=q.text+(rest.length?' tags:'+rest.join(','):'');}
+function tagButton(tag,className){
+  const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
+  button.onclick=()=>{const applied=activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);if(isSelectedTag(tag)){if(applied){removeTag(tag);coverFetch.stop();render();}else{pendingTags.delete(tag);renderTags();}}else{pendingTags.add(tag);renderTags();}button.setAttribute('aria-pressed',String(isSelectedTag(tag)));syncSelection();};return button;
+}
+function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));$('apply-tags').textContent=pendingTags.size?'Apply '+pendingTags.size+' Tags ↵':'Apply Tags ↵';}
+function applyTags(){activeTags=[...pendingTags];coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
+function filteredNodes(){const query=tagQuery($('search').value);const required=[...new Set([...activeTags,...query.tags])];return pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));}
+function renderTags(){
+  const blank=$('folder').value==='blank';$('tag-browser').hidden=blank;
+  const tags=[...new Set(pinItems(roots,$('folder').value).flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
+  $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));
+  const required=[...new Set([...activeTags,...tagQuery($('search').value).tags])];$('active-tags').hidden=blank || !required.length;
+  const label=el('span','Matching all');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Remove tag filter '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();render();};return b;}));syncSelection();
+}
+function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=blank;$('fetch-dock').hidden=blank;$('status').hidden=blank;document.querySelector('.board-options').hidden=blank;renderTags();if(blank){blocks.clear();$('pins').replaceChildren();return;}items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
+
 function updateCoverCard(node){
   const block=[...blocks.values()].find(block=>[...block.children].some(element=>element.atlasNode?.id===node.id));if(!block)return;
   const old=[...block.children].find(element=>element.atlasNode.id===node.id);if(old.atlasNode.url!==node.url)return;
   const replacement=card(node);positionCard(replacement,positionById.get(node.id));old.replaceWith(replacement);scheduleWindow();
 }
-async function saveSettings(){try{await chrome.storage.local.set({[PINBOARD_SETTINGS]:{version:1,limit,imagesOnly:$('images-only').checked}});}catch{status('PINBOARD_SETTINGS_SAVE_FAILED: Your current view still works; settings were not saved.');}}
+async function saveSettings(){try{await chrome.storage.local.set({[PINBOARD_SETTINGS]:{version:1,limit,imagesOnly:$('images-only').checked,tagsOnly:$('tags-only').checked}});}catch{status('PINBOARD_SETTINGS_SAVE_FAILED: Your current view still works; settings were not saved.');}}
 function indexAssociations(data){
   const byResource=new Map(),result=new Map();
   for(const resource of Object.values(data?.resources || {}))if(resource.kind==='bookmark')for(const locator of resource.locators || [])if(locator.provider==='web'){
@@ -113,6 +131,9 @@ async function refresh(){
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage});
+$('apply-tags').onclick=applyTags;
+window.addEventListener('keydown',event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);applyTags();}});
+$('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 const fetchDock=$('fetch-dock');let hoverOpened=false;
 fetchDock.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse' && !fetchDock.open){hoverOpened=true;fetchDock.open=true;}});
 fetchDock.addEventListener('pointerleave',()=>{if(hoverOpened && !fetchDock.contains(document.activeElement)){fetchDock.open=false;hoverOpened=false;}});
@@ -150,8 +171,8 @@ $('image-file').onchange=async()=>{
   }catch(error){status((error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Try a smaller image; existing bookmarks are unchanged.');}
 };
 const coverFetch=installCoverFetch({
-  getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim()]),
-  getNodes:()=>pinItems(roots,$('folder').value,$('search').value),
+  getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim(),activeTags,$('tags-only').checked]),
+  getNodes:()=>filteredNodes(),
   getMounted:()=>[...blocks.values()].flatMap(block=>[...block.children].map(element=>({element,node:element.atlasNode}))),
   hasCover:node=>!!imageFor(node),raster:rasterImage,
   saveCover:async(node,image)=>navigator.locks.request('atlas-pages-v1',async()=>{
@@ -163,7 +184,7 @@ const coverFetch=installCoverFetch({
   onSaved:node=>updateCoverCard(node)
 });
 async function start(){
-  try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;}catch{}
+  try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;$('tags-only').checked=saved?.tagsOnly===true;}catch{}
   await refresh();
   if(boardId){try{const board=boardRecord((await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY]?.[boardId]);$('title').textContent=board.title;document.title=board.title+' · Atlas Pinboard';const exists=[...$('folder').options].some(o=>o.value===board.folderId);$('folder').value=exists?board.folderId:'all';if(!exists){items=[];resetBlocks();status('PINBOARD_FOLDER_MISSING: Choose another folder to browse.');}else render();}catch{items=[];resetBlocks();status('PINBOARD_NOT_FOUND: This saved pinboard is unavailable.');}}
 

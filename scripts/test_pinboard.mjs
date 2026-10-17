@@ -113,3 +113,25 @@ assert.equal(coverage.first,1);assert.equal(coverage.last,4);assert.equal(covera
 assert.ok(coverage.top<=150);assert.ok(coverage.sizes.slice(0,coverage.last).reduce((a,b)=>a+b,0)>=400);
 assert.equal(model.cardLimit(100000),72);assert.equal(model.visibleBlocks(0,72,new Map(),[],0).last,0);
 console.log('PASS: 1,000-bookmark viewport-first window, compact widths independent of buffer budget, eviction/rebuild, bounded overscan, loading geometry, filter persistence and source/preview safety. DOM/API doubles; Chrome hardware QA NOT_RUN.');
+
+// Multiple card tags remain pending until Enter / Apply; applied removal is immediate.
+assert.deepEqual(model.tagQuery('mountains tags:Design,Travel'),{text:'mountains',tags:['Design','Travel']});
+assert.deepEqual(model.tagQuery('tags:Design, Travel mountains'),{text:'mountains',tags:['Design','Travel']});
+assert.deepEqual(model.tagQuery('tags:Design tags:Design,Art'),{text:'',tags:['Design','Art']});
+assert.equal(model.matchesTags(['A','B'],['A','B']),true);assert.equal(model.matchesTags(['A'],['A','B']),false);
+tagCatalog.tags.r=['Art','Design'];tagCatalog.tags.q=['Art'];await $('refresh').onclick();flush();
+const imageTags=cards()[0].children[1].children[2];imageTags.children[0].onclick();
+assert.equal(vm.runInContext('activeTags.length',context),0);
+const otherTag=cards()[0].children[1].children[2].children[1];otherTag.onclick();
+$('apply-tags').onclick();flush();assert.equal(cards().length,1);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
+assert.equal($('active-tags').children.length,3);
+// A normal text query is intersected with ALL selected tags.
+$('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
+$('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,1);
+// Clicking active Design broadens automatically to both Art bookmarks.
+cards()[0].children[1].children[2].children[1].onclick();assert.equal(cards().length,2);
+$('search').value='tags:Design';vm.runInContext('render()',context);assert.equal(cards().length,1);
+$('active-tags').children.at(-1).onclick();assert.equal(cards().length,2);
+$('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
+assert.equal(fetchOptions.getNodes().length,2);
+console.log('PASS: all-tag intersection, cross-card staging, applied chip removal, tags clauses, search scoping and tagged-only persistence.');
