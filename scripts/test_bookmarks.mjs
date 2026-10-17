@@ -33,12 +33,19 @@ class El {
 const created=[];const els=new Map();const classes=new Set();const events={};const calls=[];
 const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>{const el=new El(tag);created.push(el);if(tag==='canvas'){el.getContext=()=>({drawImage(){}});el.toDataURL=()=> 'data:image/webp;base64,BBBB';}el.click=()=>{};return el;},body:{append(...items){created.push(...items);},classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}}};
 let failRead=false;
-const bookmarks={getTree:async()=>{if(failRead)throw Error('denied');return tree;},update:async(id,changes)=>{calls.push(['update',id,changes]);Object.assign(nodes.get(id),changes);}};
+const bookmarks={get:async id=>[nodes.get(id)],getTree:async()=>{if(failRead)throw Error('denied');return tree;},update:async(id,changes)=>{calls.push(['update',id,changes]);Object.assign(nodes.get(id),changes);}};
 for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReordered','onImportEnded'])bookmarks[name]={addListener:fn=>events[name]=fn};
-const storage={};let storageListener;let paired=false;const nativePages={};let catalog={resources:{},relations:[],tags:{}};
+const storage={};let storageListener;let paired=false;const nativePages={};let catalogRevision=1,failMetadata=false;let catalog={resources:{},relations:[],tags:{}};
 const {DEMO_COLLECTION}=await import('data:text/javascript;base64,'+Buffer.from(read('gallery-demo.js')).toString('base64'));
 const pinboards=await import('data:text/javascript;base64,'+Buffer.from(read('pinboard-model.js')).toString('base64'));
-const context={...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>message.type==='state'?{paired}:{data:catalog}},storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
+const context={...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>{
+ if(message.type==='state')return {paired};
+ if(message.body){if(failMetadata)return {ok:false,error:{code:'REVISION_CONFLICT'}};const {action,args,expected_revision}=message.body;assert.equal(expected_revision,catalogRevision);let result;
+ if(action==='add_resource'){result='new-resource';catalog.resources[result]={id:result,...args};}
+ else if(action==='tag'){catalog.tags[args.resource]=[...new Set([...(catalog.tags[args.resource] || []),args.tag])];}
+ else if(action==='update_resource')catalog.resources[args.resource].note=args.note;
+ else throw Error('unexpected mutation');catalogRevision++;return {data:catalog,revision:catalogRevision,result};}
+ return {data:catalog,revision:catalogRevision};} },storage:{local:{get:async key=>({[key]:storage[key]}),set:async values=>Object.assign(storage,values)},onChanged:{addListener:fn=>storageListener=fn}},tabs:{query:async()=>[{id:42}],update:async(id,arg)=>calls.push(['open',id,arg])}},createImageBitmap:async()=>({width:1280,height:720,close(){}}),setTimeout,clearTimeout,prompt:()=> 'Renamed',confirm:()=>false,URL};
 vm.runInNewContext(read('bookmarks.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
 els.get('bookmarks-open').onclick();await tick();
@@ -76,9 +83,21 @@ preview.children[0].onclick();rows=els.get('bookmarks-list').children;
 // Exact Atlas web-locator associations appear underneath; no prefix or ID guesses.
 paired=true;catalog={resources:{r:{id:'r',kind:'bookmark',note:'My note',locators:[{provider:'web',reference:'https://z.example/'}]},n:{id:'n',kind:'note',title:'Linked note',note:'Body',locators:[]}},relations:[{from:'r',to:'n',type:'reference-for'}],tags:{r:['example']}};
 rows[0].children[0].onclick();await tick();await tick();
-assert.ok(preview.children.some(el=>el.textContent==='My note'));
-assert.ok(preview.children.some(el=>el.textContent==='#example'));
+assert.ok(preview.children.flatMap(el=>el.children).some(el=>el.textContent==='My note'));
+assert.ok(preview.children.flatMap(el=>el.children).flatMap(el=>[el,...el.children]).some(el=>el.textContent==='example'));
 assert.ok(preview.children.some(el=>el.tagName==='details'));
+// Add metadata lives between cover actions and Associated Items; native catalog persists it.
+const addSection=()=>preview.children.find(el=>el.className==='bookmark-add-section');
+assert.ok(preview.children.indexOf(addSection())<preview.children.findIndex(el=>el.textContent==='Associated Items'));
+const metadataDialog=()=>created.filter(el=>el.className==='bookmark-metadata-dialog').at(-1);
+addSection().children[1].children[0].onclick();let metadata=metadataDialog(),metadataForm=metadata.children[0],metadataInput=metadataForm.children[2].children[0];
+metadataInput.value='Design';await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,false);assert.ok(catalog.tags.r.includes('Design'));
+addSection().children[1].children[1].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataInput=metadataForm.children[2].children[0];assert.equal(metadataInput.value,'My note');metadataInput.value='Updated note';await metadataForm.onsubmit({preventDefault(){}});assert.equal(catalog.resources.r.note,'Updated note');
+addSection().children[1].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataInput=metadataForm.children[2].children[0];metadataInput.value='Keep my input';paired=false;await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.equal(metadataInput.value,'Keep my input');assert.match(metadataForm.children[3].textContent,/COMPANION_OFFLINE/);paired=true;
+failMetadata=true;await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.match(metadataForm.children[3].textContent,/REVISION_CONFLICT/);assert.ok(!catalog.tags.r.includes('Keep my input'));failMetadata=false;metadata.close();
+// A native bookmark without an Atlas resource is registered once with its exact URL.
+delete catalog.resources.r;delete catalog.tags.r;
+addSection().children[1].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataForm.children[2].children[0].value='New tag';await metadataForm.onsubmit({preventDefault(){}});assert.equal(catalog.resources['new-resource'].locators[0].reference,'https://z.example/');assert.deepEqual(catalog.tags['new-resource'],['New tag']);assert.equal(metadata.open,false);
 // Add Item creates a durable gallery page with a visible link below the image.
 assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associated Items'));
 preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
