@@ -163,14 +163,28 @@ async function catalogRequest(body){
 function addMetadata(node,kind){
   const dialog=document.createElement('dialog');dialog.className='bookmark-metadata-dialog';
   const form=document.createElement('form'),isTag=kind==='tag';
+  let confirmed=0;
   const oldNote=associated?.matches.find(resource=>resource.note)?.note || '';
-  form.append(element('p','BOOKMARK DETAILS'),element('h2',isTag?'Add Tag':oldNote?'Edit Note':'Add Note'));
-  const label=element('label',isTag?'Tag name':'Note'),input=document.createElement(isTag?'input':'textarea');
-  input.required=isTag;input.maxLength=isTag?80:100000;if(!isTag){input.rows=7;input.value=oldNote;}else input.placeholder='e.g. Design';label.append(input);
+  form.append(element('p','BOOKMARK DETAILS'),element('h2',isTag?'Add Tags':oldNote?'Edit Note':'Add Note'));
+  const label=element('label',isTag?'Tags, separated by commas':'Note'),input=document.createElement(isTag?'input':'textarea');
+  input.required=isTag;input.maxLength=isTag?8000:100000;if(!isTag){input.rows=7;input.value=oldNote;}else input.placeholder='Design, Travel, Architecture';label.append(input);
   const message=element('p','Saved in your Atlas companion, linked to this bookmark URL.');message.setAttribute('role','status');
-  const actions=element('div','');actions.className='metadata-actions';const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();const save=element('button',isTag?'Add Tag':'Save Note');save.type='submit';actions.append(cancel,save);form.append(label,message,actions);dialog.append(form);
+  const actions=element('div','');actions.className='metadata-actions';const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();const save=element('button',isTag?'Add Tags':'Save Note');save.type='submit';actions.append(cancel,save);form.append(label);
+  const existing=document.createElement('select'),existingLabel=element('label','Or choose an existing tag'),savedTags=element('div','');savedTags.className='bookmark-tag-pills';
+  let displayedRevision=-1;
+  function populateTags(data,revision){
+    if(revision<displayedRevision)return;displayedRevision=revision;
+    const known=[...new Set(Object.values(data?.tags || {}).flat().filter(tag=>typeof tag==='string' && tag.trim()))].sort((a,b)=>a.localeCompare(b));
+    existing.replaceChildren();const placeholder=element('option',known.length?'Choose an existing tag…':'No saved tags yet');placeholder.value='';existing.append(placeholder);
+    for(const tag of known){const option=element('option',tag);option.value=tag;existing.append(option);}existing.value='';
+    const attached=Object.values(data?.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url)).flatMap(resource=>data.tags?.[resource.id] || []);
+    savedTags.replaceChildren(...[...new Set(attached)].map(tag=>{const pill=element('span',tag);pill.className='bookmark-tag-pill';return pill;}));
+  }
+  if(isTag){existing.setAttribute('aria-label','Existing Atlas tags');existingLabel.append(existing);form.append(existingLabel,savedTags);existing.onchange=()=>{if(!existing.value)return;const values=input.value.split(',').map(value=>value.trim()).filter(Boolean);if(!values.includes(existing.value))values.push(existing.value);input.value=values.join(', ');existing.value='';input.focus();};const waiting=element('option','Loading existing tags…');waiting.value='';existing.append(waiting);catalogRequest().then(snapshot=>populateTags(snapshot.data,snapshot.revision)).catch(()=>{if(displayedRevision<0){const unavailable=element('option','Connect companion to load tags');unavailable.value='';existing.replaceChildren(unavailable);}});}
+  form.append(message,actions);dialog.append(form);
+  const close=element('button','×');close.type='button';close.className='metadata-close';close.setAttribute('aria-label','Close bookmark details');close.onclick=()=>dialog.close();dialog.append(close);
   form.onsubmit=async event=>{
-    event.preventDefault();const value=isTag?input.value.trim():input.value;if(isTag && !value){message.textContent='Enter a tag name.';return;}
+    event.preventDefault();const value=isTag?[...new Set(input.value.split(',').map(tag=>tag.trim()).filter(Boolean))]:input.value;if(isTag && (!value.length || value.length>100 || value.some(tag=>tag.length>80))){message.textContent='Enter up to 100 comma-separated tags, each no longer than 80 characters.';return;}confirmed=0;
     save.disabled=true;
     try{
       await withPageLock(async()=>{
@@ -179,11 +193,12 @@ function addMetadata(node,kind){
         let snapshot=await catalogRequest();const matches=Object.values(snapshot.data.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url));let resource=(!isTag && matches.find(resource=>resource.note===oldNote)) || matches[0];
         if(!resource){snapshot=await catalogRequest({action:'add_resource',args:{kind:'bookmark',title:node.title || node.url,locators:[{provider:'web',reference:node.url}],note:isTag?'':value},expected_revision:snapshot.revision});resource=snapshot.data.resources[snapshot.result];if(!resource)throw Error('BOOKMARK_METADATA_CREATE_UNKNOWN');if(!isTag)return;}
         if(!isTag && resource.note!==oldNote)throw Error('BOOKMARK_NOTE_CONFLICT');
-        await catalogRequest({action:isTag?'tag':'update_resource',args:isTag?{resource:resource.id,tag:value}:{resource:resource.id,note:value},expected_revision:snapshot.revision});
+        if(isTag){for(const tag of value){if(!(snapshot.data.tags?.[resource.id] || []).includes(tag))snapshot=await catalogRequest({action:'tag',args:{resource:resource.id,tag},expected_revision:snapshot.revision});confirmed++;}populateTags(snapshot.data,snapshot.revision);}
+        else await catalogRequest({action:'update_resource',args:{resource:resource.id,note:value},expected_revision:snapshot.revision});
       });
       if(focused===node.id && nodes.get(node.id)?.url===node.url)await loadAssociations(node);
-      dialog.close();report('BOOKMARK_METADATA_SAVED',isTag?'Tag saved. Refresh your pinboard to see it.':'Note saved in Atlas.');
-    }catch(error){message.textContent=(error.message || 'BOOKMARK_METADATA_SAVE_FAILED')+': Could not confirm the save. Your input remains here. Connect the companion, or reopen this editor if the bookmark or note changed.';}
+      if(isTag){input.value='';message.textContent=value.length+' tag'+(value.length===1?'':'s')+' saved. Add more, or close with ×. Refresh your pinboard to see changes.';input.focus();}else dialog.close();report('BOOKMARK_METADATA_SAVED',isTag?'Tags saved. Refresh your pinboard to see them.':'Note saved in Atlas.');
+    }catch(error){message.textContent=(error.message || 'BOOKMARK_METADATA_SAVE_FAILED')+(isTag?' ('+confirmed+' of '+value.length+' confirmed)':'')+': Could not confirm the save. Your input remains here. Connect the companion, or reopen this editor if the bookmark or note changed.';}
     finally{save.disabled=false;}
   };
   dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();input.focus();
