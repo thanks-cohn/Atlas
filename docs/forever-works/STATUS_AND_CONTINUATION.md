@@ -331,3 +331,7 @@ Cloudflare authorization, R2 and deployment are future context only and unchange
 
 ### 0.1.21 — Current story heading above the focused image
 Owner correction: each image should show the same title as its associated article, rather than repeating a generic collection title. Nocturne's primary heading and browser tab now follow the focused image.title (the same field used by the article reader) on initial load, thumbnail selection and arrow navigation. The smaller collection label retains page.title. Missing image titles fall back to the collection title. Solstice retains its collection heading and individual image titles. Saved titles/content are not rewritten. Thumbnail accessible names use story titles too. Focused page and bookmark tests and package PASS; actual Chrome visual verification NOT_RUN.
+
+
+### 0.1.22 — Uncluttered Nocturne filmstrip
+Owner correction from screenshot: remove the repeated story title, count and sentence below the thumbnail strip; the focused story title already appears above the main image. The stage now contains the image alone. Hide the filmstrip's horizontal scrollbar while retaining horizontal overflow, thumbnail clicks and previous/next controls plus left/right keyboard navigation. This applies to the draft preview too. Full articles remain accessible by clicking the main image. Article reader scrolling and the main document's vertical scrolling are preserved. Page/bookmark checks and packaging PASS; actual browser visual verification NOT_RUN.

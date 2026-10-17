@@ -101,11 +101,11 @@ assert.equal(demoSaved.title,beforeDemo.title);assert.equal(demoSaved.gallerySty
 assert.ok(demoSaved.images.every(i=>i.article.split('\n\n').length===5));
 assert.throws(()=>store.validatePage({...demoSaved,images:[{...demoSaved.images[0],article:'x'.repeat(20001)}]}),/INVALID/);
 assert.ok(demoSaved.images.every(i=>i.sourceKind==='url'&&i.title&&i.caption&&i.source.startsWith('https://images.unsplash.com/')));
-// Main page is sentence-only; image expansion reveals the full reading view.
+// Main Nocturne stage has no repeated text; image expansion reveals the full reading view.
 els.get('edit').onclick();els.get('style-input').value='nocturne';
 await els.get('editor').onsubmit({preventDefault(){}});
 assert.equal(els.get('gallery').children.length,3);
-assert.equal(els.get('gallery').children[0].children[1].children[2].textContent,DEMO_COLLECTION.images[0].article.split('.')[0]+'.');
+assert.equal(els.get('gallery').children[0].children.length,1);
 els.get('gallery').children[0].children[0].onclick();
 assert.equal(els.get('viewer').open,true);
 assert.equal(els.get('viewer-article').children.length,5);
@@ -155,3 +155,6 @@ for(let i=0;i<5;i++)await tick();
 assert.equal(els.get('title').textContent,DEMO_COLLECTION.images[0].title);
 assert.equal(els.get('collection-label').textContent,'My own showcase');
 assert.equal((await store.readPage(storage,id)).title,demoSaved.title);
+
+assert.equal(els.get('gallery').children[0].children.length,1,'Focused stage contains only the image; no duplicate story text below the filmstrip');
+assert.match(read('page.css'),/\.cinema-strip \{ scrollbar-width:none/);
