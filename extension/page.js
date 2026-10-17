@@ -36,7 +36,7 @@ function render() {
   $('backup-library').hidden = !page || editing || Boolean(page.libraryRevision);
   $('presentation-preview').hidden = !page || editing;
   if (!page) return;
-  const collectionTitle = displayCollectionTitle(); document.title = collectionTitle + ' · Atlas'; $('title').textContent = collectionTitle; $('collection-label').textContent = 'CURATED IN ATLAS'; $('text').textContent = page.text;
+  const collectionTitle = displayCollectionTitle(); document.title = collectionTitle + ' · Atlas'; $('title').textContent = collectionTitle; $('collection-label').textContent = 'CURATED IN ATLAS'; renderDescription($('text'), page.text);
   $('image-count').textContent = `${page.images.length} ${page.images.length === 1 ? 'Story' : 'Stories'}`;
   document.body.className = editing ? 'studio-mode' : displayGalleryStyle(page.galleryStyle);
   renderCollection($('gallery'), page.images, displayGalleryStyle(page.galleryStyle));
@@ -76,9 +76,13 @@ function renderArticle(container, text) {
   if (!text) return;
   for (const paragraph of text.split(/\n\s*\n/).filter(part=>part.trim())) container.append(element('p',paragraph.trim()));
 }
+function renderDescription(container, text) {
+  container.replaceChildren();
+  for (const paragraph of text.split(/\n\s*\n/).filter(part=>part.trim())) container.append(element('p',paragraph.trim()));
+}
 function renderPreview() {
   $('preview-title').textContent = $('title-input').value;
-  $('preview-text').textContent = $('text-input').value;
+  renderDescription($('preview-text'), $('text-input').value);
   $('preview').className = $('style-input').value;
   renderCollection($('preview-gallery'), draftImages, $('style-input').value, true);
   const descriptions = {solstice:'A bright contact sheet: clean architectural frames, bold typography, and the whole collection in view.',nocturne:'A focused screening room with a single work, a filmstrip, and arrow navigation.'};

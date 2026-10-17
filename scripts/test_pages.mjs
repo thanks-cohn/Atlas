@@ -180,3 +180,7 @@ els.get('viewer').open=false;
 events.keydown({key:'Escape',preventDefault(){}});
 assert.ok(!document.documentElement.hasAttribute('data-presentation-preview'));
 assert.ok(!read('page.html').includes('Story template'));
+
+assert.equal(els.get('text').children.length,2);
+assert.equal(els.get('text').children[0].textContent,DEMO_COLLECTION.text.split('\n\n')[0]);
+assert.equal(els.get('text').children[1].textContent,DEMO_COLLECTION.text.split('\n\n')[1]);

@@ -329,3 +329,16 @@ body > header { min-height:88px; }
 /* Presentation mode keeps the identity and content, hides authoring chrome. */
 html[data-presentation-preview] body > header .header-actions,
 html[data-presentation-preview] body > header #status { display:none !important; }
+
+/* Collection introduction: a distinct editorial aside with room to breathe. */
+#text, #preview-text { white-space:normal; }
+#text p, #preview-text p { margin:0; white-space:pre-wrap; }
+#text p + p, #preview-text p + p { margin-top:16px; }
+.nocturne .gallery-intro { grid-template-columns:minmax(0,1fr) minmax(260px,370px); gap:12px 48px; align-items:start; padding-block:36px 30px; }
+.nocturne #text { max-width:370px; padding:3px 0 3px 25px; border-left:1px solid #ffffff17; color:#c5c4ca; font:400 14px/1.65 system-ui,sans-serif; }
+.nocturne #text p + p { padding-top:14px; margin-top:16px; border-top:1px solid #ffffff0a; color:#8f909a; font-size:11px; line-height:1.7; }
+.nocturne #text:empty { display:none; }
+@media(max-width:760px){
+ .nocturne .gallery-intro { grid-template-columns:1fr; gap:12px; padding-block:28px 22px; }
+ .nocturne #text { grid-column:1; grid-row:auto; width:100%; max-width:55ch; margin-top:10px; padding-left:18px; font-size:13px; }
+}
