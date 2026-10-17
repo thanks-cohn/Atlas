@@ -254,3 +254,8 @@ Source d33c9b22e0355ce343ee53822283c3fe5cc36c13: hosted development run [3899537
 ### Gallery action placement — 2026-10-17
 
 Explicit owner correction: utility buttons belong together at the top right; they must not interrupt the gallery composition between header and content. Moved the existing library-save action into a labelled header action group beside Publishing Check and Edit Gallery, shortened its label to Save to Atlas Library, and reused the existing button styling. The group wraps with consistent spacing on narrow layouts. Button remains hidden until page state determines it is needed. Storage and pairing behavior are unchanged. Verification: node scripts/test_pages.mjs PASS (API/DOM doubles); actual Chrome visual rendering NOT_RUN. Uploaded screenshot was unavailable at its supplied scratch path; placement was confirmed from current HTML/CSS.
+
+
+### Gallery utility text and captions — 2026-10-17
+
+Owner screenshot confirmed raw storage path and success message interrupted the gallery above its title. Keep operational information in the header: path now lives in a keyboard-accessible Storage details disclosure alongside actions; live feedback occupies a restrained right-aligned header line. Preserve errors and storage provenance rather than suppressing them. Improve image captions with 16px Georgia, comfortable line height, contrast and spacing; expanded-view captions use 17px. No external fonts/dependencies. Page behavior checks PASS (node scripts/test_pages.mjs; API/DOM doubles). Screenshot inspected; updated Chrome rendering NOT_RUN.

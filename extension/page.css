@@ -18,7 +18,7 @@ figure { margin: 0 0 28px; break-inside: avoid; }
 .gallery-image { display: block; width: 100%; padding: 0; border: 0; border-radius: 3px; overflow: hidden; background: #eeeae1; cursor: zoom-in; }
 .gallery-image img { display: block; width: 100%; height: auto; transition: transform 220ms ease-out; }
 .gallery-image:hover img { transform: scale(1.015); }
-figcaption { font-size: 12px; line-height: 1.5; margin-top: 10px; color: #716b5f; overflow-wrap: anywhere; }
+figcaption { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; line-height: 1.65; margin: 14px 2px 0; color: #514c43; text-wrap: pretty; overflow-wrap: anywhere; }
 .gallery-empty { column-span: all; padding: 64px 24px; border: 1px solid #e4dfd4; text-align: center; }
 .gallery-empty h2 { font: 400 28px Georgia, serif; }.gallery-empty p { color: #716b5f; }
 #editor { max-width: 800px; margin: 40px auto; }
@@ -39,3 +39,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 #publish-dialog { width: min(560px, 94vw); border: 1px solid #d3cbbb; border-radius: 8px; padding: 28px; color: #262521; background: #fffefa; }#publish-dialog::backdrop { background: #0007; }
 @media(max-width: 540px) { .gallery-intro { margin: 32px auto 36px; }#gallery { columns: 1; }.image-editor-row { flex-wrap: wrap; }header > span { display: none; } }
 @media(prefers-reduced-motion: reduce) { .gallery-image img { transition: none; } }
+
+/* Utility information stays in the header, outside the gallery composition. */
+header { position: relative; row-gap: 8px; }
+#status { flex-basis: 100%; margin: 0; text-align: right; overflow-wrap: anywhere; }
+#status:empty { display: none; }
+.storage-details { position: relative; color: #716d63; font-size: 12px; }
+.storage-details summary { cursor: pointer; padding: 9px 8px; border-radius: 4px; }
+.storage-details summary:focus-visible { outline: 2px solid #8a6d36; outline-offset: 3px; }
+.storage-details p { position: absolute; z-index: 2; right: 0; width: min(320px, 80vw); margin: 8px 0 0; padding: 16px; border: 1px solid #e6e2d9; border-radius: 6px; background: #fffefa; box-shadow: 0 8px 24px #26252112; overflow-wrap: anywhere; }
+#viewer-caption { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.6; color: #e6e0d5; }
