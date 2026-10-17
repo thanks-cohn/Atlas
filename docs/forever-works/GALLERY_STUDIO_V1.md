@@ -155,3 +155,7 @@ Owner rejects the serif STORIES treatment as Halloween-like. The shared reader m
 
 ### 0.1.30 — Nocturne darkroom reveal
 Owner requests distinct but equally considered image-opening motion for Nocturne. Its reader now fades out of the dark gallery, with a subtle 1.025-to-1 hero settle and brief 2px-to-zero focus treatment, followed by staggered heading and article arrival. Solstice retains its expanding source-image transition. Both use the native animation API, reduced-motion bypass, navigation/close cancellation and stale-load guards. No new dependencies or storage changes. Focused DOM/API motion branch tests (both styles, cancellation and reduced motion) and existing bookmark checks plus packaging PASS. Actual Chrome visual/motion verification NOT_RUN; premium aesthetic quality remains for owner review.
+
+
+### 0.1.31 — Distinct light Solstice reader
+Owner asks Solstice expanded articles to contrast with Nocturne using grey and white. Solstice now has a soft grey reader canvas, white article surface, pale translucent masthead, charcoal typography and subdued grey-green metadata/dividers. Buttons and scrollbar receive matching light styling; the opening animation resolves to the same grey canvas rather than dark. Nocturne's dark styling and newly introduced darkroom motion remain. Shared reader dimensions, single-scroll behavior and Escape retained. Both motion paths and existing page/bookmark checks plus packaging PASS with DOM/API doubles; actual Chrome visual/motion verification NOT_RUN.

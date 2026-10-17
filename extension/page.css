@@ -372,3 +372,23 @@ html[data-presentation-preview] body > header #status { display:none !important;
 .reader-stories { font:600 clamp(23px,2.5vw,30px)/1.1 system-ui,-apple-system,'Segoe UI',sans-serif; letter-spacing:.08em; color:#eeedf0; }
 #viewer .viewer-toolbar { flex-wrap:wrap; }
 @media(max-width:600px){.reader-wordmark{gap:9px}.reader-atlas{font-size:9px}.reader-slash{font-size:20px}.reader-stories{font-size:23px;letter-spacing:.06em}}
+
+/* Solstice articles: white editorial paper within a soft grey canvas. */
+.solstice #viewer { background:#eeefed; color:#272b2d; color-scheme:light; scrollbar-color:#b5bab8 #eeefed; }
+.solstice #viewer .viewer-toolbar { background:#f7f8f6f5; border-bottom-color:#d9ddda; }
+.solstice #viewer-reading { background:#fff; border-inline:1px solid #e1e4e0; }
+.solstice #viewer .reader-atlas { color:#626b6b; }
+.solstice #viewer .reader-slash { color:#a4aba7; }
+.solstice #viewer .reader-stories { color:#202728; }
+.solstice #viewer button { color:#343e3f; border-color:#cbd1cd; background:transparent; }
+.solstice #viewer button:hover { background:#e5e9e5; }
+.solstice #viewer #viewer-title { color:#202728; }
+.solstice #viewer #viewer-caption { color:#606b6d; }
+.solstice #viewer #reader-collection { color:#6b756d; }
+.solstice #viewer #reader-meta { color:#78817e; border-top-color:#dce1dc; }
+.solstice #viewer #viewer-article { color:#424b4e; }
+.solstice #viewer #viewer-article p:first-child { color:#293537; }
+.solstice #viewer .reader-footer { border-top-color:#dce1dc; }
+.solstice #viewer::-webkit-scrollbar-track { background:#eeefed; }
+.solstice #viewer::-webkit-scrollbar-thumb { background:#b5bab8; }
+@media(max-width:600px){.solstice #viewer-reading{border-inline:0}}

@@ -198,6 +198,7 @@ const clicked=els.get('gallery').children[0].children[0];
 const source=clicked.children[0];source.naturalWidth=1200;source.naturalHeight=800;
 source.getBoundingClientRect=()=>({left:20,top:50,width:300,height:250});
 clicked.onclick();assert.equal(motionCalls.length,4);
+assert.equal(motionCalls[1].frames[1].backgroundColor,'#eeefed');
 assert.match(motionCalls[0].frames[0].transform,/scale\(0\.333/);
 els.get('next').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
 els.get('close-viewer').onclick();

@@ -47,7 +47,7 @@ function openStory(index, sourceImage) {
       {transform:`translate(${from.x-to.x}px,${from.y-to.y}px) scale(${from.width/to.width})`,transformOrigin:'50% 50%'},
       {transform:'translate(0,0) scale(1)',transformOrigin:'50% 50%'}
     ], timing));
-    openingMotion.push($('viewer').animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#17181e'}],{duration:480,easing:'ease-out'}));
+    openingMotion.push($('viewer').animate([{backgroundColor:'#f4f3ef'},{backgroundColor:'#eeefed'}],{duration:480,easing:'ease-out'}));
     openingMotion.push($('viewer-reading').querySelector('.reader-heading').animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:350,delay:140,fill:'backwards',easing:'ease-out'}));
     openingMotion.push($('viewer-article').animate([{opacity:0},{opacity:1}],{duration:350,delay:200,fill:'backwards'}));
   };
