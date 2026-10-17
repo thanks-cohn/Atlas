@@ -9,6 +9,7 @@ const routes = new Set([
   "/v1/hash",
   "/v1/operate",
   "/v1/catalog",
+  "/v1/tag-image",
   "/v1/library",
   "/v1/receipts",
 ]);
