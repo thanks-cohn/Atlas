@@ -5,7 +5,7 @@ import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCove
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
-let pendingTags=new Set(),activeTags=[];
+let pendingTags=new Set(),activeTags=[],metadataState='loading';
 let roots=[],covers={},items=[],selected=null,associations=new Map();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
@@ -82,21 +82,23 @@ function renderWindow(){
   const wanted=[topSpacer,...[...blocks].sort((a,b)=>a[0]-b[0]).map(([,block])=>block),bottomSpacer];
   const current=[...$('pins').children];if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
   coverFetch.discover();
-  status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : 'No matching bookmarks. Try another collection or turn off the image filter.');
+  status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : ((activeTags.length || tagQuery($('search').value).tags.length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
 function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
 function isSelectedTag(tag){return pendingTags.has(tag) || activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);}
-function removeTag(tag){activeTags=activeTags.filter(t=>t!==tag);pendingTags.delete(tag);const q=tagQuery($('search').value);const rest=q.tags.filter(t=>t!==tag);$('search').value=q.text+(rest.length?' tags:'+rest.join(','):'');}
+function removeTag(tag){activeTags=activeTags.filter(t=>t!==tag);pendingTags.delete(tag);const q=tagQuery($('search').value);const rest=q.tags.filter(t=>t!==tag);$('search').value=q.text+(rest.length?' tag:'+rest.join(','):'');}
 function tagButton(tag,className){
   const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
   button.onclick=()=>{const applied=activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);if(isSelectedTag(tag)){if(applied){removeTag(tag);coverFetch.stop();render();}else{pendingTags.delete(tag);renderTags();}}else{pendingTags.add(tag);renderTags();}button.setAttribute('aria-pressed',String(isSelectedTag(tag)));syncSelection();};return button;
 }
-function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));$('apply-tags').textContent=pendingTags.size?'Apply '+pendingTags.size+' Tags ↵':'Apply Tags ↵';}
+function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=!staged;$('apply-tags').textContent='Show Matches ↵';}
+
 function applyTags(){activeTags=[...pendingTags];coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
 function filteredNodes(){const query=tagQuery($('search').value);const required=[...new Set([...activeTags,...query.tags])];return pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));}
 function renderTags(){
   const blank=$('folder').value==='blank';$('tag-browser').hidden=blank;
   const tags=[...new Set(pinItems(roots,$('folder').value).flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
+  $('tag-browser').hidden=blank || !tags.length;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));
   const required=[...new Set([...activeTags,...tagQuery($('search').value).tags])];$('active-tags').hidden=blank || !required.length;
   const label=el('span','Matching all');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Remove tag filter '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();render();};return b;}));syncSelection();
@@ -119,7 +121,7 @@ function indexAssociations(data){
 }
 async function refreshAssociations(){
   // Tags belong to exact Atlas bookmark URLs; never infer tags from titles/domains.
-  try{const state=await chrome.runtime.sendMessage({type:'state'});if(state?.paired){const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.data)associations=indexAssociations(result.data);}}catch{}
+  try{const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.ok===false || !result?.data)throw Error('Unavailable');associations=indexAssociations(result.data);metadataState='ready';}catch{metadataState=associations.size?'cached':'unavailable';}
 }
 async function refresh(){
   try{
@@ -132,7 +134,7 @@ async function refresh(){
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
 $('apply-tags').onclick=applyTags;
-window.addEventListener('keydown',event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);applyTags();}});
+window.addEventListener('keydown',async event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);await refreshAssociations();applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 async function refreshCoverUsage(){
   try{const saved=(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY];$('cover-budget').value=String(coverBudgetMiB(saved));const bytes=coverStorageBytes((await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {});$('cover-usage').textContent=(bytes/1048576).toFixed(1)+' MiB saved · '+coverBudgetMiB(saved)+' MiB limit';}catch{$('cover-usage').textContent='Usage unavailable';}

@@ -45,10 +45,10 @@ export function visibleBlocks(count,limit,heights,estimates,scrollTop,viewportHe
   return {first,last,visible,top:sizes.slice(0,first).reduce((a,b)=>a+b,0),bottom:sizes.slice(last).reduce((a,b)=>a+b,0),sizes};
 }
 
-// tags: clauses may precede or follow ordinary title/URL search words.
+// tag: clauses may precede or follow ordinary title/URL search words.
 export function tagQuery(value){
   const tags=[];
-  const text=String(value).replace(/\btags:([^\s,]+(?:\s*,\s*[^\s,]+)*)/gi,(_,list)=>{tags.push(...list.split(',').map(t=>t.trim()).filter(Boolean));return ' ';}).replace(/\s+/g,' ').trim();
+  const text=String(value).replace(/\btags?:([^\s,]+(?:\s*,\s*[^\s,]+)*)/gi,(_,list)=>{tags.push(...list.split(',').map(t=>t.trim()).filter(Boolean));return ' ';}).replace(/\s+/g,' ').trim();
   return {text,tags:[...new Set(tags)]};
 }
-export function matchesTags(actual,required){return required.every(tag=>actual.includes(tag));}
+export function matchesTags(actual,required){const available=new Set(actual.map(tag=>tag.toLocaleLowerCase()));return required.every(tag=>available.has(tag.toLocaleLowerCase()));}

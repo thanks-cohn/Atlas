@@ -147,3 +147,14 @@ $('new-board-title').value='My new board';await $('new-board-form').onsubmit({pr
 assert.equal(data[model.PINBOARDS_KEY]['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'].folderId,'blank');assert.match(context.location.href,/id=bbbb/);
 const repeats=[{id:'root',children:[{id:'f1',children:[{id:'a',title:'First',url:'https://example.com/item'}]},{id:'f2',children:[{id:'b',title:'Second',url:'https://example.com/item'},{id:'c',title:'Other query',url:'https://example.com/item?x=1'},{id:'d',title:'Fragment',url:'https://example.com/item#part'}]}]}];
 assert.equal(model.pinItems(repeats,'all').length,3);assert.equal(model.pinItems(repeats,'f2').length,3);assert.equal(model.pinItems(repeats,'all','Second')[0].id,'b');
+
+assert.deepEqual(model.tagQuery('tag:Art,Design mountains'),{text:'mountains',tags:['Art','Design']});
+assert.equal(model.matchesTags(['Design'],['design']),true);
+// No temporary paired token must not suppress the read that can reconnect natively.
+let catalogReads=0,stateReads=0;
+context.chrome.runtime.sendMessage=async message=>{if(message.type==='state'){stateReads++;return {paired:false};}catalogReads++;return {data:tagCatalog};};
+vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='tag:art';$('tags-only').checked=false",context);
+await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0);assert.equal(cards().length,2);assert.equal($('tag-browser').hidden,false);assert.equal($('apply-tags').hidden,true);
+// Empty/unavailable metadata does not leave a useless empty palette or imply no saved tags exist.
+context.chrome.runtime.sendMessage=async()=>({ok:false,error:{code:'NEEDS_PAIRING'}});
+vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,true);assert.match($('status').textContent,/Connect your companion/);
