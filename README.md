@@ -90,3 +90,7 @@ Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/
 ## Optional model experiment
 
 [JoyTag single-image experiment](experiments/joytag/README.md) is isolated from the extension and companion. Baseline `base-1.3` predates it. Model suggestions require review; no automatic tagging or recommendations are enabled.
+
+## Proposed tag provenance foundation
+
+[Tag Provenance, Run Snapshots and Curated State](docs/forever-works/PROPOSAL_TAG_PROVENANCE_RUNS_AND_CURATED_STATE.md) records the proposed separation of human/model assignments, immutable runs, attributed deltas, current views, explicit companion jobs and portable exports. Documentation only; not an implemented migration or job system.
