@@ -346,6 +346,10 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   )
     return;
   (async () => {
+    if (message.type === "debug-bookmark-status") {
+      await diagnostic("BOOKMARK_UI",safeDiagnosticCode(message.code));
+      return {ok:true};
+    }
     if (message.type === "debug-report") return {ok:true,report:await diagnosticReport()};
     if (message.type === "debug-probe") {
       const report = await diagnosticReport();

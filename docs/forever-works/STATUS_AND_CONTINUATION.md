@@ -497,3 +497,9 @@ Bookmark regression PASS for comma trimming/deduplication, choosing an existing 
 
 ### 0.1.49 — Remove shelf metadata success banner
 Owner highlights BOOKMARK_METADATA_SAVED beneath the bookmarks navigation and requests its removal as debug information in the normal interface. Successful tag/note saves now clear that shelf status line instead of inserting the technical success code and refresh instruction. The open tag editor retains its plain-language save confirmation and attached pills; failures remain visible. No persistence or helper changes. Existing bookmark checks and packaging PASS; Chrome visual QA NOT_RUN.
+
+
+### 0.1.50 — Entire bookmark status strip hidden
+Owner clarifies that the whole region beneath bookmark breadcrumbs must be free of technical status, including BOOKMARKS_READY, not merely the metadata-save message. The status element is now hidden for all messages and does not create visible/live-region clutter. Unique consecutive bookmark status codes go to the existing bounded diagnostic JSON event journal under BOOKMARK_UI; raw message text, URLs, paths and contents are not exported. Dialog-specific actionable save errors remain in their relevant editors. Worker and bookmark checks plus packaging PASS; real Chrome visual QA NOT_RUN. No helper change.
+
+Owner additionally highlights the empty-state paragraph beneath the focused bookmark. Removed that entire explanatory paragraph; Associated Items and Add Item remain available without helper-connection instructions in the empty list.

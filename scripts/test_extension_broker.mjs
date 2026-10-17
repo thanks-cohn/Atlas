@@ -252,6 +252,11 @@ test('browser startup wakes only explicitly remembered native enrollment',async(
  const returning=worker();returning.local.nativeEnrolled=true;await returning.startup();assert.equal(returning.calls.native.length,1);assert.equal(returning.session.token,token);
 });
 
+test('bookmark status goes to the bounded debug journal without free-text data',async()=>{
+ const w=worker();await w.send({type:'debug-bookmark-status',code:'BOOKMARK_READ_FAILED',message:'private-user-data'});
+ const response=await w.send({type:'debug-report'});assert.ok(response.report.events.some(event=>event.stage==='BOOKMARK_UI' && event.code==='BOOKMARK_READ_FAILED'));assert.ok(!JSON.stringify(response).includes('private-user-data'));
+});
+
 test('diagnostic report exposes stages and mode without credentials or automatic reconnect', async()=>{
  const w=worker();
  await w.send({type:'pair',token});

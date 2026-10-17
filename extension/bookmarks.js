@@ -11,7 +11,12 @@ let associated = null, associationEpoch = 0;
 let localPages = [], itemsEpoch = 0;
 const active = () => document.body.classList.contains('bookmarks-mode');
 const element = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
-function report(code, message) { $('bookmarks-status').textContent = `${code}: ${message}`; }
+let lastReportCode='';
+function report(code, message) {
+  // Technical status stays out of the shelf; export only secret-free event codes.
+  $('bookmarks-status').textContent = `${code}: ${message}`;
+  if(code!==lastReportCode){lastReportCode=code;chrome.runtime.sendMessage({type:'debug-bookmark-status',code}).catch(()=>{});}
+}
 async function operation(task) {
   try { if (await task() !== false) await refresh(); }
   catch { report('BOOKMARK_OPERATION_FAILED', 'Chrome could not complete that action. Refresh and check whether the bookmark still exists or is managed.'); }
@@ -310,7 +315,6 @@ function render() {
   const canCreate = !destination.url && destination.parentId !== undefined && !destination.unmodifiable && !query;
   $('bookmarks-new').disabled = $('bookmarks-folder').disabled = !canCreate;
   report('BOOKMARKS_READY', `${list.length} item(s) · Title opens in this tab · Triangle explores · Live Chrome bookmarks`);
-  if (focusedNode && !list.length && !associated?.matches.length && !localPages.length) $('bookmarks-list').append(element('p', 'No associated items yet. Use Add Item to create a page. Linked Atlas notes and tags also appear when the companion is connected.'));
   for (const node of list) {
     const row = document.createElement('div'); row.className = 'bookmark-row'; row.setAttribute('role', 'listitem');
     const open = element('button', ''); open.className = 'bookmark-open'; open.type = 'button';
