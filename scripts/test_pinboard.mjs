@@ -24,7 +24,7 @@ class El{
  querySelector(tag){for(const child of this.children){if(child.tag===tag)return child;const found=child.querySelector(tag);if(found)return found;}return null;}
  replaceWith(node){const index=this.parent.children.indexOf(this);node.parent=this.parent;this.parent.children[index]=node;this.parent=null;}
  contains(){return false;}focus(){}
- getBoundingClientRect(){return {top:this===elements.get('pins')?-scroll:0,bottom:800,height:800};}
+ getBoundingClientRect(){const top=this===elements.get('pins')?-scroll:this.className==='pin'?(parseFloat(this.style.top)||0)-scroll:0;const height=this.className==='pin'?(parseFloat(this.style.height)||800):800;return {top,bottom:top+height,height};}
  get options(){return this.children;}
  setAttribute(k,v){this.attrs[k]=v;} removeAttribute(k){delete this.attrs[k];}
  addEventListener(k,fn){this.handlers[k]=fn;}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}
@@ -75,6 +75,22 @@ const after=cards();assert.notEqual(after[1],before[1]);assert.equal(after[0],be
 after[1].children[0].children[0].onload();assert.equal(scroll,155);flush();assert.equal(scroll,155);
 // Offscreen successes do not rebuild the current view.
 const visible=cards();fetchOptions.onSaved(roots[0].children[0].children[900]);assert.deepEqual(cards(),visible);
+// Real layout coordinates, not remote batches, decide which cards stay mounted.
+for(let i=0;i<roots[0].children[0].children.length;i++)roots[0].children[0].children[i].url='https://example.com/'+i+(i%3===0?'.jpg':'/page');
+await $('refresh').onclick();
+for(const cap of [24,48,72,96,144]){
+ $('card-limit').value=String(cap);$('card-limit').onchange();
+ for(const top of [0,300,12000,6000,900,3000,0]){
+  scroll=top;listeners.scroll();flush();
+  const visible=vm.runInNewContext('positions.filter(p=>p.y+p.height>=localScroll() && p.y<=localScroll()+(window.innerHeight || 768)).map(p=>p.node.id)',context);
+  const mounted=new Set(cards().map(card=>card.atlasNode.id));assert.ok(cards().length<=cap);
+  for(const id of visible)assert.ok(mounted.has(id),'Visible card '+id+' missing at '+top+' cap '+cap);
+  assert.ok(cards().some(card=>{const r=card.getBoundingClientRect();return r.bottom>=0 && r.top<=768;}),'Empty viewport at '+top);
+ }
+}
+// Pointer hover has a native click/keyboard fallback; leaving doesn't trap the dock open.
+const dock=$('fetch-dock');dock.handlers.pointerenter({pointerType:'mouse'});assert.equal(dock.open,true);dock.handlers.pointerleave();assert.equal(dock.open,false);
+dock.handlers.pointerenter({pointerType:'touch'});assert.equal(dock.open,false);
 // Window calculation stays bounded at any position, including huge scroll jumps and boundaries.
 for(const limit of [24,48,72,96,144])for(const top of [0,1,5000,1e8]){
  const plan=model.visibleBlocks(1000,limit,new Map(),[],top);
