@@ -111,3 +111,12 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 #detail-image{display:block;width:auto;height:auto;max-width:100%;max-height:clamp(80px,calc(90svh - 300px),46svh);object-fit:contain;object-position:center top;border-radius:10px;background:transparent}
 #detail .detail-copy{padding:16px 28px 24px}#detail .detail-copy p:empty{display:none}
 @media(max-width:540px){.detail-heading{padding:20px;gap:15px}.detail-media{padding:20px 20px 0}#detail .detail-copy{padding:20px}}
+
+/* Tagging choices live only in the opened image preview; never on pinboard cards. */
+.detail-tagging{flex:0 0 auto;padding:7px 28px 8px;border-bottom:1px solid #eee6ea;background:#fff;display:grid;grid-template-rows:auto auto;gap:4px}
+.detail-tagging-row{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;min-height:22px}
+.detail-tagging-row label{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:#554750;cursor:pointer}
+.detail-tagging-row input{accent-color:var(--pin-red);margin:0}
+.detail-tagging-actions{font-size:10px;color:#967f8b;line-height:1.25}
+.detail-tagging [hidden]{display:none!important}
+@media(max-width:600px){.detail-tagging{padding-inline:14px}.detail-tagging-row{gap:6px 12px}.detail-tagging-row label{font-size:11px}}
