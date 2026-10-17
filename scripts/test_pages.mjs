@@ -208,3 +208,15 @@ context.window.matchMedia=()=>({matches:false});
 hero.complete=false;
 clicked.onclick();const staleLoad=hero.handlers.load;
 els.get('close-viewer').onclick();staleLoad();assert.equal(motionCalls.length,4);
+
+// Nocturne uses its own darkroom reveal, not Solstice's source-rectangle growth.
+document.body.classList={contains:name=>name==='nocturne'};
+hero.complete=true;
+clicked.onclick();assert.equal(motionCalls.length,8);
+assert.equal(motionCalls[4].frames[0].opacity,0);
+assert.equal(motionCalls[5].frames[0].transform,'scale(1.025)');
+assert.equal(motionCalls[5].frames[0].filter,'blur(2px)');
+els.get('close-viewer').onclick();assert.ok(motionCalls.every(call=>call.animation.cancelled));
+context.window.matchMedia=()=>({matches:true});
+clicked.onclick();assert.equal(motionCalls.length,8);
+els.get('close-viewer').onclick();

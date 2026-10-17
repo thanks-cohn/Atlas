@@ -365,3 +365,7 @@ Owner requests image growth followed by a changing background. Solstice image cl
 
 ### 0.1.29 — Restrained reader masthead
 Owner rejects the serif STORIES treatment as Halloween-like. The shared reader masthead now uses a clean system sans-serif at semibold weight, moderate uppercase tracking and slightly reduced scale. ATLAS remains the smaller companion label. Article typography and motion unchanged. Existing page/bookmark tests and packaging PASS; owner visual review still required.
+
+
+### 0.1.30 — Nocturne darkroom reveal
+Owner requests distinct but equally considered image-opening motion for Nocturne. Its reader now fades out of the dark gallery, with a subtle 1.025-to-1 hero settle and brief 2px-to-zero focus treatment, followed by staggered heading and article arrival. Solstice retains its expanding source-image transition. Both use the native animation API, reduced-motion bypass, navigation/close cancellation and stale-load guards. No new dependencies or storage changes. Focused DOM/API motion branch tests (both styles, cancellation and reduced motion) and existing bookmark checks plus packaging PASS. Actual Chrome visual/motion verification NOT_RUN; premium aesthetic quality remains for owner review.

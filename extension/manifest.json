@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "minimum_chrome_version": "116",
   "name": "ATLAS \u00b7 Resource Explorer",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "Explore and organize explicitly authorized local folders with the separately installed ATLAS companion.",
   "permissions": [
     "storage",

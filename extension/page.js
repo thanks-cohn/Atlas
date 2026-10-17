@@ -17,11 +17,21 @@ function openStory(index, sourceImage) {
   galleryScrollY = window.scrollY || 0;
   document.documentElement.setAttribute('data-reader-open','');
   showImage(index); $('viewer').showModal();
-  if (!origin || !origin.width || !origin.height || !document.body.classList.contains('solstice') || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const nocturne = document.body.classList?.contains('nocturne');
+  const solstice = document.body.classList?.contains('solstice');
+  if ((!nocturne && (!solstice || !origin?.width || !origin?.height)) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const hero = $('viewer-image');
   const generation = openingGeneration;
   const reveal = () => {
     if (generation !== openingGeneration || !$('viewer').open || viewerIndex !== index || !hero.animate) return;
+    if (nocturne) {
+      // A darkroom reveal: restrained depth and staggered editorial arrival.
+      openingMotion.push($('viewer').animate([{opacity:0,backgroundColor:'#0f1014'},{opacity:1,backgroundColor:'#17181e'}],{duration:340,easing:'ease-out'}));
+      openingMotion.push(hero.animate([{opacity:0,transform:'scale(1.025)',filter:'blur(2px)'},{opacity:1,transform:'scale(1)',filter:'blur(0px)'}],{duration:650,delay:60,fill:'backwards',easing:'cubic-bezier(.16,1,.3,1)'}));
+      openingMotion.push($('viewer-reading').querySelector('.reader-heading').animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:480,delay:170,fill:'backwards',easing:'cubic-bezier(.16,1,.3,1)'}));
+      openingMotion.push($('viewer-article').animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:450,delay:260,fill:'backwards',easing:'ease-out'}));
+      return;
+    }
     const target = hero.getBoundingClientRect();
     if (!target.width || !target.height) return;
     // Compare the painted image, rather than its contain/letterbox bounds.
