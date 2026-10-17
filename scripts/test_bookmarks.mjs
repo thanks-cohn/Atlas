@@ -163,5 +163,11 @@ assert.equal(coversModule.setBookmarkCover({},nodes.get('3'),'https://example.co
 assert.throws(()=>coversModule.setBookmarkCover({},nodes.get('3'),'https://u:p@example.com/x.png'));
 assert.throws(()=>coversModule.setBookmarkCover({},nodes.get('3'),'javascript:alert(1)'));
 assert.throws(()=>coversModule.setBookmarkCover({},nodes.get('3'),'https://example.com/x?token=secret'));
-assert.throws(()=>coversModule.setBookmarkCover({padding:'x'.repeat(4000000)},nodes.get('3'),dataImage),/STORAGE_FULL/);
+assert.throws(()=>coversModule.setBookmarkCover({padding:'x'.repeat(coversModule.MAX_COVERS_BYTES)},nodes.get('3'),dataImage),/STORAGE_FULL/);
 console.log('PASS: native bookmark hierarchy, current-tab titles, independent disclosure/back/Esc, saved images, exact linked metadata, URL/cover safety, quota bounds and existing CRUD (API/DOM doubles; actual Chrome NOT_RUN).');
+
+// The former four-million-character ceiling no longer blocks image additions.
+const largerCovers=coversModule.setBookmarkCover({padding:'x'.repeat(4000001)},nodes.get('3'),dataImage);
+assert.ok(coversModule.coverStorageBytes(largerCovers)>4000000);
+assert.equal(coversModule.coverStorageBytes({label:'é'}),new TextEncoder().encode(JSON.stringify({label:'é'})).length);
+assert.ok(JSON.parse(readFileSync(new URL('../extension/manifest.json',import.meta.url),'utf8')).permissions.includes('unlimitedStorage'));

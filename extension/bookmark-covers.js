@@ -1,7 +1,10 @@
 // Extension-local presentation metadata; never changes a native bookmark or grants files.
 export const COVER_KEY = 'atlasBookmarkCoversV1';
 export const MAX_COVER_LENGTH = 700000;
-export const MAX_COVERS_LENGTH = 4000000;
+// Serialized cover-map budget, separate from browser quota and mounted image memory.
+export const MAX_COVERS_BYTES = 64 * 1024 * 1024;
+export const MAX_COVERS_LENGTH = MAX_COVERS_BYTES; // Legacy import compatibility.
+export function coverStorageBytes(covers) { return new TextEncoder().encode(JSON.stringify(covers)).byteLength; }
 export function safeCover(value) {
   return typeof value === 'string' && value.length <= MAX_COVER_LENGTH &&
     /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
@@ -27,7 +30,7 @@ export function setBookmarkCover(covers, node, image) {
   const result = {...covers};
   if (image === null) delete result[node.id];
   else Object.defineProperty(result, node.id, {value: {url: node.url || '', image}, enumerable: true, configurable: true});
-  if (JSON.stringify(result).length > MAX_COVERS_LENGTH) throw new Error('BOOKMARK_IMAGE_STORAGE_FULL');
+  if (coverStorageBytes(result) > MAX_COVERS_BYTES) throw new Error('BOOKMARK_IMAGE_STORAGE_FULL');
   return result;
 }
 export function bookmarkAssociations(node, data) {
