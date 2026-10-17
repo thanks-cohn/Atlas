@@ -107,7 +107,7 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .detail-heading h2{margin:0;color:#32252c;font-size:clamp(19px,2.4vw,28px);font-weight:650;line-height:1.3;letter-spacing:-.035em;overflow-wrap:anywhere}
 .detail-heading #close{flex:0 0 32px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;background:#f8f2f5;color:#856b78;font-size:23px;line-height:1}
 .detail-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d9c5cf transparent}
-.detail-media{padding:24px 28px 0;display:flex;justify-content:center;align-items:flex-start}
-#detail-image{display:block;width:auto;height:auto;max-width:100%;max-height:60svh;object-fit:contain;object-position:center top;border-radius:10px;background:transparent}
-#detail .detail-copy{padding:22px 28px 28px}#detail .detail-copy p:empty{display:none}
+.detail-media{padding:20px 28px 0;display:flex;justify-content:center;align-items:flex-start}
+#detail-image{display:block;width:auto;height:auto;max-width:100%;max-height:clamp(80px,calc(90svh - 300px),46svh);object-fit:contain;object-position:center top;border-radius:10px;background:transparent}
+#detail .detail-copy{padding:16px 28px 24px}#detail .detail-copy p:empty{display:none}
 @media(max-width:540px){.detail-heading{padding:20px;gap:15px}.detail-media{padding:20px 20px 0}#detail .detail-copy{padding:20px}}

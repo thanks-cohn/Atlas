@@ -591,3 +591,7 @@ Owner requests single-click highlight without mutation, double-click or Enter to
 
 ### 0.1.64 — Image preview top alignment and persistent title
 Owner requests top-aligned preview image with breathing room, always-visible title, downscaling large images and no enlargement of small originals. Bookmark image popup now has a fixed title/close heading outside its single scrolling content region. Media has24px top/side padding (20px compact), top alignment, natural auto width/height capped by available width and60svh. This preserves whole-image aspect ratio and does not force thumbnail-sized images to fill the popup. Notes/tags/source remain below image; scroll is confined to content while heading remains visible. No changes to gallery Story readers. Existing pinboard/tag-editor tests and packaging/diff check PASS (DOM/API doubles); actual Chrome portrait/landscape/tiny-image and mobile visual QA NOT_RUN.
+
+
+### 0.1.65 — Compact whole-content bookmark preview
+Owner reports bottom controls still below initial view with modest content. Reduced image ceiling from60svh to46svh, also reserving300px from90svh popup budget for title/details/controls on shorter screens (80px image floor). Reduced media/copy spacing modestly while retaining breathing room, natural small-image sizing, persistent heading and one content scrollbar for unusually long notes/many tags. This targets typical compact content; arbitrary-length metadata cannot be guaranteed scrollbar-free. Existing pinboard check and packaging/diff check PASS; actual Chrome visual QA NOT_RUN.
