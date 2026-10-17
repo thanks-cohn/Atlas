@@ -1,9 +1,10 @@
 import {DEMO_COLLECTION} from './gallery-demo.js';
-import {readPage, updatePage, withPageLock, publicImageURL, publicationReadiness, displayGalleryStyle} from './pages-store.js';
+import {readPage, validatePage, updatePage, withPageLock, publicImageURL, publicationReadiness, displayGalleryStyle} from './pages-store.js';
 import {rasterImage, imageType} from './image-file.js';
 import {library, saveLibraryPage, readLibraryPage, importOriginal} from './library-client.js';
 const $ = id => document.getElementById(id);
-const id = new URL(location.href).searchParams.get('id');
+const requestedId = new URL(location.href).searchParams.get('id');
+const id = requestedId || '00000000-0000-4000-8000-000000000024';
 let page = null, editing = false, draftImages = [], viewerIndex = 0, loadingImages = false;
 const originalFiles = new Map();
 const element = (tag, text = '') => { const el = document.createElement(tag); el.textContent = text; return el; };
@@ -95,6 +96,11 @@ function renderImageEditor() {
 }
 async function load() {
   try {
+    if (!requestedId) await withPageLock(async () => {
+      if (await readPage(chrome.storage.local, id)) return;
+      const showcase = validatePage({version:1,id,kind:'page',template:'gallery',galleryStyle:'nocturne',title:DEMO_COLLECTION.title,text:DEMO_COLLECTION.text,revision:1,images:DEMO_COLLECTION.images.map((image,index)=>({...image,id:'showcase-'+index}))});
+      await chrome.storage.local.set({['atlas.page.v1.'+id]:showcase});
+    });
     page = await readPage(chrome.storage.local, id);
     try { const disk = await readLibraryPage(id); if (!page || (disk.libraryRevision || 0) > (page.libraryRevision || 0)) { page = disk; await chrome.storage.local.set({['atlas.page.v1.'+id]: page}); } } catch { /* Existing browser copy remains accessible; never label it disk-backed. */ }
     if (page?.deleted) page = null;

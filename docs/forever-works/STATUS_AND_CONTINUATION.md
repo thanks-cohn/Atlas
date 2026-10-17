@@ -321,3 +321,9 @@ Sample loading preserves the draft gallery title and introduction; it replaces i
 Verification: focused page/bookmark DOM and API-double tests, project checker, extension package. Actual Chrome visual/runtime verification NOT_RUN.
 
 0.1.19 evidence: page and bookmark scripts PASS; four real authenticated HTTP/SQLite library tests PASS including marker persistence across restart and retained image assets. Project checker: 22 linked records valid; broader 141-test run has 3 failures, 3 errors, 32 skips in existing native startup/supervisor areas. Thus full suite is not green. Extension ZIP packages successfully; Chrome/Windows UI verification NOT_RUN.
+
+
+### 0.1.20 — Ready-made gallery showcase
+Owner rationale: visitors may never create a gallery; provide immediate access to a complete example before asking them to compose anything. A Gallery showcase entry in the existing shelf sidebar opens the default page route with 24 hosted sample images, titles, captions and full articles, using Story / Nocturne. No bookmark creation, upload or companion pairing is required to browse. The first visit seeds a separate browser-local page under a reserved ID; subsequent visits preserve edits and do not overwrite existing galleries or names. Editing and durable saving use the existing editor/companion behavior. This entry opens a new extension tab; it does not replace the shelf's initial file-explorer view. Sample image loading needs internet access.
+
+Cloudflare authorization, R2 and deployment are future context only and unchanged by this addition. Evidence: page route initialization and repeat-visit preservation tests plus existing bookmark tests and extension packaging PASS (DOM/API doubles); actual Chrome UI NOT_RUN. Prior broader native startup/supervisor failures remain unresolved as recorded above.

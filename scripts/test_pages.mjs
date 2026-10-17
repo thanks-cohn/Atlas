@@ -135,3 +135,17 @@ const tombstone=await store.deletePage(storage,deletionId,1,async doc=>{assert.e
 assert.equal(tombstone.libraryRevision,4);
 assert.ok(!(await store.linkedPages(storage,node)).some(p=>p.id===deletionId));
 await assert.rejects(()=>store.updatePage(storage,deletionId,{title:'Resurrect',text:''},2),/NOT_FOUND/);
+
+// The default gallery route opens a ready-made collection, then preserves edits on reopen.
+const showcaseContext={...context,location:{href:'chrome-extension://atlas/page.html'}};
+vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),showcaseContext);
+for(let i=0;i<5;i++)await tick();
+const showcaseId='00000000-0000-4000-8000-000000000024';
+assert.equal((await store.readPage(storage,showcaseId)).images.length,24);
+assert.equal(els.get('title').textContent,DEMO_COLLECTION.title);
+const customShowcase=await store.readPage(storage,showcaseId);
+await storage.set({[store.pageKey(showcaseId)]:{...customShowcase,title:'My own showcase'}});
+vm.runInNewContext(read('page.js').replace(/^import .*\n/gm,''),{...context,location:{href:'chrome-extension://atlas/page.html'}});
+for(let i=0;i<5;i++)await tick();
+assert.equal(els.get('title').textContent,'My own showcase');
+assert.equal((await store.readPage(storage,id)).title,demoSaved.title);

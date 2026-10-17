@@ -1070,3 +1070,5 @@ dialog label input, dialog label select { display: block; width: 100%; margin-to
 .associated-gallery-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .associated-gallery-row .associated-page { flex: 1; min-width: 0; margin-top: 0; }
 .associated-gallery-row > button { flex-shrink: 0; }
+
+.gallery-showcase-link { text-decoration: none; color: inherit; }
