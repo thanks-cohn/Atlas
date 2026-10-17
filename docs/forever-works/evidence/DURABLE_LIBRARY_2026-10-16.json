@@ -1,0 +1,38 @@
+{
+  "schema": "atlas.verification-receipt.v1",
+  "sourceCommit": "d33c9b22e0355ce343ee53822283c3fe5cc36c13",
+  "extensionVersion": "0.1.8",
+  "results": [
+    {
+      "name": "Hosted development checks",
+      "status": "PASS",
+      "runId": 38995372032,
+      "url": "https://github.com/thanks-cohn/Atlas/actions/runs/38995372032"
+    },
+    {
+      "name": "Windows platform tests, standalone build, native widgets and frozen transport",
+      "status": "PASS",
+      "runId": 38995372023,
+      "url": "https://github.com/thanks-cohn/Atlas/actions/runs/38995372023"
+    }
+  ],
+  "artifact": {
+    "id": 12086164731,
+    "name": "atlas-companion-windows-x86_64",
+    "url": "https://github.com/thanks-cohn/Atlas/actions/runs/38995372023/artifacts/12086164731",
+    "retentionDays": 14
+  },
+  "localPython": {
+    "tests": 141,
+    "failures": 3,
+    "errors": 3,
+    "skipped": 32,
+    "scope": "native wake/supervisor readiness failures in local execution environment; hosted development suite passed"
+  },
+  "notRun": [
+    "Owner's actual failing image",
+    "Chrome gallery rendering and file-picker acceptance",
+    "Cloudflare R2 authorization/upload",
+    "Cloudflare Pages publishing"
+  ]
+}
