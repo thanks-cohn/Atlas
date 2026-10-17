@@ -19,3 +19,8 @@ fail=true;await open({id:'1',url:'https://example.com'});assert.match(body.child
 console.log('PASS: existing-tag picker, revision-checked add/remove, retained dialog and visible unavailable/retry state. DOM/API doubles; real Chrome NOT_RUN.');
 fail=false;const createForm=dialog.children.at(-1),newTags=createForm.children[0].children[0];newTags.value='New idea, New idea, Research';await createForm.onsubmit({preventDefault(){}});assert.ok(data.tags.r.includes('New idea'));assert.ok(data.tags.r.includes('Research'));assert.equal(data.tags.r.filter(t=>t==='New idea').length,1);assert.equal(newTags.value,'');assert.equal(dialog.open,true);
 fail=true;newTags.value='Keep my draft';await createForm.onsubmit({preventDefault(){}});assert.equal(newTags.value,'Keep my draft');assert.equal(dialog.open,true);
+
+fail=false;select.value='Design';const countBefore=mutations.length;select.onchange();assert.equal(mutations.length,countBefore,'Single click selection must not mutate');
+select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!data.tags.r.includes('Design'));assert.equal(select.value,'Design');
+select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Design'));
+select.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!data.tags.r.includes('Design'));assert.equal(select.scrollTop,120);

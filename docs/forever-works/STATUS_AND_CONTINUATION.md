@@ -583,3 +583,7 @@ Image overlay receives16px image-edge insets. Replaced filled polygon with repos
 
 ### 0.1.62 — Tag editor label capitalization
 Owner requests proper capitalization: Create New Tags and Add an Existing Tag. Updated those visible labels only; behavior unchanged. Existing tag-editor check and packaging PASS; actual Chrome visual QA NOT_RUN.
+
+
+### 0.1.63 — Double-click / Enter tag toggle
+Owner requests single-click highlight without mutation, double-click or Enter toggles attached/unattached state. Picker now chooses tag/untag from its current confirmed snapshot; shared revision-checked mutation path and busy guard remain. Existing Add Tag fallback still explicitly adds. Picker selection/scroll and session-known options remain after removal so the same row can immediately be reattached. Accessible instruction updated. Tag-editor tests PASS for no mutation on selection, double-click remove/add, Enter remove and retained scroll; packaging/diff check PASS. DOM/API doubles; real Chrome native-option double-click/keyboard QA NOT_RUN.
