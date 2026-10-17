@@ -1,3 +1,4 @@
+import {installTagEditor} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags,createPinboard} from './pinboard-model.js';
@@ -26,6 +27,7 @@ function tagStrip(node){
   return strip;
 }
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();}
+const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';render();}});
 function card(node){
   const article=el('article');article.className='pin';article.atlasNode=node;const image=imageFor(node);
   if(image){
@@ -34,6 +36,10 @@ function card(node){
     const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;imageGeometry.set(image,ratio);button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow();};img.src=image;button.onclick=()=>openDetail(node);
     img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow();};
     const copy=el('div');copy.className='pin-copy';const strip=tagStrip(node),copyHeight=strip?138:78;copy.style.height=copyHeight+'px';button.style.height='calc(100% - '+copyHeight+'px)';const title=link(node,node.title || new URL(node.url).hostname);title.className='pin-title';const url=link(node,new URL(node.url).hostname);url.className='pin-url';copy.append(title,url);if(strip)copy.append(strip);article.append(button,copy);
+    const tagEdit=el('button');tagEdit.className='image-tag-edit';tagEdit.type='button';tagEdit.style.bottom=(copyHeight+12)+'px';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);
+    let idle;const reveal=()=>{tagEdit.setAttribute('data-visible','');clearTimeout(idle);idle=setTimeout(()=>tagEdit.removeAttribute('data-visible'),1600);};
+    button.addEventListener('pointermove',reveal);button.addEventListener('pointerenter',reveal);tagEdit.addEventListener('pointermove',reveal);article.addEventListener('pointerleave',()=>{clearTimeout(idle);tagEdit.removeAttribute('data-visible');});
+    tagEdit.onclick=event=>{event?.stopPropagation();editTags(node);};article.append(tagEdit);
   }else emptyCard(article,node);
   return article;
 }
@@ -91,15 +97,15 @@ function tagButton(tag,className){
   const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
   button.onclick=()=>{const applied=activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);if(isSelectedTag(tag)){if(applied){removeTag(tag);coverFetch.stop();render();}else{pendingTags.delete(tag);renderTags();}}else{pendingTags.add(tag);renderTags();}button.setAttribute('aria-pressed',String(isSelectedTag(tag)));syncSelection();};return button;
 }
-function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=!staged;$('apply-tags').textContent='Show Matches ↵';}
+function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=false;$('apply-tags').disabled=!staged;$('apply-tags').textContent='Show Matches ↵';}
 
 function applyTags(){activeTags=[...pendingTags];coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
 function filteredNodes(){const query=tagQuery($('search').value);const required=[...new Set([...activeTags,...query.tags])];return pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));}
 function renderTags(){
   const blank=$('folder').value==='blank';$('tag-browser').hidden=blank;
   const tags=[...new Set(pinItems(roots,$('folder').value).flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
-  $('tag-browser').hidden=blank || !tags.length;
-  $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));
+  $('tag-browser').hidden=blank;
+  $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
   const required=[...new Set([...activeTags,...tagQuery($('search').value).tags])];$('active-tags').hidden=blank || !required.length;
   const label=el('span','Matching all');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Remove tag filter '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();render();};return b;}));syncSelection();
 }
@@ -134,7 +140,7 @@ async function refresh(){
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
 $('apply-tags').onclick=applyTags;
-window.addEventListener('keydown',async event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser,#pins'))){event.preventDefault();clearTimeout(searchTimer);await refreshAssociations();applyTags();}});
+window.addEventListener('keydown',async event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser'))){event.preventDefault();clearTimeout(searchTimer);await refreshAssociations();applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 async function refreshCoverUsage(){
   try{const saved=(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY];$('cover-budget').value=String(coverBudgetMiB(saved));const bytes=coverStorageBytes((await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {});$('cover-usage').textContent=(bytes/1048576).toFixed(1)+' MiB saved · '+coverBudgetMiB(saved)+' MiB limit';}catch{$('cover-usage').textContent='Usage unavailable';}

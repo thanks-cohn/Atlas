@@ -32,7 +32,7 @@ class El{
 }
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
-const context={installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={installTagEditor:()=>()=>{},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -154,7 +154,7 @@ assert.equal(model.matchesTags(['Design'],['design']),true);
 let catalogReads=0,stateReads=0;
 context.chrome.runtime.sendMessage=async message=>{if(message.type==='state'){stateReads++;return {paired:false};}catalogReads++;return {data:tagCatalog};};
 vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='tag:art';$('tags-only').checked=false",context);
-await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0);assert.equal(cards().length,2);assert.equal($('tag-browser').hidden,false);assert.equal($('apply-tags').hidden,true);
+await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0);assert.equal(cards().length,2);assert.equal($('tag-browser').hidden,false);assert.equal($('apply-tags').hidden,false);
 // Empty/unavailable metadata does not leave a useless empty palette or imply no saved tags exist.
 context.chrome.runtime.sendMessage=async()=>({ok:false,error:{code:'NEEDS_PAIRING'}});
-vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,true);assert.match($('status').textContent,/Connect your companion/);
+vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,false);assert.match($('status').textContent,/Connect your companion/);
