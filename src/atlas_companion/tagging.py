@@ -12,7 +12,7 @@ from .security import APIError
 
 MAX_IMAGE_BYTES = 1500000
 _lock = threading.Lock()
-CATEGORIES = ("angry", "disgust", "fear", "happy", "neutral", "sad", "surprise")
+CATEGORIES = ("angry", "disgust", "fearful", "happy", "neutral", "sad", "surprised")
 
 def _image(body):
     value = body.get("image")
@@ -77,16 +77,16 @@ def run(state, body):
             if len(faces) == 0:
                 return {"schema":"atlas.tag-suggestions.v1","model":"opencv-mobilefacenet-fer-int8",
                         "source":"face","suggestions":[],"note":"No frontal face detected; no expression inferred."}
-            from cv2 import FaceDetectorYN
-            # OpenCV Zoo model expects 112x112 RGB normalized to [-1,1].
+            # OpenCV Zoo FER expects a 112x112 RGB crop, normalized to [-1, 1].
+            # A basic frontal-face crop is used until landmark alignment is integrated.
             net = cv2.dnn.readNetFromONNX(str(weights))
             best = {}
             for x, y, w, h in sorted(faces, key=lambda f: f[2]*f[3], reverse=True)[:5]:
                 crop = frame[y:y+h, x:x+w]
                 crop = cv2.resize(crop, (112,112))
                 blob = cv2.dnn.blobFromImage(crop, scalefactor=1.0/127.5, size=(112,112), mean=(127.5,127.5,127.5), swapRB=True)
-                net.setInput(blob)
-                logits = net.forward().reshape(-1)
+                net.setInput(blob, 'data')
+                logits = net.forward('label').reshape(-1)
                 if len(logits) != 7:
                     raise APIError("TAG_MODEL_OUTPUT_INVALID", "Unexpected facial-expression model output.", 500)
                 import numpy as np
