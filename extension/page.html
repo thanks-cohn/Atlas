@@ -16,7 +16,7 @@
       <button id="save" type="submit">Save to Atlas Library</button><button id="cancel" type="button">Cancel</button>
     </form>
   </main>
-  <dialog id="viewer" aria-label="Expanded gallery image"><div class="viewer-toolbar"><button id="previous" aria-label="Previous image">←</button><span id="viewer-count"></span><button id="next" aria-label="Next image">→</button><button id="close-viewer" aria-label="Close expanded image">Close ×</button></div><img id="viewer-image" alt=""><p id="viewer-caption"></p></dialog>
+  <dialog id="viewer" aria-label="Expanded gallery image"><div class="viewer-toolbar"><button id="previous" aria-label="Previous image">←</button><span id="viewer-count"></span><button id="next" aria-label="Next image">→</button><button id="close-viewer" aria-label="Close expanded image">Close ×</button></div><img id="viewer-image" alt=""><div class="viewer-meta"><p id="viewer-title" hidden></p><p id="viewer-caption"></p></div></dialog>
   <dialog id="publish-dialog" aria-labelledby="publish-title"><h2 id="publish-title">Prepare for Publishing</h2><p id="publish-status"></p><p>Before publishing, local images must be sent to your chosen R2 bucket and location, then referenced by their hosted URLs. Atlas will require your approval for that transfer.</p><p>R2 upload and deployment are not available in this build. Nothing has been uploaded or published.</p><button id="close-publish">Close</button></dialog>
   <script type="module" src="page.js"></script>
 </body></html>
