@@ -49,7 +49,7 @@ function renderWindow(){
   const wanted=[topSpacer,...ordered,bottomSpacer];const current=[...$('pins').children];
   if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
   const shown=Math.max(0,Math.min(items.length,plan.last*BATCH)-plan.first*BATCH);
-  status(items.length ? `${items.length.toLocaleString()} bookmarks · ${shown} nearby cards · Limit ${limit}` : 'No matching bookmarks. Try another collection or turn off the image filter.');
+  status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : 'No matching bookmarks. Try another collection or turn off the image filter.');
 }
 function resetBlocks(){for(const block of blocks.values())resizeObserver?.unobserve(block);blocks.clear();heights.clear();$('pins').replaceChildren();estimateBlocks();renderWindow();scheduleWindow();}
 function render(){items=pinItems(roots,$('folder').value,$('search').value).filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
