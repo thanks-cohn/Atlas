@@ -281,3 +281,7 @@ Owner rejected Atelier and Fieldnotes as bare/basic and requested a complete opp
 ## 2026-10-17 — structured Nocturne viewing room (0.1.11)
 
 Owner rejected flat row/font composition and portrait side bands, requested different dark header/body. Removed full-width letterbox background; intrinsic image frame remains uncropped. Added caption rail, compact intro, divided controls/collection label and framed thumbnails, responsive stacking. Near-black header and charcoal body distinguish chrome from content. No content/storage/schema/helper changes. Gallery and bookmark behavior checks PASS (DOM/API doubles), package PASS; updated actual Chrome visual review NOT_RUN. Before screenshot inspected. Hosted design study unchanged; scope is extension screenshot. See GALLERY_STUDIO_V1.md addendum for exact intent/mechanism.
+
+## 2026-10-17 — Nocturne padding and neutral graphite palette (0.1.12)
+
+Owner screenshot confirmed stage image touched top and controls/labels sat flush. Found padding:0 on collection plus inherited older green-black nocturne class on the gallery itself. Added 22–44px room inset, intro/caption spacing and coordinated neutral graphite header/body/room; image remains uncropped and height bounded. No data/native/helper change. Gallery behavior checks and package PASS; after Chrome visual review NOT_RUN. See GALLERY_STUDIO_V1.md. This supersedes 0.1.11 palette/spacing values.
