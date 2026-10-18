@@ -951,3 +951,7 @@ Owner clarification included: every Card, popup/expanded Card and Slice must be 
 ## 2026-10-18 — Every-size portable format principle
 
 Owner direction added to mission and object-grammar proposal: every Card, popup and Slice should work beautifully across phone/tablet/desktop and actual host containers. Adapt composition rather than scale screenshots, preserve meaning/function/accessibility, and verify supported size envelopes and graceful extremes. Proposed Atlas format ambition is explicit; no new runtime format or cross-device proof claimed. Documentation-only update; whitespace checks passed. Continue by making container-size and cross-input fixtures part of the first extraction proof.
+
+## 2026-10-18 — Card-centered API and individual portability
+
+Owner requested the programmatic surface follow the portable Card principle: each Card can contain/reference a rich world of URLs, images and data and be transferred individually from a Pinboard. Added capability contracts, content-vs-membership separation, dependency manifests, copy/move/reference distinctions, privacy gates, verified destination before source membership removal, migration caveats and cross-board/host proof to the object-grammar proposal and mission. No endpoints or transfer behavior implemented/claimed. Documentation-only whitespace check passed. Continue by auditing existing resource identities and board-scoped persistence before designing a single portable Card API slice.

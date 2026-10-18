@@ -144,3 +144,28 @@ Adapt to the component's available container as well as the device viewport. Rec
 Use the existing Any-Shape adaptation contract and shared presentation rules. Document supported minimum/maximum envelopes and graceful behavior outside them: no finite component can display unlimited content inside literally zero space. This engineering boundary must not become an excuse for testing desktop only. Include narrow/wide phones, tablets, desktop, narrow embedded containers on wide screens, large text/zoom, long titles, missing assets, touch/keyboard and reduced motion. Record visual and functional evidence at those sizes; no claim of universal correctness follows merely from media queries or a handful of screenshots.
 
 **Format ambition:** source identity/content + portable expression + adaptive behavior + verifiable quality across hosts and sizes. Call it a proposed Atlas format until its schema, compatibility/versioning contract and independent implementations/export proofs are established; widespread standard adoption remains a goal.
+
+## Card-centered API and programmatic surface
+
+**Explicit owner direction:** the API and the whole programmatic surface must serve the same portable-unit principle. A Card can be a “world unto itself”: a stable, independently understandable unit holding or referencing its URLs, images, writing, structured data, annotations, relationships, presentation and behavior. Its scope may be extensive even when only a small representation is visible. The architecture must permit taking an individual Card out of a Pinboard and transferring it elsewhere without reconstructing it from the entire board's implementation.
+
+A Pinboard supplies membership, arrangement and browsing context. It must not be the sole owner of the knowledge required to interpret a Card. Keep Card identity/content independent from board-specific position, selection, ranking, filters and layout. Where existing records are board-scoped, introduce explicit compatibility/migration adapters before claiming independence; do not silently re-key or lose user data.
+
+### Proposed capability contract
+
+The following are required capabilities to design toward, **not claims that these operations or endpoints already exist**. Choose concrete routes/types only after mapping existing resource APIs; do not create duplicate stores or a second competing API.
+
+- Address/read/update a Card by stable identity, independently of its board view.
+- Enumerate its selected content, references, required assets, versions and provenance through a bounded manifest/dependency inventory.
+- Render the same Card as a compact Card, expanded/popup view or permitted Slice through the shared presentation contract.
+- Export/import an individual Card with a versioned portable manifest and required authorized assets, preserving identity/lineage under explicit copy/move semantics.
+- Add/remove board membership independently of deleting a Card or shared asset.
+- Copy, move or reference the Card into a destination allowed by the type/relationship rules. Portability does not bypass containment, ownership or permissions.
+
+A transfer distinguishes assets that must travel, external URLs that remain references, shared dependencies, and private/unavailable resources. Storage locations and transient browser blob URLs are not identity. Preserve relative asset resolution, hashes where available, metadata, original human/model provenance and needed presentation dependencies. Export selected permission-safe content; do not recursively leak every connected private object. Bound dependency traversal, handle cycles explicitly and report incomplete dependencies honestly.
+
+**Move** commits the destination, verifies manifest/assets and recoverability, then removes the source membership according to the user's explicit action. Do not delete physical assets or other memberships implicitly. **Copy** produces independent editable identity with lineage; **reference** retains shared source identity. Retries and interrupted transfers need stable operation identities, conflict handling and recoverable state rather than duplicate Cards or half-completed deletion.
+
+### Proof before declaring portability
+
+Extract one real Card from a bookmark-derived Pinboard and one from an authored board using the same public capability boundary. Import into another permitted board, render on an unrelated host, and verify content/assets/provenance and responsive behavior. Test destination failure, unavailable dependencies, duplicate imports, concurrent edits, shared assets and interruption before source removal. Verify that source/destination layout is contextual while Card content remains coherent. Future agents must be able to discover this contract without reading the entire pinboard renderer. This is a forward architecture obligation; existing API completeness remains to be audited.
