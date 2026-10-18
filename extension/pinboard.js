@@ -30,14 +30,16 @@ const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
 function previewTagLayout(){
+  const host=$('detail-preview-tags');if(!host)return;
   const examples=[];
-  if($('tag-image-choice').checked)examples.push('garden','house','dress');
+  if($('tag-image-choice').checked)examples.push('garden','dress','outdoors');
   if($('tag-people-choice').checked)examples.push('3 people','2 female-presenting','1 male-presenting');
   if($('tag-face-choice').checked)examples.push('smiling','adult (estimated)');
+  host.replaceChildren();
   const unique=[...new Set(examples)].slice(0,5);
-  const host=$('tagging-example-chips');
-  host.replaceChildren(...unique.map(tag=>{const chip=el('span',tag);chip.className='tagging-example-chip';return chip;}));
-  if(!unique.length)host.append(el('span','Select at least one stage.'));
+  if(!unique.length)return;
+  const title=el('small','Example tags · not generated');title.className='tagging-sample-caption';host.append(title);
+  for(const label of unique){const chip=el('span',label);chip.className='tag';host.append(chip);}
 }
 async function loadTaggingChoices(node){
   const key=node.url;
@@ -46,7 +48,7 @@ async function loadTaggingChoices(node){
   $('tag-image-choice').checked=true;
   $('tag-people-choice').checked=true;
   $('tag-face-choice').checked=false;
-  setTaggingChoiceStatus('Choose stages to preview how tags will appear. Nothing is analyzed or saved.');
+  setTaggingChoiceStatus('Layout preview only · Models not connected');
   try{
     const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
     if(selected?.url!==key)return;
@@ -125,7 +127,7 @@ function imagePayload(image){
 }
 $('run-image-tagging').onclick=()=>{
   previewTagLayout();
-  setTaggingChoiceStatus('Layout only: no AI inference, downloads, or edits to real tags.');
+  setTaggingChoiceStatus('Sample tags updated · No image analysis performed');
 };
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
 const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
