@@ -132,3 +132,7 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .pin-tag-pair>.pin-tag{flex:1;border:0;border-radius:0;padding-right:2px;text-align:left}
 .pin-tag-remove{flex:0 0 19px;min-width:19px;padding:0;border:0;border-radius:0;background:transparent;color:#967b86;font-size:13px;line-height:19px}
 .pin-tag-remove:hover,.pin-tag-remove:focus-visible{background:#f6dce5;color:#a0274b}
+
+.preview-tag-pair{display:inline-flex;height:27px;max-width:100%;align-items:stretch}
+.preview-tag-pair>.tag{min-width:0;margin:0;border:0;border-radius:0;padding:4px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.preview-tag-pair>.pin-tag-remove{flex-basis:23px;min-width:23px;font-size:14px}

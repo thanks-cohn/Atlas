@@ -28,7 +28,7 @@ function tagsFor(node){
   const entry=generatedIndex.get(node.url);
   if(entry?.image===imageFor(node))for(const tag of entry.tags){const key=tag.label.normalize('NFKC').toLowerCase();if(!result.has(key))result.set(key,tag.label);}
   const removed=cardTagRemovals[node.url] || {};
-  return [...result.values()].filter(tag=>!removed[tag.normalize('NFKC').toLowerCase()]);
+  return [...result.values()].filter(tag=>!Object.hasOwn(removed,tag.normalize('NFKC').toLowerCase()));
 }
 async function refreshGeneratedIndex(){
   const epoch=++generatedEpoch;
@@ -61,17 +61,19 @@ async function removeCardTag(node,tag){
     await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals,[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});
   });
   await refreshGeneratedIndex();
-  if(selected?.url===node.url){$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>tagButton(tag,'tag')));await showGeneratedTags(node);}
+  if(selected?.url===node.url){$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));await showGeneratedTags(node);}
+}
+function removableTag(node,tag,preview=false){
+  const pill=el('span');pill.className='pin-tag-pair'+(preview?' preview-tag-pair':'');
+  const label=tagButton(tag,preview?'tag':'pin-tag');
+  const remove=el('button','×');remove.type='button';remove.className='pin-tag-remove';remove.setAttribute('aria-label','Remove '+tag+' from this card');
+  remove.onclick=async event=>{event?.stopPropagation();remove.disabled=true;try{await removeCardTag(node,tag);}catch(error){status(error.message || 'Tag could not be removed. Retry.');remove.disabled=false;}};
+  pill.append(label,remove);return pill;
 }
 function tagStrip(node){
   const tags=tagsFor(node);if(!tags.length)return null;
   const strip=el('div');strip.className='pin-tags';strip.setAttribute('aria-label','Bookmark tags');
-  for(const tag of tags.slice(0,5)){
-    const pill=el('span');pill.className='pin-tag-pair';const label=tagButton(tag,'pin-tag');
-    const remove=el('button','×');remove.type='button';remove.className='pin-tag-remove';remove.setAttribute('aria-label','Remove '+tag+' from this card');
-    remove.onclick=async event=>{event?.stopPropagation();remove.disabled=true;try{await removeCardTag(node,tag);}catch(error){status(error.message || 'Tag could not be removed. Retry.');remove.disabled=false;}};
-    pill.append(label,remove);strip.append(pill);
-  }
+  for(const tag of tags.slice(0,5))strip.append(removableTag(node,tag));
   if(tags.length>5){const more=el('button','+'+(tags.length-5));more.className='pin-tag pin-tag-more';more.setAttribute('aria-label','Show all '+tags.length+' tags');more.onclick=()=>openDetail(node);strip.append(more);}
   return strip;
 }
@@ -134,8 +136,8 @@ async function showGeneratedTags(node){
     const section=el('section'),heading=el('strong','Generated tags');
     const tags=el('div');tags.className='generated-tag-chips';
     for(const [key,entry] of grouped){
-      if(human.has(key) || cardTagRemovals[node.url]?.[key])continue; // Existing human tag is already shown above.
-      const chip=el('span',entry.label);chip.className='tag';
+      if(human.has(key) || Object.hasOwn(cardTagRemovals[node.url] || {},key))continue; // Existing human tag is already shown above.
+      const chip=removableTag(node,entry.label,true);
       chip.title=entry.sources.map(item=>{
         const confidence=Number.isFinite(item.score)?' ('+Math.round(item.score*100)+'%)':'';
         return ({objects:'Things',face:'Faces',anime:'Anime'}[item.source] || 'People')+confidence;
@@ -176,7 +178,7 @@ $('run-image-tagging').onclick=async()=>{
   }catch(error){report(error.message || 'Tag generation failed.');}
   finally{taggingBusy=false;updateTaggingAction();}
 };
-function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
+function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
 const editTags=installTagEditor({onChanged:async data=>{
   if(tagsChangedURL){const next=indexAssociations(data).get(tagsChangedURL)?.tags || [],prior=associations.get(tagsChangedURL)?.tags || [];
     const added=next.filter(tag=>!prior.includes(tag));
