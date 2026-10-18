@@ -115,7 +115,7 @@ assert.ok(coverage.top<=150);assert.ok(coverage.sizes.slice(0,coverage.last).red
 assert.equal(model.cardLimit(100000),72);assert.equal(model.visibleBlocks(0,72,new Map(),[],0).last,0);
 console.log('PASS: 1,000-bookmark viewport-first window, compact widths independent of buffer budget, eviction/rebuild, bounded overscan, loading geometry, filter persistence and source/preview safety. DOM/API doubles; Chrome hardware QA NOT_RUN.');
 
-// Multiple card tags remain pending until Enter / Apply; applied removal is immediate.
+// Highlighted tags reorder without hiding; explicit search filters within them.
 assert.deepEqual(model.tagQuery('mountains tags:Design,Travel'),{text:'mountains',tags:['Design','Travel']});
 assert.deepEqual(model.tagQuery('tags:Design, Travel mountains'),{text:'mountains',tags:['Design','Travel']});
 assert.deepEqual(model.tagQuery('tags:Design tags:Design,Art'),{text:'',tags:['Design','Art']});
@@ -124,18 +124,35 @@ tagCatalog.tags.r=['Art','Design'];tagCatalog.tags.q=['Art'];await $('refresh').
 const imageTags=cards()[0].children[1].children[2];imageTags.children[0].children[0].onclick();
 assert.equal(vm.runInContext('activeTags.length',context),0);
 const otherTag=cards()[0].children[1].children[2].children[1];otherTag.children[0].onclick();
-$('apply-tags').onclick();flush();assert.equal(cards().length,1);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
+$('apply-tags').onclick();flush();assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards().length,144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
 assert.equal($('active-tags').children.length,3);
 // A normal text query is intersected with ALL selected tags.
 $('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
-$('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,1);
+$('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
 // Clicking active Design broadens automatically to both Art bookmarks.
-cards()[0].children[1].children[2].children[1].children[0].onclick();assert.equal(cards().length,2);
+cards()[0].children[1].children[2].children[1].children[0].onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='tags:Design';vm.runInContext('render()',context);assert.equal(cards().length,1);
-$('active-tags').children.at(-1).onclick();assert.equal(cards().length,2);
+$('active-tags').children.at(-1).onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
 assert.equal(fetchOptions.getNodes().length,2);
-console.log('PASS: all-tag intersection, cross-card staging, applied chip removal, tags clauses, search scoping and tagged-only persistence.');
+console.log('PASS: highlighted tags prioritize without hiding, all-tag search intersection, chip removal, tag clauses, search scoping and tagged-only persistence.');
+
+// Highlighting is immediately additive ranking, not an implicit search or save.
+$('tags-only').checked=false;vm.runInContext("pendingTags.clear();activeTags=[];$('search').value='';render()",context);
+tagCatalog.tags.q=['Second Only'];await $('refresh').onclick();flush();
+const priorNodes=vm.runInContext('items.map(node=>node.id)',context);
+const secondPair=cards().find(card=>card.atlasNode.id===taggedURL.id).children.at(-1).children[0];
+secondPair.children[0].onclick();flush();
+assert.equal(vm.runInContext('items[0].id',context),taggedURL.id);
+assert.equal(vm.runInContext('items.length',context),1000);
+assert.equal($('active-tags').children[0].textContent,'Prioritizing');
+assert.deepEqual(Array.from(vm.runInContext('items.slice(1).map(node=>node.id)',context)),Array.from(priorNodes).filter(id=>id!==taggedURL.id));
+$('search').value='tag:Second';vm.runInContext('render()',context);assert.equal(cards().length,0);
+$('search').value='Bookmark';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1);
+$('search').value='';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
+$('active-tags').children.at(-1).onclick();assert.deepEqual(Array.from(vm.runInContext('items.map(node=>node.id)',context)),Array.from(priorNodes));
+tagCatalog.tags.q=['Art'];
+console.log('PASS: selecting a tag on a later card moves all matches first, preserves all other cards in stable order, search alone hides nonmatches and clearing selection restores order.');
 
 // Cover storage is a shared persisted setting, independent of visible card budget.
 $('cover-budget').value='128';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-usage').textContent,/128 MiB limit/);

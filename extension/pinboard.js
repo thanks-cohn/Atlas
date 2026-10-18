@@ -253,19 +253,32 @@ function isSelectedTag(tag){return pendingTags.has(tag) || activeTags.includes(t
 function removeTag(tag){activeTags=activeTags.filter(t=>t!==tag);pendingTags.delete(tag);const q=tagQuery($('search').value);const rest=q.tags.filter(t=>t!==tag);$('search').value=q.text+(rest.length?' tag:'+rest.join(','):'');}
 function tagButton(tag,className){
   const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
-  button.onclick=()=>{const applied=activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);if(isSelectedTag(tag)){if(applied){removeTag(tag);coverFetch.stop();render();}else{pendingTags.delete(tag);renderTags();}}else{pendingTags.add(tag);renderTags();}button.setAttribute('aria-pressed',String(isSelectedTag(tag)));syncSelection();};return button;
+  button.onclick=()=>{if(isSelectedTag(tag))removeTag(tag);else pendingTags.add(tag);coverFetch.stop();updatePriorities();};return button;
 }
-function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=false;$('apply-tags').disabled=!staged;$('apply-tags').textContent='Show Matches ↵';}
+function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=false;$('apply-tags').disabled=!staged;$('apply-tags').textContent='Bring to Top ↵';}
 
-function applyTags(){activeTags=[...pendingTags];coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
-function filteredNodes(){const query=tagQuery($('search').value);const required=[...new Set([...activeTags,...query.tags])];return pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));}
+function applyTags(){activeTags=[...pendingTags];coverFetch.stop();updatePriorities();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
+function filteredNodes(){
+  const query=tagQuery($('search').value),selected=[...pendingTags];
+  // Highlighting prioritizes; an explicit search restricts to the selected scope.
+  const searching=!!query.text || query.tags.length>0;
+  const required=searching?[...new Set([...selected,...query.tags])]:[];
+  const nodes=pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));
+  if(!selected.length)return nodes;
+  // Stable partition: all highlighted tags match, then every remaining card.
+  const matching=[],remaining=[];
+  for(const node of nodes)(matchesTags(tagsFor(node),selected)?matching:remaining).push(node);
+  return [...matching,...remaining];
+}
+function updatePriorities(){items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();renderWindow();}
+
 function renderTags(){
   const blank=$('folder').value==='blank';$('tag-browser').hidden=blank;
   const tags=[...new Set(pinItems(roots,$('folder').value).flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
   $('tag-browser').hidden=blank;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
-  const required=[...new Set([...activeTags,...tagQuery($('search').value).tags])];$('active-tags').hidden=blank || !required.length;
-  const label=el('span','Matching all');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Remove tag filter '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();render();};return b;}));syncSelection();
+  const query=tagQuery($('search').value),required=[...new Set([...pendingTags,...query.tags])];$('active-tags').hidden=blank || !required.length;
+  const label=el('span',query.text || query.tags.length?'Matching all':'Prioritizing');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Unselect '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();updatePriorities();};return b;}));syncSelection();
 }
 function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=blank;$('fetch-dock').hidden=blank;$('status').hidden=blank;document.querySelector('.board-options').hidden=blank;renderTags();if(blank){blocks.clear();$('pins').replaceChildren();return;}items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
 
