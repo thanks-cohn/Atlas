@@ -16,7 +16,7 @@ assert.equal((await model.linkedPinboards(storage,{...node,url:'https://changed.
 await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards(storage,node)).length,0);
 
 const animations=[],motionFinishes=[];
-let previewContent;
+let previewContent,tagEditorNode;
 let holdImpl={hold(){},touch(){},active:()=>[],clear(){}};
 let blankOptions,blankImpl={show(){},load:async()=>{},nodes:()=>[]};
 let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
@@ -40,7 +40,7 @@ class El{
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
-const context={heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:()=>({setContent:(key,value)=>previewContent={key,...value}}),TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:()=>({setContent:(key,value)=>previewContent={key,...value}}),TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return node=>{tagEditorNode=node;};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -107,7 +107,7 @@ context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired
 await $('refresh').onclick();flush();
 let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].children[0].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
 assert.equal(tagged.children[1].style.height,'138px');
-strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);$('close').onclick();
+strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();
 const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
 // Refresh retrieves edits to the existing catalog rather than requiring a new tab.
 tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].children[0].textContent,'Updated');
@@ -224,6 +224,8 @@ assert.equal(cards()[0],machineCard);assert.equal(cards()[0].children[0].childre
 const derived=vm.runInContext('tagsFor(items[0])',context);
 assert.ok(derived.includes('Machine Cat'));assert.equal(derived.filter(tag=>tag.toLowerCase()==='art').length,1);
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
+await vm.runInContext('showGeneratedTags(selected)',context);
+assert.ok($('detail-generated-tags').children.length>0);assert.ok($('detail-generated-tags').children.every(chip=>chip.className.includes('preview-tag-pair') && !chip.className.includes('human-tag')),'Generated chips join the field directly without a heading, and keep distinct presentation');
 $('search').value='tag:Machine Cat';
 // Exercise the tag predicate directly: whitespace search grammar is independent.
 assert.equal(vm.runInContext("tagsFor(items[0]).includes('Machine Cat')",context),true);

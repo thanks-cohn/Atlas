@@ -116,7 +116,7 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .tagging-question{font-size:12px;font-weight:650;color:#4b3943;white-space:nowrap}
 .detail-tagging-row label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;color:#66515d;cursor:pointer}
 .detail-tagging-row input{accent-color:var(--pin-red);margin:0;width:14px;height:14px}
-#run-image-tagging{margin-left:auto;flex:0 0 auto;background:var(--pin-red);border-color:var(--pin-red);color:#fff;padding:6px 13px;font-size:12px;border-radius:9px}
+#run-image-tagging{flex:0 0 auto;background:var(--pin-red);border-color:var(--pin-red);color:#fff;padding:6px 13px;font-size:12px;border-radius:9px}
 #run-image-tagging:hover{background:var(--pin-red-dark)}
 #tagging-selection-status{font-size:11px;line-height:1.4;color:#9a8890}
 .model-choice-setting{margin-top:18px;padding-top:14px;border-top:1px solid #eee4e8}
@@ -292,3 +292,28 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 .detail-source-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:16px}
 .detail-source-actions #detail-link{margin-left:auto;font-size:12px;white-space:nowrap}
 #tagging-selection-status:empty{display:none}
+
+/* One shared inset for the preview's text/action hierarchy. */
+#detail{--preview-inset:28px}
+#detail .detail-heading,#detail .detail-copy,#detail .detail-tagging,#detail .preview-sections{padding-inline:var(--preview-inset)}
+#detail .preview-tags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0}
+#detail .preview-tags>div{display:contents}
+#detail .preview-tag-pair{margin:0}
+#detail .human-tag{background:#f0e9fb;border-color:#c9b7e6}
+#detail .human-tag :is(.tag,.pin-tag-remove){background:transparent;color:#65448e}
+#detail .human-tag .tag[aria-pressed=true]{background:var(--pin-red);color:#fff}
+[data-board-appearance=dark] #detail .human-tag{background:#302740;border-color:#77618e}
+[data-board-appearance=dark] #detail .human-tag :is(.tag,.pin-tag-remove){color:#e0c9f6}
+[data-board-appearance=dark] #detail .human-tag .tag[aria-pressed=true]{background:var(--pin-red);color:#fff}
+#detail .detail-source-actions{width:100%;margin-inline:0}
+#detail .detail-source-actions #detail-link{margin-right:0}
+@media(max-width:540px){#detail{--preview-inset:20px}}
+/* Reserve the same scrollbar lane even when short content does not scroll. */
+#detail .detail-scroll{scrollbar-gutter:stable;scrollbar-width:auto}
+#detail .detail-scroll::-webkit-scrollbar{width:10px}
+#detail .detail-scroll::-webkit-scrollbar-thumb{background:#d9c5cf;border:3px solid transparent;background-clip:padding-box;border-radius:10px}
+[data-board-appearance=dark] #detail .detail-scroll::-webkit-scrollbar-thumb{background-color:#4e6383}
+#detail .detail-heading{padding-right:calc(var(--preview-inset) + 10px)}
+
+.tagging-buttons{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+#preview-add-tag{padding:6px 13px;font-size:12px;border-radius:9px}

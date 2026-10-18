@@ -72,7 +72,8 @@ async function removeCardTag(node,tag){
   if(itemKey(selected)===itemKey(node)){$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));await showGeneratedTags(node);}
 }
 function removableTag(node,tag,preview=false){
-  const pill=el('span');pill.className='pin-tag-pair'+(preview?' preview-tag-pair':'');
+  const pill=el('span');pill.className='pin-tag-pair'+(preview?' preview-tag-pair':'')+(preview && humanTagsFor(node).some(value=>selectionKey(value)===selectionKey(tag))?' human-tag':'');
+  if(preview && pill.className.includes('human-tag'))pill.title='Your tag';
   const label=tagButton(tag,preview?'tag':'pin-tag',preview?null:node);
   const remove=el('button','×');remove.type='button';remove.className='pin-tag-remove';remove.setAttribute('aria-label','Remove '+tag+' from this card');
   remove.onclick=async event=>{event?.stopPropagation();remove.disabled=true;try{await removeCardTag(node,tag);}catch(error){status(error.message || 'Tag could not be removed. Retry.');remove.disabled=false;}};
@@ -141,8 +142,7 @@ async function showGeneratedTags(node){
     const human=new Set(humanTagsFor(node).map(tag=>tag.normalize('NFKC').toLowerCase()));
     const grouped=new Map(generatedTags(runs,reference,animeEnabled).map(entry=>[entry.label.normalize('NFKC').toLowerCase(),entry]));
     if(!grouped.size)return;
-    const section=el('section'),heading=el('strong','Generated tags');
-    const tags=el('div');tags.className='generated-tag-chips';
+    const tags=[];
     for(const [key,entry] of grouped){
       if(human.has(key) || Object.hasOwn(cardTagRemovals[itemKey(node)] || {},key))continue; // Existing human tag is already shown above.
       const chip=removableTag(node,entry.label,true);
@@ -150,10 +150,9 @@ async function showGeneratedTags(node){
         const confidence=Number.isFinite(item.score)?' ('+Math.round(item.score*100)+'%)':'';
         return ({objects:'Things',face:'Faces',anime:'Anime'}[item.source] || 'People')+confidence;
       }).join(' · ');
-      tags.append(chip);
+      tags.push(chip);
     }
-    if(!tags.childElementCount)tags.append(el('span','All generated tags are already shown as human tags.'));
-    section.append(heading,tags);host.append(section);
+    host.append(...tags);
   }catch{host.append(el('p','Saved model results could not be loaded.'));}
 }
 
@@ -208,7 +207,8 @@ const editTags=installTagEditor({localAdapter:node=>{
     const added=next.filter(tag=>!prior.includes(tag));
     if(added.length)await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_REMOVALS),all=saved[TAG_REMOVALS] || {},own={...all[tagsChangedURL]};for(const tag of added)delete own[tag.normalize('NFKC').toLowerCase()];cardTagRemovals={...all,[tagsChangedURL]:own};await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals});});
   }
-  associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===itemKey(node))updateTagCard(node);renderWindow();}});
+  associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===itemKey(node))updateTagCard(node);renderWindow();if(selected && itemKey(selected)===itemKey(node))openDetailContent(node);}});
+$('preview-add-tag').onclick=()=>{if(!selected)return;tagsChangedURL=itemKey(selected);editTags(selected);};
 async function previewCatalog(body){const response=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(response?.ok===false || !response?.data || !Number.isSafeInteger(response.revision))throw Error('Connect your companion and try again.');return response;}
 const writePreviewConnection=connectionWriter({catalog:previewCatalog,validateBookmark:async node=>{const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Reopen the preview.');},isAuthored:authored,local:(node,action,value)=>blankBoard.connect(node,action,value),onSnapshot:data=>{associations=indexAssociations(data);metadataState='ready';}});
 const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();const shown=image || imageFor(selected);if(shown)$('detail-image').src=shown;$('detail-image').hidden=!shown;$('detail-image').alt=title || selected?.title || 'Card image';$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
