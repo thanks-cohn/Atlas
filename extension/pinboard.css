@@ -133,3 +133,11 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 #detail-preview-tags:not(:empty){margin-top:10px}
 .tagging-sample-caption{display:block;font-size:10px;color:#947f8a;margin-bottom:4px}
 @media(max-width:540px){#detail .detail-tagging{padding:7px 20px 9px}#detail .detail-tagging-row{gap:8px 13px}#detail .detail-tagging-row label{font-size:11px}}
+
+/* Intuitive: one question, three choices, one action. */
+.tagging-question{font-size:12px;font-weight:650;color:#4b3943;white-space:nowrap}
+#detail .detail-tagging{gap:4px;padding:7px 28px 9px}
+#detail .detail-tagging-row{min-height:20px}
+#detail .detail-tagging-row label{font-size:12px}
+#tagging-selection-status{color:#9a8890}
+@media(max-width:540px){#detail .detail-tagging{padding-inline:20px}}
