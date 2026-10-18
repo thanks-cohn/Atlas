@@ -66,3 +66,37 @@ Publish the smallest coherent vertical slice first but **architect for the entir
 ## Relationship to the implementation program
 
 This is the **target product contract** complementing `BUILD_PROGRAM.md`. Milestones may stage implementation, but may not quietly redefine the final target into a toy graph viewer or minimalist bookmark extension. Every agent should know the premium explorer is the ultimate objective.
+
+
+## Proposal addendum — Drag web images into authorized local folders (2026-10-18)
+
+**Status:** Owner-directed future feature proposal, not a claim of implementation. Builds on the existing general cross-directory drag-and-drop obligation and the documented Chute companion precedent. This adds a specific **browser image → Atlas-authorized local destination** flow; it is not merely dragging files already visible inside the explorer.
+
+### Experience and intent
+
+- A user should be able to drag an image from an ordinary browser webpage and drop it onto a visible, authorized local folder in Atlas, ideally with the fluency of dragging an existing file between desktop folders.
+- Atlas shows the destination, item count/type, a clear **Copy / Save image here** action, a drop highlight and useful success/failure feedback. The default is to **copy**; never delete or mutate the web source or silently move it.
+- Reuse the same attractive folder tree, breadcrumb targets and file card/grid presentation as the canonical Atlas explorer. Drag-over can briefly expand a closed destination folder, auto-scroll long trees, and make the current destination unmistakable. Support keyboard and explicit **Save image to…** fallback.
+- Where browser-to-extension drag transfer is not supported across windows/contexts, provide a **Chute-inspired extension handoff**: image context-menu action or Atlas shelf destination picker backed by its explicitly paired native companion, without implying arbitrary web pages can write to local files.
+- Input possibilities include browser drag payloads containing actual image File/Blob bytes, URL text, or HTML with image references. Inspect and validate the payload; do not assume a dragged image URL is equivalent to its rendered image bytes. Where a source requires authentication, blocks cross-origin fetching, expires, or returns HTML instead of image bytes, present an intelligible retry, explicitly user-mediated save, or unsupported state instead of silently saving the wrong file.
+- Support batch/multi-image drops when the browser actually provides multiple valid items, with per-item results and duplicates/collision handling. No guarantee every webpage or third-party browser supplies equivalent drag data.
+
+### Trust boundary and storage
+
+- The companion is the only component that writes into the user's **previously consented folder scopes**, with properly paired, authenticated and narrow extension-to-helper requests. HTML pages and untrusted drag payloads cannot choose arbitrary host paths or bypass grants.
+- Verify actual image file signatures, size/decode limits, safe filenames/extensions and destination identity. Treat remote URLs as untrusted; enforce safe protocols, SSRF/network egress restrictions where the fetching component has network authority, redirects/timeouts, and reject credential-bearing or prohibited URLs. Avoid SVG/script execution and HTML disguised as images.
+- Use staged streaming/atomic writes, collision naming options (rename, skip, replace with confirmation), integrity/completion checks, bounded retries and useful progress/error states. Do not claim an operation succeeded until the destination has durably received the selected bytes.
+- Keep **Save to local folder**, **Add to Atlas library**, and **Archive to R2** as independent actions. A local drop should not automatically create a public pinboard entry or R2 upload; optional post-save association is user-controlled. Respect private library authorization and visibility boundaries.
+- Examine Chute's proven user flow, helper pairing, wake/reconnect and file handoff as *engineering experience*, but independently implement code subject to license and current Chrome/OS permission constraints; its historical success is not proof this exact image-drop flow works today.
+
+### Acceptance before shipping
+
+1. Drag an ordinary webpage image into a pre-authorized Atlas local directory; a correct, viewable original image appears at the target location without source mutation.
+2. A drag that supplies only a URL or inaccessible/protected resource is handled truthfully; no HTML error page is misidentified as an image.
+3. Unpaired/offline companion, unauthorized folder, blocked network URL and interrupted transfer fail safely with clear recovery.
+4. Drag over nested folder tree and grid works at desktop and narrow widths; drop destination and copy intent remain obvious.
+5. Duplicate filenames, long names, multi-file payloads, large files, MIME mismatch and retry are handled without silent overwrite or truncated saves.
+6. Equivalent **Save image to…** context-menu/button path remains usable when native webpage drag data cannot be captured.
+7. Only explicitly user-authorized local storage is modified; no silent publishing or remote archival.
+
+**Guiding outcome:** Treat browser-to-local image capture as a natural, visually polished operation within the unified Atlas explorer, using lessons from Chute without pretending the browser has unrestricted filesystem privileges.
