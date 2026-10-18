@@ -29,11 +29,11 @@ export async function generateModels({node,image,choices,send,save,status}) {
   for (const model of models) {
     status('Generating '+({objects:'Things / People',face:'Faces',anime:'Anime'}[model])+'…');
     const response = await send({type:'api',path:'/v1/tag-image',body:{model,image,item_id:node.url,display_choices:choices}});
-    if (response?.ok===false || !response?.data?.suggestions) {
+    const result=response?.data || response;
+    if (response?.ok===false || !Array.isArray(result?.suggestions)) {
       const error = response?.error;
       throw Error((error?.code ? error.code+': ' : '')+(error?.message || 'Companion did not return tag predictions.'));
     }
-    const result = response.data;
     // Preserve original predictions. Display selection is a separate field.
     results[model] = {...result,display_choices:{...choices}};
     await save(model,results[model]);

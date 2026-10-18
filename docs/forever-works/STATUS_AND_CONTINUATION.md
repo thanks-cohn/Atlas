@@ -686,3 +686,13 @@ Broad verification result: `python scripts/check_project.py` ran 152 tests in
 bootstrap/supervisor process startup, identity/readiness and recovery tests. The
 22-record linkage check passed. This run is NOT a green whole-project result;
 focused tagging tests and real model inference are the separate evidence above.
+
+Follow-up integration proof: actual authenticated loopback HTTP exercised the
+object ONNX model on the bus fixture and verified successful root-level
+`suggestions`, a run_id, and durable evidence files. The preview adapter accepts
+that real response shape (and legacy wrapped fixtures). Dedicated generation
+regression tests now run in development CI. GitHub development checks for
+7f3036fcd3a63407174fe34f69ae44a5ceed6632 passed, including native tests that failed
+locally; keep the local failures as environment-specific evidence, not a green
+local result. Extension changes now trigger Windows packaging as its archive
+also includes the extension source. Windows artifact acceptance remains pending.

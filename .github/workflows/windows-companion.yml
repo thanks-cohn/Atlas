@@ -12,6 +12,7 @@ on:
       - 'scripts/smoke_windows_companion.py'
       - 'tests/test_windows_*.py'
       - 'packaging/**'
+      - 'extension/**'
       - '.github/workflows/windows-companion.yml'
 permissions:
   contents: read

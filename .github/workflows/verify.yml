@@ -21,6 +21,9 @@ jobs:
           node scripts/test_bookmarks.mjs
           node scripts/test_pages.mjs
           node scripts/test_image_file.mjs
+          node scripts/test_pinboard.mjs
+          node scripts/test_pinboard_generation.mjs
+          node scripts/test_pinboard_tag_editor.mjs
       - name: Verify real CLI and filesystem integration
         run: python scripts/smoke_companion.py
       - name: Verify native wake and worker integration without replay
