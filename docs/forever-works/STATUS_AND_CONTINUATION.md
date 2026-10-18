@@ -620,3 +620,39 @@ Board settings now has Enable JoyTag (Anime), default false, persisted in the ex
 Generate tags intentionally only reports Models aren’t connected yet. No downloads, fake generated tags, jobs, API mutation or inference is triggered. Empty choice disables action. This is not proof that object/person/face stages are wired; they are UX categories for future connections. JoyTag activation here enables an option, not installation or runtime readiness. No backend/model/provenance changes.
 
 Proof: expanded pinboard DOM/storage checks PASS for default choices/hidden Anime, Settings save/reveal/disable, preference restoration, empty choice, no generation requests, main wording and absence of sample block. Existing tag-editor/bookmark checks, unsigned packaging and diff check PASS. Actual Chrome visual, keyboard/touch and narrow-screen acceptance NOT_RUN; no browser binary available in this environment. Owner should inspect real preview after reload. No helper upgrade required.
+
+## 2026-10-18 — machine tag evidence and deduplicated projection foundation
+
+Owner direction: duplicate labels from different models appear once, while portable
+JSON/JSONL preserves each contribution and distinguishes production, derivation and
+presentation. Human tags remain owned by the existing human-tag store.
+
+Implemented `src/atlas_companion/tag_provenance.py`, called after successful
+`/v1/tag-image` inference. Private `evidence/tagging-runs.jsonl` durably appends one
+machine run with UUID, UTC time, item identity, image-payload SHA-256, source, model,
+version (explicit UNKNOWN when unavailable), recipe, duration and original
+predictions. `evidence/tagging-current.json` atomically stores latest run per
+item/source, normalized derived labels and contributor links (run/model/source,
+prediction index and confidence). Duplicate normalized labels yield one candidate;
+original spelling and scores remain in run evidence. An empty rerun clears only
+that source's current predictions. Log history is retained. Evidence-save failure
+fails the inference request explicitly instead of reporting an unsaved success.
+
+Important distinction: `presentation: candidate` is a proposed deduplicated view,
+NOT proof of browser rendering or saved display-profile selection. This slice does
+not implement human curation deltas, rejection events, display profiles, ONNX
+conversion/model installation, Anime inference or Generate-button wiring. Existing
+preview remains layout-only. Existing face/object backend behavior is unchanged.
+Without an item_id, image-payload hash is the fallback identity; callers should
+provide a stable resource identity when wiring the preview. Hash identifies encoded
+payload bytes, not a canonical decoded image. JSONL is authoritative and project()
+can rebuild the current projection. Malformed logs fail closed; there is no silent
+history repair. Projection construction streams history, but run time still scales
+with log length; indexed/checkpointed replay is future work before large batches.
+
+Proof: `PYTHONPATH=src python -m unittest discover -s tests -p 'test_tag*.py'`
+passed 5 tests: duplicate outputs retain both contributors, Unicode normalization,
+separate item identities, empty reruns, deterministic replay, success/failure
+metrics. No Windows/Chrome or real inference acceptance was performed in this
+slice. Next: pin/download ONNX assets, integrate replaceable adapters and explicit
+Generate action; preserve these evidence contracts when connecting them.

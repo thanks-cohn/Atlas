@@ -140,6 +140,12 @@ def run(state, body):
         result = _run_model(state, body)
         model_id = result.get("model", model_id)
         count = len(result.get("suggestions", ()))
+        from .tag_provenance import record
+        try:
+            evidence = record(state, body, result, round((time.perf_counter() - started) * 1000, 3))
+        except (OSError, ValueError) as exc:
+            raise APIError("TAG_EVIDENCE_SAVE_FAILED", "Predictions could not be saved safely; retry after checking companion storage.", 500) from exc
+        result = {**result, "run_id": evidence["run_id"], "origin": "machine"}
         success = True
         return result
     except Exception as exc:
