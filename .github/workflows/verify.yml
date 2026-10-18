@@ -21,6 +21,7 @@ jobs:
           node scripts/test_bookmarks.mjs
           node scripts/test_pages.mjs
           node scripts/test_image_file.mjs
+          node scripts/test_pinboard_preview_connections.mjs
           node scripts/test_pinboard_preview_sections.mjs
           node scripts/test_pinboard_menu.mjs
           node scripts/test_pinboard_appearance.mjs

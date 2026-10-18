@@ -1,3 +1,4 @@
+import {connectionWriter} from './pinboard-preview-connections.js';
 import {installPreviewSections} from './pinboard-preview-sections.js';
 import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun} from './pinboard-generation.js';
 import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
@@ -8,6 +9,7 @@ import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCove
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
+let previewingLinkedImage=false;
 let highlightedTags=new Set(),metadataState='loading';
 let roots=[],covers={},items=[],selected=null,associations=new Map();
 const imageGeometry=new Map(),failedImages=new Set();
@@ -86,7 +88,7 @@ const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
 let taggingChoiceEpoch=0,taggingBusy=false;
-function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice','tag-face-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || !chosen;}
+function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice','tag-face-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || previewingLinkedImage || !chosen;}
 function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
 async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
 $('joytag-enabled').onchange=async()=>{
@@ -184,10 +186,10 @@ $('run-image-tagging').onclick=async()=>{
   finally{taggingBusy=false;updateTaggingAction();}
 };
 function openDetailContent(node){
-  selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
+  previewingLinkedImage=false;selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
   $('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');
   $('detail-image').alt=node.title || 'Card image';
-  const details=metadata(node);previewSections.setContent(itemKey(node),{available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:details.bookmarks || []});
+  const details=metadata(node);previewSections.setContent(itemKey(node),{sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))});
   $('detail-link').hidden=!node.url;if(node.url)$('detail-link').href=node.url;else $('detail-link').removeAttribute('href');
   $('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));
   $('edit-authored-card').hidden=$('delete-authored-card').hidden=!authored(node);
@@ -206,7 +208,9 @@ const editTags=installTagEditor({localAdapter:node=>{
     if(added.length)await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_REMOVALS),all=saved[TAG_REMOVALS] || {},own={...all[tagsChangedURL]};for(const tag of added)delete own[tag.normalize('NFKC').toLowerCase()];cardTagRemovals={...all,[tagsChangedURL]:own};await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals});});
   }
   associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===itemKey(node))updateTagCard(node);renderWindow();}});
-const previewSections=installPreviewSections();
+async function previewCatalog(body){const response=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(response?.ok===false || !response?.data || !Number.isSafeInteger(response.revision))throw Error('Connect your companion and try again.');return response;}
+const writePreviewConnection=connectionWriter({catalog:previewCatalog,validateBookmark:async node=>{const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Reopen the preview.');},isAuthored:authored,local:(node,action,value)=>blankBoard.connect(node,action,value),onSnapshot:data=>{associations=indexAssociations(data);metadataState='ready';}});
+const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();const shown=image || imageFor(selected);if(shown)$('detail-image').src=shown;$('detail-image').hidden=!shown;$('detail-image').alt=title || selected?.title || 'Card image';$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
 let tagsChangedURL=null;
 function cardSignature(node){return JSON.stringify([node.title,node.url,imageFor(node)]);}
 function card(node){
