@@ -279,7 +279,7 @@ function renderWindow(preserveAnchor=true){
   const wanted=[topSpacer,...[...blocks].sort((a,b)=>a[0]-b[0]).map(([,block])=>block),...(composerRegion?[composerRegion]:[]),bottomSpacer];
   const current=[...$('pins').children];if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
   coverFetch.discover();
-  status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'} · Explore your collection` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
+  status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'}` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
 function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
 const selectionKey=tag=>tag.normalize('NFKC').trim().toLowerCase();
