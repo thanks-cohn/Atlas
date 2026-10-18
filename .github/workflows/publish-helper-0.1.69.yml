@@ -1,0 +1,61 @@
+name: Publish verified helper 0.1.69
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-helper-0.1.69.yml']
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 6898e09251e99d480d3ee5fd1a55c7414bf95901
+      VERIFIED_RUN: '39098156230'
+    steps:
+      - name: Verify exact source and completed Windows acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run watch "$VERIFIED_RUN" --exit-status --interval 10
+          gh api "repos/$GH_REPO/actions/runs/$VERIFIED_RUN" > "$RUNNER_TEMP/run.json"
+          jq -e --arg sha "$SOURCE_SHA" '.head_sha == $sha and .conclusion == "success" and .name == "Build Windows companion"' "$RUNNER_TEMP/run.json"
+      - name: Download and verify original GitHub artifact archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$VERIFIED_RUN/artifacts" > "$RUNNER_TEMP/artifacts.json"
+          for name in atlas-companion-windows-x86_64 atlas-companion-core-windows-x86_64; do
+            record=$(jq -ce --arg name "$name" '.artifacts[] | select(.name == $name and .expired == false)' "$RUNNER_TEMP/artifacts.json")
+            id=$(jq -r '.id' <<< "$record")
+            digest=$(jq -r '.digest' <<< "$record")
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            gh api "repos/$GH_REPO/actions/artifacts/$id/zip" > "$RUNNER_TEMP/$name.zip"
+            printf '%s  %s\n' "${digest#sha256:}" "$RUNNER_TEMP/$name.zip" | sha256sum --check --status
+            (cd "$RUNNER_TEMP" && sha256sum "$name.zip") >> "$RUNNER_TEMP/SHA256SUMS.txt"
+          done
+      - name: Publish permanent prerelease downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/NOTES.md" <<'NOTES'
+          Atlas 0.1.69 — lightweight helper and bookmark tagging.
+
+          Full bundle: extract the entire atlas-companion-windows-x86_64.zip into one folder. Keep atlas-companion.exe, debug.exe, tagging-engine/ and tagging-models/ together. Open debug.exe and approve Repair/Upgrade using your existing extension ID. No separate Python installation is needed. Reload the extension after updating its source.
+
+          The core-only ZIP supports ordinary Atlas without local AI; it does not include model weights or the tagging engine.
+
+          Models run only after Generate tags, sequentially in short-lived processes. Anime is enabled through Board Settings → Enable JoyTag (Anime). Generated tags appear on the originating card and become reusable dropdown choices; they are not automatically attached to other bookmarks. Trailing × removes a tag from that card while retaining reusable vocabulary and original model predictions.
+
+          Verified source: 6898e09251e99d480d3ee5fd1a55c7414bf95901. Windows build 39098156230 must pass before this release is published. This unsigned development build passed Windows model, duplicate-launch, installed native/HTTP, cache and recovery tests. Actual user-machine Chrome performance and publisher signing remain separate acceptance checks.
+          NOTES
+          gh release create atlas-helper-v0.1.69 \
+            "$RUNNER_TEMP/atlas-companion-windows-x86_64.zip" \
+            "$RUNNER_TEMP/atlas-companion-core-windows-x86_64.zip" \
+            "$RUNNER_TEMP/SHA256SUMS.txt" \
+            --target "$SOURCE_SHA" --title "Atlas helper 0.1.69 — lightweight local tagging" \
+            --notes-file "$RUNNER_TEMP/NOTES.md" --prerelease
