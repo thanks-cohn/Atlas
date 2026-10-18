@@ -1,35 +1,30 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
-const code=readFileSync('extension/pinboard-blank.js','utf8');
-class E{
- constructor(tag){this.tag=tag;this.children=[];this.value='';this.classList={toggle(){}};}
- append(...n){this.children.push(...n);}insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);}replaceChildren(...n){this.children=n;}setAttribute(){}focus(){}querySelector(){return null;}
- get lastElementChild(){return this.children.at(-1);}
-}
-const elements=new Map(),events={};const document={getElementById:id=>{if(!elements.has(id))elements.set(id,new E('div'));return elements.get(id);},createElement:tag=>new E(tag),addEventListener:(type,fn)=>events[type]=fn};
-let data={},reject=false;const storage={get:async key=>({[key]:data[key]}),set:async value=>{if(reject)throw Error('Storage full');Object.assign(data,value);}};
-const context={document,navigator:{locks:{request:async(_,fn)=>fn()}},crypto:{randomUUID:()=>String(Math.random())}};
-vm.createContext(context);vm.runInContext(code.replace(/export /g,'')+';globalThis.install=installBlankBoard;globalThis.clean=cleanCard;',context);
-assert.throws(()=>context.clean({title:' ',tags:''}));
-assert.equal(context.clean({title:' Name ',tags:'Art, Art, Design'}).tags.length,2);
-const args={scope:'one',storage,publicImageURL:url=>url.startsWith('https://')?url:null,rasterImage:async()=> 'data:image/png;base64,AA'};
-const board=context.install(args),$=id=>document.getElementById(id),tick=()=>new Promise(r=>setTimeout(r,0));board.show(true);await tick();
-const region=$('blank-board'),form=region.children[0],fields=form.children.filter(n=>n.tag==='label' && n.children[0].tag!=='select').map(n=>n.children[0]);
-assert.equal(form.tag,'form');assert.equal(form.children[1].className,'composer-image');
+class E{constructor(tag){this.tag=tag;this.children=[];this.value='';}append(...nodes){this.children.push(...nodes);}insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);}replaceChildren(...nodes){this.children=nodes;}setAttribute(){}focus(){}scrollIntoView(){}get lastElementChild(){return this.children.at(-1);}}
+const elements=new Map(),events={},document={getElementById:id=>{if(!elements.has(id))elements.set(id,new E('div'));return elements.get(id);},createElement:tag=>new E(tag),addEventListener:(type,fn)=>events[type]=fn};
+let data={},reject=false,changes=0;
+const storage={get:async key=>({[key]:data[key]}),set:async value=>{if(reject)throw Error('Storage full');Object.assign(data,value);}};
+const context={document,URL,navigator:{locks:{request:async(_,fn)=>fn()}},crypto:{randomUUID:()=>String(Math.random())}};
+vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-blank.js','utf8').replace(/export /g,'')+';globalThis.install=installBlankBoard;globalThis.clean=cleanCard;',context);
+assert.throws(()=>context.clean({title:' ',tags:''}));assert.equal(context.clean({title:' Name ',tags:'Art, art, Design'}).tags.length,2);
+const args={scope:'one',storage,publicImageURL:url=>url.startsWith('https://')?url:null,rasterImage:async()=> 'data:image/png;base64,AA',onChanged:()=>changes++};
+const board=context.install(args),$=id=>document.getElementById(id);await board.load();board.show(true);
+const region=$('blank-board'),form=region.children[0],fields=form.children.filter(node=>node.tag==='label' && node.children[0].tag!=='select').map(node=>node.children[0]);
 fields[1].value='My card';fields[2].value='First paragraph.\n\nSecond paragraph.';fields[3].value='Art, Design, Art';
-// Preview keeps the actual draft form and Escape restores editing.
-$('preview-board').onclick();assert.equal(region.children[0],form);events.keydown({key:'Escape',preventDefault(){}});assert.equal(region.children[0],form);
+$('preview-board').onclick();assert.equal(region.hidden,true);events.keydown({key:'Escape',preventDefault(){}});assert.equal(region.hidden,false);assert.equal(region.children[0],form);
 reject=true;await form.onsubmit({preventDefault(){}});assert.equal(region.children[0],form);assert.equal(fields[1].value,'My card');assert.match($('blank-status').textContent,/Storage full/);
-reject=false;await form.onsubmit({preventDefault(){}});assert.equal(region.children.length,2);assert.equal(region.children[0].className,'authored-pin');assert.equal(region.children[1].tag,'form');
-assert.equal(data['atlas.pinboard.cards.v1'].one[0].title,'My card');assert.equal(data['atlas.pinboard.cards.v1'].one[0].tags.length,2);
-const reload=context.install(args);reload.show(true);await tick();assert.equal(region.children[0].children[0].children[0].textContent,'My card');
-const other=context.install({...args,scope:'two'});other.show(true);await tick();assert.equal(region.children.length,1);
-assert.match(readFileSync('extension/pinboard.css','utf8'),/\.is-preview \.pin-composer\{display:none\}/);
-console.log('PASS: blank-board cards persist by board, comma tags, preview draft retention, Escape, save failure retention and fresh adjacent starter. DOM/storage doubles; Chrome visual QA NOT_RUN.');
+reject=false;await form.onsubmit({preventDefault(){}});assert.equal(region.children.length,1);assert.equal(region.children[0].tag,'form');assert.equal(board.nodes().length,1);assert.equal(changes,1);
+const first=board.nodes()[0];assert.equal(first.kind,'authored');assert.equal(first.url,null);assert.match(first.itemKey,/^atlas-card:one:/);assert.equal(board.metadata(first).tags.length,2);
+const reload=context.install(args);await reload.load();reload.show(true);assert.equal(reload.nodes()[0].id,first.id);assert.equal(reload.metadata(first).note,fields[2].value);
+$('preview-board').onclick();reload.show(false);reload.show(true);assert.equal(region.hidden,false);assert.equal($('preview-board').textContent,'Preview');
+await reload.patch(first,{title:'Updated',text:'Edited'});assert.equal(reload.nodes()[0].title,'Updated');assert.equal(reload.metadata(first).note,'Edited');
+await reload.tagAdapter(first).mutate('tag','New Tag');assert.ok(reload.metadata(first).tags.includes('New Tag'));await reload.tagAdapter(first).mutate('untag','new tag');assert.ok(!reload.metadata(first).tags.includes('New Tag'));
+await reload.remove(first);assert.equal(reload.nodes().length,0);assert.equal(data['atlas.pinboard.cards.v1'].one[0].deleted,true);await assert.rejects(()=>reload.patch(first,{title:'Stale edit'}),/no longer exists/);
+const other=context.install({...args,scope:'two'});await other.load();assert.equal(other.nodes().length,0);
 const chosen={id:'b',title:'Chosen bookmark',url:'https://example.com/chosen'};
-const linked=context.install({...args,scope:'linked',getBookmarks:()=>[chosen],describeBookmark:()=>({image:'https://example.com/cover.jpg',note:'My note',tags:['Design']})});linked.show(true);await tick();
-const linkedForm=region.children[0],picker=linkedForm.children[0].children[0];picker.value='b';picker.onchange();
-await linkedForm.onsubmit({preventDefault(){}});
-const saved=data['atlas.pinboard.cards.v1'].linked[0];assert.equal(saved.title,'Chosen bookmark');assert.equal(saved.url,chosen.url);assert.equal(saved.image,'https://example.com/cover.jpg');assert.equal(saved.text,'My note');assert.equal(saved.tags[0],'Design');
-assert.equal(region.children[0].children[1].children[2].href,chosen.url);
+const linked=context.install({...args,scope:'linked',getBookmarks:()=>[chosen],describeBookmark:()=>({image:'https://example.com/cover.jpg',note:'My note',tags:['Design']})});await linked.load();linked.show(true);
+const linkedForm=region.children[0],picker=linkedForm.children[0].children[0];picker.value='b';picker.onchange();await linkedForm.onsubmit({preventDefault(){}});
+const saved=data['atlas.pinboard.cards.v1'].linked[0];assert.equal(saved.title,chosen.title);assert.equal(saved.url,chosen.url);assert.equal(saved.image,'https://example.com/cover.jpg');assert.equal(saved.text,'My note');
+assert.ok(!readFileSync('extension/pinboard-blank.js','utf8').includes('authored-pin'));
+console.log('PASS: authored provider retains existing IDs/data, composer/draft/preview, isolated scopes, local tag editing, soft deletion, bookmark import and no separate saved-card renderer.');

@@ -24,18 +24,20 @@ export async function removeBookmarkTag(node,tag){
   });
 }
 // Exact-URL tag editing through the existing revision-checked companion catalog.
-export function installTagEditor({onChanged}){
+export function installTagEditor({onChanged,localAdapter=()=>null}){
   const make=(tag,text='')=>{const e=document.createElement(tag);e.textContent=text;return e;};
   async function request(body){const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(result?.ok===false || !result?.data || !Number.isSafeInteger(result.revision))throw Error('Connect your companion, then retry.');return result;}
   return async function open(node){
-    const dialog=make('dialog');dialog.className='pin-tag-editor';dialog.setAttribute('aria-label','Edit bookmark tags');
-    const head=make('div');head.className='tag-editor-head';const close=make('button','×');close.setAttribute('aria-label','Close tag editor');close.onclick=()=>dialog.close();head.append(make('h2','Bookmark tags'),close);
+    const local=localAdapter(node);
+    const dialog=make('dialog');dialog.className='pin-tag-editor';dialog.setAttribute('aria-label','Edit card tags');
+    const head=make('div');head.className='tag-editor-head';const close=make('button','×');close.setAttribute('aria-label','Close tag editor');close.onclick=()=>dialog.close();head.append(make('h2','Card tags'),close);
     const title=make('p',node.title || node.url),attached=make('div'),label=make('label','Add an Existing Tag'),select=make('select'),add=make('button','Add Tag'),message=make('p','Loading tags…'),retry=make('button','Retry');retry.hidden=true;message.setAttribute('role','status');label.append(select);dialog.append(head,title,attached,label,add,message,retry);
+    const ownedTags=()=>local?(snapshot?.tags || []):[...new Set(resources(snapshot.data).flatMap(resource=>snapshot.data.tags?.[resource.id] || []))];
     let snapshot=null,busy=false;const knownTags=new Set();select.size=6;select.setAttribute('aria-label','Existing tags. Single click highlights; double-click or Enter toggles the tag.');
     const resources=data=>Object.values(data.resources || {}).filter(r=>r.kind==='bookmark' && r.locators?.some(l=>l.provider==='web' && l.reference===node.url));
     function controls(){add.disabled=busy || !snapshot || !select.value;select.disabled=!snapshot;close.disabled=busy;for(const b of attached.children)b.disabled=busy;}
     function paint(){
-      const data=snapshot.data,owned=[...new Set(resources(data).flatMap(r=>data.tags?.[r.id] || []))];
+      const data=snapshot.data || {},owned=ownedTags();for(const tag of owned)knownTags.add(tag);
       attached.replaceChildren(...owned.map(tag=>{const b=make('button',tag+' ×');b.setAttribute('aria-label','Remove tag '+tag);b.onclick=()=>mutate('untag',tag);return b;}));
       if(!owned.length)attached.append(make('p','No tags attached.'));
       const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const known=[...knownTags].sort((a,b)=>a.localeCompare(b));
@@ -43,11 +45,11 @@ export function installTagEditor({onChanged}){
     }
     async function load(){busy=true;retry.hidden=true;controls();try{const saved=await chrome.storage?.local.get([TAG_VOCABULARY,'atlas-image-tagging-runs-v1']);for(const tag of saved?.[TAG_VOCABULARY] || [])knownTags.add(tag);
       // Include earlier successful runs too; this reads predictions without inference.
-      for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const value of Object.values(sources))for(const run of modelRuns(value))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
+      for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const value of Object.values(sources))for(const run of modelRuns(value))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=local?await local.read():await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
     async function mutate(action,tag,allowNew=false){
       if(busy)return;busy=true;controls();retry.hidden=true;
       try{
-        await navigator.locks.request('atlas-pages-v1',async()=>{
+        if(local){snapshot=await local.mutate(action,tag);await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_VOCABULARY);await chrome.storage.local.set({[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});});}else await navigator.locks.request('atlas-pages-v1',async()=>{
           const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Close and select it again.');
           snapshot=await request();let matches=resources(snapshot.data);
           if(action==='tag' && !allowNew && !knownTags.has(tag))throw Error('That tag is no longer available. Retry to reload.');
@@ -58,11 +60,11 @@ export function installTagEditor({onChanged}){
             snapshot=await request({action,args:{resource:resource.id,tag},expected_revision:snapshot.revision});
           }
         });
-        paint();message.textContent='Saved.';await onChanged(snapshot.data);return true;
+        paint();message.textContent='Saved.';await onChanged(snapshot.data,node);return true;
       }catch(error){message.textContent=error.message || 'Could not confirm the change. Retry to reload saved tags.';retry.hidden=false;if(snapshot)paint();return false;}
       finally{busy=false;controls();select.focus?.({preventScroll:true});}
     }
-    const toggleSelected=()=>{if(!select.value || busy || !snapshot)return;const tag=select.value,attached=resources(snapshot.data).some(r=>(snapshot.data.tags?.[r.id] || []).includes(tag));return mutate(attached?'untag':'tag',tag);};
+    const toggleSelected=()=>{if(!select.value || busy || !snapshot)return;const tag=select.value,attached=ownedTags().includes(tag);return mutate(attached?'untag':'tag',tag);};
     select.ondblclick=event=>{event.preventDefault();event.stopPropagation();if(event.target?.value)select.value=event.target.value;toggleSelected();};
     select.onpointermove=event=>{const option=event.target;if(option?.tagName?.toLowerCase()==='option' && option.value && !busy){select.value=option.value;controls();}};select.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleSelected();}};
     select.onchange=controls;add.onclick=()=>{if(select.value)mutate('tag',select.value);};retry.onclick=load;

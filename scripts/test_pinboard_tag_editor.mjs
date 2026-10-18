@@ -40,3 +40,15 @@ await context.removeBookmarkTag({id:'1',url:'https://example.com'},'Art');
 assert.ok(!data.tags.r.includes('Art'));assert.ok(data.tags.other.includes('Art'));
 assert.ok(savedTags['atlas-tag-vocabulary-v1'].includes('Art'));
 console.log('PASS: generated vocabulary and older predictions appear in picker without automatic attachment; direct removal preserves other bookmarks and reusable vocabulary.');
+
+// Authored cards use the same dialog without requesting or mutating bookmarks.
+let localTags=['Local'],localChanges=0;
+const bookmarkGet=context.chrome.bookmarks.get;
+context.chrome.bookmarks.get=async()=>{throw Error('Authored cards must not request native bookmarks');};
+const openLocal=context.installTagEditor({localAdapter:()=>({read:async()=>({tags:localTags,data:null}),mutate:async(action,tag)=>{localTags=action==='untag'?localTags.filter(value=>value!==tag):[...new Set([...localTags,tag])];return {tags:localTags,data:null};}}),onChanged:async(_data,node)=>{assert.equal(node.itemKey,'atlas-card:board:one');localChanges++;}});
+await openLocal({id:'one',itemKey:'atlas-card:board:one',title:'Authored'});
+const localDialog=body.children.at(-1),localPicker=localDialog.children[3].children[0];
+localPicker.value='Generated Choice';localDialog.children[4].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(localTags.includes('Generated Choice'));
+localPicker.value='Local';localPicker.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!localTags.includes('Local'));assert.equal(localChanges,2);assert.equal(localDialog.open,true);
+context.chrome.bookmarks.get=bookmarkGet;
+console.log('PASS: authored cards share retained tag dialog, vocabulary and Enter toggling without native bookmark mutation.');

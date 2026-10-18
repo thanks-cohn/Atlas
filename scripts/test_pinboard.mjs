@@ -15,10 +15,12 @@ assert.equal((await model.linkedPinboards(storage,{...node,url:'https://changed.
 await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards(storage,node)).length,0);
 
 const animations=[],motionFinishes=[];
+let blankOptions,blankImpl={show(){},load:async()=>{},nodes:()=>[]};
 let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
 class El{
  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.attrs={};this.handlers={};this.hidden=false;this.style={};this.classList={add:name=>this.ready=name};this.clientWidth=1100;}
  append(...nodes){for(const node of nodes)if(node.tag==='fragment')this.children.push(...node.children);else{if(node.parent)node.parent.children=node.parent.children.filter(child=>child!==node);this.children.push(node);node.parent=this;}}
+ insertBefore(node,before){if(node.parent)node.remove();const index=this.children.indexOf(before);node.parent=this;this.children.splice(index,0,node);}
  replaceChildren(...nodes){for(const child of this.children)child.parent=null;this.children=[];this.append(...nodes);}
  remove(){if(this.parent)this.parent.children=this.parent.children.filter(child=>child!==this);this.parent=null;}
  animate(frames,options){animations.push({card:this,frames,options});let finish;const finished=new Promise(resolve=>finish=resolve);motionFinishes.push(finish);return {finished,cancel(){finish();}};}
@@ -35,7 +37,7 @@ class El{
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
-const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -331,3 +333,25 @@ console.log('PASS: click/typed tag clauses produce identical full graded order; 
 assert.deepEqual(model.tagQuery('tag:'),{text:'',tags:[]});
 assert.deepEqual(model.tagQuery('tag:Alpha,'),{text:'',tags:['Alpha']});
 console.log('PASS: unfinished tag prefixes and trailing commas do not become accidental text filters while typing.');
+
+// Exercise authored records through the very same production board functions.
+const documentKeys={};context.document.addEventListener=(key,fn)=>documentKeys[key]=fn;
+vm.runInContext(read('pinboard-blank.js').replace(/export /g,'').replace('function installBlankBoard(', 'function installAuthoredBoard(')+';globalThis.authoredInstall=installAuthoredBoard;',context);
+const localStorageKey='atlas.pinboard.cards.v1';
+data[localStorageKey]={default:[{id:'auth-a',title:'Authored A',text:'A note',image:'https://images.example/a.jpg',tags:['Alpha'],url:null},{id:'auth-b',title:'Authored B',text:'B note',image:'https://images.example/b.jpg',tags:['Alpha','Beta'],url:taggedImage.url},{id:'auth-c',title:'Authored C',text:'C note',image:null,tags:['Beta'],url:taggedImage.url}]};
+blankImpl=context.authoredInstall(blankOptions);await blankImpl.load();$('folder').value='blank';$('search').value='';vm.runInContext('highlightedTags.clear();render()',context);flush();
+assert.equal(cards().length,3);assert.ok(cards().every(card=>card.className.startsWith('pin')));assert.equal($('tag-browser').hidden,false);assert.equal($('pins').hidden,false);
+const authoredA=cards().find(card=>card.atlasNode.cardId==='auth-a'),authoredB=cards().find(card=>card.atlasNode.cardId==='auth-b');
+assert.equal(authoredA.children[0].className,'pin-visual');authoredA.children[0].onclick();await tick();await tick();assert.equal($('detail').open,true);assert.equal($('detail-title').textContent,'Authored A');assert.equal($('detail-note').textContent,'A note');assert.equal($('detail-link').hidden,true);assert.equal($('edit-authored-card').hidden,false);
+$('close').onclick();$('search').value='tag:Alpha,Beta';vm.runInContext('updatePriorities()',context);assert.equal(vm.runInContext('items[0].cardId',context),'auth-b');assert.equal(vm.runInContext('items.length',context),3);
+$('search').value='';const isolated=blankImpl.nodes();assert.notEqual(isolated[1].itemKey,isolated[2].itemKey);assert.notEqual(isolated[1].itemKey,taggedImage.url);
+const pair=authoredB.children[1].children.find(child=>child.className==='pin-tags').children.find(pair=>pair.children[0].textContent==='Beta');await pair.children[1].onclick({stopPropagation(){}});assert.ok(!blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(blankImpl.metadata(isolated[2]).tags.includes('Beta'));
+const localTagEditor=tagEditorOptions.localAdapter(isolated[1]);await localTagEditor.mutate('tag','Beta');assert.ok(blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Beta'));
+vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
+context.chrome.runtime.sendMessage=async message=>{assert.equal(message.path,'/v1/tag-image');assert.equal(message.body.item_id,isolated[0].itemKey);return {ok:true,source:'objects',run_id:'auth-run',image_payload_sha256:'auth-payload',suggestions:[{tag:'Authored Machine',score:.9}]};};
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;await $('run-image-tagging').onclick();
+assert.ok(data['atlas-image-tagging-runs-v1'][isolated[0].itemKey]);assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Authored Machine'));
+await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));
+$('close').onclick();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
+$('folder').value='all';vm.runInContext('render()',context);$('folder').value='blank';vm.runInContext('render()',context);assert.equal(blankImpl.region().hidden,false);assert.equal($('preview-board').textContent,'Preview');
+console.log('PASS: legacy authored cards use common card/preview/ranking/tag/X/generation/masonry functions, unique identities, local mutation, stale-cover isolation, editing refresh and preview exit reset.');

@@ -1,59 +1,67 @@
-// Independent authoring surface; bookmark collections and cover fetching stay unchanged.
+// Authored-card storage and composer only. All saved cards use pinboard.js's
+// shared renderer, virtual layout, preview, tag controls and motion.
 export const BLANK_KEY='atlas.pinboard.cards.v1';
 export function cleanCard(value){
   const title=String(value.title || '').trim(),text=String(value.text || '').trim();
-  const tags=[...new Set(String(value.tags || '').split(',').map(t=>t.trim()).filter(Boolean))];
-  if(!title || title.length>200 || text.length>20000 || tags.length>100 || tags.some(t=>t.length>80))throw Error('Use a title, up to 100 tags, and shorter text.');
-  return {id:value.id,title,text,tags,image:value.image || null,url:value.url || null};
+  const values=Array.isArray(value.tags)?value.tags:String(value.tags || '').split(',');
+  const tags=[...new Map(values.map(tag=>String(tag).trim()).filter(Boolean).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag])).values()];
+  if(!title || title.length>200 || text.length>20000 || tags.length>100 || tags.some(tag=>tag.length>80))throw Error('Use a title, up to 100 tags, and shorter text.');
+  return {...value,title,text,tags,image:value.image || null,url:value.url || null};
 }
-export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getBookmarks=()=>[],describeBookmark=()=>({})}){
-  const $=id=>document.getElementById(id),make=(tag,text='',cls='')=>{const e=document.createElement(tag);e.textContent=text;e.className=cls;return e;};
-  let cards=[],loaded=false,preview=false,image=null,active=false,busy=false;
-  const region=$('blank-board'),message=$('blank-status');
-  function setPreview(value){preview=value;region.classList.toggle('is-preview',value);$('preview-board').textContent=value?'Exit Preview':'Preview';}
-  $('preview-board').hidden=true;
-  $('preview-board').onclick=()=>setPreview(!preview);
-  document.addEventListener('keydown',event=>{if(active && preview && event.key==='Escape'){event.preventDefault();setPreview(false);}});
-  function render(){
-    region.replaceChildren();
-    for(const card of cards){
-      const article=make('article','','authored-pin');
-      if(card.image){const img=make('img');img.src=card.image;img.alt=card.title;img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';article.append(img);}
-      const copy=make('div','','authored-copy');copy.append(make('h2',card.title),make('p',card.text));
-      if(card.url){const link=make('a','Visit source ↗');link.href=card.url;link.target='_blank';link.rel='noopener noreferrer';copy.append(link);}
-      const tags=make('div','','authored-tags');for(const tag of card.tags)tags.append(make('span',tag));copy.append(tags);article.append(copy);region.append(article);
-    }
-    if(preview){if(!cards.length)region.append(make('p','Your board is ready for its first card.','blank-empty'));return;}
-    const form=make('form','','pin-composer');let bookmark=null;
+export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getBookmarks=()=>[],describeBookmark=()=>({}),onChanged=()=>{},onLayout=()=>{}}){
+  const $=id=>document.getElementById(id),make=(tag,text='',cls='')=>{const node=document.createElement(tag);node.textContent=text;node.className=cls;return node;};
+  const region=$('blank-board'),message=$('blank-status');region.replaceChildren();
+  let cards=[],loaded=false,preview=false,active=false,busy=false,image=null,editing=null;
+  const key=id=>'atlas-card:'+encodeURIComponent(scope)+':'+encodeURIComponent(id);
+  const current=node=>cards.find(card=>card.id===node.cardId && !card.deleted);
+  async function load(){const saved=await storage.get(BLANK_KEY);cards=saved[BLANK_KEY]?.[scope] || [];loaded=true;return cards;}
+  async function write(change){
+    await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await storage.get(BLANK_KEY),all=saved[BLANK_KEY] || {},next=change(all[scope] || []);await storage.set({[BLANK_KEY]:{...all,[scope]:next}});cards=next;});
+    await onChanged();
+  }
+  async function patch(node,changes){
+    await write(list=>{if(!list.some(card=>card.id===node.cardId && !card.deleted))throw Error('This card no longer exists. Refresh the board.');return list.map(card=>card.id===node.cardId?cleanCard({...card,...changes,id:card.id}):card);});
+  }
+  function nodes(){return cards.filter(card=>!card.deleted).map(card=>({id:key(card.id),itemKey:key(card.id),kind:'authored',cardId:card.id,title:card.title,url:card.url || null}));}
+  function setPreview(value){preview=value;region.hidden=!active || preview;$('preview-board').textContent=preview?'Exit Preview':'Preview';onLayout();}
+  $('preview-board').hidden=true;$('preview-board').onclick=()=>setPreview(!preview);
+  document.addEventListener('keydown',event=>{if(active && preview && event.key==='Escape' && !(document.querySelectorAll?.('dialog[open]') || []).length){event.preventDefault();setPreview(false);}});
+  function composer(){
+    region.replaceChildren();const form=make('form','','pin-composer');let bookmark=null;
     const imageButton=make('button','','composer-image');imageButton.type='button';imageButton.setAttribute('aria-label','Choose card image');
-    imageButton.append(make('span','+'),make('small','Add an image'));
+    const paintImage=()=>{imageButton.replaceChildren();if(image){const img=make('img');img.src=image;img.alt='Selected cover';imageButton.append(img);}else imageButton.append(make('span','+'),make('small','Add an image'));};paintImage();
     const file=make('input');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';file.hidden=true;imageButton.onclick=()=>file.click();
-    file.onchange=async()=>{if(!file.files?.[0])return;imageButton.disabled=true;try{image=await rasterImage(file.files[0],60000);imageButton.replaceChildren();const img=make('img');img.src=image;img.alt='Selected cover';imageButton.append(img);message.textContent='';}catch{message.textContent='Could not prepare that image. Try a smaller PNG, JPEG, WebP or GIF.';}finally{imageButton.disabled=false;}};
+    file.onchange=async()=>{if(!file.files?.[0])return;imageButton.disabled=true;try{image=await rasterImage(file.files[0],60000);paintImage();message.textContent='';}catch(error){message.textContent=error.message || 'Could not prepare that image.';}finally{imageButton.disabled=false;}};
     function field(label,tag,max,placeholder){const wrap=make('label',label),input=make(tag);input.maxLength=max;input.placeholder=placeholder;wrap.append(input);form.append(wrap);return input;}
     form.append(imageButton,file);
-    const url=field('Image URL · optional','input',8192,'https://…');url.type='url';
+    const imageURL=field('Image URL · optional','input',8192,'https://…');imageURL.type='url';
     const title=field('Title','input',200,'Give your card a title');title.required=true;
     const text=field('Text','textarea',20000,'A thought, a story, a little context…');text.rows=3;
     const tags=field('Tags','input',8000,'Design, inspiration, ideas');
-    const bookmarkLabel=make('label','Existing Bookmark'),picker=make('select');const none=make('option','Choose a bookmark · optional');none.value='';picker.append(none);
+    const link=field('Link · optional','input',8192,'https://…');link.type='url';
+    const bookmarkLabel=make('label','Existing Bookmark'),picker=make('select'),none=make('option','Choose a bookmark · optional');none.value='';picker.append(none);
     const bookmarks=getBookmarks();for(const node of bookmarks){const option=make('option',(node.title || node.url)+' — '+node.url);option.value=node.id;picker.append(option);}bookmarkLabel.append(picker);form.insertBefore(bookmarkLabel,imageButton);
-    picker.onchange=()=>{bookmark=bookmarks.find(n=>n.id===picker.value) || null;if(!bookmark)return;const details=describeBookmark(bookmark);title.value=bookmark.title || bookmark.url;text.value=details.note || '';tags.value=(details.tags || []).join(', ');image=details.image || null;url.value='';imageButton.replaceChildren();if(image){const img=make('img');img.src=image;img.alt=title.value;imageButton.append(img);}else imageButton.append(make('span','+'),make('small','Add an image'));};
-    const add=make('button','Add Card +','composer-save');add.type='submit';form.append(add);
+    picker.onchange=()=>{bookmark=bookmarks.find(node=>node.id===picker.value) || null;if(!bookmark)return;const details=describeBookmark(bookmark);title.value=bookmark.title || bookmark.url;text.value=details.note || '';tags.value=(details.tags || []).join(', ');image=details.image || null;imageURL.value='';link.value=bookmark.url;paintImage();};
+    if(editing){title.value=editing.title;text.value=editing.text;tags.value=(editing.tags || []).join(', ');link.value=editing.url || '';image=editing.image;paintImage();}
+    const add=make('button',editing?'Save Card':'Add Card +','composer-save');add.type='submit';form.append(add);
+    if(editing){const cancel=make('button','Cancel');cancel.type='button';cancel.onclick=()=>{editing=null;image=null;composer();};form.append(cancel);}
     form.onsubmit=async event=>{
       event.preventDefault();if(busy)return;busy=true;add.disabled=true;
       try{
-        const remote=url.value.trim();if(remote && !publicImageURL(remote))throw Error('Use a public image URL without credentials or signed tokens.');
-        const card=cleanCard({id:crypto.randomUUID(),url:bookmark?.url || null,title:title.value,text:text.value,tags:tags.value,image:image || (remote?publicImageURL(remote):null)});
-        await navigator.locks.request('atlas-pages-v1',async()=>{
-          const all=(await storage.get(BLANK_KEY))[BLANK_KEY] || {},current=all[scope] || [];
-          if(current.length>=100)throw Error('This board has reached its 100-card authoring limit.');
-          const next=[...current,card];await storage.set({[BLANK_KEY]:{...all,[scope]:next}});cards=next;
-        });
-        image=null;message.textContent='';render();region.lastElementChild?.querySelector('input:not([type=file])')?.focus({preventScroll:true});
+        const remote=imageURL.value.trim(),target=link.value.trim();
+        if(remote && !publicImageURL(remote))throw Error('Use a public image URL without credentials or signed tokens.');
+        if(target){let valid=false;try{const parsed=new URL(target);valid=target.length<=8192 && ['http:','https:'].includes(parsed.protocol) && !parsed.username && !parsed.password;}catch{}if(!valid)throw Error('Use an HTTP(S) link without embedded credentials.');}
+        const card=cleanCard({id:editing?.id || crypto.randomUUID(),url:target || null,title:title.value,text:text.value,tags:tags.value,image:remote?publicImageURL(remote):image});
+        if(editing)await patch({cardId:editing.id},card);else await write(list=>[...list,card]);
+        editing=null;image=null;message.textContent='';composer();
       }catch(error){message.textContent=error.message || 'Could not save. Your draft remains here.';}
       finally{busy=false;add.disabled=false;}
-    };
-    region.append(form);
+    };region.append(form);onLayout();
   }
-  return {show(blank){active=blank;region.hidden=message.hidden=!blank;$('preview-board').hidden=!blank;if(!blank){preview=false;return;}if(!loaded){loaded=true;storage.get(BLANK_KEY).then(result=>{cards=result[BLANK_KEY]?.[scope] || [];render();}).catch(()=>{loaded=false;message.textContent='Could not load this board. Refresh to retry.';});}else if(!region.children.length)render();}};
+  return {load,nodes,region:()=>region,composing:()=>active && !preview,metadata:node=>{const card=current(node);return {note:card?.text || '',tags:card?.tags || [],image:card?.image || null};},patch,
+    tagAdapter:node=>({read:async()=>{await load();const card=current(node);if(!card)throw Error('This card no longer exists.');return {tags:card.tags || [],data:null};},mutate:async(action,tag)=>{await write(list=>{if(!list.some(card=>card.id===node.cardId && !card.deleted))throw Error('This card no longer exists.');return list.map(card=>{if(card.id!==node.cardId || card.deleted)return card;const tags=card.tags || [],identity=tag.normalize('NFKC').toLowerCase();return cleanCard({...card,tags:action==='untag'?tags.filter(value=>value.normalize('NFKC').toLowerCase()!==identity):[...tags,tag]});});});return {tags:current(node)?.tags || [],data:null};}}),
+    edit(node){editing=current(node);if(!editing)return;setPreview(false);image=editing.image;composer();region.scrollIntoView?.({block:'start',behavior:'smooth'});},
+    async remove(node){await patch(node,{deleted:true});},
+    show(blank){const changed=active!==blank;active=blank;message.hidden=!blank;$('preview-board').hidden=!blank;if(changed)setPreview(false);else region.hidden=!blank || preview;if(blank && !region.children.length && loaded)composer();}
+  };
 }

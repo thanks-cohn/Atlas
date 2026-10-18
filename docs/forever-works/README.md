@@ -90,3 +90,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Remote-locked private library proposal
 
 - [PROPOSAL_REMOTE_LOCKED_PRIVATE_LIBRARY.md](PROPOSAL_REMOTE_LOCKED_PRIVATE_LIBRARY.md) — password-unlocked remote-only R2 private library, capability-gated URL fetches, on-demand assets, verified migration out of Chrome bookmarks, and explicit private-to-public publishing without leakage. Proposal only; not implemented.
+
+- [Shared pinboard surface](SHARED_PINBOARD_SURFACE.md) — bookmarks and authored boards share rendering, preview, tags, ranking and virtual layout; source adapters retain independent persistence and identities.

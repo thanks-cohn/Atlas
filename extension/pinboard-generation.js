@@ -37,7 +37,7 @@ export async function generateModels({node,image,choices,send,save,status}) {
   const results = {};
   for (const model of models) {
     status('Generating '+({objects:'Things / People',face:'Faces',anime:'Anime'}[model])+'…');
-    const response = await send({type:'api',path:'/v1/tag-image',body:{model,image,item_id:node.url,display_choices:choices}});
+    const response = await send({type:'api',path:'/v1/tag-image',body:{model,image,item_id:node.itemKey || node.url,display_choices:choices}});
     const result=response?.data || response;
     if (response?.ok===false || !Array.isArray(result?.suggestions)) {
       const error = response?.error;
