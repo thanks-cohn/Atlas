@@ -120,3 +120,41 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .detail-tagging-actions{font-size:10px;color:#967f8b;line-height:1.25}
 .detail-tagging [hidden]{display:none!important}
 @media(max-width:600px){.detail-tagging{padding-inline:14px}.detail-tagging-row{gap:6px 12px}.detail-tagging-row label{font-size:11px}}
+
+
+/* Tagging studio: layout-review UI only. No inference or face overlay. */
+#detail .detail-tagging{display:flex;flex-direction:column;gap:12px;padding:16px 28px;background:#fff;border-bottom:1px solid #eee6ea}
+.tagging-studio-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.tagging-studio-top>div{display:flex;flex-direction:column;gap:2px}
+.tagging-kicker{font-size:9px;letter-spacing:.16em;font-weight:750;color:var(--pin-red)}
+.tagging-studio-top strong{font-size:18px;letter-spacing:-.035em;font-weight:700;color:#352931}
+.tagging-studio-top small{font-size:11px;color:#907d87}
+.tagging-prototype{border:1px solid #ead9e0;border-radius:99px;padding:5px 9px;font-size:9px;letter-spacing:.09em;color:#936677;white-space:nowrap}
+#detail .tagging-stage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;overflow:visible}
+#detail .tagging-stage{display:flex;align-items:flex-start;gap:10px;white-space:normal;min-width:0;padding:12px 10px;border:1px solid #eee3e8;border-radius:12px;background:#fdfbfc;cursor:pointer}
+#detail .tagging-stage:has(input:checked){border-color:#d9abbc;background:#fff6f8}
+#detail .tagging-stage input{flex:0 0 auto;margin-top:3px;accent-color:var(--pin-red)}
+.tagging-stage-index{font-size:10px;color:#ae8798;font-weight:750}
+.tagging-stage span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tagging-stage strong{color:#40303a;font-size:12px;font-weight:700;line-height:1.3}
+.tagging-stage small{font-size:10px;color:#9a858f;line-height:1.45}
+#detail .tagging-studio-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;overflow:visible}
+#run-image-tagging{background:var(--pin-red);color:#fff;border-color:var(--pin-red);padding:9px 15px;border-radius:10px;white-space:nowrap}
+#run-image-tagging:hover{background:var(--pin-red-dark)}
+#tagging-selection-status{flex:1;color:#8c7883;font-size:11px;line-height:1.4}
+#tag-anime-wrap{font-size:11px}
+.tagging-layout-example{padding:11px 13px;border:1px solid #eee4e8;border-radius:12px;background:#fcfafb}
+.tagging-example-heading{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#8c7582;font-weight:650}
+.tagging-example-heading span:first-child{color:#5d4651}
+.tagging-example-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.tagging-example-chip{padding:5px 9px;background:#f5e8ee;border:1px solid #eed8e1;border-radius:20px;color:#8b3455;font-size:11px}
+.tagging-layout-example p{margin:7px 0 0;font-size:10px;color:#a18d95}
+@media(max-width:720px){
+ #detail .detail-tagging{padding:12px 18px;gap:9px}
+ #detail .tagging-stage-grid{grid-template-columns:1fr;gap:6px}
+ #detail .tagging-stage{padding:8px 11px;align-items:center}
+ .tagging-stage span:last-child{flex-direction:row;align-items:baseline;gap:9px}
+ .tagging-stage small{display:none}
+ .tagging-prototype{font-size:8px}
+ .tagging-layout-example{padding:9px 11px}
+}
