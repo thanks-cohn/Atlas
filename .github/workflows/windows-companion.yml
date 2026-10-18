@@ -44,6 +44,23 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: atlas-companion-windows-x86_64
-          path: dist/windows/
+          path: |
+            dist/windows/atlas-companion.exe
+            dist/windows/BUILD_RECEIPT.json
+            dist/windows/SHA256SUMS
+            dist/windows/README.md
+            dist/windows/TAGGING_MODEL_NOTICES.md
+            dist/windows/model-licenses/
+            dist/windows/atlas-extension-*.zip
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-debug-windows-x86_64
+          path: |
+            dist/windows/debug.exe
+            dist/windows/README.md
+            dist/windows/TAGGING_MODEL_NOTICES.md
+            dist/windows/model-licenses/
           if-no-files-found: error
           retention-days: 14

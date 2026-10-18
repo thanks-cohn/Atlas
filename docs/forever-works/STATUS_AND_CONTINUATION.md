@@ -703,3 +703,16 @@ policy intentionally excludes data: and was not widened. A regression test
 asserts local covers never call fetch and rejects unsupported data media. Remote
 images retain explicit site permission and bounded streamed retrieval. This is
 extension-only; native inference/runtime code is unchanged from the Windows build.
+
+Windows runtime proof: workflow 39090628102 at 6ade5cbadd017f9c50870bcd81dc9041a4e5a116
+completed successfully. Frozen executable size 442,933,699 bytes. Model smoke,
+actual management widgets, native frames/HTTP, real filesystem operations,
+suspended-helper recovery, live upgrade, opt-in supervisor recovery/revocation,
+and owned uninstall all passed. Development CI also passed for that commit.
+Final local-cover fix changes extension only, not that verified native runtime.
+
+Distribution correction: the old all-files artifact redundantly held two large
+executables plus their two-executable nested archive (~1.77 GB). Primary upload
+now selects the normal helper, receipts/notices and extension zip only; debug.exe
+is a separate optional artifact. Build-time full archive remains available to
+local builders but is not redundantly uploaded into the user-facing download.

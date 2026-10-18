@@ -48,8 +48,8 @@ Windows build prepares all model assets and bundles dependencies plus weights
 inside the helper, so normal Windows users need no Python installation or manual
 model placement. Anime remains disabled in UI until Settings activation even
 though this development bundle includes its weights. The one-file executable is
-larger than the raw model assets; the release archive includes both helper and
-debug executable copies. Existing installed helpers require an upgrade; pulling
+larger than the raw model assets; normal and debug downloads are separate artifacts so users do not download
+duplicate executables and a redundant nested archive. Existing installed helpers require an upgrade; pulling
 extension source alone does not replace the installed helper.
 
 Source development: install dependencies from `packaging/requirements-build.txt`,
