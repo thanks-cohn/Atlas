@@ -1,3 +1,4 @@
+import {createCardHold,heldMasonry} from './pinboard-card-hold.js';
 import {connectionWriter} from './pinboard-preview-connections.js';
 import {installPreviewSections} from './pinboard-preview-sections.js';
 import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun} from './pinboard-generation.js';
@@ -72,7 +73,7 @@ async function removeCardTag(node,tag){
 }
 function removableTag(node,tag,preview=false){
   const pill=el('span');pill.className='pin-tag-pair'+(preview?' preview-tag-pair':'');
-  const label=tagButton(tag,preview?'tag':'pin-tag');
+  const label=tagButton(tag,preview?'tag':'pin-tag',preview?null:node);
   const remove=el('button','×');remove.type='button';remove.className='pin-tag-remove';remove.setAttribute('aria-label','Remove '+tag+' from this card');
   remove.onclick=async event=>{event?.stopPropagation();remove.disabled=true;try{await removeCardTag(node,tag);}catch(error){status(error.message || 'Tag could not be removed. Retry.');remove.disabled=false;}};
   pill.append(label,remove);return pill;
@@ -211,10 +212,12 @@ const editTags=installTagEditor({localAdapter:node=>{
 async function previewCatalog(body){const response=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(response?.ok===false || !response?.data || !Number.isSafeInteger(response.revision))throw Error('Connect your companion and try again.');return response;}
 const writePreviewConnection=connectionWriter({catalog:previewCatalog,validateBookmark:async node=>{const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Reopen the preview.');},isAuthored:authored,local:(node,action,value)=>blankBoard.connect(node,action,value),onSnapshot:data=>{associations=indexAssociations(data);metadataState='ready';}});
 const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();const shown=image || imageFor(selected);if(shown)$('detail-image').src=shown;$('detail-image').hidden=!shown;$('detail-image').alt=title || selected?.title || 'Card image';$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
+const cardHolds=createCardHold({onRelease:()=>updatePriorities()});
+function holdCard(node){const position=positionById.get(node.id);if(!position)return;const mounted=[...blocks.values()].flatMap(block=>[...block.children]).find(card=>card.atlasNode.id===node.id),rect=mounted?.getBoundingClientRect(),root=$('pins').getBoundingClientRect();const actual=rect && Number.isFinite(rect.left) && Number.isFinite(root.left)?{...position,x:rect.left-root.left,y:rect.top-root.top}:position;cardHolds.hold(node.id,actual);}
 let tagsChangedURL=null;
 function cardSignature(node){return JSON.stringify([node.title,node.url,imageFor(node)]);}
 function card(node){
-  const article=el('article');article.className='pin';article.atlasNode=node;article.atlasSignature=cardSignature(node);const image=imageFor(node);
+  const article=el('article');article.className='pin';article.atlasNode=node;article.atlasSignature=cardSignature(node);for(const event of ['pointermove','pointerdown','keydown','focusin'])article.addEventListener(event,()=>cardHolds.touch(node.id));const image=imageFor(node);
   if(image){
     const button=el('button');button.className='pin-visual';button.setAttribute('aria-label','Preview '+(node.title || node.url));
     const geometry=imageGeometry.get(image);button.style.aspectRatio=geometry || '4 / 3';
@@ -242,13 +245,11 @@ function renderWindow(preserveAnchor=true){
   const anchor=(preserveAnchor?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
   const oldAnchor=anchor?.getBoundingClientRect().top;
   const cols=columns(),gap=window.innerWidth<=540?12:20,width=(($('pins').clientWidth || 1100)-(cols-1)*gap)/cols;
-  const ends=Array(cols).fill(0);
-  positions=items.map((node,index)=>{
+  const layout=heldMasonry(items,cols,width,gap,node=>{
     const image=imageFor(node),parts=(imageGeometry.get(image) || '4 / 3').split('/').map(Number),ratio=parts[0]/parts[1];
     const visual=image?Math.max(window.innerWidth<=540?120:160,Math.min(480,width/ratio)):0;
-    const extra=tagsFor(node).length?60:0;const height=image?visual+78+extra:108+extra,column=ends.indexOf(Math.min(...ends));
-    const position={node,index,x:column*(width+gap),y:ends[column],width,height};ends[column]+=height+24;return position;
-  });
+    const extra=tagsFor(node).length?60:0;return image?visual+78+extra:108+extra;
+  },cardHolds.active());positions=layout.positions;const ends=layout.ends;
   positionById=new Map(positions.map(position=>[position.node.id,position]));
   const composerRegion=blankBoard.region?.();
   if($('folder').value==='blank' && blankBoard.composing?.() && composerRegion){
@@ -289,9 +290,9 @@ function removeTag(tag){
   const q=tagQuery($('search').value),rest=q.tags.filter(value=>selectionKey(value)!==key);
   $('search').value=q.text+(rest.length?' tag:'+rest.join(','):'');
 }
-function tagButton(tag,className){
+function tagButton(tag,className,node=null){
   const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
-  button.onclick=()=>{if(isSelectedTag(tag))removeTag(tag);else highlightedTags.add(tag);coverFetch.stop();updatePriorities();};return button;
+  button.onclick=()=>{if(node)holdCard(node);if(isSelectedTag(tag))removeTag(tag);else highlightedTags.add(tag);coverFetch.stop();updatePriorities();};return button;
 }
 function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));}
 
@@ -355,7 +356,7 @@ function renderTags(){
   const required=selectionTags();$('active-tags').hidden=!required.length;
   const label=el('span','Prioritizing');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Unselect '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();updatePriorities();};return b;}));syncSelection();
 }
-function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=false;$('fetch-dock').hidden=blank;$('status').hidden=false;document.querySelector('.board-options').hidden=false;renderTags();items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
+function render(){cardHolds.clear();const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=false;$('fetch-dock').hidden=blank;$('status').hidden=false;document.querySelector('.board-options').hidden=false;renderTags();items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
 
 
 function updateTagCard(node){
@@ -401,7 +402,7 @@ window.addEventListener('keydown',event=>{
   if(event.target!==$('search') && event.target?.matches?.('input,textarea,select,[contenteditable]'))return;
   const query=tagQuery($('search').value);
   if(!highlightedTags.size && !query.tags.length)return;
-  event.preventDefault();highlightedTags.clear();$('search').value=query.text;clearTimeout(searchTimer);coverFetch.stop();updatePriorities();
+  event.preventDefault();cardHolds.clear();highlightedTags.clear();$('search').value=query.text;clearTimeout(searchTimer);coverFetch.stop();updatePriorities();
 });
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 async function refreshCoverUsage(){
@@ -426,7 +427,7 @@ $('new-board-form').onsubmit=async event=>{event.preventDefault();const title=$(
 $('images-only').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();saveSettings();};
 $('card-limit').onchange=()=>{limit=cardLimit($('card-limit').value);renderWindow();saveSettings();};
 window.addEventListener('scroll',scheduleWindow,{passive:true});
-window.addEventListener('resize',scheduleWindow);
+window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
 $('edit-authored-card').onclick=()=>{const node=selected;$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(selected) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(selected);$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
 $('close').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>{$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');});

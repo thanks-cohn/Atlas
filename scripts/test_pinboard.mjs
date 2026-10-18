@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const read=name=>readFileSync(new URL('../extension/'+name,import.meta.url),'utf8');
 const moduleOf=async name=>import('data:text/javascript;base64,'+Buffer.from(read(name)).toString('base64'));
+const holdsModule=await moduleOf('pinboard-card-hold.js');
 const model=await moduleOf('pinboard-model.js'),coversModule=await moduleOf('bookmark-covers.js');
 const roots=[{id:'0',children:[{id:'1',parentId:'0',title:'Work',children:Array.from({length:1000},(_,i)=>({id:String(i+10),parentId:'1',title:'Bookmark '+i,url:'https://example.com/'+i+'.jpg'}))}]}];
 assert.equal(model.pinItems(roots).length,1000);assert.equal(model.pinItems(roots,'missing').length,0);
@@ -16,6 +17,7 @@ await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards
 
 const animations=[],motionFinishes=[];
 let previewContent;
+let holdImpl={hold(){},touch(){},active:()=>[],clear(){}};
 let blankOptions,blankImpl={show(){},load:async()=>{},nodes:()=>[]};
 let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
 class El{
@@ -38,7 +40,7 @@ class El{
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
-const context={connectionWriter:()=>async()=>{},installPreviewSections:()=>({setContent:(key,value)=>previewContent={key,...value}}),TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:()=>({setContent:(key,value)=>previewContent={key,...value}}),TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -368,3 +370,14 @@ console.log('PASS: authored cover fetch persists through one nonreentrant storag
 const projection=context.indexAssociations({resources:{a:{id:'a',kind:'bookmark',title:'Source',note:'Own note',locators:[{provider:'web',reference:'https://source.example'}]},n:{id:'n',kind:'note',title:'Linked note',note:'Linked text'},b:{id:'b',kind:'bookmark',title:'Connected site',locators:[{provider:'web',reference:'https://linked.example'}]},other:{id:'other',kind:'bookmark',title:'Unlinked',locators:[{provider:'web',reference:'https://unlinked.example'}]}},tags:{},relations:[{from:'a',to:'n',type:'related'},{from:'a',to:'b',type:'related'}]}).get('https://source.example');
 assert.deepEqual(JSON.parse(JSON.stringify(projection.notes)).map(n=>n.text),['Own note','Linked text']);assert.equal(projection.bookmarks.length,1);assert.equal(projection.bookmarks[0].url,'https://linked.example');
 console.log('PASS: expansion projects own/explicitly linked notes and bookmarks, with no unrelated library suggestions.');
+
+// Exercise the production hold through the actual card tag click/layout path.
+let holdClock=0,holdTimerId=0;const holdTimers=new Map();
+holdImpl=holdsModule.createCardHold({onRelease:()=>context.updatePriorities(),setTimer:(fn,ms)=>{holdTimers.set(++holdTimerId,{fn,at:holdClock+ms});return holdTimerId;},clearTimer:id=>holdTimers.delete(id)});
+const holdAdvance=ms=>{holdClock+=ms;for(const [id,timer] of [...holdTimers])if(timer.at<=holdClock){holdTimers.delete(id);timer.fn();}};
+await blankImpl.patch(blankImpl.nodes()[2],{tags:['Beta','Unique']});vm.runInContext("highlightedTags.clear();$('search').value='';render()",context);flush();
+const targetCard=cards().find(card=>card.atlasNode.cardId==='auth-c'),targetPosition={left:targetCard.style.left,top:targetCard.style.top};
+const targetTag=targetCard.children[1].children.find(child=>child.className==='pin-tags').children.find(pair=>pair.children[0]?.textContent==='Unique').children[0];targetTag.onclick();
+assert.equal(vm.runInContext('items[0].cardId',context),'auth-c','Selection/ranking updates immediately');assert.ok(cards().includes(targetCard));assert.equal(targetCard.style.left,targetPosition.left);assert.equal(targetCard.style.top,targetPosition.top);
+holdAdvance(4000);targetCard.handlers.pointermove();holdAdvance(4999);assert.equal(holdImpl.active().length,1);assert.equal(targetCard.style.left,targetPosition.left);holdAdvance(1);assert.equal(holdImpl.active().length,0);assert.equal(targetCard.style.left,'0px');assert.equal(targetCard.style.top,'0px');
+console.log('PASS: card tag click immediately selects/ranks but retains the actual card/geometry until five seconds after its last interaction.');
