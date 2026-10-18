@@ -55,6 +55,10 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [DIAGNOSTICS_AND_SIMPLE_SETUP.md](DIAGNOSTICS_AND_SIMPLE_SETUP.md) — simple enrollment, stages, codes, debug APIs and privacy.
 
 
+## Card expansion and portable transitions
+
+- [PROPOSAL_CARD_EXPANSION_STATE_TRANSITIONS_AND_ROULETTE.md](PROPOSAL_CARD_EXPANSION_STATE_TRANSITIONS_AND_ROULETTE.md) — proposed fixed-viewport glossy note roulette, separate expandable bookmark rows with preserved links and foregrounded image lightbox, tag-informed recommended photos, and device-independent state/transition behavior. Proposal only; existing card and note contracts remain authoritative.
+
 ## Active design work
 
 - [CURRENTLY_WORKING_ON_CARD_WORKSPACE.md](CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) — owner-directed WIP specification for cards, shelf hierarchy, progressive expansion, ALL-tag search, composition and publishing; includes rationale, unresolved choices and future acceptance checks. [Baseline source record](../releases/BASELINE_2026-10-16.md).
