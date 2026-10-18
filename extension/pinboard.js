@@ -29,44 +29,42 @@ function tagStrip(node){
 const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
-function previewTagLayout(){
-  const host=$('detail-preview-tags');if(!host)return;
-  const examples=[];
-  if($('tag-image-choice').checked)examples.push('garden','dress','outdoors');
-  if($('tag-people-choice').checked)examples.push('3 people','2 female-presenting','1 male-presenting');
-  if($('tag-face-choice').checked)examples.push('smiling','adult (estimated)');
-  host.replaceChildren();
-  const unique=[...new Set(examples)].slice(0,5);
-  if(!unique.length)return;
-  const title=el('small','Example tags · not generated');title.className='tagging-sample-caption';host.append(title);
-  for(const label of unique){const chip=el('span',label);chip.className='tag';host.append(chip);}
-}
+let taggingChoiceEpoch=0;
+function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice','tag-face-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=!chosen;}
+function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
+async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
+$('joytag-enabled').onchange=async()=>{
+  const enabled=$('joytag-enabled').checked;$('joytag-enabled').disabled=true;
+  try{await chrome.storage.local.set({[JOYTAG_ACTIVATED]:enabled});applyJoyTagSetting(enabled);$('model-choice-status').textContent='Saved.';}catch{$('model-choice-status').textContent='Could not save. Please retry.';await loadModelChoiceSetting();}finally{$('joytag-enabled').disabled=false;}
+};
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);});
+loadModelChoiceSetting();
 async function loadTaggingChoices(node){
-  const key=node.url;
+  const key=node.url,request=++taggingChoiceEpoch;
   $('tag-anime-wrap').hidden=true;
   $('tag-anime-choice').checked=false;
   $('tag-image-choice').checked=true;
   $('tag-people-choice').checked=true;
   $('tag-face-choice').checked=false;
-  setTaggingChoiceStatus('Layout preview only · Models not connected');
+  setTaggingChoiceStatus('Preview only');updateTaggingAction();
   try{
     const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
-    if(selected?.url!==key)return;
+    if(selected?.url!==key || request!==taggingChoiceEpoch)return;
     const prefs=saved[TAGGING_UI_PREFS]?.[key] || {};
     $('tag-image-choice').checked=prefs.objects!==false;
     $('tag-people-choice').checked=prefs.people!==false;
     $('tag-face-choice').checked=prefs.details===true;
     const joytagEnabled=saved[JOYTAG_ACTIVATED]===true;
-    $('tag-anime-wrap').hidden=!joytagEnabled;
+    applyJoyTagSetting(joytagEnabled);
     $('tag-anime-choice').checked=joytagEnabled && prefs.anime===true;
-  }catch{setTaggingChoiceStatus('Preview available; selections could not be restored.');}
-  previewTagLayout();
+  }catch{if(selected?.url!==key || request!==taggingChoiceEpoch)return;setTaggingChoiceStatus('Could not restore choices.');}
+  updateTaggingAction();
 }
 async function saveTaggingChoices(){
   if(!selected?.url)return;
   const key=selected.url;
   const choice={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,details:$('tag-face-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
-  previewTagLayout();
+  updateTaggingAction();setTaggingChoiceStatus('Preview only');
   try{
     const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};
     await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[key]:choice}});
@@ -78,14 +76,15 @@ async function showGeneratedTags(node){
   const host=$('detail-generated-tags');
   host.replaceChildren();
   try{
-    const runs=(await chrome.storage.local.get(TAGGING_RESULTS))[TAGGING_RESULTS]?.[node.url] || {};
+    const [stored,activation]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED)]);
+    const runs=stored[TAGGING_RESULTS]?.[node.url] || {},animeEnabled=activation[JOYTAG_ACTIVATED]===true;
     if(selected?.url!==node.url)return;
     // Deduplicate presentation only: every per-model result remains saved intact.
     const human=new Set(tagsFor(node).map(tag=>tag.toLocaleLowerCase()));
     const grouped=new Map();
     for(const source of ['objects','face','anime']){
       const run=runs[source];
-      if(!run)continue;
+      if(!run || (source==='anime' && !animeEnabled))continue;
       for(const suggestion of run.suggestions||[]){
         if(typeof suggestion.tag!=='string')continue;
         const label=suggestion.tag.trim();
@@ -103,7 +102,7 @@ async function showGeneratedTags(node){
       const chip=el('span',entry.label);chip.className='tag';
       chip.title=entry.sources.map(item=>{
         const confidence=Number.isFinite(item.score)?' ('+Math.round(item.score*100)+'%)':'';
-        return (item.model||item.source)+confidence;
+        return ({objects:'Things',face:'Faces',anime:'Anime'}[item.source] || 'People')+confidence;
       }).join(' · ');
       tags.append(chip);
     }
@@ -112,22 +111,9 @@ async function showGeneratedTags(node){
   }catch{host.append(el('p','Saved model results could not be loaded.'));}
 }
 
-function imagePayload(image){
-  return new Promise((resolve,reject)=>{
-    if(!image?.complete || !image.naturalWidth)return reject(Error('Open a loaded image first.'));
-    const canvas=document.createElement('canvas'),scale=Math.min(1,1024/Math.max(image.naturalWidth,image.naturalHeight));
-    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
-    try{
-      canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
-      const data=canvas.toDataURL('image/jpeg',0.78);
-      if(data.length>1990000)throw Error('Image is too large for local tagging.');
-      resolve(data);
-    }catch{reject(Error('This image cannot be read for local tagging. Try an uploaded or locally saved cover.'));}
-  });
-}
 $('run-image-tagging').onclick=()=>{
-  previewTagLayout();
-  setTaggingChoiceStatus('Sample tags updated · No image analysis performed');
+  updateTaggingAction();
+  if(!$('run-image-tagging').disabled)setTaggingChoiceStatus('Models aren’t connected yet.');
 };
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
 const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
