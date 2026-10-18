@@ -41,3 +41,9 @@ A credible standalone local-first free tier and optional paid differentiation (a
 No stealth access to every filesystem, no remote-shell endpoint, no mandatory uploads of local content, no bypass of OS permission boundaries, no silent executable installation from Chrome Web Store, and no false promise that content is accessible when offline or unauthorized.
 
 This document describes **owner-directed product purpose**; it is not a claim of operational completion.
+
+## Portable Atlas expressions — enduring owner vision
+
+The owner dreams of a future filled with beautiful, aesthetic **Atlas cards and Atlas slices across the internet, enduring indefinitely**. The guiding principle is to reduce rich wholes into their best representative, useful and elegant parts, portable across Atlas templates and independent websites. Preserve identity, meaning, source connections and aesthetic quality across sizes. Exports must remain independently useful without Atlas installed; widespread adoption and permanence are ambitions, not proven outcomes. Projects organize; Pages compose; Sections present; specialized collections keep their native containment rules. See [Object Grammar and Portable Expressions](PROPOSAL_OBJECT_GRAMMAR_AND_PORTABLE_EXPRESSIONS.md) for the proposed relationship rules, Add Item behavior and portable-expression proof.
+
+**Extractable from inception:** Every Card, expanded/popup Card and Slice is designed for extraction and reuse from its first implementation. Keep its portable content/presentation/interaction core separate from explicit, replaceable host capabilities. Independent viewing must remain useful; privileged operations still require authorized adapters. This is a forward design obligation, not a claim that all current components already satisfy it.

@@ -98,3 +98,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Minimal publishing and aesthetic adaptation — owner-directed proposal
 
 - [PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md](PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md) — **Use the smallest implementation that fully preserves the experience**; transparent modular editor/output boundaries, ten useful formats, card/whole/slice relationships, rich note/article transformation, R2/local portability, five-dollar one-time pricing hypothesis, a first-time-user Cloudflare publishing acceptance test, Any-Shape cross-size aesthetic equivalence and a documented future AI design corpus. Proposed only, not implemented.
+
+- [Object Grammar and Portable Atlas Expressions](PROPOSAL_OBJECT_GRAMMAR_AND_PORTABLE_EXPRESSIONS.md) — owner vision of beautiful cards/slices across the internet; Project/Page/Section/Pinboard rules, conditional containment vs embedding, contextual Add Item and independent export contracts. Design proposal, not shipped enforcement.
