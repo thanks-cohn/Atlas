@@ -81,7 +81,6 @@ body:has(#blank-board:not([hidden])) .storage-note,body:has(#blank-board:not([hi
 /* The tag palette grows in place; card selection never navigates away. */
 .tag-browser{margin:0 0 18px;padding:16px 18px;border:1px solid #eee5e9;border-radius:16px;background:#fdfafb;max-width:100%}
 .tag-browser-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:#927580;font-size:11px;font-weight:650;letter-spacing:.04em}
-#apply-tags{padding:7px 13px;border-color:#efd9e0;color:var(--pin-red);font-size:11px;background:#fff}
 .tag-field{display:flex;flex-wrap:wrap;align-content:flex-start;gap:7px;max-height:57px;overflow:auto;scrollbar-width:thin;scrollbar-color:#e4d5dc transparent;transition:max-height .22s ease}
 .tag-browser:hover .tag-field,.tag-browser:focus-within .tag-field{max-height:185px}
 .browse-tag{font-size:11px;font-weight:500;line-height:16px;height:25px;padding:4px 11px;background:#fff;border:1px solid #eaddE3;color:#8a6d7a;white-space:nowrap}

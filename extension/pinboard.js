@@ -2,12 +2,12 @@ import {generationImage,generateModels,imageReference,generatedTags,mergeGenerat
 import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
-import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags,createPinboard} from './pinboard-model.js';
+import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,createPinboard} from './pinboard-model.js';
 import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
-let pendingTags=new Set(),activeTags=[],metadataState='loading';
+let highlightedTags=new Set(),metadataState='loading';
 let roots=[],covers={},items=[],selected=null,associations=new Map();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
@@ -247,24 +247,28 @@ function renderWindow(preserveAnchor=true){
   const wanted=[topSpacer,...[...blocks].sort((a,b)=>a[0]-b[0]).map(([,block])=>block),bottomSpacer];
   const current=[...$('pins').children];if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
   coverFetch.discover();
-  status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : ((activeTags.length || tagQuery($('search').value).tags.length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
+  status(items.length ? `${items.length.toLocaleString()} bookmark${items.length===1?'':'s'} · Explore your collection` : ((selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
 function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
-function isSelectedTag(tag){return pendingTags.has(tag) || activeTags.includes(tag) || tagQuery($('search').value).tags.includes(tag);}
-function removeTag(tag){activeTags=activeTags.filter(t=>t!==tag);pendingTags.delete(tag);const q=tagQuery($('search').value);const rest=q.tags.filter(t=>t!==tag);$('search').value=q.text+(rest.length?' tag:'+rest.join(','):'');}
+const selectionKey=tag=>tag.normalize('NFKC').trim().toLowerCase();
+function selectionTags(){return [...new Map([...highlightedTags,...tagQuery($('search').value).tags].map(tag=>[selectionKey(tag),tag])).values()];}
+function isSelectedTag(tag){return selectionTags().some(value=>selectionKey(value)===selectionKey(tag));}
+function removeTag(tag){
+  const key=selectionKey(tag);for(const value of highlightedTags)if(selectionKey(value)===key)highlightedTags.delete(value);
+  const q=tagQuery($('search').value),rest=q.tags.filter(value=>selectionKey(value)!==key);
+  $('search').value=q.text+(rest.length?' tag:'+rest.join(','):'');
+}
 function tagButton(tag,className){
   const button=el('button',tag);button.type='button';button.className=className;button.title=tag;button.dataset && (button.dataset.tag=tag);button.setAttribute('aria-pressed',String(isSelectedTag(tag)));
-  button.onclick=()=>{if(isSelectedTag(tag))removeTag(tag);else pendingTags.add(tag);coverFetch.stop();updatePriorities();};return button;
+  button.onclick=()=>{if(isSelectedTag(tag))removeTag(tag);else highlightedTags.add(tag);coverFetch.stop();updatePriorities();};return button;
 }
-function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));const staged=[...pendingTags].some(tag=>!activeTags.includes(tag));$('apply-tags').hidden=false;$('apply-tags').disabled=!staged;$('apply-tags').textContent='Bring to Top ↵';}
+function syncSelection(){for(const button of document.querySelectorAll?.('[data-tag]') || [])button.setAttribute('aria-pressed',String(isSelectedTag(button.dataset.tag)));}
 
-function applyTags(){activeTags=[...pendingTags];coverFetch.stop();updatePriorities();$('pins').scrollIntoView({block:'start',behavior:'instant'});}
 function filteredNodes(){
-  const query=tagQuery($('search').value),selected=[...pendingTags];
-  // Highlighting prioritizes; an explicit search restricts to the selected scope.
-  const searching=!!query.text || query.tags.length>0;
-  const required=searching?[...new Set([...selected,...query.tags])]:[];
-  const nodes=pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));
+  const query=tagQuery($('search').value),selected=selectionTags();
+  // Clicked tags and typed tag: clauses rank identically. Only ordinary search
+  // words (and explicit image/tag-only settings) narrow the collection.
+  const nodes=pinItems(roots,$('folder').value,query.text).filter(node=>!$('tags-only').checked || tagsFor(node).length);
   if(!selected.length)return nodes;
   // More matching tags means higher priority; duplicate labels never add weight.
   const keys=new Set(selected.map(tag=>tag.normalize('NFKC').toLowerCase()));
@@ -317,8 +321,8 @@ function renderTags(){
   const tags=[...new Set(pinItems(roots,$('folder').value).flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
   $('tag-browser').hidden=blank;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
-  const query=tagQuery($('search').value),required=[...new Set([...pendingTags,...query.tags])];$('active-tags').hidden=blank || !required.length;
-  const label=el('span',query.text || query.tags.length?'Matching all':'Prioritizing');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Unselect '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();updatePriorities();};return b;}));syncSelection();
+  const required=selectionTags();$('active-tags').hidden=blank || !required.length;
+  const label=el('span','Prioritizing');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Unselect '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();updatePriorities();};return b;}));syncSelection();
 }
 function render(){const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=blank;$('fetch-dock').hidden=blank;$('status').hidden=blank;document.querySelector('.board-options').hidden=blank;renderTags();if(blank){blocks.clear();$('pins').replaceChildren();return;}items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
 
@@ -358,17 +362,15 @@ async function refresh(){
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
-$('apply-tags').onclick=applyTags;
 // Alt+Q clears browsing selection only. Escape remains exclusively available
 // to previews/dialogs. Ordinary search words and attached tags are preserved.
 window.addEventListener('keydown',event=>{
   if(event.key?.toLowerCase()!=='q' || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat || event.defaultPrevented || $('detail').open || $('image-source').open || (document.querySelectorAll?.('dialog[open]') || []).length)return;
   if(event.target!==$('search') && event.target?.matches?.('input,textarea,select,[contenteditable]'))return;
   const query=tagQuery($('search').value);
-  if(!pendingTags.size && !activeTags.length && !query.tags.length)return;
-  event.preventDefault();pendingTags.clear();activeTags=[];$('search').value=query.text;clearTimeout(searchTimer);coverFetch.stop();updatePriorities();
+  if(!highlightedTags.size && !query.tags.length)return;
+  event.preventDefault();highlightedTags.clear();$('search').value=query.text;clearTimeout(searchTimer);coverFetch.stop();updatePriorities();
 });
-window.addEventListener('keydown',async event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser'))){event.preventDefault();clearTimeout(searchTimer);await refreshAssociations();applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 async function refreshCoverUsage(){
   try{const saved=(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY];$('cover-budget').value=String(coverBudgetMiB(saved));const bytes=coverStorageBytes((await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {});$('cover-usage').textContent=(bytes/1048576).toFixed(1)+' MiB saved · '+coverBudgetMiB(saved)+' MiB limit';}catch{$('cover-usage').textContent='Usage unavailable';}
@@ -419,7 +421,7 @@ $('image-file').onchange=async()=>{
   }catch(error){status((error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Try a smaller image; existing bookmarks are unchanged.');}
 };
 const coverFetch=installCoverFetch({
-  getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim(),activeTags,$('tags-only').checked]),
+  getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim(),selectionTags().map(selectionKey),$('tags-only').checked]),
   getNodes:()=>filteredNodes(),
   getMounted:()=>[...blocks.values()].flatMap(block=>[...block.children].map(element=>({element,node:element.atlasNode}))),
   hasCover:node=>!!imageFor(node),raster:rasterImage,

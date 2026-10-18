@@ -153,3 +153,8 @@ Keep the enlarged/selected image, its title, attached tags, and a compact **Note
 7. No note mutation, tag regeneration, accidental publication or unauthorized remote retrieval occurs from mere browsing.
 
 **Intent:** Make the pinboard popout a quiet, beautiful reading surface: **image + title + tags + expandable notes**, with progressive disclosure rather than clutter.
+
+
+### Current tag interaction — 0.1.72 (supersedes select/apply filtering)
+
+Clicking tags or entering `tag:tag1,tag2` immediately ranks cards by the number of selected tags they match (3, 2, 1, 0), with stable original order for ties. Nonmatches remain. There is one normalized selection and no Apply button or Enter commit step. Ordinary title/URL words filter independently; tag clauses only rank the remaining results. Alt+Q clears tag selection; Escape closes previews. Card × removes that card's association, independently of selection. Generation attaches tags automatically and preserves human/model provenance.

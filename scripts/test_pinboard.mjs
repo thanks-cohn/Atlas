@@ -121,26 +121,25 @@ console.log('PASS: 1,000-bookmark viewport-first window, compact widths independ
 assert.deepEqual(model.tagQuery('mountains tags:Design,Travel'),{text:'mountains',tags:['Design','Travel']});
 assert.deepEqual(model.tagQuery('tags:Design, Travel mountains'),{text:'mountains',tags:['Design','Travel']});
 assert.deepEqual(model.tagQuery('tags:Design tags:Design,Art'),{text:'',tags:['Design','Art']});
-assert.equal(model.matchesTags(['A','B'],['A','B']),true);assert.equal(model.matchesTags(['A'],['A','B']),false);
 tagCatalog.tags.r=['Art','Design'];tagCatalog.tags.q=['Art'];await $('refresh').onclick();flush();
 const imageTags=cards()[0].children[1].children[2];imageTags.children[0].children[0].onclick();
-assert.equal(vm.runInContext('activeTags.length',context),0);
+assert.equal(vm.runInContext('highlightedTags.size',context),1);
 const otherTag=cards()[0].children[1].children[2].children[1];otherTag.children[0].onclick();
-$('apply-tags').onclick();flush();assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards().length,144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
+flush();assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards().length,144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
 assert.equal($('active-tags').children.length,3);
 // A normal text query is intersected with ALL selected tags.
 $('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
 $('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
 // Clicking active Design broadens automatically to both Art bookmarks.
 cards()[0].children[1].children[2].children[1].children[0].onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
-$('search').value='tags:Design';vm.runInContext('render()',context);assert.equal(cards().length,1);
+$('search').value='tag:Design';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
 $('active-tags').children.at(-1).onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
 assert.equal(fetchOptions.getNodes().length,2);
-console.log('PASS: highlighted tags prioritize without hiding, all-tag search intersection, chip removal, tag clauses, search scoping and tagged-only persistence.');
+console.log('PASS: highlighted tags prioritize without hiding, typed tag ranking, chip removal, tag clauses, ordinary text filtering and tagged-only persistence.');
 
 // Highlighting is immediately additive ranking, not an implicit search or save.
-$('tags-only').checked=false;vm.runInContext("pendingTags.clear();activeTags=[];$('search').value='';render()",context);
+$('tags-only').checked=false;vm.runInContext("highlightedTags.clear();$('search').value='';render()",context);
 tagCatalog.tags.q=['Second Only'];await $('refresh').onclick();flush();
 const priorNodes=vm.runInContext('items.map(node=>node.id)',context);
 const secondPair=cards().find(card=>card.atlasNode.id===taggedURL.id).children.at(-1).children[0];
@@ -149,12 +148,12 @@ assert.equal(vm.runInContext('items[0].id',context),taggedURL.id);
 assert.equal(vm.runInContext('items.length',context),1000);
 assert.equal($('active-tags').children[0].textContent,'Prioritizing');
 assert.deepEqual(Array.from(vm.runInContext('items.slice(1).map(node=>node.id)',context)),Array.from(priorNodes).filter(id=>id!==taggedURL.id));
-$('search').value='tag:Second';vm.runInContext('render()',context);assert.equal(cards().length,0);
-$('search').value='Bookmark';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1);
+$('search').value='tag:Second';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
+$('search').value='Bookmark';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
 $('active-tags').children.at(-1).onclick();assert.deepEqual(Array.from(vm.runInContext('items.map(node=>node.id)',context)),Array.from(priorNodes));
 tagCatalog.tags.q=['Art'];
-console.log('PASS: selecting a tag on a later card moves all matches first, preserves all other cards in stable order, search alone hides nonmatches and clearing selection restores order.');
+console.log('PASS: selecting a tag on a later card moves all matches first, preserves all other cards in stable order, ordinary text search filters without making tag clauses restrictive and clearing selection restores order.');
 
 // Cover storage is a shared persisted setting, independent of visible card budget.
 $('cover-budget').value='128';await $('save-cover-budget').onclick();assert.equal(data[coversModule.COVER_BUDGET_KEY],128);assert.match($('cover-usage').textContent,/128 MiB limit/);
@@ -169,19 +168,18 @@ const repeats=[{id:'root',children:[{id:'f1',children:[{id:'a',title:'First',url
 assert.equal(model.pinItems(repeats,'all').length,3);assert.equal(model.pinItems(repeats,'f2').length,3);assert.equal(model.pinItems(repeats,'all','Second')[0].id,'b');
 
 assert.deepEqual(model.tagQuery('tag:Art,Design mountains'),{text:'mountains',tags:['Art','Design']});
-assert.equal(model.matchesTags(['Design'],['design']),true);
 // No temporary paired token must not suppress the read that can reconnect natively.
 let catalogReads=0,stateReads=0;
 context.chrome.runtime.sendMessage=async message=>{if(message.type==='state'){stateReads++;return {paired:false};}catalogReads++;return {data:tagCatalog};};
-vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='tag:art';$('tags-only').checked=false",context);
-await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0);assert.equal(cards().length,2);assert.equal($('tag-browser').hidden,false);assert.equal($('apply-tags').hidden,false);
+vm.runInContext("highlightedTags.clear();$('search').value='tag:art';$('tags-only').checked=false",context);
+await $('refresh').onclick();assert.ok(catalogReads>0);assert.equal(stateReads,0);assert.equal(vm.runInContext('items.length',context),1000);assert.equal($('tag-browser').hidden,false);assert.ok(!read('pinboard.html').includes('apply-tags'));
 // Empty/unavailable metadata does not leave a useless empty palette or imply no saved tags exist.
 context.chrome.runtime.sendMessage=async()=>({ok:false,error:{code:'NEEDS_PAIRING'}});
-vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,false);assert.match($('status').textContent,/Connect your companion/);
+vm.runInContext('associations=new Map()',context);await $('refresh').onclick();assert.equal($('tag-browser').hidden,false);assert.match($('tag-field').children[0].textContent,/Connect your companion/);
 
 // Metadata saves preserve image nodes and neighboring cards instead of resetting the board.
 context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});
-vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='';$('tags-only').checked=false",context);
+vm.runInContext("highlightedTags.clear();$('search').value='';$('tags-only').checked=false",context);
 await $('refresh').onclick();flush();const stable=cards(),stableImage=stable[0].children[0].children[0];
 vm.runInContext('tagsChangedURL=items[0].url',context);tagCatalog.tags.r=['Art','Updated'];await tagEditorOptions.onChanged(tagCatalog);flush();
 assert.equal(cards()[0],stable[0]);assert.equal(cards()[0].children[0].children[0],stableImage);assert.equal(cards()[1],stable[1]);
@@ -209,7 +207,7 @@ assert.ok(previewMarkup.includes('> Anime</label>'));assert.ok(!previewMarkup.in
 console.log('PASS: compact preview model choices, Settings-only JoyTag gate, preference restore, empty selection and explicit generation and no automatic model requests.');
 // Successful generation attaches a derived tag to the existing card and filters,
 // without promoting machine output into the human catalog or replacing images.
-vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='';$('tags-only').checked=false",context);
+vm.runInContext("highlightedTags.clear();$('search').value='';$('tags-only').checked=false",context);
 await $('refresh').onclick();flush();
 const machineCard=cards()[0],machineImage=machineCard.children[0].children[0];
 vm.runInContext('openDetail(items[0])',context);await tick();await tick();
@@ -223,7 +221,7 @@ assert.ok(derived.includes('Machine Cat'));assert.equal(derived.filter(tag=>tag.
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
 $('search').value='tag:Machine Cat';
 // Exercise the tag predicate directly: whitespace search grammar is independent.
-assert.equal(vm.runInContext("matchesTags(tagsFor(items[0]),['Machine Cat'])",context),true);
+assert.equal(vm.runInContext("tagsFor(items[0]).includes('Machine Cat')",context),true);
 console.log('PASS: generated tags appear immediately on stable bookmark cards, participate in filtering, deduplicate human labels and leave human metadata unchanged.');
 
 assert.ok(data['atlas-tag-vocabulary-v1'].includes('Machine Cat'));
@@ -253,49 +251,49 @@ assert.ok(!cumulative.includes('Machine Cat'),'Explicit removal must survive all
 assert.ok(data['atlas-image-tagging-runs-v1'][machineCard.atlasNode.url].objects.length>=3);
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
 console.log('PASS: three separate UI generations accumulate different payloads and shared-detector choices; explicit × removal and human metadata survive.');
-vm.runInContext('pendingTags.clear();activeTags=[];generatedIndex=new Map()',context);
+vm.runInContext('highlightedTags.clear();generatedIndex=new Map()',context);
 context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});await $('refresh').onclick();flush();
 const reloaded=vm.runInContext('tagsFor(selected)',context);
 for(const tag of ['Generated Object','person','smile'])assert.ok(reloaded.includes(tag));
 assert.ok(!reloaded.includes('Machine Cat'));
-assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
+assert.equal(vm.runInContext('highlightedTags.size',context),0);
 console.log('PASS: cumulative generated attachments survive reloading storage with zero highlighted/selected tags.');
 
 // Alt+Q restores ordinary order without deleting attachments. Open preview and
 // editor controls retain key ownership; typed search words are kept.
-$('close').onclick();vm.runInContext("pendingTags=new Set(['smile']);activeTags=['smile'];$('search').value='';updatePriorities()",context);
+$('close').onclick();vm.runInContext("highlightedTags=new Set(['smile']);$('search').value='';updatePriorities()",context);
 let clearPrevented=false;
 listeners.keydown({key:'Escape',target:document.body,preventDefault(){throw Error('Escape must not clear tags');}});
-assert.equal(vm.runInContext('pendingTags.size',context),1);
+assert.equal(vm.runInContext('highlightedTags.size',context),1);
 listeners.keydown({key:'q',altKey:true,target:document.body,preventDefault(){clearPrevented=true;}});
-assert.equal(clearPrevented,true);assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
+assert.equal(clearPrevented,true);assert.equal(vm.runInContext('highlightedTags.size',context),0);
 for(const tag of ['Generated Object','person','smile'])assert.ok(vm.runInContext('tagsFor(selected)',context).includes(tag));
-vm.runInContext("pendingTags.add('smile');$('search').value='Bookmark tag:smile'",context);
+vm.runInContext("highlightedTags.add('smile');$('search').value='Bookmark tag:smile'",context);
 vm.runInContext("$('detail').showModal()",context);
 listeners.keydown({key:'q',altKey:true,target:document.body,preventDefault(){throw Error('Preview must not clear underlying tags');}});
-assert.equal(vm.runInContext('pendingTags.size',context),1);
+assert.equal(vm.runInContext('highlightedTags.size',context),1);
 $('close').onclick();listeners.keydown({key:'q',altKey:true,target:{matches:()=>true},preventDefault(){throw Error('Editor must keep input handling');}});
-assert.equal(vm.runInContext('pendingTags.size',context),1);
+assert.equal(vm.runInContext('highlightedTags.size',context),1);
 listeners.keydown({key:'q',altKey:true,target:$('search'),preventDefault(){}});
-assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);assert.equal($('search').value,'Bookmark');
+assert.equal(vm.runInContext('highlightedTags.size',context),0);assert.equal($('search').value,'Bookmark');
 console.log('PASS: Alt+Q clears highlighted tags/clauses and restores order; attachments/search words persist; Escape never clears selection and dialogs/editors retain handling.');
 
 // Graded priority: 3 matches, 2, 1, zero, with stable ties and no double-counting.
-$('search').value='';vm.runInContext("pendingTags.clear();activeTags=[];render()",context);
+$('search').value='';vm.runInContext("highlightedTags.clear();render()",context);
 const rankedNodes=roots[0].children[0].children.slice(0,6);
 context.rankingFixtures=rankedNodes.map((node,index)=>[node.url,{note:'',tags:[['Alpha'],[],['Alpha','Beta'],['Alpha','Beta','Gamma'],['Beta','Gamma'],['ALPHA','Alpha']][index],image:null}]);
-vm.runInContext("associations=new Map(rankingFixtures);pendingTags=new Set(['Alpha','Beta','Gamma']);updatePriorities()",context);
+vm.runInContext("associations=new Map(rankingFixtures);highlightedTags=new Set(['Alpha','Beta','Gamma']);updatePriorities()",context);
 assert.deepEqual(Array.from(vm.runInContext('items.slice(0,6).map(node=>node.id)',context)),[rankedNodes[3].id,rankedNodes[2].id,rankedNodes[4].id,rankedNodes[0].id,rankedNodes[5].id,rankedNodes[1].id]);
 assert.equal(vm.runInContext('items.length',context),1000);
-vm.runInContext('pendingTags.clear();updatePriorities()',context);
+vm.runInContext('highlightedTags.clear();updatePriorities()',context);
 const retained=cards().find(card=>card.atlasNode.id===rankedNodes[0].id);
 context.rankingFixtures=roots[0].children[0].children.slice(1,31).map(node=>[node.url,{note:'',tags:['Alpha'],image:null}]);
-vm.runInContext("associations=new Map(rankingFixtures);pendingTags.add('Alpha');updatePriorities()",context);
+vm.runInContext("associations=new Map(rankingFixtures);highlightedTags.add('Alpha');updatePriorities()",context);
 assert.equal(vm.runInContext('items[30].id',context),rankedNodes[0].id);
 assert.equal(cards().find(card=>card.atlasNode.id===rankedNodes[0].id),retained,'Moving across virtual batches must retain the card and its image');
 assert.ok(animations.length>0);assert.equal(animations.at(-1).options.duration,260);
 const animationCount=animations.length;context.window.matchMedia=()=>({matches:true});
-vm.runInContext('pendingTags.clear();updatePriorities()',context);assert.equal(animations.length,animationCount);
+vm.runInContext('highlightedTags.clear();updatePriorities()',context);assert.equal(animations.length,animationCount);
 console.log('PASS: graded 3/2/1/0 matching priority, stable ties, unique tag scoring, all cards retained, cross-batch image reuse, bounded transform motion and reduced-motion support.');
 
 // Departing cards use their own DOM for a bounded, noninteractive exit; arriving
@@ -313,3 +311,23 @@ assert.ok(exits.every(card=>!card.isConnected));
 for(const finish of motionFinishes.splice(0))finish();await tick();
 assert.equal(vm.runInContext('retiringCards.size',context),0);
 console.log('PASS: bounded 100ms exits and 180ms entrances, inert departing DOM, rapid-search cleanup and no leftover cards; browser visual smoothness remains separate.');
+
+// One ranking path: click and typed clauses yield the same complete ordering.
+context.rankingFixtures=rankedNodes.map((node,index)=>[node.url,{note:'',tags:[['Alpha'],[],['Alpha','Beta'],['Alpha','Beta','Gamma'],['Beta','Gamma'],['ALPHA','Alpha']][index],image:null}]);
+vm.runInContext("associations=new Map(rankingFixtures);highlightedTags=new Set(['Alpha','Beta','Gamma']);$('search').value=''",context);
+const clickOrder=Array.from(vm.runInContext('filteredNodes().map(node=>node.id)',context));
+vm.runInContext("highlightedTags.clear();$('search').value='tag:Alpha,Beta,Gamma'",context);
+assert.deepEqual(Array.from(vm.runInContext('filteredNodes().map(node=>node.id)',context)),clickOrder);assert.equal(clickOrder.length,1000);
+$('search').value='Bookmark 9 tag:Alpha,Beta';
+assert.equal(vm.runInContext('filteredNodes().length',context),model.pinItems(roots,'all','Bookmark 9').length);
+assert.ok(vm.runInContext('filteredNodes().some(node=>!tagsFor(node).length)',context));
+$('search').value='tag:Art,art,ＡＲＴ';assert.equal(vm.runInContext('selectionTags().length',context),1);assert.equal(vm.runInContext("isSelectedTag('aRt')",context),true);
+vm.runInContext("tagButton('ART','pin-tag').onclick()",context);assert.equal($('search').value,'');assert.equal(vm.runInContext('selectionTags().length',context),0);
+listeners.keydown({key:'Enter',target:{closest:()=>true},preventDefault(){throw Error('Board must not intercept native tag-button Enter');}});
+assert.equal(vm.runInContext('typeof applyTags',context),'undefined');assert.equal(vm.runInContext('typeof activeTags',context),'undefined');
+assert.ok(!read('pinboard.css').includes('#apply-tags'));
+console.log('PASS: click/typed tag clauses produce identical full graded order; text alone filters; case/Unicode highlighting and unselection agree; old Apply state/control/Enter interception are removed.');
+
+assert.deepEqual(model.tagQuery('tag:'),{text:'',tags:[]});
+assert.deepEqual(model.tagQuery('tag:Alpha,'),{text:'',tags:['Alpha']});
+console.log('PASS: unfinished tag prefixes and trailing commas do not become accidental text filters while typing.');
