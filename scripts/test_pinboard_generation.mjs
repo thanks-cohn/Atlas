@@ -14,3 +14,10 @@ calls=[];saved=[];
 await assert.rejects(()=>generateModels({...options,send:async request=>request.body.model==='objects'?{data:{suggestions:[]}}:{ok:false,error:{code:'TAG_BUSY',message:'Busy'}}}),/TAG_BUSY/);
 assert.equal(saved.length,1); // Completed source survives a later source failure.
 console.log('PASS: explicit sequential generation, shared Things/People pass, Anime selection, original predictions and partial success.');
+const generationStub=await import('data:text/javascript;base64,'+Buffer.from(text.replace("const {rasterImage} = await import('./image-file.js');","const rasterImage=async blob=>({size:blob.size,type:blob.type});")).toString('base64'));
+const originalFetch=globalThis.fetch;globalThis.fetch=()=>{throw Error('Local image must not use fetch');};
+try {
+  assert.deepEqual(await generationStub.generationImage('data:image/png;base64,AA=='),{size:1,type:'image/png'});
+  await assert.rejects(()=>generationStub.generationImage('data:image/svg+xml;base64,AA=='),/supported image/);
+} finally {globalThis.fetch=originalFetch;}
+console.log('PASS: local covers decode without network/CSP changes; unsupported data media rejected.');

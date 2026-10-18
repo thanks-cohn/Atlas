@@ -5,17 +5,26 @@ export async function imageReference(source) {
 // Explicit user action only. The companion owns durable per-model evidence.
 export async function generationImage(source) {
   if (!source) throw Error('Choose an image first.');
-  if (/^https?:/.test(source)) {
+  let blob;
+  if (source.startsWith('data:')) {
+    // Decode local covers without fetch: connect-src deliberately excludes data:.
+    const match=/^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/.exec(source);
+    if(!match || match[2].length>14*1024*1024)throw Error('Choose a supported image below 10 MB.');
+    const raw=atob(match[2]);
+    if(raw.length>10*1024*1024)throw Error('Choose an image below 10 MB for tagging.');
+    blob=new Blob([Uint8Array.from(raw,char=>char.charCodeAt(0))],{type:match[1]});
+  } else {
+    if (!/^https?:/.test(source))throw Error('Choose a local image or an HTTP image URL.');
     const origin=new URL(source).origin+'/*';
     if (!await chrome.permissions.request({origins:[origin]})) throw Error('Allow access to this image site, or choose a local image.');
+    const response = await fetch(source, {credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(20000)});
+    if (!response.ok) throw Error('Image could not be loaded.');
+    const reader=response.body.getReader(),parts=[];let size=0;
+    try {
+      while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>10*1024*1024)throw Error('Choose an image below 10 MB for tagging.');parts.push(value);}
+    } finally {await reader.cancel();}
+    blob = new Blob(parts,{type:response.headers.get('Content-Type') || 'application/octet-stream'});
   }
-  const response = await fetch(source, {credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(20000)});
-  if (!response.ok) throw Error('Image could not be loaded.');
-  const reader=response.body.getReader(),parts=[];let size=0;
-  try {
-    while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>10*1024*1024)throw Error('Choose an image below 10 MB for tagging.');parts.push(value);}
-  } finally {await reader.cancel();}
-  const blob = new Blob(parts,{type:response.headers.get('Content-Type') || 'application/octet-stream'});
   const {rasterImage} = await import('./image-file.js');
   return rasterImage(blob);
 }

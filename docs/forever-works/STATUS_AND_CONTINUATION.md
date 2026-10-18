@@ -696,3 +696,10 @@ regression tests now run in development CI. GitHub development checks for
 locally; keep the local failures as environment-specific evidence, not a green
 local result. Extension changes now trigger Windows packaging as its archive
 also includes the extension source. Windows artifact acceptance remains pending.
+
+Local-cover boundary correction: generationImage decodes supported data:image
+covers directly into a bounded Blob, without fetch. The existing connect-src
+policy intentionally excludes data: and was not widened. A regression test
+asserts local covers never call fetch and rejects unsupported data media. Remote
+images retain explicit site permission and bounded streamed retrieval. This is
+extension-only; native inference/runtime code is unchanged from the Windows build.
