@@ -14,13 +14,15 @@ await model.createPinboard(storage,node,'Research',id,'1');assert.equal((await m
 assert.equal((await model.linkedPinboards(storage,{...node,url:'https://changed.example/'})).length,0);
 await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards(storage,node)).length,0);
 
+const animations=[],motionFinishes=[];
 let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
 class El{
  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.attrs={};this.handlers={};this.hidden=false;this.style={};this.classList={add:name=>this.ready=name};this.clientWidth=1100;}
- append(...nodes){for(const node of nodes)if(node.tag==='fragment')this.children.push(...node.children);else{this.children.push(node);node.parent=this;}}
- replaceChildren(...nodes){this.children=[];this.append(...nodes);}
- remove(){if(this.parent)this.parent.children=this.parent.children.filter(child=>child!==this);}
- get isConnected(){return !!this.parent;}
+ append(...nodes){for(const node of nodes)if(node.tag==='fragment')this.children.push(...node.children);else{if(node.parent)node.parent.children=node.parent.children.filter(child=>child!==node);this.children.push(node);node.parent=this;}}
+ replaceChildren(...nodes){for(const child of this.children)child.parent=null;this.children=[];this.append(...nodes);}
+ remove(){if(this.parent)this.parent.children=this.parent.children.filter(child=>child!==this);this.parent=null;}
+ animate(frames,options){animations.push({card:this,frames,options});let finish;const finished=new Promise(resolve=>finish=resolve);motionFinishes.push(finish);return {finished,cancel(){finish();}};}
+ get isConnected(){let root=this;while(root.parent)root=root.parent;return root===document.body || root===document.documentElement || root===elements.get('pins');}
  querySelector(tag){for(const child of this.children){if(child.tag===tag)return child;const found=child.querySelector(tag);if(found)return found;}return null;}
  replaceWith(node){const index=this.parent.children.indexOf(this);node.parent=this.parent;this.parent.children[index]=node;this.parent=null;}
  contains(){return false;}focus(){}
@@ -277,3 +279,37 @@ assert.equal(vm.runInContext('pendingTags.size',context),1);
 listeners.keydown({key:'q',altKey:true,target:$('search'),preventDefault(){}});
 assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);assert.equal($('search').value,'Bookmark');
 console.log('PASS: Alt+Q clears highlighted tags/clauses and restores order; attachments/search words persist; Escape never clears selection and dialogs/editors retain handling.');
+
+// Graded priority: 3 matches, 2, 1, zero, with stable ties and no double-counting.
+$('search').value='';vm.runInContext("pendingTags.clear();activeTags=[];render()",context);
+const rankedNodes=roots[0].children[0].children.slice(0,6);
+context.rankingFixtures=rankedNodes.map((node,index)=>[node.url,{note:'',tags:[['Alpha'],[],['Alpha','Beta'],['Alpha','Beta','Gamma'],['Beta','Gamma'],['ALPHA','Alpha']][index],image:null}]);
+vm.runInContext("associations=new Map(rankingFixtures);pendingTags=new Set(['Alpha','Beta','Gamma']);updatePriorities()",context);
+assert.deepEqual(Array.from(vm.runInContext('items.slice(0,6).map(node=>node.id)',context)),[rankedNodes[3].id,rankedNodes[2].id,rankedNodes[4].id,rankedNodes[0].id,rankedNodes[5].id,rankedNodes[1].id]);
+assert.equal(vm.runInContext('items.length',context),1000);
+vm.runInContext('pendingTags.clear();updatePriorities()',context);
+const retained=cards().find(card=>card.atlasNode.id===rankedNodes[0].id);
+context.rankingFixtures=roots[0].children[0].children.slice(1,31).map(node=>[node.url,{note:'',tags:['Alpha'],image:null}]);
+vm.runInContext("associations=new Map(rankingFixtures);pendingTags.add('Alpha');updatePriorities()",context);
+assert.equal(vm.runInContext('items[30].id',context),rankedNodes[0].id);
+assert.equal(cards().find(card=>card.atlasNode.id===rankedNodes[0].id),retained,'Moving across virtual batches must retain the card and its image');
+assert.ok(animations.length>0);assert.equal(animations.at(-1).options.duration,260);
+const animationCount=animations.length;context.window.matchMedia=()=>({matches:true});
+vm.runInContext('pendingTags.clear();updatePriorities()',context);assert.equal(animations.length,animationCount);
+console.log('PASS: graded 3/2/1/0 matching priority, stable ties, unique tag scoring, all cards retained, cross-batch image reuse, bounded transform motion and reduced-motion support.');
+
+// Departing cards use their own DOM for a bounded, noninteractive exit; arriving
+// cards fade in, and interrupted searches never leave retired nodes behind.
+scroll=0;document.body=new El('body');document.body.append($('pins'));context.window.matchMedia=()=>({matches:false});
+$('search').value='Bookmark 1';const motionStart=animations.length;vm.runInContext('updatePriorities()',context);
+const exits=Array.from(vm.runInContext('[...retiringCards.keys()]',context));
+assert.ok(exits.length>0 && exits.length<=8);assert.ok(animations.length-motionStart<=32);
+assert.ok(exits.every(card=>card.inert===true && card.attrs['aria-hidden']==='true' && card.style.position==='fixed'));
+assert.ok(animations.slice(motionStart).some(animation=>animation.options.duration===100));
+$('search').value='Bookmark 99';vm.runInContext('updatePriorities()',context);
+assert.ok(animations.slice(motionStart).some(animation=>animation.options.duration===180 && animation.frames[0].opacity===0));
+
+assert.ok(exits.every(card=>!card.isConnected));
+for(const finish of motionFinishes.splice(0))finish();await tick();
+assert.equal(vm.runInContext('retiringCards.size',context),0);
+console.log('PASS: bounded 100ms exits and 180ms entrances, inert departing DOM, rapid-search cleanup and no leftover cards; browser visual smoothness remains separate.');

@@ -209,10 +209,11 @@ function columns(){
 }
 function scheduleWindow(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow();});}
 function positionCard(element,position){if(!position)return;Object.assign(element.style,{position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'});}
-function renderWindow(){
+function renderWindow(preserveAnchor=true){
   if($('folder').value==='blank')return;
   const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
-  const anchor=mounted.find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
+  const mountedById=new Map(mounted.map(element=>[element.atlasNode.id,element]));
+  const anchor=(preserveAnchor?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
   const oldAnchor=anchor?.getBoundingClientRect().top;
   const cols=columns(),gap=window.innerWidth<=540?12:20,width=(($('pins').clientWidth || 1100)-(cols-1)*gap)/cols;
   const ends=Array(cols).fill(0);
@@ -236,7 +237,7 @@ function renderWindow(){
   for(const index of wantedBatches){let block=blocks.get(index);if(!block){block=el('div');block.className='pin-block';blocks.set(index,block);}
     const existing=new Map([...block.children].map(element=>[element.atlasNode.id,element]));
     const wanted=selected.filter(position=>Math.floor(position.index/BATCH)===index);
-    const nodes=wanted.map(position=>{const element=existing.get(position.node.id) || card(position.node);positionCard(element,position);return element;});
+    const nodes=wanted.map(position=>{const element=existing.get(position.node.id) || mountedById.get(position.node.id) || card(position.node);positionCard(element,position);return element;});
     if(nodes.length!==block.children.length || nodes.some((node,i)=>node!==block.children[i])){
       if([...block.children].some(element=>element.contains(document.activeElement) && !nodes.includes(element))){$('pins').tabIndex=-1;$('pins').focus({preventScroll:true});}
       block.replaceChildren(...nodes);
@@ -265,12 +266,51 @@ function filteredNodes(){
   const required=searching?[...new Set([...selected,...query.tags])]:[];
   const nodes=pinItems(roots,$('folder').value,query.text).filter(node=>matchesTags(tagsFor(node),required) && (!$('tags-only').checked || tagsFor(node).length));
   if(!selected.length)return nodes;
-  // Stable partition: all highlighted tags match, then every remaining card.
-  const matching=[],remaining=[];
-  for(const node of nodes)(matchesTags(tagsFor(node),selected)?matching:remaining).push(node);
-  return [...matching,...remaining];
+  // More matching tags means higher priority; duplicate labels never add weight.
+  const keys=new Set(selected.map(tag=>tag.normalize('NFKC').toLowerCase()));
+  return nodes.map((node,index)=>{
+    const available=new Set(tagsFor(node).map(tag=>tag.normalize('NFKC').toLowerCase()));
+    const score=[...keys].reduce((count,key)=>count+Number(available.has(key)),0);
+    return {node,index,score};
+  }).sort((a,b)=>b.score-a.score || a.index-b.index).map(entry=>entry.node);
 }
-function updatePriorities(){items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();renderWindow();}
+const priorityAnimations=new WeakMap(),retiringCards=new Map();
+function updatePriorities(){
+  // Finish previous exits first; rapid input must never accumulate spare cards.
+  for(const [card,animation] of retiringCards){animation.cancel();card.remove();}retiringCards.clear();
+  const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
+  const before=new Map(mounted.map(card=>[card,card.getBoundingClientRect()]));
+  for(const card of mounted)priorityAnimations.get(card)?.cancel();
+  items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();renderWindow(false);
+  if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+  const height=window.innerHeight || 768,visible=rect=>rect.bottom>0 && rect.top<height;
+  let moving=0,leaving=0;
+  // Compositor-only, bounded motion. Reuse the actual card/image; never clone
+  // an image or run transitions during ordinary scroll-window maintenance.
+  for(const [card,old] of before){
+    if(!card.animate)continue;
+    if(!card.isConnected){
+      if(!visible(old) || leaving>=8 || !document.body?.append)continue;
+      leaving++;
+      Object.assign(card.style,{position:'fixed',left:(old.left || 0)+'px',top:old.top+'px',width:(old.width || parseFloat(card.style.width))+'px',height:(old.height || parseFloat(card.style.height))+'px',pointerEvents:'none',zIndex:'1'});
+      card.setAttribute('aria-hidden','true');card.inert=true;document.body.append(card);
+      const animation=card.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(6px)'}],{duration:100,easing:'ease-out'});
+      retiringCards.set(card,animation);
+      const cleanup=()=>{if(retiringCards.get(card)===animation){retiringCards.delete(card);card.remove();}};
+      animation.finished.then(cleanup,cleanup);
+      continue;
+    }
+    const next=card.getBoundingClientRect(),dx=(old.left || 0)-(next.left || 0),dy=old.top-next.top;
+    if(moving>=24 || Math.abs(dx)+Math.abs(dy)<1 || Math.abs(dy)>height*1.5 || (!visible(old) && !visible(next)))continue;
+    moving++;
+    priorityAnimations.set(card,card.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:260,easing:'cubic-bezier(.2,.7,.2,1)'}));
+  }
+  for(const block of blocks.values())for(const card of block.children){
+    if(moving>=24 || before.has(card) || !card.animate || !visible(card.getBoundingClientRect()))continue;
+    moving++;
+    priorityAnimations.set(card,card.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(.2,.7,.2,1)'}));
+  }
+}
 
 function renderTags(){
   const blank=$('folder').value==='blank';$('tag-browser').hidden=blank;
@@ -344,7 +384,7 @@ fetchDock.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'
 fetchDock.addEventListener('pointerleave',()=>{if(hoverOpened && !fetchDock.contains(document.activeElement)){fetchDock.open=false;hoverOpened=false;}});
 fetchDock.addEventListener('focusout',()=>{setTimeout(()=>{if(hoverOpened && !fetchDock.contains(document.activeElement) && !fetchDock.matches(':hover')){fetchDock.open=false;hoverOpened=false;}},0);});
 fetchDock.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();event.preventDefault();fetchDock.open=false;hoverOpened=false;fetchDock.querySelector('summary').focus();}});
-$('folder').onchange=()=>{if($('folder').value.startsWith('board:')){location.href='pinboard.html?id='+encodeURIComponent($('folder').value.slice(6));return;}coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{coverFetch.stop();clearTimeout(searchTimer);searchTimer=setTimeout(()=>render(),160);};
+$('folder').onchange=()=>{if($('folder').value.startsWith('board:')){location.href='pinboard.html?id='+encodeURIComponent($('folder').value.slice(6));return;}coverFetch.stop();render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();};let searchTimer;$('search').oninput=()=>{coverFetch.stop();clearTimeout(searchTimer);searchTimer=setTimeout(()=>updatePriorities(),160);};
 $('refresh').onclick=refresh;
 $('new-pinboard').onclick=()=>{$('new-board-title').value='';$('new-board-status').textContent='';$('new-board-dialog').showModal();$('new-board-title').focus();};
 $('cancel-new-board').onclick=()=>$('new-board-dialog').close();
