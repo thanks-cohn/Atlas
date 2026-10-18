@@ -9,6 +9,17 @@ Make all user-authorized resources accessible through one **advanced, relationsh
 - **Intuitive:** Everyday interactions should be easy to discover and understand, with clear navigation, predictable behavior, and minimal unnecessary complexity.
 - **Aesthetic:** Atlas should feel thoughtfully designed and visually cohesive across its views, templates, and screen sizes, without sacrificing usability or accessibility.
 
+## Publishing and adaptive-design doctrine (proposed)
+
+- **Intuitive, beautiful, aesthetic, and fun:** use established browser/file-explorer conventions by default; make returning to bookmarks enjoyable, not a chore.
+- **Use the smallest implementation that fully preserves the experience.** Prefer modular, inspectable HTML, CSS, JavaScript and JSON for published outputs, borrowing composition and separation principles from frameworks such as Astro without importing needless runtime dependencies.
+- **Start finished, then customize incrementally:** production-ready familiar templates; the user should reach a publishable result through minimal edits and progressively gain deeper controls.
+- **First-time-user acceptance question:** *Can someone who has never used Atlas create a three-entry story website, attach their portfolio and résumé, customize its appearance, and publish it through Cloudflare without asking how anything works?*
+- **Card-centric portability:** canonical card objects may reference extensive content; intermediary presentations derive cards, slices, full articles and sites. Preserve identity and data across browser, authorized local and R2 locations.
+- **Aesthetic equivalence across shapes:** mobile, desktop, embedded card and unusual viewports must each be intentional and compelling, not simply fit the screen. Use Any-Shape principles and record layout/design rationale through Forever Works.
+
+The [full minimal publishing, card/slice and design-corpus proposal](PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md) documents the proposed modules, ten format families, storage/publishing UX, verification plan and research horizon. **These aspirations are not statements of shipped functionality.**
+
 ## Essential user experience
 
 A bookmark can be associated with images on R2 and a local PDF; all become members of a user-selected research catalog, with tags, names, typed links, cluster pairing and searches. The underlying files need not move or be duplicated. A resource may appear in several catalogs. Offline/unavailable entries retain their metadata and relationships rather than vanishing.
