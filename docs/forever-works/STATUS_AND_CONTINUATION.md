@@ -934,3 +934,9 @@ Explicit owner reports recorded as backlog 002 (missing note-title entry) and 00
 ## 2026-10-18 — Linked-bookmark cover bug queued
 
 Owner screenshot/report recorded as backlog 004: the expanded linked-bookmark preview shows No image saved despite a reported existing cover. Screenshot inspected; storage and root cause remain unverified. Entry distinguishes observed UI from lookup-key/cache hypotheses and requires shared-resolver/data-preservation checks plus Chrome proof. Documentation only; no fix claimed. Continue with a saved-cover identity trace through the linked preview.
+
+## 2026-10-18 — Next-step priority: rich tagging, then recommendations
+
+Owner direction recorded: next model work targets RAM++ and MiVOLO v2 with a compatible detector, replacing the non-JoyTag sources while retaining optional Settings-gated JoyTag/Anime. Aim for maximum useful tag coverage with independent raw/source provenance and deduplicated presentation; avoid arbitrary tiny output caps. Existing 30–60-tag aspiration is neither a cap nor a guarantee. Exact model exports/licenses/resources remain qualification gates, not proven facts.
+
+After the replacements work end to end, connect the tag-based recommendation engine below Notes/Bookmarks, requiring current-image tags and independent entry ownership. AniTag2Vec/Dart remain discussed candidates; final provider is unselected. Full sequencing and constraints are appended to PROPOSAL_FUTURE_AI_TAGGING_RAMPP_MIVOLO_JOYTAG.md. This is a progress/roadmap documentation update only; no model download, replacement or recommendation implementation occurred. Previously queued bugs remain open. Whitespace checks passed; runtime behavior is unchanged.
