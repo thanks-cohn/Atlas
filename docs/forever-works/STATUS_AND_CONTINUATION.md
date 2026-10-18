@@ -929,3 +929,8 @@ Owner-approved documentation scope only: recorded additive Add Image, explicit R
 ## 2026-10-18 — Note UI bug reports queued
 
 Explicit owner reports recorded as backlog 002 (missing note-title entry) and 003 (no removal of saved notes), indexed under docs/backlog. Both remain Backlog, not started; no runtime fix or Chrome reproduction claimed. Entries define preservation/ownership constraints and closure evidence for native and authored notes, including future per-image isolation. Documentation-only change; local links/whitespace checked. Continue by inspecting the existing shared note editor and persistence adapters, then reproduce each report in Chrome.
+
+
+## 2026-10-18 — Linked-bookmark cover bug queued
+
+Owner screenshot/report recorded as backlog 004: the expanded linked-bookmark preview shows No image saved despite a reported existing cover. Screenshot inspected; storage and root cause remain unverified. Entry distinguishes observed UI from lookup-key/cache hypotheses and requires shared-resolver/data-preservation checks plus Chrome proof. Documentation only; no fix claimed. Continue with a saved-cover identity trace through the linked preview.
