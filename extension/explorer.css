@@ -1102,3 +1102,9 @@ button.brand-mark{border:0;padding:0;flex:0 0 32px;cursor:pointer;font-family:in
 .add-item-actions button{min-height:40px;padding:10px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px}
 .add-item-actions button[type=submit]{background:var(--accent);border-color:var(--accent);color:#fff}
 @media(max-width:360px){.add-item-dialog{padding:20px}.add-item-actions button{padding-inline:12px}}
+
+/* Actions keeps native disclosure behavior, styled as a quiet button. */
+.bookmark-row .bookmark-action-menu>summary{display:block;list-style:none;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--background);color:var(--ink);font-size:12px;white-space:nowrap}
+.bookmark-action-menu>summary::-webkit-details-marker{display:none}
+.bookmark-row .bookmark-action-menu>summary:hover,.bookmark-row .bookmark-action-menu[open]>summary{background:var(--soft);border-color:var(--accent)}
+.bookmark-action-menu>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

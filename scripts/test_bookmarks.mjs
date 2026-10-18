@@ -38,7 +38,7 @@ for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReor
 const storage={};let storageListener;let paired=false;const nativePages={};let catalogRevision=1,failMetadata=false,failMetadataTag='';let catalog={resources:{},relations:[],tags:{}};
 const {DEMO_COLLECTION}=await import('data:text/javascript;base64,'+Buffer.from(read('gallery-demo.js')).toString('base64'));
 const pinboards=await import('data:text/javascript;base64,'+Buffer.from(read('pinboard-model.js')).toString('base64'));
-const context={...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>{
+const context={requestAnimationFrame:fn=>fn(),...pinboards,DEMO_COLLECTION,...model,...coversModule,...pagesModule,withPageLock:task=>task(),library:async()=>({pages:Object.values(nativePages).map(page=>({id:page.id,libraryRevision:page.libraryRevision}))}),readLibraryPage:async id=>nativePages[id],crypto:{randomUUID:()=> 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},document,window:{addEventListener(){}},chrome:{bookmarks,runtime:{getURL:path=>'chrome-extension://atlas/'+path,sendMessage:async message=>{
  if(message.type==='state')return {paired};
  if(message.body){if(failMetadata || message.body.args?.tag===failMetadataTag)return {ok:false,error:{code:'REVISION_CONFLICT'}};const {action,args,expected_revision}=message.body;assert.equal(expected_revision,catalogRevision);let result;
  if(action==='add_resource'){result='new-resource';catalog.resources[result]={id:result,...args};}
@@ -62,7 +62,10 @@ assert.equal(calls.filter(c=>c[0]==='open').length,1);
 const dataImage='data:image/webp;base64,AAAA';
 storage[coversModule.COVER_KEY]=coversModule.setBookmarkCover({},nodes.get('3'),dataImage);
 await els.get('bookmarks-refresh').onclick();rows=els.get('bookmarks-list').children;
+els.get('bookmarks-workspace').scrollHeight=900;
 rows[0].children[0].onclick();await tick();
+assert.equal(els.get('bookmarks-workspace').scrollTop,900,'Disclosure opens at the bottom');
+els.get('bookmarks-workspace').handlers.wheel();els.get('bookmarks-workspace').scrollTop=123;vm.runInContext('alignRevealBottom()',context);assert.equal(els.get('bookmarks-workspace').scrollTop,123,'User scroll cancels bottom anchoring');
 let preview=els.get('bookmarks-preview');
 assert.equal(preview.hidden,false);assert.equal(preview.children[0].textContent,'←');
 assert.equal(preview.children[0].attrs['aria-expanded'],'true');

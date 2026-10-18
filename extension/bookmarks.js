@@ -9,6 +9,12 @@ let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
 let covers = {}, focused = null, trail = [];
 let associated = null, associationEpoch = 0;
 let localPages = [], itemsEpoch = 0;
+let bottomReveal=null;
+function alignRevealBottom(){
+  const request=bottomReveal;if(!request)return;
+  requestAnimationFrame(()=>{if(bottomReveal!==request || focused!==request.id || !active())return;const host=$('bookmarks-workspace');host.scrollTop=host.scrollHeight;});
+}
+for(const event of ['wheel','touchstart','pointerdown','keydown'])$('bookmarks-workspace').addEventListener(event,()=>{bottomReveal=null;},{passive:true});
 const active = () => document.body.classList.contains('bookmarks-mode');
 const element = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
 let lastReportCode='';
@@ -40,7 +46,7 @@ async function refresh() {
     if (focused) loadLocalItems(nodes.get(focused));
   } catch { report('BOOKMARK_READ_FAILED', 'Bookmark access is unavailable. Reload the updated extension and accept Chrome’s bookmark permission if prompted.'); }
 }
-function navigate(id) { selected = null; focused = null; associated = null; localPages = []; itemsEpoch++; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
+function navigate(id) { bottomReveal=null; selected = null; focused = null; associated = null; localPages = []; itemsEpoch++; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
 async function openNode(node) {
   if (!node.url) { navigate(node.id); return; }
   if (!openableBookmark(node.url)) { report('BOOKMARK_URL_BLOCKED', 'This saved URL type cannot be opened here. Use Chrome’s bookmark manager for special or executable URLs.'); return false; }
@@ -50,9 +56,9 @@ async function openNode(node) {
 }
 function focusNode(node) {
   trail.push({focused, associated, localPages, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
-  focused = node.id; associated = null; localPages = []; selected = node.id; render(); $('bookmarks-workspace').scrollTop = 0;
-  loadAssociations(node);
-  loadLocalItems(node);
+  focused = node.id; associated = null; localPages = []; selected = node.id;
+  const request={id:node.id};bottomReveal=request;render();alignRevealBottom();
+  Promise.allSettled([loadAssociations(node),loadLocalItems(node)]).then(()=>{if(bottomReveal===request)alignRevealBottom();});
 }
 async function loadLocalItems(node) {
   const request = ++itemsEpoch;
@@ -136,6 +142,7 @@ async function loadAssociations(node) {
   } catch { /* Native bookmarks and saved covers remain usable while the companion is offline. */ }
 }
 function returnFromPreview() {
+  bottomReveal=null;
   associationEpoch++;
   const state = trail.pop(); focused = state?.focused ?? null; selected = state?.selected ?? null;
   associated = state?.associated ?? null;
@@ -238,7 +245,8 @@ function renderPreview() {
   const source = bookmarkCover(node, covers) || associated?.image;
   if (source) {
     const image = document.createElement('img'); image.alt = node.title || 'Bookmark image'; image.referrerPolicy = 'no-referrer'; image.decoding = 'async';
-    image.onerror = () => { image.remove(); host.append(element('p', 'This image is unavailable. Choose another image below.')); };
+    image.onerror = () => { image.remove(); host.append(element('p', 'This image is unavailable. Choose another image below.'));alignRevealBottom(); };
+    image.onload=()=>alignRevealBottom();
     image.src = source; host.append(image);
   } else host.append(element('p', 'No representative image yet. Choose one to show it here.'));
   const actions = element('div', ''); actions.className = 'bookmark-image-actions';
@@ -345,7 +353,7 @@ function render() {
     arrow.onclick = () => focusNode(node);
     row.append(arrow, open);
     if (editableBookmark(node, nodes)) {
-      const menu = document.createElement('details'); menu.append(element('summary', 'Actions'));
+      const menu = document.createElement('details');menu.className='bookmark-action-menu'; menu.append(element('summary', 'Actions'));
       const actions = document.createElement('div'); actions.className = 'bookmark-actions';
       actions.append(button('Rename', async () => {
         const title = prompt('Bookmark title', node.title); if (title !== null) await chrome.bookmarks.update(node.id, {title});
