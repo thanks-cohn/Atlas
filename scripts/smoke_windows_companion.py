@@ -103,6 +103,28 @@ def main():
                 finally:
                     connection.close()
             assert request('/v1/health')[1]['platform'] == 'windows'
+            # Prove installed inference owns reusable copies; no dependency on
+            # the original download directory or system Python/PATH.
+            bundle_folders=[binary.parent/'tagging-engine',binary.parent/'tagging-models']
+            hidden=[]
+            try:
+                for folder in bundle_folders:
+                    held=folder.with_name(folder.name+'.hidden-probe')
+                    folder.rename(held);hidden.append((folder,held))
+                import base64,zlib
+                def png_chunk(kind,data):
+                    return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
+                png=b'\x89PNG\r\n\x1a\n'+png_chunk(b'IHDR',struct.pack('>IIBBBBB',32,32,8,2,0,0,0))+png_chunk(b'IDAT',zlib.compress((b'\0'+b'\xff'*96)*32))+png_chunk(b'IEND',b'')
+                code,predictions=request('/v1/tag-image',{'model':'objects','item_id':'synthetic-installed-probe',
+                    'image':'data:image/png;base64,'+base64.b64encode(png).decode()})
+                assert code==200 and predictions['run_id'],predictions
+                assert predictions['resources']['peak_working_set_bytes']>0
+                assert (private/'evidence/tagging-runs.jsonl').exists()
+                cache_stamp=(private/'tagging-models/joytag.onnx').stat().st_mtime_ns
+                print('PASS installed ONNX HTTP works with download folders unavailable, no Python PATH; worker peak bytes:',predictions['resources'])
+            finally:
+                for folder,held in reversed(hidden):held.rename(folder)
+
             assert request('/v1/grants')[1]['grants'] and len(request('/v1/grants')[1]['grants']) == 2
             assert request('/v1/list', {'grant':src})[1]['entries'][0]['name'] == 'original.bin'
             operation = {'id':uuid.uuid4().hex,'action':'copy','sources':[{'grant':src,'path':'original.bin'}],
@@ -172,6 +194,7 @@ def main():
             upgraded = subprocess.run([str(binary), 'install', '--extension-id', extension, '--consent', '--upgrade',
                 '--state-dir', str(private), '--install-dir', str(app)], env=env, capture_output=True, timeout=45)
             assert upgraded.returncode == 0, upgraded.stderr.decode(errors='replace')
+            assert (private/'tagging-models/joytag.onnx').stat().st_mtime_ns==cache_stamp, 'Repair recopied unchanged model data'
             token = connect()
             assert len(request('/v1/grants')[1]['grants']) == 2
             assert request('/v1/operate', operation)[1]['replayed']

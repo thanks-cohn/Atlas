@@ -19,7 +19,7 @@ class _SecurityAttributes(ctypes.Structure):
 
 class RuntimeLock:
     def __init__(self, state, name):
-        if name not in ('service', 'supervisor', 'wake', 'desktop'):
+        if name not in ('service', 'supervisor', 'wake', 'desktop', 'launch'):
             raise ValueError('Unknown runtime lock')
         digest = hashlib.sha256(json.dumps(state.identity).encode()).hexdigest()
         self.name = f'Local\\Atlas.{state.sid}.{digest}.{name}'

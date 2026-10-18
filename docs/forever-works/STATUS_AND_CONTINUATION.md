@@ -732,3 +732,22 @@ then run the new helper and approve same-ID repair/upgrade. No user Python setup
 or manual model download is required. Actual Chrome visual/runtime acceptance on
 the owner's computer and 4GB-machine resource profiling remain NOT_RUN; Windows
 CI runtime success is not those separate proofs.
+
+## 2026-10-18 — 0.1.68 lightweight runtime trial after owner-reported lag
+
+Owner evidence: starting several 443 MB helpers caused extreme delay and system
+lag. Earlier Windows CI success did not establish laptop performance. Preserve
+that negative field evidence. See ONNX_LIGHTWEIGHT_RUNTIME.md for fixed/constrained/
+fluid obligations and the replacement: small core without ML imports/assets,
+verified separate onedir engine, reusable private model cache, sequential short-
+lived model jobs with timeout/reaping and per-run peak-memory telemetry, and an
+entry-level GUI launch lock with verified same-user/executable focus. Full and
+core-only artifacts preserve zero system-Python setup. Full test bundle still
+includes optional Anime weights; an optional specialist download is future work.
+
+Local focused proof: 15 tagging/bundle/process/provenance tests, 3 entrypoint
+selection tests and 8 portable installer tests passed (4 actual Windows installer
+tests skipped on Linux). Preview generation/pinboard tests passed. Real models,
+frozen process/GUI/installed cache/recovery checks are Windows CI gates, not yet
+claimed from these portable tests. Existing bookmarks, human tags, run history,
+permissions and UI are retained. Owner laptop/4GB acceptance remains pending.

@@ -24,8 +24,8 @@ def _run_model(state, body):
     if not _lock.acquire(blocking=False):
         raise APIError("TAG_BUSY", "Another image is being tagged; retry after it completes.", 409)
     try:
-        from .onnx_tags import predict
-        return predict(state, body)
+        from .tag_process import run_engine
+        return run_engine(state, body)
     finally:
         _lock.release()
 

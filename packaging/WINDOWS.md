@@ -111,3 +111,16 @@ diagnostic tabs. Double-clicking debug.exe selects advanced management immediate
 without changing saved permissions or enrollment. Both use the same private state.
 Explicit CLI arguments preserve their existing meaning for either executable.
 Do not rename debug.exe if relying on this name-based entry selection.
+
+## Lightweight runtime layout (0.1.68)
+
+For local AI, extract the ENTIRE normal artifact: atlas-companion.exe, debug.exe,
+tagging-engine/, and tagging-models/ stay together for installation. Run
+`atlas-companion.exe --desktop --advanced`, then approve same-ID repair/upgrade.
+The installer saves verified reusable copies; subsequent installed launches do
+not require the download folder. Core helper contains neither AI libraries nor
+weights. Every requested model runs in a separate process that exits afterward.
+The core-only artifact supports normal Atlas without local AI. A bare executable
+without the engine/model bundle can still install basic functionality, but cannot
+supply tagging unless valid cached engine/models already exist. No Python setup
+is needed. This supersedes the earlier all-in-one AI helper packaging.

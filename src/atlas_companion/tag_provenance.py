@@ -71,6 +71,7 @@ def record(state, body, result, duration_ms):
         'model_sha256': result.get('model_sha256', 'unknown'),
         'recipe': result.get('recipe', 'legacy-companion-v1'),
         'duration_ms': duration_ms, 'produced': result.get('suggestions', []),
+        'resources': result.get('resources', {}),
         'display_choices': choices,
     }
     directory = Path(state.directory) / 'evidence'

@@ -24,7 +24,8 @@ def _registry(browser):
 
 
 def _digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    with Path(path).open('rb') as handle:
+        return hashlib.file_digest(handle, 'sha256').hexdigest()
 
 
 def _write(path, data):
@@ -169,6 +170,8 @@ def install_runtime(extension_id, browser='chrome', state_dir=None, install_dir=
         state = State(state_dir)
         try:
             state.protect_path(directory)
+            from .tag_bundle import install_bundle
+            install_bundle(source, state_dir, directory, secure_directory)
             state.pair(extension_id)
         finally:
             state.close()

@@ -8,19 +8,35 @@ import sys
 
 
 def _hide_owned_console():
-    """Hide only a console belonging solely to this GUI/background launch."""
+    """Hide a GUI-owned console, including its same-image onefile bootloader.
+
+    Never hide the user's CMD/PowerShell console or another application's console.
+    """
     try:
         import ctypes
-        from ctypes import wintypes
-        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
-        kernel.GetConsoleWindow.restype = wintypes.HWND
-        process = (wintypes.DWORD * 1)()
-        if kernel.GetConsoleProcessList(process, 1) == 1:
-            window = kernel.GetConsoleWindow()
-            if window:
-                user = ctypes.WinDLL('user32', use_last_error=True)
-                user.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
-                user.ShowWindow(window, 0)
+        from ctypes import wintypes as w
+        from .windows_state import windows_api, token_sid
+        kernel,_=windows_api()
+        kernel.GetConsoleWindow.restype=w.HWND
+        processes=(w.DWORD*8)()
+        count=kernel.GetConsoleProcessList(processes,8)
+        if not 0<count<=8:return
+        kernel.OpenProcess.argtypes=[w.DWORD,w.BOOL,w.DWORD];kernel.OpenProcess.restype=w.HANDLE
+        kernel.QueryFullProcessImageNameW.argtypes=[w.HANDLE,w.DWORD,w.LPWSTR,ctypes.POINTER(w.DWORD)]
+        own_sid=token_sid();own_image=os.path.normcase(str(Path(sys.executable).absolute()))
+        for pid in list(processes)[:count]:
+            process=kernel.OpenProcess(0x1000,False,pid)
+            if not process:return
+            try:
+                size=w.DWORD(32768);image=ctypes.create_unicode_buffer(size.value)
+                if token_sid(process)!=own_sid or not kernel.QueryFullProcessImageNameW(process,0,image,ctypes.byref(size)):
+                    return
+                if os.path.normcase(image.value)!=own_image:return
+            finally:kernel.CloseHandle(process)
+        window=kernel.GetConsoleWindow()
+        if window:
+            user=ctypes.WinDLL('user32',use_last_error=True)
+            user.ShowWindow.argtypes=[w.HWND,ctypes.c_int];user.ShowWindow(window,0)
     except OSError:
         pass
 
@@ -42,7 +58,7 @@ def native_arguments(arguments, executable):
     return arguments
 
 
-def main(arguments=None):
+def _main(arguments=None):
     if os.name != 'nt':
         raise OSError('This entry requires an actual Windows host.')
     arguments = launch_arguments(sys.argv[1:] if arguments is None else arguments, sys.executable)
@@ -165,3 +181,36 @@ def main(arguments=None):
         print('ATLAS Windows: ' + str(exc), file=sys.stderr)
         return 1
     return 0
+
+
+def main(arguments=None):
+    if os.name != 'nt':
+        raise OSError('This entry requires an actual Windows host.')
+    arguments = launch_arguments(sys.argv[1:] if arguments is None else arguments, sys.executable)
+    if arguments and '--desktop' not in arguments:
+        return _main(arguments)
+    _hide_owned_console()
+    # Acquire before quiet-start readiness polling, not only after Tk opens.
+    from .windows_state import WindowsState
+    from .windows_runtime import RuntimeLock
+    from .security import APIError
+    default = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Atlas'
+    receipt = Path(sys.executable).with_name('installation.json')
+    if getattr(sys, 'frozen', False) and receipt.is_file():
+        default = Path(json.loads(receipt.read_text(encoding='utf-8'))['state_dir'])
+    if '--state-dir' in arguments:
+        default = Path(arguments[arguments.index('--state-dir')+1])
+    state = WindowsState(default)
+    try:
+        try:
+            with RuntimeLock(state, 'launch'):
+                return _main(arguments)
+        except APIError as exc:
+            if exc.code != 'ALREADY_RUNNING':
+                raise
+            from .windows_focus import existing_setup
+            existing_setup()
+            _hide_owned_console()
+            return 0
+    finally:
+        state.close()

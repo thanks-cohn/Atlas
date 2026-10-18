@@ -11,7 +11,7 @@ from .security import APIError
 
 class RuntimeLock:
     def __init__(self, state, name):
-        if name not in ('service', 'supervisor', 'wake', 'desktop'):
+        if name not in ('service', 'supervisor', 'wake', 'desktop', 'launch'):
             raise ValueError('Unknown runtime lock')
         self.path = state.directory / (name + '.lock')
         self.fd = None

@@ -10,6 +10,7 @@ on:
       - 'scripts/build_windows_companion.py'
       - 'scripts/prepare_tagging_models.py'
       - 'scripts/smoke_windows_companion.py'
+      - 'scripts/smoke_windows_launch.py'
       - 'tests/test_windows_*.py'
       - 'packaging/**'
       - 'extension/**'
@@ -35,10 +36,12 @@ jobs:
           exit $LASTEXITCODE
       - name: Build standalone Windows executable
         run: python scripts/build_windows_companion.py
-      - name: Execute all bundled ONNX models in frozen artifact
+      - name: Execute separate ONNX jobs without importing AI into the core
         run: dist/windows/atlas-companion.exe --tagging-smoke
       - name: Verify actual Windows native management widgets
         run: python scripts/smoke_desktop.py
+      - name: Verify duplicate setup launches stay light
+        run: python scripts/smoke_windows_launch.py dist/windows/atlas-companion.exe
       - name: Verify actual frozen native frames and HTTP bytes
         run: python scripts/smoke_windows_companion.py dist/windows/atlas-companion.exe
       - uses: actions/upload-artifact@v4
@@ -46,6 +49,9 @@ jobs:
           name: atlas-companion-windows-x86_64
           path: |
             dist/windows/atlas-companion.exe
+            dist/windows/debug.exe
+            dist/windows/tagging-engine/
+            dist/windows/tagging-models/
             dist/windows/BUILD_RECEIPT.json
             dist/windows/SHA256SUMS
             dist/windows/README.md
@@ -56,11 +62,13 @@ jobs:
           retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
-          name: atlas-debug-windows-x86_64
+          name: atlas-companion-core-windows-x86_64
           path: |
+            dist/windows/atlas-companion.exe
             dist/windows/debug.exe
+            dist/windows/BUILD_RECEIPT.json
+            dist/windows/SHA256SUMS
             dist/windows/README.md
-            dist/windows/TAGGING_MODEL_NOTICES.md
-            dist/windows/model-licenses/
+            dist/windows/atlas-extension-*.zip
           if-no-files-found: error
           retention-days: 14

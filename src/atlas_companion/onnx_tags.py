@@ -15,7 +15,8 @@ EXPRESSIONS = ('angry', 'disgust', 'fearful', 'happy', 'neutral', 'sad', 'surpri
 def asset(state, key):
     spec = json.loads(MANIFEST.read_text(encoding='utf-8'))[key]
     bundled = Path(getattr(sys, '_MEIPASS', Path(__file__).parents[2])) / 'tagging-models'
-    for directory in (Path(state.directory) / 'tagging-models', bundled):
+    sidecar=Path(sys.executable).parent.parent / 'tagging-models'
+    for directory in (Path(state.directory) / 'tagging-models', sidecar, bundled):
         target = directory / spec['file']
         if target.is_file():
             with target.open('rb') as stream:
