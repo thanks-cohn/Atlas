@@ -222,7 +222,7 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 [data-board-appearance=dark] .board-menu .image-filter{border-color:#35425b;background:#151f33}
 [data-board-appearance=dark] .board-menu .image-filter:has(input:checked){background:#1a3543;border-color:#4e8591}
 [data-board-appearance=dark] .board-menu .settings-panel{background:#101a2c;border-color:#3b4964}
-@media(max-width:620px){.board-menu>summary>span:last-child{display:none}.board-menu-panel{padding:16px}.board-menu>summary{width:40px;padding:10px}}
+@media(max-width:620px){.board-menu-panel{padding:16px}.board-menu>summary{width:40px;padding:10px}}
 
 /* Same-row exclusive disclosures expand down inside the existing single scroller. */
 #detail .preview-sections{padding:0 28px 24px;border-top:1px solid var(--pin-line)}
@@ -263,3 +263,23 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 #detail .preview-add-note:hover{border-color:var(--pin-red)}
 
 #detail .preview-sections{border-top:0}
+
+/* Overview: identity/context on the left, a one-third search column at right. */
+.board-overview{display:grid;grid-template-columns:minmax(0,2fr) minmax(240px,1fr);align-items:end;gap:28px;padding:28px 0 22px}
+.board-overview .intro{display:block;padding:0;min-width:0}
+.board-overview .intro h1{margin:0 0 8px}
+.board-overview .intro>p:last-child{max-width:52ch;text-align:left;padding:0;font-size:13px;line-height:1.6}
+.board-overview .tools{padding:0;display:block;min-width:0}
+.board-overview .search{display:flex;flex-direction:column;gap:9px;min-width:0}
+.board-overview .search input{width:100%;height:44px;min-width:0;font-size:12px;font-weight:400;padding-inline:14px}
+.board-overview .tools label{letter-spacing:.12em;font-size:9px;font-weight:600}
+/* Accessible icon-only trigger; menu interaction and native summary remain. */
+.board-menu>summary{width:42px;min-height:42px;padding:12px;border:0;border-radius:9px;background:transparent;box-shadow:none}
+.board-menu .menu-bars{width:18px;flex:0 0 18px}
+[data-board-appearance=dark] .board-menu>summary,[data-board-appearance=dark] .board-menu[open]>summary{background:transparent;border:0;box-shadow:none;color:#bdd0e8}
+.board-menu>summary:hover,[data-board-appearance=dark] .board-menu>summary:hover{color:var(--pin-red);background:transparent}
+/* An outward outline was clipped by .pin overflow and covered by its image.
+   Paint the rim inside the image button, above its pixels, on every edge. */
+.pin-visual:focus{outline:0}
+.pin-visual:focus::after{content:"";position:absolute;inset:2px;z-index:4;pointer-events:none;border:2px solid var(--pin-red);border-radius:inherit;box-shadow:0 0 0 1px #10152580}
+@media(max-width:760px){.board-overview{grid-template-columns:1fr;gap:18px;padding:22px 0 18px}.board-overview .search input{font-size:13px}.board-overview .intro>p:last-child{max-width:none}.board-menu>summary{width:40px;min-height:40px}}
