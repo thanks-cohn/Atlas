@@ -1082,3 +1082,23 @@ dialog label input, dialog label select { display: block; width: 100%; margin-to
 /* Brand doubles as the single home control in the shelf and full explorer. */
 button.brand-mark{border:0;padding:0;flex:0 0 32px;cursor:pointer;font-family:inherit;line-height:1}button.brand-mark:hover{background:#244b3d}button.brand-mark:focus-visible{outline:2px solid #315c4d;outline-offset:4px}button.brand-mark.active{box-shadow:0 0 0 4px #dfeae4}
 .bookmark-copy-dialog{width:min(440px,calc(100vw - 32px));padding:28px}.bookmark-copy-dialog h2{margin:0 0 10px;letter-spacing:-.03em}.bookmark-copy-dialog form>p{overflow-wrap:anywhere;color:#738278;font-size:12px}.bookmark-copy-dialog label{display:flex;flex-direction:column;gap:8px;margin:20px 0;font-size:12px}.bookmark-copy-dialog input,.bookmark-copy-dialog select{width:100%;padding:11px;border:1px solid #dce5df;border-radius:9px;background:#fff;font:inherit}.bookmark-copy-dialog button{margin:8px 8px 0 0}
+
+/* Contextual Add Item: type, content format and appearance are distinct choices. */
+.add-item-dialog{width:min(440px,calc(100vw - 28px));max-height:calc(100svh - 28px);overflow:auto;padding:26px;border-radius:20px;background:var(--background);color:var(--ink)}
+.add-item-dialog form{display:grid;gap:16px;min-width:0}
+.add-item-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.add-item-heading h2{margin:0;font-size:22px;letter-spacing:-.035em}
+.add-item-heading button{display:grid;place-items:center;width:32px;height:32px;padding:0;font-size:23px;color:var(--muted);border:1px solid var(--line);border-radius:50%}
+.add-item-dialog .add-item-context{margin:-8px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
+.add-item-dialog label{display:grid;gap:7px;margin:0;color:var(--muted);font-size:12px;font-weight:500}
+.add-item-dialog label[hidden]{display:none}
+.add-item-dialog input,.add-item-dialog select{width:100%;min-width:0;min-height:43px;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel,#fff);color:var(--ink);font:inherit;font-size:13px}
+.add-item-dialog input:focus-visible,.add-item-dialog select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.add-item-dialog .add-item-path{margin:2px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px;font-weight:500;color:var(--ink)}
+.add-item-dialog .add-item-hint{margin:-10px 0 0;font-size:12px}
+.add-item-dialog .add-item-error{margin:0;color:#a23c39;overflow-wrap:anywhere}
+.add-item-error:empty{display:none}
+.add-item-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px}
+.add-item-actions button{min-height:40px;padding:10px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px}
+.add-item-actions button[type=submit]{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:360px){.add-item-dialog{padding:20px}.add-item-actions button{padding-inline:12px}}

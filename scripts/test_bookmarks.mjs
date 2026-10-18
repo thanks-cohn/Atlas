@@ -109,9 +109,9 @@ assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associa
 preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
 const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
 const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Title').children[0];titleControl.value='My Gallery';
-const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Template').children[0];
-const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Gallery style').children[0];assert.equal(styleControl.value,'nocturne');styleControl.value='solstice';
-assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children[1].disabled,true);
+const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Format').children[0];
+const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Appearance').children[0];assert.equal(styleControl.value,'nocturne');styleControl.value='solstice';
+assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children.length,1);assert.ok(!form.children.some(el=>el.textContent==='Bookmark collection'));
 await form.onsubmit({preventDefault(){}});await tick();
 assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
 const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');assert.equal(storedPage.galleryStyle,'solstice');
@@ -120,7 +120,8 @@ assert.equal(storedPage.images.length,24);
 assert.ok(storedPage.images.every(image=>image.title&&image.article.split('\n\n').length===5));
 assert.equal(new Set(storedPage.images.map(image=>image.id)).size,24);
 // Pinboard is its own Add Item choice, not a gallery with a different label.
-const kindControl=form.children.find(el=>el.tagName==='select');kindControl.value='pinboard';kindControl.onchange();
+const kindControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Type').children[0];kindControl.value='pinboard';kindControl.onchange();
+assert.equal(form.children.find(el=>el.textContent==='Appearance').hidden,true);assert.equal(templateControl.value,'2010s');assert.equal(templateControl.children.length,1);
 titleControl.value='My Pins';await form.onsubmit({preventDefault(){}});await tick();
 assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Pins'&&el.href.includes('pinboard.html?id=')));
 assert.equal((await pinboards.linkedPinboards(context.chrome.storage.local,nodes.get('3'))).length,1);
