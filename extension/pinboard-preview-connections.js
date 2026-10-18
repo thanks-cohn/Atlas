@@ -10,9 +10,17 @@ export function connectionWriter({catalog,validateBookmark,isAuthored,local,onSn
       async function bookmark(item){let match=Object.values(snapshot.data.resources || {}).find(r=>r.kind==='bookmark' && r.locators?.some(l=>l.provider==='web' && l.reference===item.url));if(!match){await change('add_resource',{kind:'bookmark',title:item.title || item.url,locators:[{provider:'web',reference:item.url}]});match=snapshot.data.resources[snapshot.result];}if(!match)throw Error('Could not confirm bookmark registration.');return match;}
       const source=await bookmark(node);let target;
       if(action==='note'){
+        const title=value.title?.trim() || value.text.split('\n')[0].slice(0,200);
+        if(value.editing){
+          target=snapshot.data.resources[value.id];
+          const linked=target && (value.inline?target.id===source.id && target.kind==='bookmark':target.kind==='note' && (snapshot.data.relations || []).some(r=>r.from===source.id && r.to===target.id));
+          if(!linked || target.note!==value.originalText || (target.title || '')!==value.originalTitle)throw Error('This note changed. Reopen it before saving.');
+          await change('update_resource',{resource:target.id,note:value.text,...(value.inline?{}:{title})});
+          onSnapshot(snapshot.data);return;
+        }
         target=Object.values(snapshot.data.resources || {}).find(r=>r.kind==='note' && r.locators?.some(l=>l.provider==='atlas' && l.reference===value.id));
-        if(target && target.note!==value.text)await change('update_resource',{resource:target.id,title:value.text.split('\n')[0].slice(0,200),note:value.text});
-        if(!target){await change('add_resource',{kind:'note',title:value.text.split('\n')[0].slice(0,200),note:value.text,locators:[{provider:'atlas',reference:value.id}]});target=snapshot.data.resources[snapshot.result];}
+        if(target && (target.note!==value.text || target.title!==title))await change('update_resource',{resource:target.id,title,note:value.text});
+        if(!target){await change('add_resource',{kind:'note',title,note:value.text,locators:[{provider:'atlas',reference:value.id}]});target=snapshot.data.resources[snapshot.result];}
       }else target=await bookmark(value);
       if(!target)throw Error('Could not confirm saved content. Your input remains.');
       if(source.id===target.id)throw Error('Choose a different bookmark.');

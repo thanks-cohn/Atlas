@@ -8,3 +8,9 @@ const writer=context.connectionWriter({isAuthored:node=>node.kind==='authored',l
 const source={id:'one',url:'https://source.example',title:'Source'},note={id:'note-stable-id',text:'First text'};failLink=true;await assert.rejects(()=>writer(source,'note',note),/interrupted/);failLink=false;await writer(source,'note',{...note,text:'Edited retry'});assert.equal(Object.values(data.resources).filter(r=>r.kind==='note').length,1);assert.equal(Object.values(data.resources).find(r=>r.kind==='note').note,'Edited retry');assert.equal(data.relations.length,1);
 await writer(source,'bookmark',{id:'two',url:'https://target.example',title:'Target'});await writer(source,'bookmark',{id:'two',url:'https://target.example',title:'Target'});assert.equal(data.relations.length,2);await assert.rejects(()=>writer({...source,stale:true},'note',note),/Changed/);await writer({kind:'authored'},'note',note);assert.equal(actions.at(-1),'local');assert.ok(validations>=5);
 console.log('PASS: revision-safe native connections, partial-save retry without duplicate notes, edited retry, idempotent links, stale bookmark rejection and authored delegation.');
+
+const existing=Object.values(data.resources).find(r=>r.kind==='note');
+await writer(source,'note',{id:existing.id,editing:true,originalTitle:existing.title,originalText:existing.note,title:'Named note',text:'Updated body'});
+assert.equal(existing.title,'Named note');assert.equal(existing.note,'Updated body');assert.equal(Object.values(data.resources).filter(r=>r.kind==='note').length,1);
+await assert.rejects(()=>writer(source,'note',{id:existing.id,editing:true,originalTitle:'stale',originalText:'stale',title:'Oops',text:'Oops'}),/changed/);
+console.log('PASS: existing native note edits preserve identity and reject stale content.');

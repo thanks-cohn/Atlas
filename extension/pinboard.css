@@ -244,7 +244,7 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 @keyframes preview-section-reveal{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.preview-section-panel{animation:none}.preview-section-controls>button>span{transition:none}}
 @media(max-width:540px){#detail .preview-sections{padding:0 20px 20px}.preview-section-controls>button{flex:1;min-width:0;gap:12px}.preview-note{padding:16px}}
-.preview-section-controls{justify-content:space-between}.preview-section-controls>button>span{transition:none}.preview-section-controls>button[aria-expanded=true]>span{transform:none}
+.preview-section-controls{justify-content:flex-start;gap:24px}.preview-section-controls>button>span{transition:none}.preview-section-controls>button[aria-expanded=true]>span{transform:none}
 .preview-note-toolbar{display:flex;justify-content:flex-start;padding:0 0 12px;border-bottom:1px solid var(--pin-line);margin-bottom:14px}.preview-add-note{width:38px;height:36px;padding:0;font-size:23px;border-radius:9px}
 .preview-note-editor{display:flex;flex-direction:column;min-height:clamp(280px,55svh,580px);padding:0 0 12px;gap:16px}.preview-note-editor label{display:flex;flex-direction:column;gap:10px;flex:1;font-size:12px}.preview-note-editor textarea{flex:1;width:100%;min-height:240px;padding:18px;border:1px solid var(--pin-line);border-radius:12px;resize:vertical;font:inherit;font-size:14px;line-height:1.8}.preview-note-actions{display:flex;justify-content:flex-start;gap:10px}.preview-note-actions button[type=submit]{background:var(--pin-red);color:white;border-color:var(--pin-red)}
 .preview-bookmark{width:100%;text-align:left}.preview-bookmark-back{margin-bottom:14px;font-size:11px;padding:8px 12px}.preview-bookmark-focus{display:flex;flex-direction:column;align-items:center;gap:18px;padding:8px 0 20px}.preview-bookmark-focus h3{align-self:flex-start;font-size:19px;margin:0;line-height:1.4}.preview-linked-image{display:flex;justify-content:center;align-items:center;padding:0;border:0;background:transparent;max-width:100%;width:100%}.preview-linked-image img{max-width:100%;max-height:34svh;width:auto;height:auto;object-fit:contain;border-radius:10px}.preview-bookmark-visit{color:var(--pin-red);font-size:13px;padding:12px 18px;border:1px solid var(--pin-line);border-radius:10px;text-decoration:none}
@@ -317,3 +317,17 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 
 .tagging-buttons{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
 #preview-add-tag{padding:6px 13px;font-size:12px;border-radius:9px}
+
+.preview-note-editor input{width:100%;min-width:0;padding:11px 13px;border:1px solid var(--pin-line);border-radius:10px;background:inherit;color:inherit;font:inherit}
+button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
+
+/* Reserve equal scrollbar gutters so both tag-field edges retain the same inset. */
+.tag-field{scrollbar-gutter:stable both-edges;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.tag-field::-webkit-scrollbar{width:6px;height:6px}
+.tag-field::-webkit-scrollbar-thumb{background:transparent}
+.tag-browser:hover .tag-field,.tag-browser:focus-within .tag-field{scrollbar-color:#c7b8c0 transparent}
+.tag-browser:hover .tag-field::-webkit-scrollbar-thumb,.tag-browser:focus-within .tag-field::-webkit-scrollbar-thumb{background:#c7b8c0}
+[data-board-appearance=dark] .tag-field{scrollbar-color:transparent transparent}
+[data-board-appearance=dark] .tag-field::-webkit-scrollbar-thumb{background:transparent}
+[data-board-appearance=dark] .tag-browser:hover .tag-field,[data-board-appearance=dark] .tag-browser:focus-within .tag-field{scrollbar-color:#4e6383 transparent}
+[data-board-appearance=dark] .tag-browser:hover .tag-field::-webkit-scrollbar-thumb,[data-board-appearance=dark] .tag-browser:focus-within .tag-field::-webkit-scrollbar-thumb{background:#4e6383}

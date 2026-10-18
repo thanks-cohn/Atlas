@@ -3,20 +3,21 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
   const $=id=>document.getElementById(id),make=(tag,text='',cls='')=>{const node=document.createElement(tag);node.textContent=text;node.className=cls;return node;};
   const names=['notes','bookmarks'],drafts=new Map();let active=null,identity=null,content={},editing=false,focusedBookmark=null,busy=false;
   const button=name=>$('preview-'+name),panel=name=>$('preview-'+name+'-panel');
-  function sync(){for(const name of names){const open=active===name;button(name).setAttribute('aria-expanded',String(open));panel(name).hidden=!open;const triangle=button(name).querySelector?.('span');if(triangle)triangle.textContent=open?'▼':name==='notes'?'▶':'◀';}}
+  function sync(){for(const name of names){const open=active===name;button(name).setAttribute('aria-expanded',String(open));panel(name).hidden=!open;const triangle=button(name).querySelector?.('span');if(triangle)triangle.textContent=open?'▼':'▶';}}
   for(const name of names)button(name).onclick=()=>{active=active===name?null:name;sync();};
   function safeURL(value){try{const url=new URL(value);return ['http:','https:'].includes(url.protocol) && !url.username && !url.password?url.href:null;}catch{return null;}}
   function action(label,handler,cls=''){const node=make('button',label,cls);node.type='button';node.onclick=handler;return node;}
   function notes(){
     const host=panel('notes');host.replaceChildren();
     if(editing){
-      const key=identity,draft=drafts.get(key) || {id:crypto.randomUUID(),text:''};drafts.set(key,draft);
-      const form=make('form','','preview-note-editor'),label=make('label','New Note'),input=make('textarea');input.value=draft.text;input.required=true;input.maxLength=100000;input.placeholder='Write your note…';input.oninput=()=>draft.text=input.value;label.append(input);
-      const feedback=make('p','','preview-save-status');feedback.setAttribute('role','status');const controls=make('div','','preview-note-actions'),submit=make('button','Save');submit.type='submit';const cancel=action('Cancel',()=>{editing=false;notes();});controls.append(submit,cancel);form.append(label,controls,feedback);host.append(form);
-      form.onsubmit=async event=>{event.preventDefault();if(busy)return;draft.text=input.value;if(!draft.text.trim())return;busy=true;submit.disabled=cancel.disabled=true;try{await save(key,'note',{...draft,text:draft.text.trim()});drafts.delete(key);if(identity===key){editing=false;notes();}}catch(error){feedback.textContent=error.message || 'Could not save. Your draft remains.';}finally{busy=false;submit.disabled=cancel.disabled=false;}};return;
+      const key=identity,draft=drafts.get(key) || {id:crypto.randomUUID(),title:'',text:''};drafts.set(key,draft);
+      const form=make('form','','preview-note-editor'),titleLabel=make('label',draft.inline?'Bookmark / card title':'Title'),titleInput=make('input');titleInput.value=draft.title || '';titleInput.maxLength=200;titleInput.required=true;titleInput.readOnly=!!draft.inline;titleInput.placeholder='Give your note a title';titleInput.oninput=()=>draft.title=titleInput.value;titleLabel.append(titleInput);
+      const label=make('label','Note'),input=make('textarea');input.value=draft.text;input.required=true;input.maxLength=100000;input.placeholder='Write your note…';input.oninput=()=>draft.text=input.value;label.append(input);
+      const feedback=make('p','','preview-save-status');feedback.setAttribute('role','status');const controls=make('div','','preview-note-actions'),submit=make('button','Save');submit.type='submit';const cancel=action('Cancel',()=>{editing=false;notes();});controls.append(submit,cancel);form.append(titleLabel,label,controls,feedback);host.append(form);
+      form.onsubmit=async event=>{event.preventDefault();if(busy)return;draft.text=input.value;draft.title=titleInput.value;if(!draft.text.trim() || !draft.title.trim())return;busy=true;submit.disabled=cancel.disabled=true;try{await save(key,'note',{...draft,title:draft.title.trim(),text:draft.text.trim()});drafts.delete(key);if(identity===key){editing=false;notes();}}catch(error){feedback.textContent=error.message || 'Could not save. Your draft remains.';}finally{busy=false;submit.disabled=cancel.disabled=false;}};return;
     }
-    const top=make('div','','preview-note-toolbar'),add=action('+',()=>{editing=true;notes();panel('notes').querySelector?.('textarea')?.focus?.();},'preview-add-note');add.setAttribute('aria-label','Add Note');top.append(add);host.append(top);
-    const seen=new Set();for(const note of content.notes || []){if(!note.text || seen.has(note.id))continue;seen.add(note.id);const row=make('article','','preview-note');row.append(make('h3',note.title || 'Note'),make('p',note.text));host.append(row);}
+    const top=make('div','','preview-note-toolbar'),add=action('+',()=>{if(drafts.get(identity)?.editing)drafts.delete(identity);editing=true;notes();panel('notes').querySelector?.('textarea')?.focus?.();},'preview-add-note');add.setAttribute('aria-label','Add Note');top.append(add);host.append(top);
+    const seen=new Set();for(const note of content.notes || []){if(!note.text || seen.has(note.id))continue;seen.add(note.id);const row=action('',()=>{drafts.set(identity,{...note,editing:true,originalTitle:note.title || '',originalText:note.text});editing=true;notes();host.scrollIntoView?.({block:'nearest',behavior:'auto'});host.querySelector?.('textarea')?.focus?.({preventScroll:true});},'preview-note');row.append(make('h3',note.title || 'Note'),make('p',note.text));host.append(row);}
     if(!seen.size)host.append(make('p',content.available===false?'Notes are unavailable right now.':'No notes yet.','preview-section-empty'));
   }
   function bookmarks(){
