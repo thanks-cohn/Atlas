@@ -319,10 +319,10 @@ async function refresh(){
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
 $('apply-tags').onclick=applyTags;
-// Escape clears browsing selection only. Dialogs, dropdowns and text editors
-// retain their native Escape behavior; ordinary search words are preserved.
+// Alt+Q clears browsing selection only. Escape remains exclusively available
+// to previews/dialogs. Ordinary search words and attached tags are preserved.
 window.addEventListener('keydown',event=>{
-  if(event.key!=='Escape' || event.defaultPrevented || $('detail').open || $('image-source').open || (document.querySelectorAll?.('dialog[open]') || []).length)return;
+  if(event.key?.toLowerCase()!=='q' || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat || event.defaultPrevented || $('detail').open || $('image-source').open || (document.querySelectorAll?.('dialog[open]') || []).length)return;
   if(event.target!==$('search') && event.target?.matches?.('input,textarea,select,[contenteditable]'))return;
   const query=tagQuery($('search').value);
   if(!pendingTags.size && !activeTags.length && !query.tags.length)return;

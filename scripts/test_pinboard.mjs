@@ -259,19 +259,21 @@ assert.ok(!reloaded.includes('Machine Cat'));
 assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
 console.log('PASS: cumulative generated attachments survive reloading storage with zero highlighted/selected tags.');
 
-// Escape restores ordinary order without deleting attachments. Open preview and
-// editor controls retain Escape ownership; typed search words are kept.
+// Alt+Q restores ordinary order without deleting attachments. Open preview and
+// editor controls retain key ownership; typed search words are kept.
 $('close').onclick();vm.runInContext("pendingTags=new Set(['smile']);activeTags=['smile'];$('search').value='';updatePriorities()",context);
-let escPrevented=false;
-listeners.keydown({key:'Escape',target:document.body,preventDefault(){escPrevented=true;}});
-assert.equal(escPrevented,true);assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
+let clearPrevented=false;
+listeners.keydown({key:'Escape',target:document.body,preventDefault(){throw Error('Escape must not clear tags');}});
+assert.equal(vm.runInContext('pendingTags.size',context),1);
+listeners.keydown({key:'q',altKey:true,target:document.body,preventDefault(){clearPrevented=true;}});
+assert.equal(clearPrevented,true);assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
 for(const tag of ['Generated Object','person','smile'])assert.ok(vm.runInContext('tagsFor(selected)',context).includes(tag));
 vm.runInContext("pendingTags.add('smile');$('search').value='Bookmark tag:smile'",context);
 vm.runInContext("$('detail').showModal()",context);
-listeners.keydown({key:'Escape',target:document.body,preventDefault(){throw Error('Preview owns Escape');}});
+listeners.keydown({key:'q',altKey:true,target:document.body,preventDefault(){throw Error('Preview must not clear underlying tags');}});
 assert.equal(vm.runInContext('pendingTags.size',context),1);
-$('close').onclick();listeners.keydown({key:'Escape',target:{matches:()=>true},preventDefault(){throw Error('Editor owns Escape');}});
+$('close').onclick();listeners.keydown({key:'q',altKey:true,target:{matches:()=>true},preventDefault(){throw Error('Editor must keep input handling');}});
 assert.equal(vm.runInContext('pendingTags.size',context),1);
-listeners.keydown({key:'Escape',target:$('search'),preventDefault(){}});
+listeners.keydown({key:'q',altKey:true,target:$('search'),preventDefault(){}});
 assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);assert.equal($('search').value,'Bookmark');
-console.log('PASS: Escape clears highlighted tags and tag clauses, restores browsing priority, preserves attached tags/search words, and respects modal/editor Escape behavior.');
+console.log('PASS: Alt+Q clears highlighted tags/clauses and restores order; attachments/search words persist; Escape never clears selection and dialogs/editors retain handling.');
