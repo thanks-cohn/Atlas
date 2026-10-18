@@ -134,3 +134,51 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .preview-tag-pair{display:inline-flex;height:27px;max-width:100%;align-items:stretch}
 .preview-tag-pair>.tag{min-width:0;margin:0;border:0;border-radius:0;padding:4px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
 .preview-tag-pair>.pin-tag-remove{flex-basis:23px;min-width:23px;font-size:14px}
+
+/* Dark appearance: late-night navy/plum, cyan signals and violet highlights.
+   Legacy --pin-red tokens are aliases here; media pixels are never recolored. */
+:root[data-board-appearance=dark]{color-scheme:dark;color:#e3eaf4;background:#0b1020;--board-accent:#66dce8;--pin-red:var(--board-accent);--pin-red-dark:#9deef2;--pin-line:#30354d;--pin-soft:#171d32;--night-surface:#121a2e;--night-raised:#202840;--night-muted:#acb8d0}
+html[data-board-appearance=dark]{scrollbar-color:#495b7c #0b1020}
+[data-board-appearance=dark] :is(header,.pin){background:transparent}
+[data-board-appearance=dark] :is(button,input,textarea,select,dialog){color:#e3eaf4;border-color:#465371;background:var(--night-surface)}
+[data-board-appearance=dark] :is(button:hover,.tools input:focus,.tools select:focus){background:var(--night-raised)}
+[data-board-appearance=dark] :is(input,textarea)::placeholder{color:#9ba9c4}
+[data-board-appearance=dark] :is(.wordmark .brand-section,.intro>p:last-child,.tools label,.board-options,.pin-url,.pin-empty .pin-url,.storage-note,#status,.tag-browser-head,.tag-field>p,.active-tags>span,.pin-composer label,.detail-copy p,.detail-tagging-row label,.tagging-question,#tagging-selection-status,.pin-tag-editor>p,.cover-divider,.fetch-mode-label,.fetch-panel p,.fetch-panel #fetch-progress,#image-source .url-field){color:var(--night-muted)}
+[data-board-appearance=dark] :is(.wordmark .brand-section,.tools input,.tools select,.pin-empty,.fetch-one,.pin-with-tags>.pin-tags,.pin-composer,.tag-browser,.pin-tag-pair,.pin-tag,.browse-tag,.tag,.active-tags button,.cover-header,.cover-budget-setting,.model-choice-setting,.pin-tag-editor>form,.pin-tag-editor input,.pin-tag-editor select,.detail-heading,#detail,#detail .detail-tagging){border-color:var(--pin-line)}
+[data-board-appearance=dark] :is(.tools input,.tools select,.image-filter,.pin-empty,.fetch-one,.pin-composer,.tag-browser,.tag,.pin-tag,.pin-tag-pair,.browse-tag,.pin-composer input,.pin-composer textarea,.pin-composer select,.cover-budget-setting input,.board-options select,.fetch-mode-label select,#cover-url){background:var(--night-surface);color:#c6d4e9}
+[data-board-appearance=dark] :is(.pin-visual,.pin-visual:hover,.pin-loading,.composer-image){background:#171c34;color:var(--night-muted);border-color:#45557b}
+[data-board-appearance=dark] :is(.pin-title,.detail-heading h2){color:#edf3ff}
+[data-board-appearance=dark] :is(.pin-title:hover,.intro .eyebrow,.detail-copy>a,.pin-tag-more,.fetch-one,.cover-budget-setting button,.board-options #cover-usage){color:var(--board-accent)}
+[data-board-appearance=dark] :is(.settings-panel,.board-options summary,.cover-fetch>summary,.cover-fetch[open],dialog,.detail-heading,#detail .detail-tagging){background:var(--night-surface);color:#e3eaf4;border-color:var(--pin-line);box-shadow:0 16px 48px #0003}
+[data-board-appearance=dark] :is(.board-options .settings-panel p,.board-options details p){color:var(--night-muted)}
+[data-board-appearance=dark] :is(.board-options details[open] summary,.image-filter:has(input:checked),.active-tags button,.pin-tag-more,.pin-tag-editor>div:nth-of-type(2)>button,.pin-tag-editor select option:checked){background:#253149;color:#a0f1f4;border-color:#426e88}
+[data-board-appearance=dark] :is(.pin-tag[aria-pressed=true],.tag[aria-pressed=true],.browse-tag[aria-pressed=true],.wordmark .brand-glyph,header #new-pinboard,.composer-save,#fetch-start,#save-image-url,#run-image-tagging,.pin-tag-editor>form button,.pin-loading strong){background:var(--board-accent);color:#092333;border-color:var(--board-accent)}
+[data-board-appearance=dark] :is(#fetch-start:hover,#save-image-url:hover,#run-image-tagging:hover,.composer-save:hover){background:var(--pin-red-dark)}
+[data-board-appearance=dark] :is(.image-tag-edit,.empty-tag-edit,#cancel-image,.detail-heading #close,.tag-editor-head button,.pin-empty button,#upload-image){background:#202a43;color:#9eeaf2;border-color:#506584}
+[data-board-appearance=dark] :is(.image-tag-edit:hover,.empty-tag-edit:hover,#upload-image:hover,.pin-tag-remove:hover,.pin-tag-remove:focus-visible){background:#303453;color:#c9d9ff}
+[data-board-appearance=dark] .pin-tag-remove{background:transparent;color:#afc1dd}
+[data-board-appearance=dark] :is(.tag-field,.detail-scroll){scrollbar-color:#4e6383 transparent}
+[data-board-appearance=dark] :is(#image-status,#blank-status,#new-board-status,#appearance-status){color:#f3b9d5}
+[data-board-appearance=dark] dialog::backdrop{background:#08080dd9}
+#appearance-status:empty{display:none}
+
+/* Static atmospheric color, no glow/filter/animation cost on the image grid. */
+html[data-board-appearance=dark]{background:radial-gradient(ellipse at 90% 0%,#242044 0,transparent 48%),linear-gradient(155deg,#0a1528,#101126 70%,#19132b);min-height:100%}
+[data-board-appearance=dark] header{background:#0b1426;border-bottom:1px solid #35425f}
+[data-board-appearance=dark] .wordmark .brand-section{color:#9bb6d8}
+[data-board-appearance=dark] .intro .eyebrow{color:#a897e8}
+[data-board-appearance=dark] .tag-browser{background:linear-gradient(120deg,#121d32,#1c1931);border-color:#37405c}
+[data-board-appearance=dark] .tag-browser-head{color:#b1a2d6}
+[data-board-appearance=dark] .settings-panel{border-top:2px solid #66dce8}
+[data-board-appearance=dark] .pin-composer{background:linear-gradient(160deg,#142035,#1b1930)}
+[data-board-appearance=dark] .pin-tag-more{color:#c1afff;background:#2b2548;border-color:#524373}
+
+@font-face{font-family:Atlas Rajdhani;src:url('fonts/Rajdhani-SemiBold.ttf') format('truetype');font-style:normal;font-weight:600;font-display:swap}
+@font-face{font-family:Atlas Space Grotesk;src:url('fonts/SpaceGrotesk-Variable.ttf') format('truetype');font-style:normal;font-weight:300 700;font-display:swap}
+[data-board-appearance=dark] body{font-family:Atlas Space Grotesk,system-ui,sans-serif}
+[data-board-appearance=dark] :is(button,input,textarea,select,.pin-composer input,.pin-composer textarea,.pin-composer select,.pin-tag-editor select){font-family:Atlas Space Grotesk,system-ui,sans-serif}
+[data-board-appearance=dark] :is(.wordmark strong,.intro h1,.detail-heading h2,.cover-header h2,.tag-editor-head h2,#new-board-form h2){font-family:Atlas Rajdhani,system-ui,sans-serif;font-weight:600;letter-spacing:.025em;line-height:1.12}
+[data-board-appearance=dark] .intro h1{font-size:clamp(36px,4vw,54px)}
+[data-board-appearance=dark] .wordmark strong{font-size:30px;letter-spacing:.1em}
+[data-board-appearance=dark] :is(.intro .eyebrow,.wordmark .brand-section){font-family:Atlas Rajdhani,system-ui,sans-serif;font-size:12px;letter-spacing:.18em}
+[data-board-appearance=dark] .pin-title{font-weight:600;letter-spacing:-.015em}
