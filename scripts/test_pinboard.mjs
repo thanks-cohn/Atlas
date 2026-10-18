@@ -33,7 +33,7 @@ class El{
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
-const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -258,3 +258,20 @@ for(const tag of ['Generated Object','person','smile'])assert.ok(reloaded.includ
 assert.ok(!reloaded.includes('Machine Cat'));
 assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
 console.log('PASS: cumulative generated attachments survive reloading storage with zero highlighted/selected tags.');
+
+// Escape restores ordinary order without deleting attachments. Open preview and
+// editor controls retain Escape ownership; typed search words are kept.
+$('close').onclick();vm.runInContext("pendingTags=new Set(['smile']);activeTags=['smile'];$('search').value='';updatePriorities()",context);
+let escPrevented=false;
+listeners.keydown({key:'Escape',target:document.body,preventDefault(){escPrevented=true;}});
+assert.equal(escPrevented,true);assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
+for(const tag of ['Generated Object','person','smile'])assert.ok(vm.runInContext('tagsFor(selected)',context).includes(tag));
+vm.runInContext("pendingTags.add('smile');$('search').value='Bookmark tag:smile'",context);
+vm.runInContext("$('detail').showModal()",context);
+listeners.keydown({key:'Escape',target:document.body,preventDefault(){throw Error('Preview owns Escape');}});
+assert.equal(vm.runInContext('pendingTags.size',context),1);
+$('close').onclick();listeners.keydown({key:'Escape',target:{matches:()=>true},preventDefault(){throw Error('Editor owns Escape');}});
+assert.equal(vm.runInContext('pendingTags.size',context),1);
+listeners.keydown({key:'Escape',target:$('search'),preventDefault(){}});
+assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);assert.equal($('search').value,'Bookmark');
+console.log('PASS: Escape clears highlighted tags and tag clauses, restores browsing priority, preserves attached tags/search words, and respects modal/editor Escape behavior.');

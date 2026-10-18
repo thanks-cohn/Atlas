@@ -319,6 +319,15 @@ async function refresh(){
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});
 $('apply-tags').onclick=applyTags;
+// Escape clears browsing selection only. Dialogs, dropdowns and text editors
+// retain their native Escape behavior; ordinary search words are preserved.
+window.addEventListener('keydown',event=>{
+  if(event.key!=='Escape' || event.defaultPrevented || $('detail').open || $('image-source').open || (document.querySelectorAll?.('dialog[open]') || []).length)return;
+  if(event.target!==$('search') && event.target?.matches?.('input,textarea,select,[contenteditable]'))return;
+  const query=tagQuery($('search').value);
+  if(!pendingTags.size && !activeTags.length && !query.tags.length)return;
+  event.preventDefault();pendingTags.clear();activeTags=[];$('search').value=query.text;clearTimeout(searchTimer);coverFetch.stop();updatePriorities();
+});
 window.addEventListener('keydown',async event=>{if(event.key==='Enter' && !$('detail').open && !$('image-source').open && $('folder').value!=='blank' && (event.target===$('search') || event.target===document.body || event.target?.closest?.('[data-tag],#tag-browser'))){event.preventDefault();clearTimeout(searchTimer);await refreshAssociations();applyTags();}});
 $('tags-only').onchange=()=>{coverFetch.stop();render();saveSettings();};
 async function refreshCoverUsage(){

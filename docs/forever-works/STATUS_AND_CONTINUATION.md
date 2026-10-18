@@ -789,3 +789,9 @@ permissions and UI are retained. Owner laptop/4GB acceptance remains pending.
 - `filteredNodes` now applies search/tag clauses only for a nonempty query, then stably partitions the resulting collection by highlighted-tag matches. Clicking updates the mounted view immediately; Enter/Bring to Top scrolls to the prioritized beginning without narrowing the collection. Tag selection and tag persistence are independent. Explicit images-only/tags-only settings remain filters.
 - Regression with 1,000 bookmarks selects a tag on the second card, proves it moves first with all 1,000 retained and all nonmatches stable, proves search narrows, and verifies clearing restores order. This supersedes the earlier click/Enter-to-filter interaction; it does not change per-card tag associations or model evidence.
 - GitHub development check 39104507462 for additive-storage commit 7485173 passed, despite the separately recorded local native-startup failures. Latest prioritization commit's CI acceptance is separate.
+
+### Clear selection shortcut
+
+- Owner requests a shortcut to clear all highlighted tags and restore normal board order. Escape now clears highlighted/committed browsing selections and explicit tag clauses while retaining ordinary search text. It never removes attached human/model tags. With no remaining text search, the bookmark order is restored.
+- Dialogs/previews own their existing Escape-close behavior. Selects, settings inputs and text editors also retain native handling; the main search field supports clearing tag selection. A tag-browser tooltip advertises the shortcut without adding interface clutter.
+- Local pinboard regression verifies clearing, retained attachments, preserved ordinary search terms and modal/editor Escape precedence. Generation and tag-editor suites also pass. This is extension-only and remains compatible with the installed 0.1.69 helper; no model download is required.
