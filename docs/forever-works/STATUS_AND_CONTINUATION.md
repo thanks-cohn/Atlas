@@ -716,3 +716,19 @@ executables plus their two-executable nested archive (~1.77 GB). Primary upload
 now selects the normal helper, receipts/notices and extension zip only; debug.exe
 is a separate optional artifact. Build-time full archive remains available to
 local builders but is not redundantly uploaded into the user-facing download.
+
+Final acceptance and distribution proof: commit
+5902fb9c61f37d6c2ff8ce0c3712220acdaeae6f passed GitHub development checks
+(workflow 39091017092) and the complete Windows build/runtime workflow
+39091017086, including frozen model, desktop-widget, native HTTP, live upgrade,
+kill/suspend recovery, supervisor/revocation and uninstall tests. Primary artifact
+12123181172 (`atlas-companion-windows-x86_64`) is 442,651,047 bytes, SHA-256
+924ccd12a85f855ee197b29c086ed6a322791b5550f53c2336c7f1c4258364d2
+(outer artifact ZIP, not the executable). Download:
+https://github.com/thanks-cohn/Atlas/actions/runs/39091017086/artifacts/12123181172
+Artifacts use 14-day retention; rebuild from pinned source after expiry. Optional
+debug is separately distributed. Update unpacked extension from main/reload it,
+then run the new helper and approve same-ID repair/upgrade. No user Python setup
+or manual model download is required. Actual Chrome visual/runtime acceptance on
+the owner's computer and 4GB-machine resource profiling remain NOT_RUN; Windows
+CI runtime success is not those separate proofs.
