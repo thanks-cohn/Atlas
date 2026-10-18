@@ -1,3 +1,4 @@
+import {modelRuns} from './pinboard-generation.js';
 export const TAG_VOCABULARY='atlas-tag-vocabulary-v1';
 // Remove associations, never the tag vocabulary or another bookmark's tags.
 export async function removeBookmarkTag(node,tag){
@@ -42,7 +43,7 @@ export function installTagEditor({onChanged}){
     }
     async function load(){busy=true;retry.hidden=true;controls();try{const saved=await chrome.storage?.local.get([TAG_VOCABULARY,'atlas-image-tagging-runs-v1']);for(const tag of saved?.[TAG_VOCABULARY] || [])knownTags.add(tag);
       // Include earlier successful runs too; this reads predictions without inference.
-      for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const run of Object.values(sources))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
+      for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const value of Object.values(sources))for(const run of modelRuns(value))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
     async function mutate(action,tag,allowNew=false){
       if(busy)return;busy=true;controls();retry.hidden=true;
       try{

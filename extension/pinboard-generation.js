@@ -50,19 +50,39 @@ export async function generateModels({node,image,choices,send,save,status}) {
   return results;
 }
 
-// Derived presentation only. Original runs and human metadata are never mutated.
+// Accept older single-result storage without rewriting original evidence.
+export function modelRuns(value){return Array.isArray(value)?value:(value?[value]:[]);}
+
+// Runs are additive for one chosen cover. Encoded preview bytes may vary between
+// requests; the stable cover reference decides whether this is the same image.
+export function mergeGeneratedRun(current,source,result){
+  if(!['objects','face','anime'].includes(source) || !result.image_reference)throw Error('Missing model or image identity.');
+  const next={};
+  for(const key of ['objects','face','anime']){
+    const matching=modelRuns(current?.[key]).filter(run=>run.image_reference===result.image_reference);
+    if(matching.length)next[key]=matching;
+  }
+  const prior=next[source] || [];
+  next[source]=[...prior.filter(run=>!result.run_id || run.run_id!==result.run_id),result];
+  return next;
+}
+
+// Derived presentation only. Each run keeps its own original predictions,
+// display choices and provenance; a later request cannot erase earlier choices.
 export function generatedTags(runs,reference,animeEnabled=false) {
   const grouped=new Map();
   for(const source of ['objects','face','anime']){
-    const run=runs?.[source];
-    if(!run || !reference || run.image_reference!==reference || (source==='anime' && !animeEnabled))continue;
-    for(const suggestion of run.suggestions || []){
-      if(typeof suggestion.tag!=='string')continue;
-      if(source==='objects' && run.display_choices && (suggestion.tag==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
-      const label=suggestion.tag.trim(),key=label.normalize('NFKC').toLowerCase();
-      if(!key)continue;
-      if(!grouped.has(key))grouped.set(key,{label,sources:[]});
-      grouped.get(key).sources.push({source,model:run.model,score:suggestion.score});
+    if(source==='anime' && !animeEnabled)continue;
+    for(const run of modelRuns(runs?.[source])){
+      if(!reference || run.image_reference!==reference)continue;
+      for(const suggestion of run.suggestions || []){
+        if(typeof suggestion.tag!=='string')continue;
+        const label=suggestion.tag.trim(),key=label.normalize('NFKC').toLowerCase();
+        if(source==='objects' && run.display_choices && (key==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
+        if(!key)continue;
+        if(!grouped.has(key))grouped.set(key,{label,sources:[]});
+        grouped.get(key).sources.push({source,model:run.model,run_id:run.run_id,score:suggestion.score});
+      }
     }
   }
   return [...grouped.values()];

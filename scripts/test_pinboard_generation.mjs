@@ -31,3 +31,23 @@ assert.deepEqual(visible.map(t=>t.label),['Cat','smile']);assert.equal(visible[0
 assert.deepEqual(generatedTags(runs,'replacement',true),[]);
 assert.equal(JSON.stringify(runs),original);
 console.log('PASS: generated card projection keeps provenance, deduplicates sources, honors image/Anime/display gates and never mutates evidence.');
+
+const {mergeGeneratedRun}=await import('data:text/javascript;base64,'+Buffer.from(text).toString('base64'));
+const first={run_id:'things-1',model:'detector',image_reference:'cover',image_payload_sha256:'encoded-a',display_choices:{objects:true,people:false},suggestions:[{tag:'cat',score:.9},{tag:'person',score:.8}]};
+const people={...first,run_id:'people-1',image_payload_sha256:'encoded-b',display_choices:{objects:false,people:true},suggestions:[{tag:'person',score:.85}]};
+let accumulated=mergeGeneratedRun({},'objects',first);
+accumulated=mergeGeneratedRun(accumulated,'objects',people);
+assert.deepEqual(generatedTags(accumulated,'cover').map(t=>t.label),['cat','person']);
+const faces={run_id:'faces-1',image_reference:'cover',image_payload_sha256:'encoded-c',model:'faces',suggestions:[{tag:'smile',score:.7}]};
+accumulated=mergeGeneratedRun(accumulated,'face',faces);
+assert.deepEqual(generatedTags(accumulated,'cover').map(t=>t.label),['cat','person','smile']);
+accumulated=mergeGeneratedRun(accumulated,'objects',{...people,run_id:'empty-1',suggestions:[]});
+assert.deepEqual(generatedTags(accumulated,'cover').map(t=>t.label),['cat','person','smile']);
+assert.equal(accumulated.objects.length,3);
+assert.equal(mergeGeneratedRun(accumulated,'face',faces).face.length,1);
+const replaced=mergeGeneratedRun(accumulated,'face',{...faces,run_id:'new-cover',image_reference:'replacement'});
+assert.deepEqual(Object.keys(replaced),['face']);
+const migrated=mergeGeneratedRun({objects:first},'face',faces);
+assert.deepEqual(generatedTags(migrated,'cover').map(t=>t.label),['cat','smile']);
+assert.equal(first.display_choices.people,false);assert.equal(first.image_payload_sha256,'encoded-a');
+console.log('PASS: Things → People → Faces and empty reruns accumulate, preview re-encoding does not erase tags, same-run saves are idempotent, legacy records migrate and replacement covers remain isolated.');

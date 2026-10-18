@@ -32,8 +32,8 @@ class El{
 }
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
-const {generateModels,generatedTags}=await moduleOf('pinboard-generation.js');
-const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
+const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -219,3 +219,25 @@ await $('refresh').onclick();
 assert.ok(!vm.runInContext('tagsFor(selected)',context).includes('Machine Cat'));
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
 console.log('PASS: trailing × removes only this card, persists after reload, retains dropdown vocabulary and leaves original predictions intact.');
+// Separate clicks accumulate at the real UI save boundary, including different
+// preview payload hashes and repeated Things/People calls to the same detector.
+$('search').value='';context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});await $('refresh').onclick();flush();
+vm.runInContext('openDetail(items[0])',context);await tick();await tick();
+let runNumber=0;
+context.chrome.runtime.sendMessage=async message=>{runNumber++;return {ok:true,source:message.body.model,model:message.body.model,run_id:'accumulate-'+runNumber,image_payload_sha256:'payload-'+runNumber,suggestions:message.body.model==='face'?[{tag:'smile',score:.9}]:[{tag:'Generated Object',score:.9},{tag:'person',score:.8},{tag:'Machine Cat',score:.8}]};};
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;await $('run-image-tagging').onclick();
+$('tag-image-choice').checked=false;$('tag-people-choice').checked=true;await $('run-image-tagging').onclick();
+$('tag-people-choice').checked=false;$('tag-face-choice').checked=true;await $('run-image-tagging').onclick();flush();
+const cumulative=vm.runInContext('tagsFor(selected)',context);
+assert.ok(cumulative.includes('Generated Object'));assert.ok(cumulative.includes('person'));assert.ok(cumulative.includes('smile'));
+assert.ok(!cumulative.includes('Machine Cat'),'Explicit removal must survive all later runs');
+assert.ok(data['atlas-image-tagging-runs-v1'][machineCard.atlasNode.url].objects.length>=3);
+assert.equal(JSON.stringify(tagCatalog),humanBefore);
+console.log('PASS: three separate UI generations accumulate different payloads and shared-detector choices; explicit × removal and human metadata survive.');
+vm.runInContext('pendingTags.clear();activeTags=[];generatedIndex=new Map()',context);
+context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});await $('refresh').onclick();flush();
+const reloaded=vm.runInContext('tagsFor(selected)',context);
+for(const tag of ['Generated Object','person','smile'])assert.ok(reloaded.includes(tag));
+assert.ok(!reloaded.includes('Machine Cat'));
+assert.equal(vm.runInContext('pendingTags.size+activeTags.length',context),0);
+console.log('PASS: cumulative generated attachments survive reloading storage with zero highlighted/selected tags.');

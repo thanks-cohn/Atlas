@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
+const generationText=readFileSync('extension/pinboard-generation.js','utf8');
+const {modelRuns}=await import('data:text/javascript;base64,'+Buffer.from(generationText).toString('base64'));
 class E{constructor(tag){this.tag=tag;this.children=[];this.value='';this.handlers={};}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}setAttribute(){}addEventListener(k,fn){this.handlers[k]=fn;}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}remove(){this.removed=true;}}
 const body=new E('body'),document={createElement:tag=>new E(tag),body};
 let revision=1,fail=false,changed=0;let data={resources:{r:{id:'r',kind:'bookmark',locators:[{provider:'web',reference:'https://example.com'}]},other:{id:'other',kind:'bookmark',locators:[{provider:'web',reference:'https://other.example'}]}},tags:{r:['Art'],other:['Design']}};
-const mutations=[];const context={document,navigator:{locks:{request:async(_,fn)=>fn()}},chrome:{bookmarks:{get:async()=>[{url:'https://example.com'}]},runtime:{sendMessage:async message=>{if(fail)return {ok:false};const body=message.body;if(body){assert.equal(body.expected_revision,revision);mutations.push(body);const tags=data.tags[body.args.resource] || [];data.tags[body.args.resource]=body.action==='tag'?[...new Set([...tags,body.args.tag])]:tags.filter(t=>t!==body.args.tag);revision++;}return {data:structuredClone(data),revision};}}}};
-vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-tag-editor.js','utf8').replace(/export /g,'')+';globalThis.install=installTagEditor;globalThis.removeBookmarkTag=removeBookmarkTag',context);
+const mutations=[];const context={modelRuns,document,navigator:{locks:{request:async(_,fn)=>fn()}},chrome:{bookmarks:{get:async()=>[{url:'https://example.com'}]},runtime:{sendMessage:async message=>{if(fail)return {ok:false};const body=message.body;if(body){assert.equal(body.expected_revision,revision);mutations.push(body);const tags=data.tags[body.args.resource] || [];data.tags[body.args.resource]=body.action==='tag'?[...new Set([...tags,body.args.tag])]:tags.filter(t=>t!==body.args.tag);revision++;}return {data:structuredClone(data),revision};}}}};
+vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-tag-editor.js','utf8').replace(/^import .*\n/gm,'').replace(/export /g,'')+';globalThis.install=installTagEditor;globalThis.removeBookmarkTag=removeBookmarkTag',context);
 const open=context.install({onChanged:()=>changed++});await open({id:'1',url:'https://example.com',title:'Bookmark'});
 const dialog=body.children.at(-1),attached=dialog.children[2],select=dialog.children[3].children[0],add=dialog.children[4];
 assert.equal(attached.children[0].textContent,'Art ×');assert.equal(add.disabled,true);
@@ -25,7 +27,7 @@ select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){
 select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Design'));
 select.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!data.tags.r.includes('Design'));assert.equal(select.scrollTop,120);
 
-const savedTags={'atlas-tag-vocabulary-v1':['Generated Choice'],'atlas-image-tagging-runs-v1':{'https://source.example':{anime:{suggestions:[{tag:'Earlier Model Tag'}]}}}};
+const savedTags={'atlas-tag-vocabulary-v1':['Generated Choice'],'atlas-image-tagging-runs-v1':{'https://source.example':{anime:[{suggestions:[{tag:'Earlier Model Tag'}]}]}}};
 context.chrome.storage={local:{get:async keys=>Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(key=>[key,savedTags[key]])),set:async values=>Object.assign(savedTags,values)}};
 fail=false;await open({id:'1',url:'https://example.com'});
 const newDialog=body.children.at(-1),picker=newDialog.children[3].children[0];

@@ -1,4 +1,4 @@
-import {generationImage,generateModels,imageReference,generatedTags} from './pinboard-generation.js';
+import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun} from './pinboard-generation.js';
 import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
@@ -166,10 +166,10 @@ $('run-image-tagging').onclick=async()=>{
         result={...result,image_reference:reference};
         await navigator.locks.request('atlas-pages-v1',async()=>{
           const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAG_VOCABULARY]),all=stored[TAGGING_RESULTS] || {};
-          const previous=Object.fromEntries(Object.entries(all[node.url] || {}).filter(([,run])=>run.image_payload_sha256===result.image_payload_sha256));
+          const combined=mergeGeneratedRun(all[node.url],source,result);
           const vocabulary=new Map((stored[TAG_VOCABULARY] || []).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
           for(const suggestion of result.suggestions || [])if(typeof suggestion.tag==='string' && suggestion.tag.trim()){const tag=suggestion.tag.trim(),key=tag.normalize('NFKC').toLowerCase();if(!vocabulary.has(key))vocabulary.set(key,tag);}
-          await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[node.url]:{...previous,[source]:result}},[TAG_VOCABULARY]:[...vocabulary.values()]});
+          await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[node.url]:combined},[TAG_VOCABULARY]:[...vocabulary.values()]});
         });
         await refreshGeneratedIndex();
         if(selected?.url===node.url)await showGeneratedTags(node);
