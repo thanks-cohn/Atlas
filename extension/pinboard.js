@@ -66,19 +66,35 @@ async function showGeneratedTags(node){
   try{
     const runs=(await chrome.storage.local.get(TAGGING_RESULTS))[TAGGING_RESULTS]?.[node.url] || {};
     if(selected?.url!==node.url)return;
-    for(const source of ['objects','face']){
+    // Deduplicate presentation only: every per-model result remains saved intact.
+    const human=new Set(tagsFor(node).map(tag=>tag.toLocaleLowerCase()));
+    const grouped=new Map();
+    for(const source of ['objects','face','anime']){
       const run=runs[source];
       if(!run)continue;
-      const section=el('section'),heading=el('strong',source==='objects'?'Object tags':'Facial expression tags');
-      const tags=el('div');tags.className='generated-tag-chips';
       for(const suggestion of run.suggestions||[]){
-        const chip=el('span',suggestion.tag);chip.className='tag';
-        chip.title=String(Math.round(suggestion.score*100))+'% model score';
-        tags.append(chip);
+        if(typeof suggestion.tag!=='string')continue;
+        const label=suggestion.tag.trim();
+        const key=label.toLocaleLowerCase();
+        if(!key)continue;
+        if(!grouped.has(key))grouped.set(key,{label,sources:[]});
+        grouped.get(key).sources.push({source,model:run.model,score:suggestion.score});
       }
-      if(!tags.childElementCount)tags.append(el('span','No matching tags.'));
-      section.append(heading,tags);host.append(section);
     }
+    if(!grouped.size)return;
+    const section=el('section'),heading=el('strong','Generated tag suggestions');
+    const tags=el('div');tags.className='generated-tag-chips';
+    for(const [key,entry] of grouped){
+      if(human.has(key))continue; // Existing human tag is already shown above.
+      const chip=el('span',entry.label);chip.className='tag';
+      chip.title=entry.sources.map(item=>{
+        const confidence=Number.isFinite(item.score)?' ('+Math.round(item.score*100)+'%)':'';
+        return (item.model||item.source)+confidence;
+      }).join(' · ');
+      tags.append(chip);
+    }
+    if(!tags.childElementCount)tags.append(el('span','All generated tags are already shown as human tags.'));
+    section.append(heading,tags);host.append(section);
   }catch{host.append(el('p','Saved model results could not be loaded.'));}
 }
 
