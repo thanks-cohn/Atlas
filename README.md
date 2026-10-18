@@ -94,3 +94,7 @@ Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/
 ## Proposed tag provenance foundation
 
 [Tag Provenance, Run Snapshots and Curated State](docs/forever-works/PROPOSAL_TAG_PROVENANCE_RUNS_AND_CURATED_STATE.md) records the proposed separation of human/model assignments, immutable runs, attributed deltas, current views, explicit companion jobs and portable exports. Documentation only; not an implemented migration or job system.
+
+## Minimal publishing, cards, slices and Any-Shape — proposal
+
+[Minimal Publishing, Card/Slice Architecture and Aesthetic Adaptation Corpus](docs/forever-works/PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md) sets out the owner-directed principle **“Use the smallest implementation that fully preserves the experience”**, a transparent modular HTML/CSS/JS + JSON renderer, production-ready templates, first-time-user publish test, card/whole/slice portability, responsive aesthetic equivalence and an inspectable future training corpus. This is **proposed direction, not shipped functionality**.
