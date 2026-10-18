@@ -59,6 +59,10 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 
 - [PROPOSAL_CARD_EXPANSION_STATE_TRANSITIONS_AND_ROULETTE.md](PROPOSAL_CARD_EXPANSION_STATE_TRANSITIONS_AND_ROULETTE.md) — proposed fixed-viewport glossy note roulette, separate expandable bookmark rows with preserved links and foregrounded image lightbox, tag-informed recommended photos, and device-independent state/transition behavior. Proposal only; existing card and note contracts remain authoritative.
 
+## Deferred AI tagging replacement — UX first
+
+- [PROPOSAL_FUTURE_AI_TAGGING_RAMPP_MIVOLO_JOYTAG.md](PROPOSAL_FUTURE_AI_TAGGING_RAMPP_MIVOLO_JOYTAG.md) — owner-selected future RAM++ everyday tags, MiVOLO v2 age analysis with separate person detection, and retained opt-in JoyTag; current AI baseline kept until replacement verified. **Fix the card/interface UX first; models afterwards.** Proposal only.
+
 ## Active design work
 
 - [CURRENTLY_WORKING_ON_CARD_WORKSPACE.md](CURRENTLY_WORKING_ON_CARD_WORKSPACE.md) — owner-directed WIP specification for cards, shelf hierarchy, progressive expansion, ALL-tag search, composition and publishing; includes rationale, unresolved choices and future acceptance checks. [Baseline source record](../releases/BASELINE_2026-10-16.md).
