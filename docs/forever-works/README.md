@@ -94,3 +94,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Shared pinboard surface](SHARED_PINBOARD_SURFACE.md) — bookmarks and authored boards share rendering, preview, tags, ranking and virtual layout; source adapters retain independent persistence and identities.
 
 - [Additive Image Entries and Contextual Recommendations](PROPOSAL_ADDITIVE_IMAGE_ENTRIES_AND_RECOMMENDATIONS.md) — proposed multi-image card previews, independent annotations/generation, explicit removal and tag-required recommendations below Notes/Bookmarks; not yet implemented.
+
+## Minimal publishing and aesthetic adaptation — owner-directed proposal
+
+- [PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md](PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md) — **Use the smallest implementation that fully preserves the experience**; transparent modular editor/output boundaries, ten useful formats, card/whole/slice relationships, rich note/article transformation, R2/local portability, five-dollar one-time pricing hypothesis, a first-time-user Cloudflare publishing acceptance test, Any-Shape cross-size aesthetic equivalence and a documented future AI design corpus. Proposed only, not implemented.
