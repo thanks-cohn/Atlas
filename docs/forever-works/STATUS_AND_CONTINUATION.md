@@ -818,4 +818,9 @@ permissions and UI are retained. Owner laptop/4GB acceptance remains pending.
 
 ### Follow-up bug audit requested by owner
 
-- Added open investigation `ATLAS-TAGS-001` in `docs/bugs/README.md`: thoroughly audit remnants and dependencies of the retired select/apply/Enter and ALL-match tag-filter interaction across code, persisted state, views and tests. Requires existing-profile and fresh-profile Chrome checks before closure. This records requested work, not proof that further remnants exist or that the audit is complete.
+- Added open investigation `ATLAS-TAGS-001` in `docs/backlog/001-retired-tag-system-audit.md`: thoroughly audit remnants and dependencies of the retired select/apply/Enter and ALL-match tag-filter interaction across code, persisted state, views and tests. Requires existing-profile and fresh-profile Chrome checks before closure. This records requested work, not proof that further remnants exist or that the audit is complete.
+
+
+### Numbered investigation backlog
+
+- Owner requests a directory for problems/investigations we intend to tackle but have not reached. Established `docs/backlog/README.md` as the index; moved the retired tag-system audit into `001-retired-tag-system-audit.md`, item 001, status Backlog — not started. Legacy identifier ATLAS-TAGS-001 is retained for traceability. Removed the superseded docs/bugs file rather than maintaining duplicate trackers. Future entries use stable sequential numbers starting at 002. No audit work is implied by this organizational change.

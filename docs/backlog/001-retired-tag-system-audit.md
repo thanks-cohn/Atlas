@@ -1,8 +1,8 @@
-# Bugs and investigation backlog
+# 001 — Audit remnants of the retired tag-selection system
 
-## ATLAS-TAGS-001 — Audit remnants of the retired tag-selection system
+**Legacy identifier:** ATLAS-TAGS-001
 
-**Status:** Open — investigation required; remaining conflicts are not yet proven.
+**Status:** Backlog — not started; remaining conflicts are not yet proven.
 **Reported:** 2026-10-18, explicit owner request.
 **Context:** The immediate ranking implementation in `4d599f6` replaces the older select/apply/Enter and ALL-match tag-filter flow. Removing the visible controls alone is not sufficient evidence that every old dependency has gone.
 
