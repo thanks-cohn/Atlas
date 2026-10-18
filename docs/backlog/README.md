@@ -5,6 +5,8 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 | Number | Item | Status |
 | --- | --- | --- |
 | 001 | [Audit remnants of the retired tag-selection system](001-retired-tag-system-audit.md) | Backlog — not started |
+| 002 | [Note editor has no title field](002-note-title-entry.md) | Backlog — not started |
+| 003 | [Saved notes cannot be deleted](003-delete-saved-notes.md) | Backlog — not started |
 
 ## Adding an item
 

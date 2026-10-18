@@ -924,3 +924,8 @@ Owner follow-up included in this slice: Add Tag sits beside Generate tags in the
 ## 2026-10-18 — Additive image-entry proposal
 
 Owner-approved documentation scope only: recorded additive Add Image, explicit Remove Image, left/right entry navigation, empty independent per-image tags/notes/bookmarks/model results, and tag-required recommendations below the Notes/Bookmarks region. New proposal separates accepted direction from suggested identity/schema/migration/transition details, preserves shared assets and provenance, and lists staged gates plus cold-agent replacement obligations. Linked from inheritance index. No extension/runtime/storage behavior changed. Proposal local links and whitespace checks passed. Required project verification validated 22 records; 160 tests had 3 native/supervisor readiness failures, 3 errors and 33 skips, matching preceding local process-start limitations, not a full local pass. Chrome implementation acceptance is inapplicable until an implementation slice exists. Continue with ownership inventory and migration design before introducing an image array or routing writes to new entries.
+
+
+## 2026-10-18 — Note UI bug reports queued
+
+Explicit owner reports recorded as backlog 002 (missing note-title entry) and 003 (no removal of saved notes), indexed under docs/backlog. Both remain Backlog, not started; no runtime fix or Chrome reproduction claimed. Entries define preservation/ownership constraints and closure evidence for native and authored notes, including future per-image isolation. Documentation-only change; local links/whitespace checked. Continue by inspecting the existing shared note editor and persistence adapters, then reproduce each report in Chrome.
