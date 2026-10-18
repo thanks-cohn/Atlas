@@ -1,3 +1,4 @@
+import {installPreviewSections} from './pinboard-preview-sections.js';
 import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun} from './pinboard-generation.js';
 import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
@@ -185,7 +186,8 @@ $('run-image-tagging').onclick=async()=>{
 function openDetailContent(node){
   selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
   $('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');
-  $('detail-image').alt=node.title || 'Card image';$('detail-note').textContent=metadata(node).note;
+  $('detail-image').alt=node.title || 'Card image';
+  const details=metadata(node);previewSections.setContent(itemKey(node),{available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:details.bookmarks || []});
   $('detail-link').hidden=!node.url;if(node.url)$('detail-link').href=node.url;else $('detail-link').removeAttribute('href');
   $('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));
   $('edit-authored-card').hidden=$('delete-authored-card').hidden=!authored(node);
@@ -204,6 +206,7 @@ const editTags=installTagEditor({localAdapter:node=>{
     if(added.length)await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_REMOVALS),all=saved[TAG_REMOVALS] || {},own={...all[tagsChangedURL]};for(const tag of added)delete own[tag.normalize('NFKC').toLowerCase()];cardTagRemovals={...all,[tagsChangedURL]:own};await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals});});
   }
   associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===itemKey(node))updateTagCard(node);renderWindow();}});
+const previewSections=installPreviewSections();
 let tagsChangedURL=null;
 function cardSignature(node){return JSON.stringify([node.title,node.url,imageFor(node)]);}
 function card(node){
@@ -368,9 +371,9 @@ async function saveSettings(){try{await chrome.storage.local.set({[PINBOARD_SETT
 function indexAssociations(data){
   const byResource=new Map(),result=new Map();
   for(const resource of Object.values(data?.resources || {}))if(resource.kind==='bookmark')for(const locator of resource.locators || [])if(locator.provider==='web'){
-    const entry=result.get(locator.reference) || {note:'',tags:[],image:null};entry.note=resource.note || entry.note;entry.tags=[...new Set([...entry.tags,...(data.tags?.[resource.id] || [])])];result.set(locator.reference,entry);byResource.set(resource.id,entry);
+    const entry=result.get(locator.reference) || {note:'',tags:[],image:null,notes:[],bookmarks:[]};entry.note=resource.note || entry.note;if(resource.note && !entry.notes.some(note=>note.id===resource.id))entry.notes.push({id:resource.id,title:resource.title || 'Note',text:resource.note});entry.tags=[...new Set([...entry.tags,...(data.tags?.[resource.id] || [])])];result.set(locator.reference,entry);byResource.set(resource.id,entry);
   }
-  for(const relation of data?.relations || []){const entry=byResource.get(relation.from),target=data.resources?.[relation.to];if(!entry || !target)continue;if(target.kind==='image' && !entry.image)entry.image=(target.locators || []).map(l=>l.provider==='web'?directImage(l.reference):null).find(Boolean) || null;if(target.kind==='note' && target.note)entry.note+=(entry.note?'\n\n':'')+target.note;}
+  for(const relation of data?.relations || []){const entry=byResource.get(relation.from),target=data.resources?.[relation.to];if(!entry || !target)continue;if(target.kind==='image' && !entry.image)entry.image=(target.locators || []).map(l=>l.provider==='web'?directImage(l.reference):null).find(Boolean) || null;if(target.kind==='note' && target.note){entry.note+=(entry.note?'\n\n':'')+target.note;if(!entry.notes.some(note=>note.id===target.id))entry.notes.push({id:target.id,title:target.title || 'Note',text:target.note});}if(target.kind==='bookmark'){const url=(target.locators || []).find(locator=>locator.provider==='web')?.reference;if(url && !entry.bookmarks.some(bookmark=>bookmark.id===target.id))entry.bookmarks.push({id:target.id,title:target.title || url,url});}}
   return result;
 }
 async function refreshAssociations(){

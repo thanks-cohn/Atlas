@@ -1,6 +1,6 @@
 # Atlas Proposal — Card Expansion, Note Roulette, Bookmark Preview, and Portable Transitions
 
-**Status:** Proposed / not implemented or verified.
+**Status:** Partially implemented in 0.1.76: exclusive Notes/Bookmarks disclosure slice. Roulette, nested bookmark-image reveal and recommendations remain proposed; browser visual acceptance is pending.
 **Recorded:** 2026-10-18 (America/Chicago).
 **Companions:** [Current Card Workspace](CURRENTLY_WORKING_ON_CARD_WORKSPACE.md), [Contextual Image Pages and Dated Notes](PROPOSAL_CONTEXTUAL_IMAGE_TAG_ROTUNDA_AND_DATED_NOTES.md), [Horizons v1](PROPOSAL_HORIZONS_V1.md), and [Shelf-First Bookmarks](PROPOSAL_SHELF_FIRST_BOOKMARKS_COMPOSITIONS_AND_PORTABLE_PUBLISHING.md).
 
@@ -67,3 +67,11 @@ Document intermediate **changes, expansions, movement, reordering, disappearance
 9. Keep existing image-page tag rotunda, contextual search and focused-note Escape navigation intact; avoid competing key handlers or duplicate viewers.
 
 **Implementation gate:** inspect the existing Bookmark Board and card workspace first; prototype transitions there and prove compatibility before generalizing to newly created boards. This is a proposal, not a claim of shipped features.
+
+## 0.1.76 implementation and owner clarification
+
+The initial shared image-preview implementation places Notes at the left and Bookmarks beside it, beneath Generate Tags. The owner explicitly clarified that opening one closes the other (superseding independent simultaneous expansion for this view). Both may be closed; opening expands downward inside the same preview scroller. The title remains in its existing fixed heading. Recommendation placement is **below the disclosure row and any expanded content**, as a sibling region rather than inside either section; the recommendation engine is not implemented in this slice.
+
+Notes show existing source note text and explicitly linked note resources; authored cards show their existing local text. Explicit outgoing graph-linked bookmarks appear as safe external links. This is read-only projection of existing IDs and stores, not a new association store or model inference. General recommendation candidates must not be mislabeled as saved bookmark links. Empty sections state their absence without fabricated content. Full-note text is readable through the one enclosing scroller; fixed-height roulette, editing/creation and nested image foreground/restoration remain future steps. Existing inline note text moved into Notes rather than being duplicated above it.
+
+Implementation: `extension/pinboard-preview-sections.js`, projection in `pinboard.js`, markup/CSS in `pinboard.html`/`pinboard.css`. Separate presentation state preserves open section during same-card refresh, resets on a different card, uses buttons with aria-expanded/aria-controls, and confines reveal scrolling to the modal scroller. Reduced motion disables its small entrance effect. Targeted DOM/API tests verify exclusive states, projection, links and identity; real Chrome visual acceptance remains pending.
