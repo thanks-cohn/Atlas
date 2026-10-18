@@ -137,6 +137,22 @@ The aspiration is to empower people with familiar polished workflows, not to mar
 
 **Implementation priority:** do not stall the current card workspace or ongoing bug work for unproven future engines. New technology is proposed, not implemented, until source code, tests and browser/deployment evidence establish otherwise.
 
+## Minimal Need to Rebuild — composable single-page projects
+
+**Guiding principle: Minimal Need to Rebuild.** A finished single-page project should remain useful on its own, yet be reusable as part of a larger publication with as little rework as possible. The **data and relationships move; the presentation can change**.
+
+- Create an immediately publishable single-page story, gallery, portfolio, article or profile independently.
+- Later merge two or more single-page projects into a multi-page website or embed a page's purposeful slice inside another page. Preserve original project identities, content, assets, links and revision/variation lineage.
+- Apply a shared template or design-token family across the combined project so independently created pages complement each other. Allow local overrides where appropriate without destroying their earlier appearance.
+- Extract a page, section, card grouping or slice into an independent project, or link to it, without manually recreating its content.
+- Provide preview-first **combine / extract / restyle / save as version** operations, with reversible choices and explicit copy-versus-reference semantics. Never erase an original project's styling, source data, or private/public permissions merely because it was combined.
+- Separate portable content and object identity from template, navigation, hosting location and page composition. Resolve internal links and asset references safely after a merge; fail visibly if something cannot be transferred.
+- When merging styles, harmonize typography, palette, spacing and section conventions by default, while retaining recoverable source styles. A common theme must not silently strip deliberate unique art direction.
+- Ensure this works across browser, authorized local storage and Cloudflare R2, and across mobile/desktop compositions in accordance with Any-Shape.
+- Verify a concrete scenario: create a three-story gallery, separately create a one-page portfolio with résumé, merge them into one cohesive site, change their shared template, extract either page again, and confirm all original data and versions remain recoverable.
+
+**Acceptance:** minimal need to rebuild does not mean zero engineering or zero edits; it means the user almost never has to re-enter or reconstruct content that Atlas already possesses.
+
 ## Related existing docs
 
 - [Adaptive Publishing and Presentation](PROPOSAL_ADAPTIVE_PUBLISHING_AND_PRESENTATION_SYSTEM.md) — existing page/template/slice cascade and privacy contract.
