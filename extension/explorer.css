@@ -1062,18 +1062,18 @@ body.bookmarks-mode #details { display: none !important; }
 .bookmark-disclosure { flex: 0 0 36px; min-width: 36px; min-height: 36px; }
 .bookmark-image-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .bookmark-row button:focus-visible, #bookmarks-preview button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.associated-page { display: block; padding: 12px; margin-top: 8px; border: 1px solid var(--line); border-radius: 6px; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+
 .associated-page:hover { background: var(--soft); }
 dialog label { display: block; margin: 12px 0; }
 dialog label input, dialog label select { display: block; width: 100%; margin-top: 6px; }
 
-.associated-gallery-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.associated-gallery-row .associated-page { flex: 1; min-width: 0; margin-top: 0; }
-.associated-gallery-row > button { flex-shrink: 0; }
+
+
+
 
 .gallery-showcase-link { text-decoration: none; color: inherit; }
 
-.bookmark-add-section{margin:18px 0 20px;padding:15px 0;border-block:1px solid var(--line)}#bookmarks-preview .bookmark-add-section h3{margin:0 0 10px}.bookmark-add-actions{display:flex;gap:8px;flex-wrap:wrap}.bookmark-add-actions button{border:1px solid var(--line);border-radius:20px;padding:7px 14px;background:var(--panel,#fff);font-size:12px}.bookmark-tag-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.bookmark-tag-pill{font-size:11px;padding:4px 9px;border-radius:16px;background:#f4f0f2;color:#705c65;overflow-wrap:anywhere}.bookmark-saved-note{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.65;margin:12px 0 0}.bookmark-metadata-dialog{width:min(440px,calc(100vw - 32px));padding:24px;border:1px solid var(--line);border-radius:18px}.bookmark-metadata-dialog form{display:grid;gap:16px}.bookmark-metadata-dialog form>p:first-child{font-size:10px;letter-spacing:.14em;color:#8c727c;margin:0}.bookmark-metadata-dialog h2{font-size:24px;margin:0}.bookmark-metadata-dialog label{display:grid;gap:8px;font-size:12px}.bookmark-metadata-dialog input,.bookmark-metadata-dialog textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font:inherit}.bookmark-metadata-dialog textarea{resize:vertical;line-height:1.6}.bookmark-metadata-dialog [role=status]{font-size:12px;line-height:1.6;margin:0;color:#817078}.metadata-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.metadata-actions button{padding:9px 16px;border-radius:22px}.metadata-actions button[type=submit]{background:#315f53;color:white;border:1px solid #315f53}
+.bookmark-add-section{margin:18px 0 20px;padding:15px 0;border-block:1px solid var(--line)}#bookmarks-preview .bookmark-add-section h3{margin:0 0 10px}.bookmark-add-actions{display:flex;gap:8px;flex-wrap:wrap}.bookmark-add-actions button{border:1px solid var(--line);border-radius:20px;padding:7px 14px;background:var(--panel,#fff);font-size:12px}.bookmark-tag-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.bookmark-tag-pill{font-size:11px;padding:4px 9px;border-radius:16px;background:#f4f0f2;color:#705c65;overflow-wrap:anywhere}.bookmark-metadata-dialog{width:min(440px,calc(100vw - 32px));padding:24px;border:1px solid var(--line);border-radius:18px}.bookmark-metadata-dialog form{display:grid;gap:16px}.bookmark-metadata-dialog form>p:first-child{font-size:10px;letter-spacing:.14em;color:#8c727c;margin:0}.bookmark-metadata-dialog h2{font-size:24px;margin:0}.bookmark-metadata-dialog label{display:grid;gap:8px;font-size:12px}.bookmark-metadata-dialog input,.bookmark-metadata-dialog [role=status]{font-size:12px;line-height:1.6;margin:0;color:#817078}.metadata-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.metadata-actions button{padding:9px 16px;border-radius:22px}.metadata-actions button[type=submit]{background:#315f53;color:white;border:1px solid #315f53}
 
 .activity-recovery-controls{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0;margin:10px 0;border-block:1px solid var(--line)}.activity-recovery-controls>button{border:1px solid var(--line);border-radius:22px;padding:9px 14px}.activity-recovery-controls>p,.activity-recovery-controls>details{flex-basis:100%;font-size:12px;line-height:1.6}.activity-recovery-controls summary{cursor:pointer;font-weight:600}.activity-recovery-controls code{display:block;overflow-wrap:anywhere;user-select:all;font-size:11px}
 
@@ -1082,26 +1082,6 @@ dialog label input, dialog label select { display: block; width: 100%; margin-to
 /* Brand doubles as the single home control in the shelf and full explorer. */
 button.brand-mark{border:0;padding:0;flex:0 0 32px;cursor:pointer;font-family:inherit;line-height:1}button.brand-mark:hover{background:#244b3d}button.brand-mark:focus-visible{outline:2px solid #315c4d;outline-offset:4px}button.brand-mark.active{box-shadow:0 0 0 4px #dfeae4}
 .bookmark-copy-dialog{width:min(440px,calc(100vw - 32px));padding:28px}.bookmark-copy-dialog h2{margin:0 0 10px;letter-spacing:-.03em}.bookmark-copy-dialog form>p{overflow-wrap:anywhere;color:#738278;font-size:12px}.bookmark-copy-dialog label{display:flex;flex-direction:column;gap:8px;margin:20px 0;font-size:12px}.bookmark-copy-dialog input,.bookmark-copy-dialog select{width:100%;padding:11px;border:1px solid #dce5df;border-radius:9px;background:#fff;font:inherit}.bookmark-copy-dialog button{margin:8px 8px 0 0}
-
-/* Contextual Add Item: type, content format and appearance are distinct choices. */
-.add-item-dialog{width:min(440px,calc(100vw - 28px));max-height:calc(100svh - 28px);overflow:auto;padding:26px;border-radius:20px;background:var(--background);color:var(--ink)}
-.add-item-dialog form{display:grid;gap:16px;min-width:0}
-.add-item-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.add-item-heading h2{margin:0;font-size:22px;letter-spacing:-.035em}
-.add-item-heading button{display:grid;place-items:center;width:32px;height:32px;padding:0;font-size:23px;color:var(--muted);border:1px solid var(--line);border-radius:50%}
-.add-item-dialog .add-item-context{margin:-8px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted)}
-.add-item-dialog label{display:grid;gap:7px;margin:0;color:var(--muted);font-size:12px;font-weight:500}
-.add-item-dialog label[hidden]{display:none}
-.add-item-dialog input,.add-item-dialog select{width:100%;min-width:0;min-height:43px;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel,#fff);color:var(--ink);font:inherit;font-size:13px}
-.add-item-dialog input:focus-visible,.add-item-dialog select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.add-item-dialog .add-item-path{margin:2px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px;font-weight:500;color:var(--ink)}
-.add-item-dialog .add-item-hint{margin:-10px 0 0;font-size:12px}
-.add-item-dialog .add-item-error{margin:0;color:#a23c39;overflow-wrap:anywhere}
-.add-item-error:empty{display:none}
-.add-item-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px}
-.add-item-actions button{min-height:40px;padding:10px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px}
-.add-item-actions button[type=submit]{background:var(--accent);border-color:var(--accent);color:#fff}
-@media(max-width:360px){.add-item-dialog{padding:20px}.add-item-actions button{padding-inline:12px}}
 
 /* Actions keeps native disclosure behavior, styled as a quiet button. */
 .bookmark-row .bookmark-action-menu>summary{display:block;list-style:none;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--background);color:var(--ink);font-size:12px;white-space:nowrap}

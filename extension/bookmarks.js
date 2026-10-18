@@ -1,14 +1,10 @@
-import {createPinboard,linkedPinboards,removePinboard} from './pinboard-model.js';
-import {DEMO_COLLECTION} from './gallery-demo.js';
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
-import {PAGE_PREFIX, ITEM_PREFIX, PAGE_TEMPLATES, linkedPages, createLinkedPage, deletePage, withPageLock} from './pages-store.js';
-import {library, readLibraryPage, saveLibraryPage} from './library-client.js';
+import {withPageLock} from './pages-store.js';
 const $ = id => document.getElementById(id);
 let nodes = new Map(), folder = null, epoch = 0, refreshTimer, selected = null;
 let covers = {}, focused = null, trail = [];
 let associated = null, associationEpoch = 0;
-let localPages = [], itemsEpoch = 0;
 let bottomReveal=null;
 function alignRevealBottom(){
   const request=bottomReveal;if(!request)return;
@@ -43,10 +39,9 @@ async function refresh() {
     if (!nodes.has(focused)) { focused = null; trail = []; }
     if (!nodes.has(folder) || nodes.get(folder).url) folder = roots[0]?.id;
     render();
-    if (focused) loadLocalItems(nodes.get(focused));
   } catch { report('BOOKMARK_READ_FAILED', 'Bookmark access is unavailable. Reload the updated extension and accept Chrome’s bookmark permission if prompted.'); }
 }
-function navigate(id) { bottomReveal=null; selected = null; focused = null; associated = null; localPages = []; itemsEpoch++; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
+function navigate(id) { bottomReveal=null; selected = null; focused = null; associated = null; associationEpoch++; trail = []; folder = id; $('bookmarks-search').value = ''; render(); }
 async function openNode(node) {
   if (!node.url) { navigate(node.id); return; }
   if (!openableBookmark(node.url)) { report('BOOKMARK_URL_BLOCKED', 'This saved URL type cannot be opened here. Use Chrome’s bookmark manager for special or executable URLs.'); return false; }
@@ -55,81 +50,11 @@ async function openNode(node) {
   await chrome.tabs.update(tab.id, {url: node.url});
 }
 function focusNode(node) {
-  trail.push({focused, associated, localPages, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
-  focused = node.id; associated = null; localPages = []; selected = node.id;
+  trail.push({focused, associated, selected: node.id, scroll: $('bookmarks-workspace').scrollTop});
+  focused = node.id; associated = null; selected = node.id;
   const request={id:node.id};bottomReveal=request;render();alignRevealBottom();
-  Promise.allSettled([loadAssociations(node),loadLocalItems(node)]).then(()=>{if(bottomReveal===request)alignRevealBottom();});
+  Promise.allSettled([loadAssociations(node)]).then(()=>{if(bottomReveal===request)alignRevealBottom();});
 }
-async function loadLocalItems(node) {
-  const request = ++itemsEpoch;
-  try {
-    let pages = await linkedPages(chrome.storage.local, node);
-    try {
-      const state = await chrome.runtime.sendMessage({type:'state'});
-      if (state?.paired) {
-        const saved = await library('list-pages',{bookmarkId:node.id,bookmarkUrl:node.url || ''});
-        for (const item of saved.pages) {
-          const oldPage = pages.find(page => page.id === item.id);
-          if (oldPage && oldPage.libraryRevision >= item.libraryRevision) continue;
-          const page = await readLibraryPage(item.id);
-          await chrome.storage.local.set({[PAGE_PREFIX+page.id]:page});
-          pages = pages.filter(existing => existing.id !== page.id);
-          if (!page.deleted) pages.push(page);
-        }
-        const old = (await chrome.storage.local.get(ITEM_PREFIX+node.id))[ITEM_PREFIX+node.id];
-        if (pages.some(page=>page.libraryRevision) && (old?.bookmarkUrl !== (node.url || '') || JSON.stringify(old?.pageIds) !== JSON.stringify(pages.map(page=>page.id)))) await chrome.storage.local.set({[ITEM_PREFIX+node.id]:{version:1,bookmarkUrl:node.url || '',pageIds:pages.map(page=>page.id)}});
-      }
-    } catch { /* Offline/older companion: retain every browser copy. */ }
-    for (let i=0;i<pages.length;i++) if (!pages[i].sourceBookmark) { pages[i]={...pages[i],sourceBookmark:{id:node.id,url:node.url || ''}}; await chrome.storage.local.set({[PAGE_PREFIX+pages[i].id]:pages[i]}); }
-    const boards=await linkedPinboards(chrome.storage.local,node);
-    if (request !== itemsEpoch || focused !== node.id) return;
-    localPages = [...pages,...boards.map(board=>({...board,kind:'pinboard'}))]; render();
-  } catch { if (request === itemsEpoch) report('ASSOCIATED_ITEMS_READ_FAILED', 'Saved pages could not be read. Existing data has not been changed.'); }
-}
-function addItem(node) {
-  const dialog=document.createElement('dialog'),form=document.createElement('form');
-  dialog.className='add-item-dialog';dialog.setAttribute('aria-label','Add Item');
-  const head=element('div');head.className='add-item-heading';
-  const close=element('button','×');close.type='button';close.setAttribute('aria-label','Close Add Item');close.onclick=()=>dialog.close();
-  head.append(element('h2','Add Item'),close);
-  const context=element('p',node.title || 'Untitled');context.className='add-item-context';context.title=node.title || 'Untitled';
-  const kindLabel=element('label','Type'),kind=document.createElement('select');kind.setAttribute('aria-label','Item type');
-  for(const [value,label] of [['page','Gallery'],['pinboard','Pinboard']]){const option=element('option',label);option.value=value;kind.append(option);}kindLabel.append(kind);
-  const titleLabel=element('label','Title'),title=document.createElement('input');title.required=true;title.maxLength=200;title.placeholder='Give it a name';titleLabel.append(title);
-  const templateLabel=element('label','Format'),template=document.createElement('select');templateLabel.append(template);
-  const styleLabel=element('label','Appearance'),style=document.createElement('select');
-  for(const [value,label] of [['nocturne','Nocturne — dark & cinematic'],['solstice','Solstice — light & editorial']]){const option=element('option',label);option.value=value;style.append(option);}style.value='nocturne';styleLabel.append(style);
-  const path=element('p');path.className='add-item-path';path.setAttribute('aria-live','polite');
-  const hint=element('p');hint.className='add-item-hint';
-  const message=element('p');message.className='add-item-error';message.setAttribute('role','status');
-  const save=element('button','Create Gallery');save.type='submit';
-  const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();
-  const actions=element('div');actions.className='add-item-actions';actions.append(cancel,save);
-  form.append(head,context,kindLabel,titleLabel,templateLabel,styleLabel,path,hint,message,actions);dialog.append(form);
-  const describe=()=>{const pin=kind.value==='pinboard';path.textContent=pin?'Pinboard / 2010s':'Gallery / Story / '+(style.value==='solstice'?'Solstice':'Nocturne');};
-  kind.onchange=()=>{
-    const pin=kind.value==='pinboard';styleLabel.hidden=pin;template.replaceChildren();
-    for(const choice of (pin?[{id:'2010s',label:'2010s'}]:PAGE_TEMPLATES.filter(choice=>choice.available))){const option=element('option',choice.label);option.value=choice.id;template.append(option);}
-    template.value=pin?'2010s':'gallery';hint.textContent=pin?'Your bookmarks, arranged as cards.':'24 sample stories, ready to edit.';save.textContent=pin?'Create Pinboard':'Create Gallery';describe();
-  };
-  style.onchange=describe;kind.value='page';kind.onchange();
-  form.onsubmit=async event=>{
-    event.preventDefault();save.disabled=true;message.textContent='';
-    try{
-      if(!nodes.has(node.id) || nodes.get(node.id).url!==node.url)throw new Error('BOOKMARK_CHANGED');
-      if(!['page','pinboard'].includes(kind.value))throw new Error('ITEM_TYPE_INVALID');
-      if(kind.value==='pinboard')await withPageLock(()=>createPinboard(chrome.storage.local,node,title.value,crypto.randomUUID(),'all'));
-      else{
-        if(!PAGE_TEMPLATES.some(choice=>choice.available && choice.id===template.value) || !['nocturne','solstice'].includes(style.value))throw new Error('ITEM_FORMAT_INVALID');
-        await withPageLock(()=>createLinkedPage(chrome.storage.local,node,{title:title.value,template:template.value,galleryStyle:style.value,text:DEMO_COLLECTION.text,images:DEMO_COLLECTION.images.map((image,index)=>({...image,id:'sample-'+index}))},crypto.randomUUID()));
-      }
-      await loadLocalItems(node);dialog.close();
-    }catch{message.textContent=`${kind.value==='pinboard'?'PINBOARD_CREATE_FAILED':'PAGE_CREATE_FAILED'}: Enter a title and check available local storage. Your existing items are unchanged.`;}
-    finally{save.disabled=false;}
-  };
-  dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();title.focus();
-}
-
 async function loadAssociations(node) {
   const request = ++associationEpoch;
   if (!node.url) return;
@@ -146,7 +71,6 @@ function returnFromPreview() {
   associationEpoch++;
   const state = trail.pop(); focused = state?.focused ?? null; selected = state?.selected ?? null;
   associated = state?.associated ?? null;
-  localPages = state?.localPages ?? []; itemsEpoch++;
   if (!nodes.has(focused)) focused = null;
   render(); $('bookmarks-workspace').scrollTop = state?.scroll || 0;
   [...$('bookmarks-list').querySelectorAll('.bookmark-disclosure')].find(el => el.dataset.bookmarkId === selected)?.focus();
@@ -183,16 +107,15 @@ async function catalogRequest(body){
   if(response?.ok===false || !response?.data || !Number.isSafeInteger(response.revision))throw new Error(response?.error?.code || 'BOOKMARK_METADATA_UNAVAILABLE');
   return response;
 }
-function addMetadata(node,kind){
+function addMetadata(node){
   const dialog=document.createElement('dialog');dialog.className='bookmark-metadata-dialog';
-  const form=document.createElement('form'),isTag=kind==='tag';
+  const form=document.createElement('form');
   let confirmed=0;
-  const oldNote=associated?.matches.find(resource=>resource.note)?.note || '';
-  form.append(element('p','BOOKMARK DETAILS'),element('h2',isTag?'Add Tags':oldNote?'Edit Note':'Add Note'));
-  const label=element('label',isTag?'Tags, separated by commas':'Note'),input=document.createElement(isTag?'input':'textarea');
-  input.required=isTag;input.maxLength=isTag?8000:100000;if(!isTag){input.rows=7;input.value=oldNote;}else input.placeholder='Design, Travel, Architecture';label.append(input);
+  form.append(element('p','BOOKMARK DETAILS'),element('h2','Add Tags'));
+  const label=element('label','Tags, separated by commas'),input=document.createElement('input');
+  input.required=true;input.maxLength=8000;input.placeholder='Design, Travel, Architecture';label.append(input);
   const message=element('p','Saved in your Atlas companion, linked to this bookmark URL.');message.setAttribute('role','status');
-  const actions=element('div','');actions.className='metadata-actions';const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();const save=element('button',isTag?'Add Tags':'Save Note');save.type='submit';actions.append(cancel,save);form.append(label);
+  const actions=element('div','');actions.className='metadata-actions';const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();const save=element('button','Add Tags');save.type='submit';actions.append(cancel,save);form.append(label);
   const existing=document.createElement('select'),existingLabel=element('label','Or choose an existing tag'),savedTags=element('div','');savedTags.className='bookmark-tag-pills';
   let displayedRevision=-1;
   function populateTags(data,revision){
@@ -203,35 +126,32 @@ function addMetadata(node,kind){
     const attached=Object.values(data?.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url)).flatMap(resource=>data.tags?.[resource.id] || []);
     savedTags.replaceChildren(...[...new Set(attached)].map(tag=>{const pill=element('span',tag);pill.className='bookmark-tag-pill';return pill;}));
   }
-  if(isTag){existing.setAttribute('aria-label','Existing Atlas tags');existingLabel.append(existing);form.append(existingLabel,savedTags);existing.onchange=()=>{if(!existing.value)return;const values=input.value.split(',').map(value=>value.trim()).filter(Boolean);if(!values.includes(existing.value))values.push(existing.value);input.value=values.join(', ');existing.value='';input.focus();};const waiting=element('option','Loading existing tags…');waiting.value='';existing.append(waiting);catalogRequest().then(snapshot=>populateTags(snapshot.data,snapshot.revision)).catch(()=>{if(displayedRevision<0){const unavailable=element('option','Connect companion to load tags');unavailable.value='';existing.replaceChildren(unavailable);}});}
+  {existing.setAttribute('aria-label','Existing Atlas tags');existingLabel.append(existing);form.append(existingLabel,savedTags);existing.onchange=()=>{if(!existing.value)return;const values=input.value.split(',').map(value=>value.trim()).filter(Boolean);if(!values.includes(existing.value))values.push(existing.value);input.value=values.join(', ');existing.value='';input.focus();};const waiting=element('option','Loading existing tags…');waiting.value='';existing.append(waiting);catalogRequest().then(snapshot=>populateTags(snapshot.data,snapshot.revision)).catch(()=>{if(displayedRevision<0){const unavailable=element('option','Connect companion to load tags');unavailable.value='';existing.replaceChildren(unavailable);}});}
   form.append(message,actions);dialog.append(form);
   const close=element('button','×');close.type='button';close.className='metadata-close';close.setAttribute('aria-label','Close bookmark details');close.onclick=()=>dialog.close();dialog.append(close);
   form.onsubmit=async event=>{
-    event.preventDefault();const value=isTag?[...new Set(input.value.split(',').map(tag=>tag.trim()).filter(Boolean))]:input.value;if(isTag && (!value.length || value.length>100 || value.some(tag=>tag.length>80))){message.textContent='Enter up to 100 comma-separated tags, each no longer than 80 characters.';return;}confirmed=0;
+    event.preventDefault();const value=[...new Set(input.value.split(',').map(tag=>tag.trim()).filter(Boolean))];if((!value.length || value.length>100 || value.some(tag=>tag.length>80))){message.textContent='Enter up to 100 comma-separated tags, each no longer than 80 characters.';return;}confirmed=0;
     save.disabled=true;
     try{
       await withPageLock(async()=>{
         const state=await chrome.runtime.sendMessage({type:'state'});if(!state?.paired)throw Error('COMPANION_OFFLINE');
         const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('BOOKMARK_CHANGED');
-        let snapshot=await catalogRequest();const matches=Object.values(snapshot.data.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url));let resource=(!isTag && matches.find(resource=>resource.note===oldNote)) || matches[0];
-        if(!resource){snapshot=await catalogRequest({action:'add_resource',args:{kind:'bookmark',title:node.title || node.url,locators:[{provider:'web',reference:node.url}],note:isTag?'':value},expected_revision:snapshot.revision});resource=snapshot.data.resources[snapshot.result];if(!resource)throw Error('BOOKMARK_METADATA_CREATE_UNKNOWN');if(!isTag)return;}
-        if(!isTag && resource.note!==oldNote)throw Error('BOOKMARK_NOTE_CONFLICT');
-        if(isTag){for(const tag of value){if(!(snapshot.data.tags?.[resource.id] || []).includes(tag))snapshot=await catalogRequest({action:'tag',args:{resource:resource.id,tag},expected_revision:snapshot.revision});confirmed++;}populateTags(snapshot.data,snapshot.revision);}
-        else await catalogRequest({action:'update_resource',args:{resource:resource.id,note:value},expected_revision:snapshot.revision});
+        let snapshot=await catalogRequest();const matches=Object.values(snapshot.data.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url));let resource=matches[0];
+        if(!resource){snapshot=await catalogRequest({action:'add_resource',args:{kind:'bookmark',title:node.title || node.url,locators:[{provider:'web',reference:node.url}],note:''},expected_revision:snapshot.revision});resource=snapshot.data.resources[snapshot.result];if(!resource)throw Error('BOOKMARK_METADATA_CREATE_UNKNOWN');}
+        {for(const tag of value){if(!(snapshot.data.tags?.[resource.id] || []).includes(tag))snapshot=await catalogRequest({action:'tag',args:{resource:resource.id,tag},expected_revision:snapshot.revision});confirmed++;}populateTags(snapshot.data,snapshot.revision);}
       });
       if(focused===node.id && nodes.get(node.id)?.url===node.url)await loadAssociations(node);
-      if(isTag){input.value='';message.textContent=value.length+' tag'+(value.length===1?'':'s')+' saved. Add more, or close with ×. Refresh your pinboard to see changes.';input.focus();}else dialog.close();$('bookmarks-status').textContent='';
-    }catch(error){message.textContent=(error.message || 'BOOKMARK_METADATA_SAVE_FAILED')+(isTag?' ('+confirmed+' of '+value.length+' confirmed)':'')+': Could not confirm the save. Your input remains here. Connect the companion, or reopen this editor if the bookmark or note changed.';}
+      {input.value='';message.textContent=value.length+' tag'+(value.length===1?'':'s')+' saved. Add more, or close with ×. Refresh your pinboard to see changes.';input.focus();}$('bookmarks-status').textContent='';
+    }catch(error){message.textContent=(error.message || 'BOOKMARK_METADATA_SAVE_FAILED')+' ('+confirmed+' of '+value.length+' confirmed)'+': Could not confirm the save. Your input remains here. Connect the companion, or reopen this editor if the bookmark changed.';}
     finally{save.disabled=false;}
   };
   dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();input.focus();
 }
 function metadataSection(node){
-  const section=element('section','');section.className='bookmark-add-section';section.append(element('h3','Add'));
+  const section=element('section','');section.className='bookmark-add-section';
   const actions=element('div','');actions.className='bookmark-add-actions';
-  for(const [label,kind] of [['Tag','tag'],[associated?.matches.some(resource=>resource.note)?'Edit Note':'Note','note']]){const control=element('button',label);control.type='button';control.onclick=()=>addMetadata(node,kind);actions.append(control);}section.append(actions);
+  const control=element('button','Add Tags');control.type='button';control.onclick=()=>addMetadata(node);actions.append(control);section.append(actions);
   if(associated?.tags.length){const tags=element('div','');tags.className='bookmark-tag-pills';for(const tag of associated.tags){const pill=element('span',tag);pill.className='bookmark-tag-pill';tags.append(pill);}section.append(tags);}
-  for(const resource of associated?.matches || [])if(resource.note){const note=element('p',resource.note);note.className='bookmark-saved-note';section.append(note);}
   return section;
 }
 function renderPreview() {
@@ -254,31 +174,7 @@ function renderPreview() {
   if (Object.hasOwn(covers, node.id)) actions.append(button('Remove chosen image', () => saveCover(node, null)));
   host.append(actions);
   if(node.url)host.append(metadataSection(node));
-  host.append(element('h3', 'Associated Items'));
-  const add = element('button', 'Add Item'); add.type = 'button'; add.onclick = () => addItem(node); host.append(add);
-  for (const page of localPages) {
-    const link = element('a', `▧ ${page.title}`); link.href = chrome.runtime.getURL(page.kind==='pinboard'?'pinboard.html':'page.html') + '?id=' + encodeURIComponent(page.id); link.target = '_blank'; link.rel = 'noopener'; link.className = 'associated-page';
-    const row = element('div', ''); row.className = 'associated-gallery-row';
-    const remove = element('button', 'Delete'); remove.type = 'button'; remove.setAttribute('aria-label', `Delete ${page.kind==='pinboard'?'pinboard':'gallery'} ${page.title}`);
-    remove.onclick = async () => {
-      if (!confirm(`Delete ${page.kind==='pinboard'?'pinboard':'gallery'} “${page.title}” from Atlas? Imported image originals and the Chrome bookmark will remain.`)) return;
-      remove.disabled = true;
-      try {
-        if(page.kind==='pinboard') await withPageLock(()=>removePinboard(chrome.storage.local,page.id));
-        else await withPageLock(() => deletePage(chrome.storage.local, page.id, page.revision, saveLibraryPage));
-        await loadLocalItems(node);
-      } catch (error) { report(error.code || 'GALLERY_DELETE_FAILED', 'Could not confirm deletion. Open Activity & recovery → Reconnect companion or Open Debug Helper, then refresh before trying again.'); remove.disabled = false; }
-    };
-    row.append(link, remove); host.append(row);
-  }
-  if (associated) {
-    for (const item of associated.related) {
-      const details = document.createElement('details');
-      details.append(element('summary', `${item.relation} · ${item.resource.title || 'Untitled'}`));
-      if (item.resource.note) details.append(element('p', item.resource.note));
-      host.append(details);
-    }
-  }
+
 }
 async function move(node) {
   const targets = folderTargets(nodes, node.id);
@@ -447,5 +343,4 @@ $('bookmarks-workspace').addEventListener('keydown', event => {
 });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes[COVER_KEY]) { covers = changes[COVER_KEY].newValue || {}; if (active()) render(); }
-  if (area === 'local' && focused && Object.keys(changes).some(key => key.startsWith(PAGE_PREFIX) || key.startsWith(ITEM_PREFIX))) loadLocalItems(nodes.get(focused));
 });

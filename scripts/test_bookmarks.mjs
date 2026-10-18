@@ -86,70 +86,32 @@ preview.children[0].onclick();rows=els.get('bookmarks-list').children;
 // Exact Atlas web-locator associations appear underneath; no prefix or ID guesses.
 paired=true;catalog={resources:{r:{id:'r',kind:'bookmark',note:'My note',locators:[{provider:'web',reference:'https://z.example/'}]},n:{id:'n',kind:'note',title:'Linked note',note:'Body',locators:[]}},relations:[{from:'r',to:'n',type:'reference-for'}],tags:{r:['example']}};
 rows[0].children[0].onclick();await tick();await tick();
-assert.ok(preview.children.flatMap(el=>el.children).some(el=>el.textContent==='My note'));
+assert.ok(!preview.children.flatMap(el=>el.children).some(el=>el.textContent==='My note'),'Shelf excludes saved notes');
 assert.ok(preview.children.flatMap(el=>el.children).flatMap(el=>[el,...el.children]).some(el=>el.textContent==='example'));
-assert.ok(preview.children.some(el=>el.tagName==='details'));
+assert.ok(!preview.children.some(el=>el.tagName==='details'),'Shelf does not render related Associated Items');
 // Add metadata lives between cover actions and Associated Items; native catalog persists it.
 const addSection=()=>preview.children.find(el=>el.className==='bookmark-add-section');
-assert.ok(preview.children.indexOf(addSection())<preview.children.findIndex(el=>el.textContent==='Associated Items'));
+assert.ok(addSection());assert.equal(addSection().children[0].children.length,1,'Only Add Tags remains in shelf controls');assert.equal(addSection().children[0].children[0].textContent,'Add Tags');
 const metadataDialog=()=>created.filter(el=>el.className==='bookmark-metadata-dialog').at(-1);
-addSection().children[1].children[0].onclick();let metadata=metadataDialog(),metadataForm=metadata.children[0],metadataInput=metadataForm.children[2].children[0];
+addSection().children[0].children[0].onclick();let metadata=metadataDialog(),metadataForm=metadata.children[0],metadataInput=metadataForm.children[2].children[0];
 await tick();const dropdown=metadataForm.children[3].children[0];assert.ok(dropdown.children.some(option=>option.value==='example'));
 metadataInput.value='Design, Travel, , Design';dropdown.value='example';dropdown.onchange();assert.equal(metadataInput.value,'Design, Travel, Design, example');
-await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.equal(metadataInput.value,'');assert.ok(catalog.tags.r.includes('Design'));assert.ok(catalog.tags.r.includes('Travel'));assert.equal(catalog.tags.r.filter(tag=>tag==='Design').length,1);assert.ok(metadataForm.children[4].children.some(pill=>pill.textContent==='Travel'));
+await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.equal(metadataInput.value,'');assert.ok(catalog.tags.r.includes('Design'));assert.ok(catalog.tags.r.includes('Travel'));assert.equal(catalog.resources.r.note,'My note','Tag saves preserve legacy notes');assert.equal(catalog.tags.r.filter(tag=>tag==='Design').length,1);assert.ok(metadataForm.children[4].children.some(pill=>pill.textContent==='Travel'));
 metadataInput.value='Architecture';await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.ok(catalog.tags.r.includes('Architecture'));
 metadataInput.value='Confirmed, Unconfirmed';failMetadataTag='Unconfirmed';await metadataForm.onsubmit({preventDefault(){}});assert.ok(catalog.tags.r.includes('Confirmed'));assert.ok(!catalog.tags.r.includes('Unconfirmed'));assert.equal(metadataInput.value,'Confirmed, Unconfirmed');assert.equal(metadata.open,true);assert.match(metadataForm.children.find(el=>el.attrs.role==='status').textContent,/1 of 2 confirmed/);
 failMetadataTag='';await metadataForm.onsubmit({preventDefault(){}});assert.ok(catalog.tags.r.includes('Unconfirmed'));assert.equal(catalog.tags.r.filter(tag=>tag==='Confirmed').length,1);
 metadata.children[1].onclick();assert.equal(metadata.open,false);
-addSection().children[1].children[1].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataInput=metadataForm.children[2].children[0];assert.equal(metadataInput.value,'My note');metadataInput.value='Updated note';await metadataForm.onsubmit({preventDefault(){}});assert.equal(catalog.resources.r.note,'Updated note');
-addSection().children[1].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataInput=metadataForm.children[2].children[0];metadataInput.value='Keep my input';paired=false;await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.equal(metadataInput.value,'Keep my input');assert.match(metadataForm.children.find(el=>el.attrs.role==='status').textContent,/COMPANION_OFFLINE/);paired=true;
+addSection().children[0].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataInput=metadataForm.children[2].children[0];metadataInput.value='Keep my input';paired=false;await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.equal(metadataInput.value,'Keep my input');assert.match(metadataForm.children.find(el=>el.attrs.role==='status').textContent,/COMPANION_OFFLINE/);paired=true;
 failMetadata=true;await metadataForm.onsubmit({preventDefault(){}});assert.equal(metadata.open,true);assert.match(metadataForm.children.find(el=>el.attrs.role==='status').textContent,/REVISION_CONFLICT/);assert.ok(!catalog.tags.r.includes('Keep my input'));failMetadata=false;metadata.close();
 // A native bookmark without an Atlas resource is registered once with its exact URL.
 delete catalog.resources.r;delete catalog.tags.r;
-addSection().children[1].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataForm.children[2].children[0].value='New tag';await metadataForm.onsubmit({preventDefault(){}});assert.equal(catalog.resources['new-resource'].locators[0].reference,'https://z.example/');assert.deepEqual(catalog.tags['new-resource'],['New tag']);assert.equal(metadata.open,true);metadata.children[1].onclick();assert.equal(metadata.open,false);
-// Add Item creates a durable gallery page with a visible link below the image.
-assert.ok(preview.children.some(el=>el.tagName==='h3'&&el.textContent==='Associated Items'));
-preview.children.find(el=>el.tagName==='button'&&el.textContent==='Add Item').onclick();
-const dialog=created.filter(el=>el.tagName==='dialog').at(-1),form=dialog.children[0];
-const titleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Title').children[0];titleControl.value='My Gallery';
-const templateControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Format').children[0];
-const styleControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Appearance').children[0];assert.equal(styleControl.value,'nocturne');styleControl.value='solstice';
-assert.equal(templateControl.value,'gallery');assert.equal(templateControl.children.length,1);assert.ok(!form.children.some(el=>el.textContent==='Bookmark collection'));
-await form.onsubmit({preventDefault(){}});await tick();
-assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'&&el.href.includes('page.html?id=')));
-const storedPage=storage[pagesModule.PAGE_PREFIX+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'];assert.equal(storedPage.template,'gallery');assert.equal(storedPage.galleryStyle,'solstice');
-assert.equal(storedPage.title,'My Gallery');
-assert.equal(storedPage.images.length,24);
-assert.ok(storedPage.images.every(image=>image.title&&image.article.split('\n\n').length===5));
-assert.equal(new Set(storedPage.images.map(image=>image.id)).size,24);
-// Pinboard is its own Add Item choice, not a gallery with a different label.
-const kindControl=form.children.find(el=>el.tagName==='label'&&el.textContent==='Type').children[0];kindControl.value='pinboard';kindControl.onchange();
-assert.equal(form.children.find(el=>el.textContent==='Appearance').hidden,true);assert.equal(templateControl.value,'2010s');assert.equal(templateControl.children.length,1);
-titleControl.value='My Pins';await form.onsubmit({preventDefault(){}});await tick();
-assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Pins'&&el.href.includes('pinboard.html?id=')));
-assert.equal((await pinboards.linkedPinboards(context.chrome.storage.local,nodes.get('3'))).length,1);
-const pinRow=preview.children.find(el=>el.className==='associated-gallery-row'&&el.children[0].textContent==='▧ My Pins');
-context.confirm=()=>true;await pinRow.children[1].onclick();context.confirm=()=>false;
-assert.equal((await pinboards.linkedPinboards(context.chrome.storage.local,nodes.get('3'))).length,0);
-// Clearing Chrome cache does not destroy the separately saved native record.
-nativePages[storedPage.id]={...storedPage,libraryRevision:1};delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];
-preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();
-for(let i=0;i<5;i++)await tick();
-assert.equal(storage[pagesModule.PAGE_PREFIX+storedPage.id].title,'My Gallery');
-assert.ok(preview.children.flatMap(el=>[el,...el.children]).some(el=>el.tagName==='a'&&el.textContent==='▧ My Gallery'));
-// Cancel preserves the gallery; confirmed deletion persists a marker and stays hidden after recovery.
-let deleteControl=preview.children.find(el=>el.className==='associated-gallery-row').children[1];
-await deleteControl.onclick();assert.equal(storage[pagesModule.PAGE_PREFIX+storedPage.id].deleted,undefined);
-context.confirm=()=>true;
-context.saveLibraryPage=async page=>{nativePages[page.id]={...page,libraryRevision:2};return {libraryRevision:2};};
-await deleteControl.onclick();await tick();
-assert.equal(nativePages[storedPage.id].deleted,true);
-assert.ok(!preview.children.some(el=>el.className==='associated-gallery-row'));
-delete storage[pagesModule.PAGE_PREFIX+storedPage.id];delete storage[pagesModule.ITEM_PREFIX+'3'];
-preview.children[0].onclick();rows=els.get('bookmarks-list').children;rows[0].children[0].onclick();
-for(let i=0;i<5;i++)await tick();
-assert.ok(!preview.children.some(el=>el.className==='associated-gallery-row'));
-context.confirm=()=>false;
+addSection().children[0].children[0].onclick();metadata=metadataDialog();metadataForm=metadata.children[0];metadataForm.children[2].children[0].value='New tag';await metadataForm.onsubmit({preventDefault(){}});assert.equal(catalog.resources['new-resource'].locators[0].reference,'https://z.example/');assert.deepEqual(catalog.tags['new-resource'],['New tag']);assert.equal(metadata.open,true);metadata.children[1].onclick();assert.equal(metadata.open,false);
+// Release shelf excludes associated items without deleting legacy saved records.
+const preservedKey=pagesModule.ITEM_PREFIX+'3';storage[preservedKey]={version:1,bookmarkUrl:'https://z.example/',pageIds:['saved-page']};
+await els.get('bookmarks-refresh').onclick();await tick();
+assert.ok(!preview.children.some(el=>el.textContent==='Associated Items' || el.textContent==='Add Item' || el.className==='associated-gallery-row'));
+assert.deepEqual(storage[preservedKey].pageIds,['saved-page']);
+assert.ok(!read('bookmarks.js').includes('loadLocalItems'),'Removed shelf loader rather than hiding the section');
 const esc={key:'Escape',target:new El(),preventDefault(){},stopPropagation(){}};
 els.get('bookmarks-workspace').handlers.keydown(esc);rows=els.get('bookmarks-list').children;assert.equal(rows.length,4);
 await rows[0].children[2].children[1].children[0].onclick();assert.equal(nodes.get('3').title,'Renamed');
