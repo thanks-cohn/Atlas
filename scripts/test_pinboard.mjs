@@ -32,7 +32,8 @@ class El{
 }
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
-const context={installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const {generateModels}=await moduleOf('pinboard-generation.js');
+const context={generateModels,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -167,14 +168,16 @@ vm.runInContext('tagsChangedURL=items[0].url',context);tagCatalog.tags.r=['Art',
 assert.equal(cards()[0],stable[0]);assert.equal(cards()[0].children[0].children[0],stableImage);assert.equal(cards()[1],stable[1]);
 assert.ok(cards()[1].children.some(c=>c.className.includes('empty-tag-edit')));
 
-// Minimal preview controls: a Settings gate, no fake inference, no model jobs.
+// Minimal preview controls: explicit inference, Settings gate and no startup model jobs.
 const previousGet=context.chrome.storage.local.get;
 context.chrome.storage.local.get=async keys=>Array.isArray(keys)?Object.assign({},...await Promise.all(keys.map(key=>previousGet(key)))):previousGet(keys);
 vm.runInContext('openDetail(items[0])',context);await tick();await tick();
 assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false);
 assert.equal($('tag-image-choice').checked,true);assert.equal($('tag-people-choice').checked,true);assert.equal($('tag-face-choice').checked,false);
 let generationRequests=0;const send=context.chrome.runtime.sendMessage;context.chrome.runtime.sendMessage=async message=>{generationRequests++;return send(message);};
-$('run-image-tagging').onclick();assert.equal(generationRequests,0);assert.match($('tagging-selection-status').textContent,/connected yet/);
+assert.equal(generationRequests,0);
+context.chrome.runtime.sendMessage=async message=>{generationRequests++;assert.equal(message.path,'/v1/tag-image');return {data:{source:message.body.model,model:'test',suggestions:[]}};};
+await $('run-image-tagging').onclick();assert.equal(generationRequests,1);assert.equal($('tagging-selection-status').textContent,'Tags generated.');
 $('joytag-enabled').checked=true;await $('joytag-enabled').onchange();assert.equal(data['atlas-joytag-enabled-v1'],true);assert.equal($('tag-anime-wrap').hidden,false);
 $('tag-anime-choice').checked=true;await $('tag-anime-choice').handlers.change();
 assert.equal(data['atlas-tagging-studio-layout-v1'][cards()[0].atlasNode.url].anime,true);
@@ -184,4 +187,4 @@ for(const id of ['tag-image-choice','tag-people-choice','tag-face-choice'])$(id)
 await $('tag-face-choice').handlers.change();assert.equal($('run-image-tagging').disabled,true);
 const previewMarkup=read('pinboard.html').split('<dialog id="detail"')[1].split('<dialog id="image-source"')[0];
 assert.ok(previewMarkup.includes('> Anime</label>'));assert.ok(!previewMarkup.includes('JoyTag'));assert.ok(!previewMarkup.includes('detail-preview-tags'));
-console.log('PASS: compact preview model choices, Settings-only JoyTag gate, preference restore, empty selection and honest unwired status without model requests.');
+console.log('PASS: compact preview model choices, Settings-only JoyTag gate, preference restore, empty selection and explicit generation and no automatic model requests.');

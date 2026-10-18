@@ -38,3 +38,21 @@ class ProvenanceTests(unittest.TestCase):
         self.assertEqual(len(result['items']['a']['presented']), 1)
         self.assertEqual(len(result['items']['b']['presented']), 1)
         self.assertEqual(len(result['items']['a']['derived'][0]['contributors']), 2)
+
+    def test_image_replacement_does_not_mix_current_predictions(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = SimpleNamespace(directory=folder)
+            for source, image in [('objects','old'),('face','old'),('objects','new')]:
+                record(state, {'item_id':'a','image':image}, {'source':source,'model':source,'suggestions':[{'tag':image,'score':.5}]}, 1)
+            current = json.loads((Path(folder)/'evidence/tagging-current.json').read_text())
+            self.assertEqual(list(current['items']['a']['sources']), ['objects'])
+            self.assertEqual(current['items']['a']['presented'][0]['tag'], 'new')
+            events = [json.loads(x) for x in (Path(folder)/'evidence/tagging-runs.jsonl').read_text().splitlines()]
+            self.assertEqual(project(events),current)
+            self.assertEqual(len(events),3)
+
+    def test_invalid_display_choices_do_not_append(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaises(ValueError):
+                record(SimpleNamespace(directory=folder), {'display_choices':[]}, {'source':'objects','model':'test'}, 1)
+            self.assertFalse((Path(folder)/'evidence/tagging-runs.jsonl').exists())

@@ -656,3 +656,33 @@ separate item identities, empty reruns, deterministic replay, success/failure
 metrics. No Windows/Chrome or real inference acceptance was performed in this
 slice. Next: pin/download ONNX assets, integrate replaceable adapters and explicit
 Generate action; preserve these evidence contracts when connecting them.
+
+## 2026-10-18 — explicit ONNX generation connected (0.1.67)
+
+See `ONNX_TAGGING_INTEGRATION.md` for fixed owner intent, adapter boundaries,
+model revisions, evidence semantics and installation steps. Generate now prepares
+the image and invokes selected native models sequentially. Things/People share
+YOLO11n ONNX; Faces uses aligned YuNet + MobileFaceNet ONNX; optional Anime uses
+JoyTag ONNX. No automatic inference. Original machine predictions persist through
+JSONL/current JSON, deduplicated display retains contributing scores, and human
+tags are untouched. Image payload changes reset current source projections while
+retaining historical runs. Display choices and model hashes accompany evidence.
+
+Windows build now bundles pinned models (~382 MB raw) and CPU dependencies; the
+workflow runs real frozen model inference before publishing artifacts. This is
+packaging source until the new Windows workflow proves it. Existing installed
+helpers must be upgraded; Git pull alone updates extension source only.
+
+Executed proof: 7 Python tagging/provenance tests, pinboard DOM/API test, manual tag
+editor test and sequential-generation module test passed; all three actual models
+ran successfully on Linux CPU with pinned weights. Real Chrome visual acceptance,
+4GB Windows memory profiling and lifecycle acceptance are NOT_RUN. Broad
+check_project.py result is recorded separately after completion; do not infer
+whole-project success from focused tests. Full provenance editing/deltas/display
+profiles are still proposals. Candidate JSON is not actual-rendering telemetry.
+
+Broad verification result: `python scripts/check_project.py` ran 152 tests in
+62.239s: 3 failures + 3 errors, 33 skips. Failing components were Linux native
+bootstrap/supervisor process startup, identity/readiness and recovery tests. The
+22-record linkage check passed. This run is NOT a green whole-project result;
+focused tagging tests and real model inference are the separate evidence above.

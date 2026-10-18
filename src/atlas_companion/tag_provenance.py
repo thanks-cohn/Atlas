@@ -24,6 +24,10 @@ def project(events):
     items = {}
     for event in events:
         item = items.setdefault(event['item_id'], {'sources': {}, 'derived': [], 'presented': []})
+        image_hash = event.get('image_payload_sha256')
+        if image_hash and item.get('image_payload_sha256') != image_hash:
+            item['sources'] = {}
+            item['image_payload_sha256'] = image_hash
         item['sources'][event['source']] = event
     for item in items.values():
         grouped = {}
@@ -37,16 +41,21 @@ def project(events):
                     'run_id': event['run_id'], 'model': event['model'],
                     'source': event['source'], 'prediction_index': index,
                     'score': prediction.get('score'),
+                    'eligible': (event.get('display_choices', {}).get('people' if key == 'person' else 'objects', True)
+                                 if event['source'] == 'objects' else True),
                 })
         item['derived'] = list(grouped.values())
         # Candidate presentation; UI may filter sources or suppress human duplicates.
         # Do not claim this projection proves what a browser actually rendered.
-        item['presented'] = [{'key': x['key'], 'tag': x['tag']} for x in item['derived']]
+        item['presented'] = [{'key': x['key'], 'tag': x['tag']} for x in item['derived'] if any(c['eligible'] for c in x['contributors'])]
     return {'schema': 'atlas.tag-projection.v1', 'presentation': 'candidate', 'items': items}
 
 
 def record(state, body, result, duration_ms):
     """Persist evidence before returning success. JSONL can rebuild stale JSON."""
+    choices = body.get('display_choices', {})
+    if not isinstance(choices, dict) or any(k not in ('objects', 'people', 'face', 'anime') or type(v) is not bool for k,v in choices.items()):
+        raise ValueError('Invalid display choices')
     image = body.get('image', '')
     if not isinstance(image, str):
         raise ValueError('Invalid image payload')
@@ -59,8 +68,10 @@ def record(state, body, result, duration_ms):
         'item_id': identity, 'image_payload_sha256': hashlib.sha256(image.encode('utf-8')).hexdigest(),
         'origin': 'machine', 'source': result['source'], 'model': result['model'],
         'model_version': result.get('model_version', 'unknown'),
+        'model_sha256': result.get('model_sha256', 'unknown'),
         'recipe': result.get('recipe', 'legacy-companion-v1'),
         'duration_ms': duration_ms, 'produced': result.get('suggestions', []),
+        'display_choices': choices,
     }
     directory = Path(state.directory) / 'evidence'
     with _lock:
@@ -82,7 +93,9 @@ def record(state, body, result, duration_ms):
         with log.open(encoding='utf-8') as handle:
             for line in handle:
                 entry = json.loads(line)
-                latest[(entry['item_id'], entry['source'])] = entry
+                identity = (entry['item_id'], entry['source'])
+                latest.pop(identity, None)
+                latest[identity] = entry
         projection = project(latest.values())
         temporary = directory / ('tagging-current.' + uuid.uuid4().hex + '.tmp')
         try:

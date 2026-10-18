@@ -13,6 +13,9 @@ def command(*arguments):
 
 def main():
     arguments = sys.argv[1:]
+    if arguments == ['--tagging-smoke']:
+        from .tagging_smoke import main as smoke
+        return smoke()
     if os.name == 'nt':
         from .windows_entrypoint import main as windows_main
         return windows_main(arguments)

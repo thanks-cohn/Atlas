@@ -18,17 +18,26 @@ def main():
         raise SystemExit('Build this target on Windows')
     if importlib.metadata.version('pyinstaller') != '6.16.0':
         raise SystemExit('Use pinned PyInstaller==6.16.0')
+    from prepare_tagging_models import prepare
+    prepare(ROOT / 'build/tagging-models')
     output = ROOT / 'dist/windows'
     subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onefile',
                     '--name', 'atlas-companion', '--paths', str(ROOT / 'src'),
                     '--collect-submodules', 'atlas_companion', '--collect-submodules', 'atlas_native',
-                    '--collect-submodules', 'atlas_core', '--hidden-import', 'tkinter',
+                    '--collect-submodules', 'atlas_core',
+                    '--collect-all', 'onnxruntime', '--collect-all', 'cv2', '--collect-all', 'PIL',
+                    '--add-data', str(ROOT / 'build/tagging-models') + ';tagging-models',
+                    '--add-data', str(ROOT / 'src/atlas_companion/tagging-models.json') + ';atlas_companion',
+                    '--add-data', str(ROOT / 'packaging/TAGGING_MODEL_NOTICES.md') + ';.',
+                    '--add-data', str(ROOT / 'packaging/model-licenses') + ';model-licenses', '--hidden-import', 'tkinter',
                     '--hidden-import', 'tkinter.filedialog', '--hidden-import', 'tkinter.messagebox',
                     '--distpath', str(output), '--workpath', str(ROOT / 'build/windows'),
                     '--specpath', str(ROOT / 'build/windows'), str(ROOT / 'packaging/companion_entry.py')], check=True)
     binary = output / 'atlas-companion.exe'
     debug_binary = output / 'debug.exe'
     shutil.copy2(binary, debug_binary)
+    shutil.copy2(ROOT / 'packaging/TAGGING_MODEL_NOTICES.md', output / 'TAGGING_MODEL_NOTICES.md')
+    shutil.copytree(ROOT / 'packaging/model-licenses', output / 'model-licenses', dirs_exist_ok=True)
     source = hashlib.sha256()
     for path in sorted((ROOT / 'src').rglob('*.py')):
         source.update(path.relative_to(ROOT).as_posix().encode() + b'\0' + path.read_bytes())
@@ -43,6 +52,9 @@ def main():
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as package:
         for item in (binary, debug_binary, output / 'README.md', output / 'BUILD_RECEIPT.json', output / 'SHA256SUMS'):
             package.write(item, item.name)
+        package.write(output / 'TAGGING_MODEL_NOTICES.md', 'TAGGING_MODEL_NOTICES.md')
+        for license_file in (output / 'model-licenses').glob('*'):
+            package.write(license_file, 'model-licenses/' + license_file.name)
     subprocess.run([sys.executable, str(ROOT / 'scripts/package_extension.py')], check=True)
     for extension_zip in (ROOT / 'dist').glob('atlas-extension-*.zip'):
         shutil.copy2(extension_zip, output / extension_zip.name)

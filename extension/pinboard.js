@@ -1,3 +1,4 @@
+import {generationImage,generateModels,imageReference} from './pinboard-generation.js';
 import {installTagEditor} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
@@ -29,8 +30,8 @@ function tagStrip(node){
 const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
-let taggingChoiceEpoch=0;
-function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice','tag-face-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=!chosen;}
+let taggingChoiceEpoch=0,taggingBusy=false;
+function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice','tag-face-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || !chosen;}
 function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
 async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
 $('joytag-enabled').onchange=async()=>{
@@ -46,7 +47,7 @@ async function loadTaggingChoices(node){
   $('tag-image-choice').checked=true;
   $('tag-people-choice').checked=true;
   $('tag-face-choice').checked=false;
-  setTaggingChoiceStatus('Preview only');updateTaggingAction();
+  setTaggingChoiceStatus('');updateTaggingAction();
   try{
     const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
     if(selected?.url!==key || request!==taggingChoiceEpoch)return;
@@ -64,11 +65,11 @@ async function saveTaggingChoices(){
   if(!selected?.url)return;
   const key=selected.url;
   const choice={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,details:$('tag-face-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
-  updateTaggingAction();setTaggingChoiceStatus('Preview only');
+  updateTaggingAction();setTaggingChoiceStatus('');
   try{
     const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};
     await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[key]:choice}});
-  }catch{setTaggingChoiceStatus('Selections could not be saved; this is still a layout preview.');}
+  }catch{setTaggingChoiceStatus('Selections could not be saved; please retry.');}
 }
 for(const id of ['tag-image-choice','tag-people-choice','tag-face-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
 const TAGGING_RESULTS='atlas-image-tagging-runs-v1';
@@ -76,7 +77,7 @@ async function showGeneratedTags(node){
   const host=$('detail-generated-tags');
   host.replaceChildren();
   try{
-    const [stored,activation]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED)]);
+    const [stored,activation,reference]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED),imageReference(imageFor(node))]);
     const runs=stored[TAGGING_RESULTS]?.[node.url] || {},animeEnabled=activation[JOYTAG_ACTIVATED]===true;
     if(selected?.url!==node.url)return;
     // Deduplicate presentation only: every per-model result remains saved intact.
@@ -84,9 +85,10 @@ async function showGeneratedTags(node){
     const grouped=new Map();
     for(const source of ['objects','face','anime']){
       const run=runs[source];
-      if(!run || (source==='anime' && !animeEnabled))continue;
+      if(!run || (run.image_reference && run.image_reference!==reference) || (source==='anime' && !animeEnabled))continue;
       for(const suggestion of run.suggestions||[]){
         if(typeof suggestion.tag!=='string')continue;
+        if(source==='objects' && run.display_choices && (suggestion.tag==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
         const label=suggestion.tag.trim();
         const key=label.toLocaleLowerCase();
         if(!key)continue;
@@ -111,9 +113,29 @@ async function showGeneratedTags(node){
   }catch{host.append(el('p','Saved model results could not be loaded.'));}
 }
 
-$('run-image-tagging').onclick=()=>{
+$('run-image-tagging').onclick=async()=>{
   updateTaggingAction();
-  if(!$('run-image-tagging').disabled)setTaggingChoiceStatus('Models aren’t connected yet.');
+  if($('run-image-tagging').disabled || !selected)return;
+  const node=selected;
+  const choices={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,face:$('tag-face-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
+  taggingBusy=true;updateTaggingAction();
+  const report=message=>{if(selected?.url===node.url)setTaggingChoiceStatus(message);};
+  try{
+    report('Preparing image…');
+    const sourceImage=imageFor(node);
+    const image=await generationImage(sourceImage);
+    const reference=await imageReference(sourceImage);
+    await generateModels({node,image,choices,send:message=>chrome.runtime.sendMessage(message),status:report,
+      save:async(source,result)=>{
+        result={...result,image_reference:reference};
+        const stored=await chrome.storage.local.get(TAGGING_RESULTS),all=stored[TAGGING_RESULTS] || {};
+        const previous=Object.fromEntries(Object.entries(all[node.url] || {}).filter(([,run])=>run.image_payload_sha256===result.image_payload_sha256));
+        await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[node.url]:{...previous,[source]:result}}});
+        if(selected?.url===node.url)await showGeneratedTags(node);
+      }});
+    report('Tags generated.');
+  }catch(error){report(error.message || 'Tag generation failed.');}
+  finally{taggingBusy=false;updateTaggingAction();}
 };
 function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
 const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
