@@ -30,18 +30,3 @@ Browser file pickers/restricted filesystem APIs made continuous file workflows c
 ## Evidence discipline
 
 For each capability record: stable requirement ID; purpose; accepted scope; precise invariant; source of claim (owner, observation, inferred, agent-proposed); dependencies and boundaries; environments; success/failure oracles; implementation version/artifact digest; actual test outcome; unknowns; migration decisions. **Documentation and compiling do not imply functional PASS.** A cold agent should reconstruct from accepted meaning plus independent tests, not product-specific handwritten translations.
-
-
-## Owner design principle — intuitive, aesthetic, standardized by default (2026-10-17)
-
-**Owner-directed standing requirement for all future Atlas interfaces, proposals, and reconstitutions.** Atlas must be **intuitive, aesthetically intentional, and grounded in established conventions and standards** to minimize confusion. Unique interactions invented for Atlas are welcome only when they provide a meaningful improvement, without gratuitously replacing familiar patterns.
-
-- **Intuitive:** Common actions should be discoverable without documentation or a learning curve. Use recognizable labels, consistent placement, predictable navigation, clear feedback, sensible defaults, and progressive disclosure rather than clutter.
-- **Aesthetic:** Layout, typography, spacing, alignment, imagery, and transitions should look carefully art-directed across shelf, full page, desktop, and small screens; beauty must not come at the cost of legibility, speed or accessibility.
-- **Standardized:** Prefer platform conventions and well-understood interaction patterns for tree navigation, folders, menus, forms, hover/keyboard/touch actions, dialog dismissal, selection, undo, save, import/export and error states. Follow relevant accessibility and security standards. Use existing components and semantics when practical rather than reinventing basic controls.
-- **Deliberate exceptions:** Distinct Atlas features—such as image-led bookmark navigation, visual graph hover previews, or expanding note/article presentations—may depart from convention where the purpose and usability gain are clear. Make exceptional interactions understandable through affordances, familiar fallback controls and consistent behavior.
-- **Cross-size and cross-template continuity:** Responsiveness should be intentional recomposition, not merely shrinking. Preserve content, associations, state, keyboard access and meaning while the visual presentation varies beautifully.
-- **Cold-inheritance rule:** A successor agent should first identify and reuse applicable standards/conventions and then document why any Atlas-specific exception exists. Treat implementation as replaceable, not user comprehension.
-- **Acceptance:** First-time users can identify key actions, complete basic tasks without instruction, recover from errors, and understand any novel interaction. Test keyboard/touch accessibility, constrained screens, clear feedback and visual consistency; do not claim usability has been proven merely by writing this principle.
-
-**Short form:** Familiar where possible. Distinctive where valuable. Beautiful and understandable everywhere.
