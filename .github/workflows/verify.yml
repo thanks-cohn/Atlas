@@ -27,6 +27,8 @@ jobs:
           node scripts/test_pinboard.mjs
           node scripts/test_pinboard_generation.mjs
           node scripts/test_pinboard_tag_editor.mjs
+      - name: Verify extension packaging and bundled notices
+        run: python scripts/package_extension.py
       - name: Verify real CLI and filesystem integration
         run: python scripts/smoke_companion.py
       - name: Verify native wake and worker integration without replay

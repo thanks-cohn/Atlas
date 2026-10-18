@@ -8,6 +8,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'extension'
 ALLOWED = {'.json', '.html', '.css', '.js', '.svg', '.png', '.webp', '.woff2', '.ttf'}
+# Explicit bundled-font attribution documents; keep unknown asset rejection.
+FONT_NOTICES = {'fonts/README.md', 'fonts/rajdhani-OFL.txt', 'fonts/spacegrotesk-OFL.txt'}
 
 
 def main():
@@ -22,7 +24,7 @@ def main():
         if path.is_symlink():
             raise SystemExit('Refusing to package symlinks')
         if path.is_file():
-            if path.suffix not in ALLOWED:
+            if path.suffix not in ALLOWED and path.relative_to(SOURCE).as_posix() not in FONT_NOTICES:
                 raise SystemExit(f'Unexpected asset type: {path.name}')
             files.append(path)
     destination = ROOT / 'dist' / f'atlas-extension-{version}.zip'
