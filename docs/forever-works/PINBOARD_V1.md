@@ -115,3 +115,41 @@ Owner requests comma-separated tags, a dropdown of existing tags in the pictured
 Uses existing native tag mutations sequentially with the latest expected revision after each result. Already attached exact tags are skipped; a partially failed batch leaves the input and identifies the confirmed count. No transactional-all-or-nothing claim or automatic mutation replay. Explicit resubmission rereads state and skips already persisted tags. Dropdown snapshots carry a revision guard against a late initial read overwriting newer saved results. Scope remains the exact bookmark URL; suggestions come from existing Atlas catalog tags, never invented bookmark labels.
 
 Bookmark regression PASS for comma trimming/deduplication, choosing an existing tag alongside new ones, repeated saves without closing, attached-tag pills, partial failure retention and explicit safe resubmission, top-right X, offline/conflict retention and existing note behavior. Existing pinboard, queue, activity, broker and gallery checks plus packaging PASS (DOM/API doubles; actual Chrome visual/keyboard QA NOT_RUN). No companion executable update, storage migration or permission change.
+
+
+## Proposal addendum — Collapsible Notes in pinboard image popout (2026-10-17)
+
+**Status:** Owner-directed future interaction proposal, not an implemented or verified feature. This supplements the existing pinboard image-modal behavior, preserving the canonical image, bookmark, note and tag data rather than making display copies.
+
+### Intended default popout
+
+Keep the enlarged/selected image, its title, attached tags, and a compact **Notes ▸** section. Remove the **Generate Tags** action from this *viewing popout* to give the content more visual breathing room; this does not remove the existing tagging capability from its appropriate editor or elsewhere. The note disclosure starts collapsed unless the user explicitly expands it; show an unobtrusive count when useful.
+
+### Notes disclosure and browsing
+
+- Clicking **Notes ▸** expands a contained section downward (**Notes ▾**) with a carefully spaced, visually cohesive list of all notes associated with the displayed item, using the actual persisted relationships and respecting private/public visibility.
+- Render notes as aesthetically composed rows/cards, each showing the first few sentences, optionally a concise title/date when present, and ellipsis only where content is truly truncated. Do not invent note summaries.
+- Support a comfortable independently scrollable notes area with responsive height, momentum/keyboard scrolling, subtle edge treatment and clear focus; avoid making the entire image popout grow beyond the viewport or obscuring the image.
+- A note row is selectable. Clicking one brings that note to the top of the **notes viewing area** and expands it to its complete text, preserving the image, title and tags in the popout rather than navigating away or destroying the remaining rows.
+- **Escape** from an expanded individual note restores the prior notes list, ordering and scroll position; Escape from the ordinary notes list can dismiss the notes section or popout according to a documented layered dismissal rule, with no accidental closure when merely returning from an opened note. Offer a visible Back/Collapse control for touch and accessible use.
+- Multiple notes remain independent first-class note records, not concatenated into one string. Editing and creating notes are distinct actions from reading; never mutate text merely by opening or reordering its displayed position.
+- No notes: display a quiet empty state with the existing Add Note action where authorized. On a large notes collection, virtualize/window entries or paginate and restore position after opening/closing an individual note.
+
+### Visual/interaction requirements
+
+- Use restrained typography, margins, row separators and a smooth but optional expand/collapse transition. Preserve usable space in narrow shelf and full-tab layouts, including long note text.
+- Support triangle disclosure semantics, keyboard Enter/Space activation, focus management, Escape, screen-reader expanded state and reduced motion.
+- Reuse existing image, tag and notes retrieval pipelines. Loading the popout must not fetch locked private R2 notes without authorization, and publicly published popouts must never embed excluded/private notes or their metadata.
+- On errors/offline, retain known accessible notes and show a non-destructive retry or unavailable state; do not present absent remote data as proof that no notes exist.
+
+### Acceptance checks (future)
+
+1. Pinboard image popout presents the **image, title, tags, Notes ▸**; **Generate Tags** is absent from that viewing surface, not removed globally.
+2. Notes disclosure expands downward without disruptive layout shift; each actual note appears as a compact row showing its opening sentences.
+3. Notes list scrolls independently and remains aesthetically legible with many notes and long content.
+4. Clicking any row moves it visually to the top of the notes region and fully expands it.
+5. Escape from the expanded note returns to the prior list and scroll position without closing the image popout or losing note data.
+6. Keyboard/touch access, no-notes state, narrow layouts, reduced motion and private/public filtering all behave correctly.
+7. No note mutation, tag regeneration, accidental publication or unauthorized remote retrieval occurs from mere browsing.
+
+**Intent:** Make the pinboard popout a quiet, beautiful reading surface: **image + title + tags + expandable notes**, with progressive disclosure rather than clutter.
