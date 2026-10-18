@@ -275,10 +275,11 @@ header .menu-footer #refresh{width:100%;margin:0;border-radius:9px;font-size:12p
 .board-menu .menu-bars{width:18px;flex:0 0 18px}
 [data-board-appearance=dark] .board-menu>summary,[data-board-appearance=dark] .board-menu[open]>summary{background:transparent;border:0;box-shadow:none;color:#bdd0e8}
 .board-menu>summary:hover,[data-board-appearance=dark] .board-menu>summary:hover{color:var(--pin-red);background:transparent}
-/* An outward outline was clipped by .pin overflow and covered by its image.
-   Paint the rim inside the image button, above its pixels, on every edge. */
-.pin-visual:focus{outline:0}
-.pin-visual:focus::after{content:"";position:absolute;inset:2px;z-index:4;pointer-events:none;border:2px solid var(--pin-red);border-radius:inherit;box-shadow:0 0 0 1px #10152580}
+/* Reserve the frame outside the image content, with identical focused/resting geometry.
+   Absolute image/loading children fill the padding box, inside this border. */
+.pin .pin-visual{border:2px solid transparent}
+.pin .pin-visual img{border-radius:15px}
+.pin .pin-visual:focus{outline:0;border-color:var(--pin-red)}
 @media(max-width:760px){.board-overview{grid-template-columns:1fr;gap:18px;padding:22px 0 18px}.board-overview .search input{font-size:13px}.board-menu>summary{width:40px;min-height:40px}}
 
 /* Quiet at rest; tag scrolling is revealed with expansion, including keyboard access. */
