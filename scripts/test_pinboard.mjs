@@ -32,8 +32,8 @@ class El{
 }
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
-const {generateModels}=await moduleOf('pinboard-generation.js');
-const context={generateModels,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const {generateModels,generatedTags}=await moduleOf('pinboard-generation.js');
+const context={TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return ()=>{};},installBlankBoard:()=>({show(){}}),installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>listeners[name]=fn,scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -98,12 +98,12 @@ const taggedImage=roots[0].children[0].children[0],taggedURL=roots[0].children[0
 const tagCatalog={resources:{r:{id:'r',kind:'bookmark',locators:[{provider:'web',reference:taggedImage.url}]},q:{id:'q',kind:'bookmark',locators:[{provider:'web',reference:taggedURL.url}]}},relations:[],tags:{r:['Design','Travel','Art','<img src=x onerror=alert(1)>','Architecture','Photography','Ideas','Design',' Travel '],q:['Notes','Personal']}};
 context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired:true}:{data:tagCatalog};
 await $('refresh').onclick();flush();
-let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
+let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].children[0].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
 assert.equal(tagged.children[1].style.height,'138px');
 strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);$('close').onclick();
 const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
 // Refresh retrieves edits to the existing catalog rather than requiring a new tab.
-tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].textContent,'Updated');
+tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].children[0].textContent,'Updated');
 // Window calculation stays bounded at any position, including huge scroll jumps and boundaries.
 for(const limit of [24,48,72,96,144])for(const top of [0,1,5000,1e8]){
  const plan=model.visibleBlocks(1000,limit,new Map(),[],top);
@@ -121,16 +121,16 @@ assert.deepEqual(model.tagQuery('tags:Design, Travel mountains'),{text:'mountain
 assert.deepEqual(model.tagQuery('tags:Design tags:Design,Art'),{text:'',tags:['Design','Art']});
 assert.equal(model.matchesTags(['A','B'],['A','B']),true);assert.equal(model.matchesTags(['A'],['A','B']),false);
 tagCatalog.tags.r=['Art','Design'];tagCatalog.tags.q=['Art'];await $('refresh').onclick();flush();
-const imageTags=cards()[0].children[1].children[2];imageTags.children[0].onclick();
+const imageTags=cards()[0].children[1].children[2];imageTags.children[0].children[0].onclick();
 assert.equal(vm.runInContext('activeTags.length',context),0);
-const otherTag=cards()[0].children[1].children[2].children[1];otherTag.onclick();
+const otherTag=cards()[0].children[1].children[2].children[1];otherTag.children[0].onclick();
 $('apply-tags').onclick();flush();assert.equal(cards().length,1);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
 assert.equal($('active-tags').children.length,3);
 // A normal text query is intersected with ALL selected tags.
 $('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
 $('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,1);
 // Clicking active Design broadens automatically to both Art bookmarks.
-cards()[0].children[1].children[2].children[1].onclick();assert.equal(cards().length,2);
+cards()[0].children[1].children[2].children[1].children[0].onclick();assert.equal(cards().length,2);
 $('search').value='tags:Design';vm.runInContext('render()',context);assert.equal(cards().length,1);
 $('active-tags').children.at(-1).onclick();assert.equal(cards().length,2);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
@@ -188,3 +188,34 @@ await $('tag-face-choice').handlers.change();assert.equal($('run-image-tagging')
 const previewMarkup=read('pinboard.html').split('<dialog id="detail"')[1].split('<dialog id="image-source"')[0];
 assert.ok(previewMarkup.includes('> Anime</label>'));assert.ok(!previewMarkup.includes('JoyTag'));assert.ok(!previewMarkup.includes('detail-preview-tags'));
 console.log('PASS: compact preview model choices, Settings-only JoyTag gate, preference restore, empty selection and explicit generation and no automatic model requests.');
+// Successful generation attaches a derived tag to the existing card and filters,
+// without promoting machine output into the human catalog or replacing images.
+vm.runInContext("activeTags=[];pendingTags.clear();$('search').value='';$('tags-only').checked=false",context);
+await $('refresh').onclick();flush();
+const machineCard=cards()[0],machineImage=machineCard.children[0].children[0];
+vm.runInContext('openDetail(items[0])',context);await tick();await tick();
+const humanBefore=JSON.stringify(tagCatalog);
+context.chrome.runtime.sendMessage=async()=>({ok:true,source:'objects',model:'test',image_payload_sha256:'payload',suggestions:[{tag:'Machine Cat',score:.9},{tag:'Art',score:.8}]});
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;
+await $('run-image-tagging').onclick();flush();
+assert.equal(cards()[0],machineCard);assert.equal(cards()[0].children[0].children[0],machineImage);
+const derived=vm.runInContext('tagsFor(items[0])',context);
+assert.ok(derived.includes('Machine Cat'));assert.equal(derived.filter(tag=>tag.toLowerCase()==='art').length,1);
+assert.equal(JSON.stringify(tagCatalog),humanBefore);
+$('search').value='tag:Machine Cat';
+// Exercise the tag predicate directly: whitespace search grammar is independent.
+assert.equal(vm.runInContext("matchesTags(tagsFor(items[0]),['Machine Cat'])",context),true);
+console.log('PASS: generated tags appear immediately on stable bookmark cards, participate in filtering, deduplicate human labels and leave human metadata unchanged.');
+
+assert.ok(data['atlas-tag-vocabulary-v1'].includes('Machine Cat'));
+const rawBefore=JSON.stringify(data['atlas-image-tagging-runs-v1']);
+const tagPair=machineCard.children[1].children.find(e=>e.className==='pin-tags').children.find(e=>e.children[0]?.textContent==='Machine Cat');
+assert.equal(tagPair.children[1].textContent,'×');
+await tagPair.children[1].onclick({stopPropagation(){}});flush();
+assert.ok(!vm.runInContext('tagsFor(selected)',context).includes('Machine Cat'));
+assert.equal(JSON.stringify(data['atlas-image-tagging-runs-v1']),rawBefore);
+assert.ok(data['atlas-tag-vocabulary-v1'].includes('Machine Cat'));
+await $('refresh').onclick();
+assert.ok(!vm.runInContext('tagsFor(selected)',context).includes('Machine Cat'));
+assert.equal(JSON.stringify(tagCatalog),humanBefore);
+console.log('PASS: trailing × removes only this card, persists after reload, retains dropdown vocabulary and leaves original predictions intact.');

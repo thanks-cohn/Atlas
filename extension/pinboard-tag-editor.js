@@ -1,3 +1,27 @@
+export const TAG_VOCABULARY='atlas-tag-vocabulary-v1';
+// Remove associations, never the tag vocabulary or another bookmark's tags.
+export async function removeBookmarkTag(node,tag){
+  return navigator.locks.request('atlas-pages-v1',async()=>{
+    const [current]=await chrome.bookmarks.get(node.id);
+    if(current?.url!==node.url)throw Error('This bookmark changed. Refresh and retry.');
+    async function request(body){
+      const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});
+      if(result?.ok===false || !result?.data || !Number.isSafeInteger(result.revision))throw Error('Connect your companion, then retry.');
+      return result;
+    }
+    let snapshot=await request();
+    const saved=await chrome.storage.local.get(TAG_VOCABULARY);
+    await chrome.storage.local.set({[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});
+    const key=tag.normalize('NFKC').toLowerCase();
+    for(const resource of Object.values(snapshot.data.resources || {})){
+      if(resource.kind!=='bookmark' || !resource.locators?.some(l=>l.provider==='web' && l.reference===node.url))continue;
+      for(const existing of snapshot.data.tags?.[resource.id] || [])if(existing.normalize('NFKC').toLowerCase()===key){
+        snapshot=await request({action:'untag',args:{resource:resource.id,tag:existing},expected_revision:snapshot.revision});
+      }
+    }
+    return snapshot.data;
+  });
+}
 // Exact-URL tag editing through the existing revision-checked companion catalog.
 export function installTagEditor({onChanged}){
   const make=(tag,text='')=>{const e=document.createElement(tag);e.textContent=text;return e;};
@@ -16,7 +40,9 @@ export function installTagEditor({onChanged}){
       const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const known=[...knownTags].sort((a,b)=>a.localeCompare(b));
       const placeholder=make('option',known.length?'Double-click or Enter to toggle':'No saved tags');placeholder.value='';select.replaceChildren(placeholder,...known.map(tag=>{const option=make('option',tag+(owned.includes(tag)?' ✓':''));option.value=tag;return option;}));select.value=known.includes(prior)?prior:'';select.scrollTop=scroll;controls();
     }
-    async function load(){busy=true;retry.hidden=true;controls();try{snapshot=await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
+    async function load(){busy=true;retry.hidden=true;controls();try{const saved=await chrome.storage?.local.get([TAG_VOCABULARY,'atlas-image-tagging-runs-v1']);for(const tag of saved?.[TAG_VOCABULARY] || [])knownTags.add(tag);
+      // Include earlier successful runs too; this reads predictions without inference.
+      for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const run of Object.values(sources))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
     async function mutate(action,tag,allowNew=false){
       if(busy)return;busy=true;controls();retry.hidden=true;
       try{

@@ -126,3 +126,9 @@ header #new-pinboard{margin-left:auto;color:#fff;background:var(--pin-red)}heade
 .board-options .model-choice-setting label{justify-content:flex-start;gap:8px;font-size:12px}
 .model-choice-setting input{accent-color:var(--pin-red)}#model-choice-status:empty{display:none}
 @media(max-width:540px){#detail .detail-tagging{padding:10px 20px 12px}.detail-tagging-row{gap:8px 12px}.detail-tagging-row label{font-size:11px}}
+
+/* Separate hit targets: the label selects a filter; × removes only this card's association. */
+.pin-tag-pair{display:flex;min-width:0;height:21px;border:1px solid #eee6e9;border-radius:20px;background:#f8f4f5;overflow:hidden}
+.pin-tag-pair>.pin-tag{flex:1;border:0;border-radius:0;padding-right:2px;text-align:left}
+.pin-tag-remove{flex:0 0 19px;min-width:19px;padding:0;border:0;border-radius:0;background:transparent;color:#967b86;font-size:13px;line-height:19px}
+.pin-tag-remove:hover,.pin-tag-remove:focus-visible{background:#f6dce5;color:#a0274b}

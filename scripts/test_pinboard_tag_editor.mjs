@@ -5,7 +5,7 @@ class E{constructor(tag){this.tag=tag;this.children=[];this.value='';this.handle
 const body=new E('body'),document={createElement:tag=>new E(tag),body};
 let revision=1,fail=false,changed=0;let data={resources:{r:{id:'r',kind:'bookmark',locators:[{provider:'web',reference:'https://example.com'}]},other:{id:'other',kind:'bookmark',locators:[{provider:'web',reference:'https://other.example'}]}},tags:{r:['Art'],other:['Design']}};
 const mutations=[];const context={document,navigator:{locks:{request:async(_,fn)=>fn()}},chrome:{bookmarks:{get:async()=>[{url:'https://example.com'}]},runtime:{sendMessage:async message=>{if(fail)return {ok:false};const body=message.body;if(body){assert.equal(body.expected_revision,revision);mutations.push(body);const tags=data.tags[body.args.resource] || [];data.tags[body.args.resource]=body.action==='tag'?[...new Set([...tags,body.args.tag])]:tags.filter(t=>t!==body.args.tag);revision++;}return {data:structuredClone(data),revision};}}}};
-vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-tag-editor.js','utf8').replace('export function','function')+';globalThis.install=installTagEditor',context);
+vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-tag-editor.js','utf8').replace(/export /g,'')+';globalThis.install=installTagEditor;globalThis.removeBookmarkTag=removeBookmarkTag',context);
 const open=context.install({onChanged:()=>changed++});await open({id:'1',url:'https://example.com',title:'Bookmark'});
 const dialog=body.children.at(-1),attached=dialog.children[2],select=dialog.children[3].children[0],add=dialog.children[4];
 assert.equal(attached.children[0].textContent,'Art ×');assert.equal(add.disabled,true);
@@ -24,3 +24,17 @@ fail=false;select.value='Design';const countBefore=mutations.length;select.oncha
 select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!data.tags.r.includes('Design'));assert.equal(select.value,'Design');
 select.ondblclick({target:{value:'Design'},preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Design'));
 select.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!data.tags.r.includes('Design'));assert.equal(select.scrollTop,120);
+
+const savedTags={'atlas-tag-vocabulary-v1':['Generated Choice'],'atlas-image-tagging-runs-v1':{'https://source.example':{anime:{suggestions:[{tag:'Earlier Model Tag'}]}}}};
+context.chrome.storage={local:{get:async keys=>Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(key=>[key,savedTags[key]])),set:async values=>Object.assign(savedTags,values)}};
+fail=false;await open({id:'1',url:'https://example.com'});
+const newDialog=body.children.at(-1),picker=newDialog.children[3].children[0];
+assert.ok(picker.children.some(option=>option.value==='Generated Choice'));
+assert.ok(picker.children.some(option=>option.value==='Earlier Model Tag'));
+assert.ok(!data.tags.r.includes('Generated Choice'));
+picker.value='Generated Choice';newDialog.children[4].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Generated Choice'));
+data.tags.other.push('Art');
+await context.removeBookmarkTag({id:'1',url:'https://example.com'},'Art');
+assert.ok(!data.tags.r.includes('Art'));assert.ok(data.tags.other.includes('Art'));
+assert.ok(savedTags['atlas-tag-vocabulary-v1'].includes('Art'));
+console.log('PASS: generated vocabulary and older predictions appear in picker without automatic attachment; direct removal preserves other bookmarks and reusable vocabulary.');

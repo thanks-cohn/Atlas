@@ -11,7 +11,10 @@ import time
 if sys.platform!='win32':raise SystemExit('Actual Windows required')
 binary=Path(sys.argv[1]).absolute()
 user=ctypes.WinDLL('user32');user.FindWindowW.argtypes=[w.LPCWSTR,w.LPCWSTR];user.FindWindowW.restype=w.HWND
-with tempfile.TemporaryDirectory(prefix='atlas-launch-smoke-') as state:
+with tempfile.TemporaryDirectory(prefix='atlas-launch-smoke-') as folder:
+    # WindowsState must create the secured leaf itself; tempfile's existing
+    # directory can be owned by Administrators on an elevated CI runner.
+    state=str(Path(folder)/'private-state')
     command=[str(binary),'--desktop','--advanced','--state-dir',state]
     started=time.monotonic()
     first=subprocess.Popen(command)

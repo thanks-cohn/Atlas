@@ -1,5 +1,5 @@
-import {generationImage,generateModels,imageReference} from './pinboard-generation.js';
-import {installTagEditor} from './pinboard-tag-editor.js';
+import {generationImage,generateModels,imageReference,generatedTags} from './pinboard-generation.js';
+import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,matchesTags,createPinboard} from './pinboard-model.js';
@@ -19,11 +19,59 @@ function metadata(node){return associations.get(node.url) || {note:'',tags:[],im
 function imageFor(node){const value=bookmarkCover(node,covers) || metadata(node).image;if(failedImages.has(value))return null;return value?.startsWith('data:')?value:publicImageURL(value);}
 function link(node,label){const a=el('a',label);a.href=node.url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 function pickImage(node){selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
-function tagsFor(node){return [...new Set(metadata(node).tags.filter(tag=>typeof tag==='string').map(tag=>tag.trim()).filter(Boolean))];}
+function humanTagsFor(node){return [...new Set(metadata(node).tags.filter(tag=>typeof tag==='string').map(tag=>tag.trim()).filter(Boolean))];}
+// Cache only validated image projections; tagsFor stays synchronous during scrolling.
+const TAG_REMOVALS='atlas-card-tag-removals-v1';
+let cardTagRemovals={},generatedIndex=new Map(),generatedEpoch=0;
+function tagsFor(node){
+  const result=new Map(humanTagsFor(node).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
+  const entry=generatedIndex.get(node.url);
+  if(entry?.image===imageFor(node))for(const tag of entry.tags){const key=tag.label.normalize('NFKC').toLowerCase();if(!result.has(key))result.set(key,tag.label);}
+  const removed=cardTagRemovals[node.url] || {};
+  return [...result.values()].filter(tag=>!removed[tag.normalize('NFKC').toLowerCase()]);
+}
+async function refreshGeneratedIndex(){
+  const epoch=++generatedEpoch;
+  const saved=await chrome.storage.local.get([TAGGING_RESULTS,JOYTAG_ACTIVATED,TAG_REMOVALS]);
+  cardTagRemovals=saved[TAG_REMOVALS] || {};
+  const runs=saved[TAGGING_RESULTS] || {},next=new Map();
+  for(const node of pinItems(roots)){
+    if(!runs[node.url])continue;
+    const image=imageFor(node);if(!image)continue;
+    const reference=await imageReference(image);
+    if(epoch!==generatedEpoch)return;
+    next.set(node.url,{image,tags:generatedTags(runs[node.url],reference,saved[JOYTAG_ACTIVATED]===true)});
+  }
+  if(epoch!==generatedEpoch)return;
+  generatedIndex=next;
+  // Preserve mounted images and scroll position when labels arrive.
+  for(const block of blocks.values())for(const card of block.children)updateTagCard(card.atlasNode);
+  items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));
+  renderTags();scheduleWindow();
+}
+async function removeCardTag(node,tag){
+  const key=tag.normalize('NFKC').toLowerCase();
+  if(humanTagsFor(node).some(value=>value.normalize('NFKC').toLowerCase()===key)){
+    associations=indexAssociations(await removeBookmarkTag(node,tag));
+  }
+  await navigator.locks.request('atlas-pages-v1',async()=>{
+    const saved=await chrome.storage.local.get([TAG_REMOVALS,TAG_VOCABULARY]);
+    const removals=saved[TAG_REMOVALS] || {};
+    cardTagRemovals={...removals,[node.url]:{...removals[node.url],[key]:{tag,actor:'human',action:'remove',at:new Date().toISOString()}}};
+    await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals,[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});
+  });
+  await refreshGeneratedIndex();
+  if(selected?.url===node.url){$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>tagButton(tag,'tag')));await showGeneratedTags(node);}
+}
 function tagStrip(node){
   const tags=tagsFor(node);if(!tags.length)return null;
   const strip=el('div');strip.className='pin-tags';strip.setAttribute('aria-label','Bookmark tags');
-  for(const tag of tags.slice(0,5)){const pill=tagButton(tag,'pin-tag');strip.append(pill);}
+  for(const tag of tags.slice(0,5)){
+    const pill=el('span');pill.className='pin-tag-pair';const label=tagButton(tag,'pin-tag');
+    const remove=el('button','×');remove.type='button';remove.className='pin-tag-remove';remove.setAttribute('aria-label','Remove '+tag+' from this card');
+    remove.onclick=async event=>{event?.stopPropagation();remove.disabled=true;try{await removeCardTag(node,tag);}catch(error){status(error.message || 'Tag could not be removed. Retry.');remove.disabled=false;}};
+    pill.append(label,remove);strip.append(pill);
+  }
   if(tags.length>5){const more=el('button','+'+(tags.length-5));more.className='pin-tag pin-tag-more';more.setAttribute('aria-label','Show all '+tags.length+' tags');more.onclick=()=>openDetail(node);strip.append(more);}
   return strip;
 }
@@ -36,9 +84,9 @@ function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-
 async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
 $('joytag-enabled').onchange=async()=>{
   const enabled=$('joytag-enabled').checked;$('joytag-enabled').disabled=true;
-  try{await chrome.storage.local.set({[JOYTAG_ACTIVATED]:enabled});applyJoyTagSetting(enabled);$('model-choice-status').textContent='Saved.';}catch{$('model-choice-status').textContent='Could not save. Please retry.';await loadModelChoiceSetting();}finally{$('joytag-enabled').disabled=false;}
+  try{await chrome.storage.local.set({[JOYTAG_ACTIVATED]:enabled});applyJoyTagSetting(enabled);await refreshGeneratedIndex();if(selected)await showGeneratedTags(selected);$('model-choice-status').textContent='Saved.';}catch{$('model-choice-status').textContent='Could not save. Please retry.';await loadModelChoiceSetting();}finally{$('joytag-enabled').disabled=false;}
 };
-chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);});
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && (changes[JOYTAG_ACTIVATED] || changes[TAGGING_RESULTS] || changes[TAG_REMOVALS])){if(changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);refreshGeneratedIndex().catch(()=>status('Saved generated tags could not be loaded.'));}});
 loadModelChoiceSetting();
 async function loadTaggingChoices(node){
   const key=node.url,request=++taggingChoiceEpoch;
@@ -80,27 +128,13 @@ async function showGeneratedTags(node){
     const [stored,activation,reference]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED),imageReference(imageFor(node))]);
     const runs=stored[TAGGING_RESULTS]?.[node.url] || {},animeEnabled=activation[JOYTAG_ACTIVATED]===true;
     if(selected?.url!==node.url)return;
-    // Deduplicate presentation only: every per-model result remains saved intact.
-    const human=new Set(tagsFor(node).map(tag=>tag.toLocaleLowerCase()));
-    const grouped=new Map();
-    for(const source of ['objects','face','anime']){
-      const run=runs[source];
-      if(!run || (run.image_reference && run.image_reference!==reference) || (source==='anime' && !animeEnabled))continue;
-      for(const suggestion of run.suggestions||[]){
-        if(typeof suggestion.tag!=='string')continue;
-        if(source==='objects' && run.display_choices && (suggestion.tag==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
-        const label=suggestion.tag.trim();
-        const key=label.toLocaleLowerCase();
-        if(!key)continue;
-        if(!grouped.has(key))grouped.set(key,{label,sources:[]});
-        grouped.get(key).sources.push({source,model:run.model,score:suggestion.score});
-      }
-    }
+    const human=new Set(humanTagsFor(node).map(tag=>tag.normalize('NFKC').toLowerCase()));
+    const grouped=new Map(generatedTags(runs,reference,animeEnabled).map(entry=>[entry.label.normalize('NFKC').toLowerCase(),entry]));
     if(!grouped.size)return;
-    const section=el('section'),heading=el('strong','Generated tag suggestions');
+    const section=el('section'),heading=el('strong','Generated tags');
     const tags=el('div');tags.className='generated-tag-chips';
     for(const [key,entry] of grouped){
-      if(human.has(key))continue; // Existing human tag is already shown above.
+      if(human.has(key) || cardTagRemovals[node.url]?.[key])continue; // Existing human tag is already shown above.
       const chip=el('span',entry.label);chip.className='tag';
       chip.title=entry.sources.map(item=>{
         const confidence=Number.isFinite(item.score)?' ('+Math.round(item.score*100)+'%)':'';
@@ -128,17 +162,27 @@ $('run-image-tagging').onclick=async()=>{
     await generateModels({node,image,choices,send:message=>chrome.runtime.sendMessage(message),status:report,
       save:async(source,result)=>{
         result={...result,image_reference:reference};
-        const stored=await chrome.storage.local.get(TAGGING_RESULTS),all=stored[TAGGING_RESULTS] || {};
-        const previous=Object.fromEntries(Object.entries(all[node.url] || {}).filter(([,run])=>run.image_payload_sha256===result.image_payload_sha256));
-        await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[node.url]:{...previous,[source]:result}}});
+        await navigator.locks.request('atlas-pages-v1',async()=>{
+          const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAG_VOCABULARY]),all=stored[TAGGING_RESULTS] || {};
+          const previous=Object.fromEntries(Object.entries(all[node.url] || {}).filter(([,run])=>run.image_payload_sha256===result.image_payload_sha256));
+          const vocabulary=new Map((stored[TAG_VOCABULARY] || []).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
+          for(const suggestion of result.suggestions || [])if(typeof suggestion.tag==='string' && suggestion.tag.trim()){const tag=suggestion.tag.trim(),key=tag.normalize('NFKC').toLowerCase();if(!vocabulary.has(key))vocabulary.set(key,tag);}
+          await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[node.url]:{...previous,[source]:result}},[TAG_VOCABULARY]:[...vocabulary.values()]});
+        });
+        await refreshGeneratedIndex();
         if(selected?.url===node.url)await showGeneratedTags(node);
       }});
     report('Tags generated.');
   }catch(error){report(error.message || 'Tag generation failed.');}
   finally{taggingBusy=false;updateTaggingAction();}
 };
-function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...tagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
-const editTags=installTagEditor({onChanged:async data=>{associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
+function openDetail(node){selected=node;$('detail-title').textContent=node.title || new URL(node.url).hostname;const image=imageFor(node);$('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');$('detail-image').alt=node.title || 'Bookmark image';$('detail-note').textContent=metadata(node).note;$('detail-link').href=node.url;$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>{return tagButton(tag,'tag');}));document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;loadTaggingChoices(node);showGeneratedTags(node);}
+const editTags=installTagEditor({onChanged:async data=>{
+  if(tagsChangedURL){const next=indexAssociations(data).get(tagsChangedURL)?.tags || [],prior=associations.get(tagsChangedURL)?.tags || [];
+    const added=next.filter(tag=>!prior.includes(tag));
+    if(added.length)await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_REMOVALS),all=saved[TAG_REMOVALS] || {},own={...all[tagsChangedURL]};for(const tag of added)delete own[tag.normalize('NFKC').toLowerCase()];cardTagRemovals={...all,[tagsChangedURL]:own};await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals});});
+  }
+  associations=indexAssociations(data);metadataState='ready';items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));renderTags();for(const node of items)if(tagsChangedURL===node.url)updateTagCard(node);renderWindow();}});
 let tagsChangedURL=null;
 function card(node){
   const article=el('article');article.className='pin';article.atlasNode=node;const image=imageFor(node);
@@ -255,7 +299,7 @@ async function refresh(){
     $('folder').replaceChildren();const blank=el('option','Create Blank');blank.value='blank';$('folder').append(blank);const all=el('option','All Bookmarks');all.value='all';$('folder').append(all);
     function folders(nodes,path=[]){for(const node of nodes)if(!node.url){const trail=[...path,node.title].filter(Boolean);if(node.id && node.parentId!==undefined){const option=el('option',trail.join(' / '));option.value=node.id;$('folder').append(option);}folders(node.children || [],trail);}}
     folders(roots);const savedBoards=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};for(const saved of Object.values(savedBoards)){try{const board=boardRecord(saved);const option=el('option',board.title);option.value='board:'+board.id;$('folder').append(option);}catch{}}$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
-    await refreshAssociations();render();
+    await refreshAssociations();await refreshGeneratedIndex();render();
   }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:tagsFor(node)})});

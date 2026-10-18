@@ -751,3 +751,16 @@ tests skipped on Linux). Preview generation/pinboard tests passed. Real models,
 frozen process/GUI/installed cache/recovery checks are Windows CI gates, not yet
 claimed from these portable tests. Existing bookmarks, human tags, run history,
 permissions and UI are retained. Owner laptop/4GB acceptance remains pending.
+
+
+## 2026-10-18 — 0.1.69 card tags and model vocabulary
+
+- Owner reports the older helper finally connected and generated tags, with light inference in their observation. Exact selected models, timing and measured owner memory remain UNKNOWN. Slow launch remains separate negative evidence.
+- Explicit Generate now projects saved model tags onto the originating bookmark's pinboard card and its tag filters. Human catalog tags remain separate; equal labels present once while every source prediction remains in evidence. Validated image references prevent predictions from an earlier cover appearing after replacement. Anime remains Settings opt-in.
+- Card chips have independent trailing × buttons after the label. Human associations are removed through the existing revision-checked catalog API for that exact URL only. Generated removals are human decisions stored separately in `atlas-card-tag-removals-v1` (URL, normalized label, actor, action, timestamp); rerunning a model does not silently restore removed labels. This is a current override projection, not the full proposed append-only curation history.
+- `atlas-tag-vocabulary-v1` retains reusable labels, including generation results and removed labels. The existing tag picker also reads older successful runs. Generating does not attach these labels to any other card; explicit dropdown selection adds a human tag there. Explicitly adding a removed label through the editor restores it. Cards sharing an exact URL are one logical bookmark, consistent with All Bookmarks deduplication.
+- No dashboard, face identity UI, startup inference or bulk tagging was added. Mounted card images and scroll position are retained when generated tags arrive. Five chips plus overflow remain the compact card presentation.
+- Latest local DOM/API checks cover immediate card attachment, deduplication, source/image/Anime gates, search predicate, durable removal, reusable generated dropdown options and unchanged raw predictions/human metadata. These doubles are not Chrome visual acceptance.
+- Windows run 39097648704 built a 13,505,342-byte core. All three real ONNX child jobs passed: peak working sets objects 121,995,264 bytes; face 86,941,696; Anime 515,129,344 on a blank test image. Parent imported no AI dependencies. These CI measurements are not guarantees for arbitrary images/hardware.
+- That run stopped at the new GUI launch test: its pre-created temporary state directory was owned differently on the elevated runner and correctly rejected by WindowsState. The fixture now lets WindowsState create its own secured leaf, matching the installed companion smoke fixture. Security checks are unchanged. Updated full Windows packaging/native/runtime acceptance is pending.
+- Human removal across catalog and extension storage is not a cross-store transaction. A storage failure after catalog success is reported; retry is safe, but full event-sourced cross-store reconciliation remains future work.

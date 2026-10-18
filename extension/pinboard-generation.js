@@ -49,3 +49,21 @@ export async function generateModels({node,image,choices,send,save,status}) {
   }
   return results;
 }
+
+// Derived presentation only. Original runs and human metadata are never mutated.
+export function generatedTags(runs,reference,animeEnabled=false) {
+  const grouped=new Map();
+  for(const source of ['objects','face','anime']){
+    const run=runs?.[source];
+    if(!run || !reference || run.image_reference!==reference || (source==='anime' && !animeEnabled))continue;
+    for(const suggestion of run.suggestions || []){
+      if(typeof suggestion.tag!=='string')continue;
+      if(source==='objects' && run.display_choices && (suggestion.tag==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
+      const label=suggestion.tag.trim(),key=label.normalize('NFKC').toLowerCase();
+      if(!key)continue;
+      if(!grouped.has(key))grouped.set(key,{label,sources:[]});
+      grouped.get(key).sources.push({source,model:run.model,score:suggestion.score});
+    }
+  }
+  return [...grouped.values()];
+}

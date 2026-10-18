@@ -21,3 +21,13 @@ try {
   await assert.rejects(()=>generationStub.generationImage('data:image/svg+xml;base64,AA=='),/supported image/);
 } finally {globalThis.fetch=originalFetch;}
 console.log('PASS: local covers decode without network/CSP changes; unsupported data media rejected.');
+
+const {generatedTags}=await import('data:text/javascript;base64,'+Buffer.from(text).toString('base64'));
+const runs={objects:{image_reference:'current',display_choices:{objects:true,people:false},suggestions:[{tag:'Cat',score:.8},{tag:'person',score:.9}]},anime:{image_reference:'current',suggestions:[{tag:'cat',score:.7},{tag:'smile',score:.6}]},face:{image_reference:'old',suggestions:[{tag:'stale'}]}};
+const original=JSON.stringify(runs);
+assert.deepEqual(generatedTags(runs,'current',false).map(t=>t.label),['Cat']);
+const visible=generatedTags(runs,'current',true);
+assert.deepEqual(visible.map(t=>t.label),['Cat','smile']);assert.equal(visible[0].sources.length,2);
+assert.deepEqual(generatedTags(runs,'replacement',true),[]);
+assert.equal(JSON.stringify(runs),original);
+console.log('PASS: generated card projection keeps provenance, deduplicates sources, honors image/Anime/display gates and never mutates evidence.');
