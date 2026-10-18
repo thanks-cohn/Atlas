@@ -8,6 +8,7 @@ on:
       - 'src/atlas_native/**'
       - 'src/atlas_core/**'
       - 'scripts/build_windows_companion.py'
+      - 'scripts/package_extension.py'
       - 'scripts/prepare_tagging_models.py'
       - 'scripts/smoke_windows_companion.py'
       - 'scripts/smoke_windows_launch.py'
