@@ -77,3 +77,31 @@ Shared tests run on actual Windows state/provider in test_windows_library.py and
 
 No guarantee is made that the exact owner failure is fixed until tested with the new build and its specific error feedback. This changes save durability, not the completed publishing product.
 
+
+## Proposal addendum — Safe-location backup and restore after Chrome resets (2026-10-17)
+
+**Status: Future proposal; not implemented by the 0.1.8 gallery persistence work above.**
+
+**Owner purpose:** A user's accumulated Atlas tags, notes, cover selections, generated-tag outputs and provenance, card-level tag overrides/removals, bookmark associations, galleries, collections, relationships and private/public metadata must not disappear when Chrome resets, clears extension storage, changes profiles, or the extension is reinstalled. Existing companion SQLite persistence is useful but *one live database is not a backup*.
+
+### Simple local-first experience
+
+- Offer **Back Up My Atlas Library** and **Restore Atlas Library** in Settings, plus configurable automatic/versioned backups into a **user-chosen safe local directory outside Chrome's profile and extension storage**. The actual location is shown clearly, can be changed, and is never silently substituted.
+- Produce a portable, versioned package/manifest capturing the curated records and referenced assets (or clearly identified missing originals), resource identifiers and bookmarks' URLs for relinking, with provenance, integrity checks and format compatibility. Preserve the distinct meanings of global tag vocabulary, tags assigned to cards, machine-generated suggestions, and manual display exclusions.
+- Treat backup as complete only after an internally consistent SQLite snapshot/export, write verification, checksum/manifest validation and a tested read-back. Do not rely on copying a live database file, and never claim a backup succeeded merely because a file exists.
+- Keep sensible dated recovery points and a retention policy that does not overwrite the last known good backup. Warn if the backup is on the same failing disk and permit exporting to another drive.
+- After a browser/profile reset or extension reinstall, show **Restore from Local Backup**: select the saved package/directory, validate the manifest, preview contents and any conflicts, then restore/reconnect the curated library without overwriting surviving data or duplicating records. Where native bookmark IDs changed, relink by confirmed URL and supporting identity/provenance rather than guessing.
+- Support reopening an existing intact companion library separately from importing a backup. Do not mistake an empty new Chrome cache for instructions to wipe durable companion data.
+- Report restoration outcomes clearly: restored, linked, needs review, missing originals, partial/error. Maintain recoverable rollback and idempotent retries; no original deletion before proof of full recoverability.
+- **Later remote option:** authorized R2 or other remote backup plus re-download/restore after a clean-device reinstall, with encryption/private access, revisioned manifests, verified uploads, and remote restore testing. Remote sync and remote backup are separate choices; neither is required for local recovery.
+
+### Future acceptance
+
+1. Curate tags/notes/covers, back up to a safe local folder, clear Chrome extension/profile storage, reinstall and restore every curated relationship and display override.
+2. Removing the extension does not delete the selected safe backup.
+3. A truncated archive, unsupported version, corrupt checksum, locked file or interrupted restore cannot destroy the surviving library.
+4. A Chrome bookmark ID change prompts safe relinking, without silently assigning curation to an unrelated bookmark.
+5. Reinstall with a functioning existing companion library reconnects without requiring destructive import.
+6. A future remote restore fetches only authorized data; verifies integrity before accepting it as restored.
+
+**Enduring requirement:** Atlas curation belongs to the user and must outlive the browser profile, the extension install and future rewrites of Atlas.
