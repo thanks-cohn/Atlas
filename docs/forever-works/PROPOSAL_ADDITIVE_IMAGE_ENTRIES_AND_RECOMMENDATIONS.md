@@ -38,7 +38,7 @@ This section translates the direction into implementation details; details not e
 
 Place Add Image and a quieter Remove Image in the source-action row, keeping Visit source on the right. Keep Add Tag beside Generate tags. Navigation affordances should be small, visible on focus/interaction, and have accessible labels plus an unobtrusive position indicator. Disable/hide unavailable navigation for zero/one entry. Do not intercept arrow keys while typing, selecting tags, or operating another control that owns them. Optional transition motion must respect reduced motion and constrained hardware.
 
-The parent title/source stays stable by default; all image-scoped content changes. Independent per-entry titles/source overrides are a future option, not a requirement to invent now. Adding an image should not silently change the board's representative cover; propose retaining the first surviving entry until an explicit representative-image choice exists.
+The parent title/source stays stable by default; all image-scoped content changes. Independent per-entry titles/source overrides are a future option, not a requirement to invent now. Adding an image does not silently change the representative cover. Accepted owner direction now requires a top-right star control: selecting it sets the active entry as the default cover, with a highlighted star on that entry. The shelf and board resolve the same explicit default. See the recovery addendum below.
 
 ## Ownership and portable identity
 
@@ -121,3 +121,9 @@ Current 0.1.84 implements a single chosen image and item-keyed tags/results/conn
 - Verify bounded decoded-image memory, one preview scroller, both themes, edge alignment, keyboard ownership and reduced motion.
 
 A successor implementation may change language, storage mechanism, UI framework or recommendation provider. It must preserve additive ownership, explicit removal, per-entry isolation, provenance, permission boundaries, recoverability and the tested interaction semantics. This proposal is rationale and planned acceptance evidence, not proof of implemented functionality.
+
+## Accepted addendum · Default cover, Recover and opt-in backup · 2026-10-18
+
+Owner clarification supersedes any implication that Remove Image automatically archives image bytes: **Recover initially preserves references, SHA-256 when readable, and relationship/history metadata. It does not create a backup copy by default.** Preserve the original URL or last known authorized local location (filename-only if the browser withholds the full path). Optional Backup to R2 stores a separately verified copy in a standardized asset namespace used by the framework/API.
+
+The top-right star selects the default entry and highlights it. Removal saves a durable recovery record before detaching the entry; restoring associations is distinct from retrieving unavailable image bytes. See [Recover, Asset References and Optional R2 Backup](PROPOSAL_IMAGE_RECOVERY_REFERENCES_AND_R2_BACKUP.md) for effects, failure semantics and acceptance gates. Everything in this addendum remains proposed, not implemented by this documentation change.
