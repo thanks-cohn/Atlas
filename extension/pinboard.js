@@ -350,7 +350,7 @@ function updatePriorities(){
 
 function renderTags(){
   $('tag-browser').hidden=false;
-  const tags=[...new Set(collectionNodes().flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b));
+  const tags=[...new Set(collectionNodes().flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b,undefined,{sensitivity:'base',numeric:true}));
   $('tag-browser').hidden=false;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable' && $('folder').value!=='blank'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
   const required=selectionTags();$('active-tags').hidden=!required.length;
@@ -398,6 +398,13 @@ const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.st
 // Alt+Q clears browsing selection only. Escape remains exclusively available
 // to previews/dialogs. Ordinary search words and attached tags are preserved.
 window.addEventListener('keydown',event=>{
+  // Hover gives the tag viewport arrow scrolling without stealing keys from editors/dialogs.
+  if(['ArrowUp','ArrowDown'].includes(event.key) && !event.defaultPrevented && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !(document.querySelectorAll?.('dialog[open]') || []).length && !event.target?.matches?.('input,textarea,select,[contenteditable]')){
+    const browser=$('tag-browser'),field=$('tag-field');
+    if(!browser.hidden && (browser.matches?.(':hover') || browser.contains?.(document.activeElement)) && field.scrollHeight>field.clientHeight){
+      event.preventDefault();field.scrollTop=Math.max(0,Math.min(field.scrollHeight-field.clientHeight,field.scrollTop+(event.key==='ArrowDown'?48:-48)));return;
+    }
+  }
   if(event.key?.toLowerCase()!=='q' || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat || event.defaultPrevented || $('detail').open || $('image-source').open || (document.querySelectorAll?.('dialog[open]') || []).length)return;
   if(event.target!==$('search') && event.target?.matches?.('input,textarea,select,[contenteditable]'))return;
   const query=tagQuery($('search').value);

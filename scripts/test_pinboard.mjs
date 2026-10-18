@@ -381,3 +381,15 @@ const targetTag=targetCard.children[1].children.find(child=>child.className==='p
 assert.equal(vm.runInContext('items[0].cardId',context),'auth-c','Selection/ranking updates immediately');assert.ok(cards().includes(targetCard));assert.equal(targetCard.style.left,targetPosition.left);assert.equal(targetCard.style.top,targetPosition.top);
 holdAdvance(4000);targetCard.handlers.pointermove();holdAdvance(4999);assert.equal(holdImpl.active().length,1);assert.equal(targetCard.style.left,targetPosition.left);holdAdvance(1);assert.equal(holdImpl.active().length,0);assert.equal(targetCard.style.left,'0px');assert.equal(targetCard.style.top,'0px');
 console.log('PASS: card tag click immediately selects/ranks but retains the actual card/geometry until five seconds after its last interaction.');
+
+// Arrow scrolling belongs to the hovered/focused tag viewport, never an editor.
+let tagHover=true,arrowPrevented=0;
+$('tag-browser').matches=()=>tagHover;
+Object.assign($('tag-field'),{scrollHeight:600,clientHeight:185,scrollTop:0});
+const arrow=(key,target=document.body)=>listeners.keydown({key,target,preventDefault(){arrowPrevented++;}});
+arrow('ArrowDown');assert.equal($('tag-field').scrollTop,48);arrow('ArrowUp');assert.equal($('tag-field').scrollTop,0);
+arrow('ArrowUp');assert.equal($('tag-field').scrollTop,0);
+arrow('ArrowDown',{matches:()=>true});assert.equal($('tag-field').scrollTop,0);
+tagHover=false;arrow('ArrowDown');assert.equal($('tag-field').scrollTop,0);
+assert.equal(arrowPrevented,3);
+console.log('PASS: hovered tag arrows scroll only the tag viewport, clamp at boundaries and leave editors/unhovered board keys alone.');

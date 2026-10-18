@@ -890,3 +890,11 @@ Owner direction: a professional, low-noise surface with the tag scrollbar visibl
 The existing tag area still expands on hover or keyboard focus, with reduced-motion support. Its scrollbar is suppressed while collapsed and thin while expanded, with matching light/dark thumb colors. No new JavaScript, dependencies, helper, model or storage changes. Shared surface covers bookmark and authored boards.
 
 Proof: integrated pinboard, menu and appearance tests passed using DOM/API doubles; packaging and whitespace checks passed. Full project verification validated 22 records; 160 tests had 3 native/supervisor readiness failures, 3 errors and 33 skips, matching preceding local process-start limitations. This is not a full local pass. Actual Chrome visual acceptance remains NOT_RUN. Continue with light/dark hover, keyboard focus, narrow screens and touch interaction in Chrome; verify tag rows, scrollbar and all controls remain reachable. No helper reinstall required.
+
+## 2026-10-18 — Alphabetical tag browsing and hover arrow scrolling, 0.1.81
+
+Owner direction: quick alphabetical navigation and Up/Down scrolling while hovering Explore Tags. Existing selected-first grouping remains fixed; each group now uses locale-aware, case-insensitive natural alphabetical order (numbered tags sort 2 before 10). Only presentation order changes, not tag identity/provenance or ranking scores.
+
+The existing keyboard handler now routes unmodified Up/Down to the overflowing tag viewport while hovered or keyboard-focused inside it. Scrolling is bounded and uses 48px increments; page scrolling is prevented only while this viewport owns those keys. Editors, open dialogs, modified keys and the unhovered board retain their existing keyboard behavior. The existing hover/focus expansion and contextual scrollbar remain. No new dependency, helper or model download.
+
+Proof: integrated pinboard suite including hover/boundary/editor isolation passed with DOM/API doubles; packaging and whitespace checks passed. Full project verification validated 22 records; 160 tests had 3 native/supervisor readiness failures, 3 errors and 33 skips, matching prior local process-start limitations, not a full local pass. Actual Chrome visual/keyboard acceptance remains NOT_RUN. Continue with long tag lists, focus navigation, search typing and preview dialogs on both themes.
