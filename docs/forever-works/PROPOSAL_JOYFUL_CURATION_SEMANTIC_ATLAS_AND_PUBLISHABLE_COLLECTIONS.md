@@ -372,3 +372,21 @@ Independent programs should be able to reproduce a useful interactive graph or c
 **Fluid:** drawing/layout engine, graph clustering algorithms, storage backend, timing heuristics, colors and animation system, inspection panel UI implementation.
 
 **Non-goals:** covert surveillance, universal browsing-time accuracy, bypassing local filesystem access grants, extracting private R2 URLs into public exports, running untrusted files in the preview, or interpreting observed attention as conclusive evidence of a person's feelings.
+
+
+## Addendum — Compact bookmark tree with visual hover previews (2026-10-17)
+
+**Status:** Owner-directed future UX proposal, not an implemented feature. **Motivation:** Retain the useful density and familiar hierarchy of a Graphmarks-inspired tree while giving Atlas faster, image-based recognition and a more refined interaction than text-only nodes. This augments the current large-image visual explorer; it does **not** replace it.
+
+- **Compact primary presentation:** Show connected bookmark nodes in a navigable tree/graph, with existing notes, tags, associated bookmarks and paths visibly branching where appropriate. Keep node sizes compact; do not expand every cover into a large image by default.
+- **Cover-image hover:** Hovering a bookmark node reveals a small polished popover containing that bookmark's **user-selected default cover**, not an arbitrary newly discovered image. Position near the node without reflowing, covering important graph controls, or obscuring the context; hide on exit with a modest adjustable delay.
+- **Preview fallback:** Where no cover exists, show favicon, title and domain; never break traversal. Reuse existing Atlas cover identity and thumbnail pipeline, rather than creating a duplicate asset or modifying the underlying bookmark.
+- **Interaction:** Hover/focus previews are non-destructive; clicking a node selects/opens the full Atlas detail or navigates to the underlying bookmark according to the view's explicit action. Keyboard focus and touch activation offer equivalent preview access; dismissal supports Escape.
+- **Optional affordance:** Allow turning hover previews on/off and adjusting thumbnail size and hover delay. Responsive positioning must work in both the shelf and full page, with viewport-edge collision handling, accessible text alternatives, and reduced-motion support.
+- **Lazy loading and storage:** Fetch thumbnails only when relevant and authorized (local storage, remote sources or private R2); respect the library's visibility/access rules. Previews must not inadvertently load private material while locked or leak private image URLs into public graph exports.
+- **Graph correctness:** Preserve the existing tree/subpath hierarchy and stable underlying resource/relationship IDs. A bookmark cannot be its own immediate parent; avoid illegal self-cycles. Reused notes/tags/bookmarks may be represented by visible references/edges instead of destructive duplication. Site-path child constraints apply only to the designated URL-path hierarchy, not arbitrary semantic associations.
+- **Extension beyond bookmarks (optional):** Note nodes may preview an excerpt; tags may preview an explicitly selected representative image. These previews do not alter the original note/tag or imply an additional relationship.
+
+**Acceptance checks:** (1) cover-selected node yields the same cover in a compact hover popover; (2) hover does not resize/rearrange graph nodes; (3) fallback works without a cover; (4) keyboard/touch operate without hover; (5) locked R2 sources make no unauthorized network requests; (6) dense graphs remain responsive through lazy retrieval; (7) switching graph/large-image layouts preserves source data and selections; (8) public export omits private previews/locators.
+
+**Enduring distinction:** Graphmarks-inspired navigability plus Atlas's curated visual recognition; a compact tree for finding things, and the existing image-led views for exploring them.
