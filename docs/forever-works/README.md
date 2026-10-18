@@ -78,3 +78,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Gallery Studio v1](GALLERY_STUDIO_V1.md): three presentations, studio workflow, preserved content, migration and proof limits.
 
 - [Pinboard v1](PINBOARD_V1.md) — native bookmarks, image/source actions, bounded lazy rendering and current storage limitations.
+
+## Remote-locked private library proposal
+
+- [PROPOSAL_REMOTE_LOCKED_PRIVATE_LIBRARY.md](PROPOSAL_REMOTE_LOCKED_PRIVATE_LIBRARY.md) — password-unlocked remote-only R2 private library, capability-gated URL fetches, on-demand assets, verified migration out of Chrome bookmarks, and explicit private-to-public publishing without leakage. Proposal only; not implemented.
