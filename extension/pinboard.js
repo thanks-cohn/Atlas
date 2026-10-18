@@ -453,13 +453,15 @@ const coverFetch=installCoverFetch({
   getNodes:()=>filteredNodes().filter(node=>!!node.url),
   getMounted:()=>[...blocks.values()].flatMap(block=>[...block.children].map(element=>({element,node:element.atlasNode}))),
   hasCover:node=>!!imageFor(node),raster:rasterImage,
-  saveCover:async(node,image)=>navigator.locks.request('atlas-pages-v1',async()=>{
+  saveCover:async(node,image)=>{
     if(authored(node)){await blankBoard.patch(node,{image});return true;}
+    return navigator.locks.request('atlas-pages-v1',async()=>{
     const current=await chrome.bookmarks.get(node.id);if(current[0]?.url!==node.url)return false;
     const latest=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
     if(bookmarkCover(node,latest)){covers=latest;return false;}
     const next=setBookmarkCover(latest,node,image,(await chrome.storage.local.get(COVER_BUDGET_KEY))[COVER_BUDGET_KEY]);await chrome.storage.local.set({[COVER_KEY]:next});covers=next;return true;
-  }),
+    });
+  },
   onSaved:node=>{updateCoverCard(node);refreshCoverUsage();}
 });
 async function start(){

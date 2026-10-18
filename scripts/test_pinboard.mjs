@@ -355,3 +355,11 @@ await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.exampl
 $('close').onclick();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
 $('folder').value='all';vm.runInContext('render()',context);$('folder').value='blank';vm.runInContext('render()',context);assert.equal(blankImpl.region().hidden,false);assert.equal($('preview-board').textContent,'Preview');
 console.log('PASS: legacy authored cards use common card/preview/ranking/tag/X/generation/masonry functions, unique identities, local mutation, stale-cover isolation, editing refresh and preview exit reset.');
+
+// Browser Web Locks are not reentrant: authored fetch persistence owns its lock.
+const originalLock=context.navigator.locks.request;let held=false;
+context.navigator.locks.request=async(name,callback)=>{assert.equal(held,false,'Do not acquire the card storage lock recursively');held=true;try{return await callback();}finally{held=false;}};
+assert.equal(await fetchOptions.saveCover(blankImpl.nodes()[2],'https://example.com/authored-fetched.webp'),true);
+assert.equal(blankImpl.metadata(blankImpl.nodes()[2]).image,'https://example.com/authored-fetched.webp');
+context.navigator.locks.request=originalLock;
+console.log('PASS: authored cover fetch persists through one nonreentrant storage lock.');
