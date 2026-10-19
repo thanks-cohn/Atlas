@@ -9,8 +9,22 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 | 003 | [Saved notes cannot be deleted](003-delete-saved-notes.md) | Backlog — not started |
 | 004 | [Linked bookmark preview misses an existing saved image](004-linked-bookmark-preview-missing-cover.md) | Backlog — not started |
 
+| 005 | [Extensible tag model companion proposal](005-extensible-tag-model-companion-proposal.md) | Backlog |
+| 006 | [Compact expandable recovery history](006-recovery-history-compact-expandable-rows.md) | Backlog |
+| 007 | [Tagging stalls and results disappear after leaving a card](007-tagging-job-lifecycle-and-result-recovery.md) | Backlog — unresolved |
+| 008 | [People reports an unexplained extra subject](008-people-extra-subject-and-count-inspection.md) | Backlog — unresolved |
+| 009 | [Audit one authoritative pinboard name](009-pinboard-title-single-source-audit.md) | Backlog — unresolved |
+| 010 | [Keep programmatic current tags fresh after manual changes](010-current-tag-checkpoint-freshness.md) | Backlog — unresolved |
+
 ## Adding an item
 
 Use the next unused number (`002`, `003`, …) and a descriptive filename. Keep numbers stable when items are reordered or completed. Add the item to this index.
 
 Each item should state the problem or question, why it matters, observed evidence versus suspicions, investigation scope, constraints, and what evidence is required to close it. Use **Backlog**, **In progress**, **Blocked**, or **Done**; preserve completed items and their results for future agents. A backlog entry records unfinished work, not a claim that the work has been investigated or fixed.
+
+## Unfinished issue reporting
+
+Owner direction (2026-10-19): when an issue is observed or discovered but not fixed,
+record it here before ending work. Separate evidence from hypotheses, state what
+remains unresolved, and give reproduction/closure criteria. Mentioning an issue
+in conversation or testing a nearby path is not a fix. Keep this index current.
