@@ -42,3 +42,5 @@ remains unresolved, and give reproduction/closure criteria. Mentioning an issue
 in conversation or testing a nearby path is not a fix. Keep this index current.
 
 - [018 — Fast-scroll stalls and missed clicks](018-fast-scroll-missed-clicks.md): indexed window selection and improved agent diagnostics implemented; real-browser acceptance open.
+
+- [019 — Anime choice flicker](019-anime-choice-flicker.md): per-card refresh hide/show removed and stale reads guarded; browser acceptance pending.

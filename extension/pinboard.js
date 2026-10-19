@@ -113,35 +113,33 @@ function tagStrip(node){
 const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
-let taggingChoiceEpoch=0,taggingBusy=false;
+let taggingChoiceEpoch=0,taggingBusy=false,modelChoiceEpoch=0,joytagEnabled=false,taggingChoiceKey=null;
 function updateTaggingAction(){const chosen=['tag-image-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || previewingLinkedImage || !chosen;}
-function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
-async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
+function applyJoyTagSetting(enabled){joytagEnabled=enabled;modelChoiceEpoch++;$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
+async function loadModelChoiceSetting(){const request=modelChoiceEpoch;try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);if(request===modelChoiceEpoch)applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{if(request===modelChoiceEpoch)$('model-choice-status').textContent='Could not load model preference.';}}
 $('joytag-enabled').onchange=async()=>{
-  const enabled=$('joytag-enabled').checked;$('joytag-enabled').disabled=true;
+  const enabled=$('joytag-enabled').checked;++modelChoiceEpoch;$('joytag-enabled').disabled=true;
   try{await chrome.storage.local.set({[JOYTAG_ACTIVATED]:enabled});applyJoyTagSetting(enabled);await refreshGeneratedIndex();if(selected)await showGeneratedTags(selected);$('model-choice-status').textContent='Saved.';}catch{$('model-choice-status').textContent='Could not save. Please retry.';await loadModelChoiceSetting();}finally{$('joytag-enabled').disabled=false;}
 };
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && (changes[JOYTAG_ACTIVATED] || changes[TAGGING_RESULTS] || changes[TAG_REMOVALS])){if(changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);refreshGeneratedIndex().catch(()=>status('Saved generated tags could not be loaded.'));}});
 loadModelChoiceSetting();
 async function loadTaggingChoices(node){
   const key=itemKey(node),request=++taggingChoiceEpoch;
-  $('tag-anime-wrap').hidden=true;
-  $('tag-anime-choice').checked=false;
-  $('tag-image-choice').checked=false;
+  // Refreshing this card must not hide an enabled model or clear its selections.
+  if(taggingChoiceKey!==key){taggingChoiceKey=key;$('tag-anime-choice').checked=false;$('tag-image-choice').checked=false;}
   setTaggingChoiceStatus('');updateTaggingAction();
   try{
-    const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
+    const saved=await chrome.storage.local.get(TAGGING_UI_PREFS);
     if(itemKey(selected)!==key || request!==taggingChoiceEpoch)return;
     const prefs=saved[TAGGING_UI_PREFS]?.[key] || {};
     $('tag-image-choice').checked=prefs.objects===true;
-    const joytagEnabled=saved[JOYTAG_ACTIVATED]===true;
-    applyJoyTagSetting(joytagEnabled);
     $('tag-anime-choice').checked=joytagEnabled && prefs.anime===true;
   }catch{if(itemKey(selected)!==key || request!==taggingChoiceEpoch)return;setTaggingChoiceStatus('Could not restore choices.');}
   updateTaggingAction();
 }
 async function saveTaggingChoices(){
   if(!selected)return;
+  ++taggingChoiceEpoch; // A user edit supersedes an unfinished preference read.
   const key=itemKey(selected);
   const choice={objects:$('tag-image-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
   updateTaggingAction();setTaggingChoiceStatus('');

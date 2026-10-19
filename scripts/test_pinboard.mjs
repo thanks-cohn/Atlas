@@ -539,3 +539,20 @@ const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distan
 assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
 assert.equal(debugStates.get('pinboard')().renderer_revision,2);
 console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
+// Model availability must not blink while card-specific choices are read.
+vm.runInContext("applyJoyTagSetting(true);selected={id:'anime-test',url:'https://fixture.test/anime'};taggingChoiceKey=itemKey(selected);",context);
+$('tag-anime-choice').checked=true;
+const oldChoiceGet=storage.get;let resolveChoice;
+storage.get=keys=>keys==='atlas-tagging-studio-layout-v1'?new Promise(resolve=>resolveChoice=resolve):oldChoiceGet(keys);
+const pendingChoice=vm.runInContext('loadTaggingChoices(selected)',context);
+assert.equal($('tag-anime-wrap').hidden,false,'Loading preferences cannot hide enabled Anime');assert.equal($('tag-anime-choice').checked,true,'Same-card refresh cannot clear selection');
+vm.runInContext('applyJoyTagSetting(false)',context);
+resolveChoice({'atlas-tagging-studio-layout-v1':{'https://fixture.test/anime':{anime:true}}});await pendingChoice;
+assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false,'A late card read cannot re-enable a globally disabled model');
+vm.runInContext('applyJoyTagSetting(true)',context);
+const editedChoice=vm.runInContext('loadTaggingChoices(selected)',context);
+storage.get=oldChoiceGet;$('tag-anime-choice').checked=true;await vm.runInContext('saveTaggingChoices()',context);
+resolveChoice({'atlas-tagging-studio-layout-v1':{}});await editedChoice;
+assert.equal($('tag-anime-choice').checked,true,'A late read cannot undo the user choice');
+storage.get=oldChoiceGet;
+console.log('PASS: Anime availability stays stable during card refresh; settings remain authoritative and stale choice reads cannot undo a user selection.');

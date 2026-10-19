@@ -1455,3 +1455,50 @@ before/after, compare phase/input/candidate/DOM data, then owner extension timin
 Required check result:170 tests,3 failures,3 errors,33 skipped;22 local model
 records valid. Failure signature is the same pre-existing container native/bootstrap
 and supervisor READY limitation. Full suite is not green. git diff --check PASS.
+
+## 2026-10-19 — Consistent theme-colored loading glyph
+
+Owner requests one consistent red A in the light/Pinterest card loader using the
+same Pinterest-style UI font; blue/cyan remains the dark/Tumblr theme accent.
+Saved-cover startup and actual-image loading now share one glyph rule: header's
+system-ui sans-serif,750 weight,28px,38x42px tile,13px radius and theme color.
+Removed green/Georgia declarations from initial/preview placeholders. Shared
+rule also keeps preview fallback consistent. Light startup/image-loader backgrounds
+match; dark startup/image-loader colors match. Loading/data lifecycle, lazy images,
+card windowing and all user storage unchanged. This is a CSS presentation fix.
+
+Verification: full test_pinboard.mjs DOM/API suite PASS; git diff --check PASS.
+Actual Chrome visual verification NOT_RUN (browser executable still unavailable).
+Required check_project.py result recorded below; prior native READY limitations
+must not be presented as new loader behavior failures or as a full-suite pass.
+
+Required loader task check:170 tests,3 failures,3 errors,33 skipped;22 model
+links valid. Same pre-existing native-bootstrap/supervisor READY limitations;
+no full-suite pass. No new Python changes were made in the follow-up below.
+
+## 2026-10-19 — Anime choice flicker and next Images-section intent
+
+Owner reports Anime checkbox appearing/disappearing and asks to log/investigate.
+Added backlog019. Found direct JS hide->async show cycle in loadTaggingChoices,
+repeated by preview content refresh/gallery initialization. Removed per-card reads
+of global model availability; only live Settings state controls visibility.
+Same-card refresh retains selections; settings read revisions and per-card request
+invalidation prevent stale async replies undoing newer settings/checkbox changes.
+JoyTag remains off/hidden by default and changes neither run nor download models.
+Full Node pinboard suite PASS, including blocked-read visibility, concurrent global
+disable and user-choice supersession regressions. Browser flicker/CSS overlap
+acceptance UNKNOWN; do not claim any separate CSS overlap was observed.
+
+Owner's next advancement: Images dropdown alongside Notes and Bookmarks in pop-out,
+vertically scrollable for phones/small screens. Recorded as future NOT_IMPLEMENTED
+proposal PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md; gallery relationship/actions remain
+open, and no extra discovery/storage/deletion semantics were assumed.
+
+Owner clarification: Images initially shows a large rectangle with centered plus.
+The add tile scrolls away with the content and reappears on scroll-up; not sticky
+or floating. Proposal updated; remains future work.
+
+Owner further clarifies: Images plus opens the same-looking Add Image/upload
+prompt as the current pop-out. Underlying wiring may differ; visual/interaction
+presentation must match. Proposal records shared chooser UI as preferred approach
+without assuming gallery/storage/default-cover behavior.

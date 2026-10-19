@@ -353,7 +353,7 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 /* Media never gates the preview's independently usable connected content. */
 #detail-image[hidden],#detail-image-placeholder[hidden]{display:none!important}
 .detail-image-placeholder{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:88px;padding:16px;box-sizing:border-box;border:1px solid var(--pin-line);border-radius:10px;background:var(--pin-panel,#faf7f9);color:var(--pin-muted,#856b78);font-size:12px}
-.detail-placeholder-logo{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:#315f53;color:#fff;font-family:Georgia,serif;font-size:30px;font-weight:700}
+.detail-placeholder-logo{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:var(--pin-red);color:#fff;font-family:system-ui,sans-serif;font-size:28px;font-weight:750}
 
 /* Virtual-window focus belongs outside the cards, not on top of their edges. */
 #pins:focus{outline:1px solid var(--pin-line);outline-offset:6px;border-radius:4px}
@@ -361,7 +361,13 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 [data-board-appearance=dark] .detail-image-placeholder{background:var(--night-surface);color:#bbcee5}
 
 .pin-initial-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;height:100%;padding:10px 14px;border:0;border-radius:inherit;background:var(--pin-panel,#faf7f9);text-align:center;overflow:hidden}
-.pin-initial-cover>strong{display:grid;place-items:center;flex:0 0 28px;width:28px;border-radius:8px;background:#315f53;color:white;font-family:Georgia,serif;font-size:23px;line-height:28px}
+.pin-initial-cover>strong{display:grid;place-items:center;flex:0 0 28px;width:28px;border-radius:8px;background:var(--pin-red);color:#fff;font-family:system-ui,sans-serif;font-size:28px;line-height:1}
 .pin-initial-cover>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}
 .pin-initial-cover>small{font-size:10px;opacity:.65}
 [data-board-appearance=dark] .pin-initial-cover{background:var(--night-surface);color:#bbcee5}
+
+/* One theme glyph across saved-cover, image-loading and preview placeholders. */
+:is(.pin-initial-cover>strong,.pin-loading strong,.detail-placeholder-logo){display:grid;place-items:center;flex:0 0 42px;width:38px;height:42px;margin:0;padding:0;border:0;border-radius:13px;background:var(--pin-red);color:#fff;font:750 28px/1 system-ui,sans-serif;letter-spacing:-.08em}
+.pin-initial-cover{background:#f8f3f4;color:#a47b85}
+:root[data-board-appearance=dark] :is(.pin-initial-cover,.pin-loading){background:#171c34;color:var(--night-muted)}
+:root[data-board-appearance=dark] :is(.pin-initial-cover>strong,.pin-loading strong,.detail-placeholder-logo){background:var(--board-accent);color:#092333}
