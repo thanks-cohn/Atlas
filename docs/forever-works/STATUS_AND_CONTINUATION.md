@@ -1157,3 +1157,16 @@ source website left/Atlas right split view, or current separate-tab behavior;
 fall back to a tab when actual browser capability is unavailable. Shared preference,
 preserved card state and runtime verification gates specified. Proposal only;
 no browser API support, code or UI implementation claimed.
+
+## 2026-10-19 — Visit source split-view trial implementation
+
+Verified official Chrome 155 Tabs API supports splitWithTabId with current tab
+index for new source on left; no additional permissions. Added shared pinboard
+Settings preference (default separate tab), validated explicit source clicks,
+actual-current-tab pairing, owned source reuse and safe separate-tab fallback.
+Shelf is an existing global side panel outside the two-tab split; no shelf API or
+pinboard navigation/state reset. Existing unrelated splits are preserved.
+Source navigation and pinboard suites, packaging and whitespace checks PASS;
+source regression added to verify.yml. No local Chrome executable: actual Chrome
+155 shelf+pinboard+source layout NOT_RUN. Proposal now records implementation,
+API-derived scenario and precise remaining owner visual gates. No helper update.

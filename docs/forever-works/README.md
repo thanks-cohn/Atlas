@@ -112,4 +112,4 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 
 - [Directory Pinboards, Reusable Objects and Saved Composition States](PROPOSAL_DIRECTORY_PINBOARDS_REUSABLE_OBJECTS_AND_SAVED_STATES.md) — owner-directed local/R2 directory pinboards, distinct object marking and Objects selector, grouped content, saved arrangements, whole-object Recovery and portable project reuse. Proposal only; implementation and compatibility proofs remain pending.
 
-- [Visit source behavior](PROPOSAL_VISIT_SOURCE_BEHAVIOR.md) — owner-approved proposal for Settings to choose source-on-left split view or existing separate-tab navigation, with capability-aware fallback; not implemented.
+- [Visit source behavior](PROPOSAL_VISIT_SOURCE_BEHAVIOR.md) — Settings trial for source-on-left split view or existing separate-tab navigation, with fallback; API tests pass, real Chrome 155 layout confirmation pending.

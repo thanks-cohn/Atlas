@@ -1,3 +1,4 @@
+import {installSourceNavigation} from './source-navigation.js';
 import {createImageEntries,IMAGE_ENTRIES,IMAGE_RECOVERY,entryKey,localImageOrigin,urlImageOrigin} from './image-entries.js';
 import {createCardHold,heldMasonry} from './pinboard-card-hold.js';
 import {connectionWriter} from './pinboard-preview-connections.js';
@@ -20,6 +21,7 @@ let blocks=new Map(),frame=0,limit=72;
 const topSpacer=el('div'),bottomSpacer=el('div');topSpacer.className=bottomSpacer.className='pin-spacer';
 const boardId=new URL(location.href).searchParams.get('id');
 const status=text=>$('status').textContent=text;
+installSourceNavigation({chrome,choice:$('source-behavior'),feedback:$('source-behavior-status'),anchor:$('detail-link'),status:message=>setTaggingChoiceStatus(message)});
 const itemKey=node=>node?.itemKey || node?.url || '';
 const authored=node=>node?.kind==='authored';
 const imageEntries=createImageEntries({storage:chrome.storage.local});
