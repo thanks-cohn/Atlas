@@ -48,6 +48,15 @@ function humanTagsFor(node){const tags=new Map();for(const tag of metadata(node)
 const TAG_REMOVALS='atlas-card-tag-removals-v1';
 const removedTags=node=>node?.entryId?(storedEntry(node)?.suppressed || {}):(cardTagRemovals[itemKey(node)] || {});
 let cardTagRemovals={},generatedIndex=new Map(),generatedEpoch=0;
+let generatedRefresh=null,generatedRefreshQueued=false,generatedRefreshNeedsRead=false;
+let generationSnapshot=null,generationSnapshotVersion=0;
+async function readGenerationSnapshot(reuse=true){
+  if(reuse && generationSnapshot)return generationSnapshot;
+  const version=generationSnapshotVersion,end=window.atlasDebug?.performance.begin('storage.tag-index-read');let saved;
+  try{saved=await chrome.storage.local.get([TAGGING_RESULTS,JOYTAG_ACTIVATED,TAG_REMOVALS]);}finally{end?.();}
+  if(version!==generationSnapshotVersion)return generationSnapshot || readGenerationSnapshot(false);
+  generationSnapshot=saved;return saved;
+}
 function tagsFor(node){
   node=defaultEntryNode(node);
   const result=new Map(humanTagsFor(node).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
@@ -56,23 +65,30 @@ function tagsFor(node){
   const removed=removedTags(node);
   return [...result.values()].filter(tag=>!Object.hasOwn(removed,tag.normalize('NFKC').toLowerCase()));
 }
-async function refreshGeneratedIndex(){const end=window.atlasDebug?.performance.begin('index.generated-tags');try{return await loadGeneratedIndex();}finally{end?.();}}
-async function loadGeneratedIndex(){
+function refreshGeneratedIndex(reuseState=false){
+  generatedRefreshQueued=true;generatedRefreshNeedsRead ||= !reuseState;
+  if(!generatedRefresh)generatedRefresh=(async()=>{
+    while(generatedRefreshQueued){generatedRefreshQueued=false;const reuse=!generatedRefreshNeedsRead;generatedRefreshNeedsRead=false;const end=window.atlasDebug?.performance.begin('index.generated-tags');try{await loadGeneratedIndex(reuse);}finally{end?.();}}
+  })().finally(()=>{generatedRefresh=null;if(generatedRefreshQueued)return refreshGeneratedIndex(!generatedRefreshNeedsRead);});
+  return generatedRefresh;
+}
+async function loadGeneratedIndex(reuseState=false){
   const epoch=++generatedEpoch;
-  const saved=await chrome.storage.local.get([TAGGING_RESULTS,JOYTAG_ACTIVATED,TAG_REMOVALS]);
+  const saved=await readGenerationSnapshot(reuseState);
   cardTagRemovals=saved[TAG_REMOVALS] || {};
   const runs=saved[TAGGING_RESULTS] || {},next=new Map();
   let sliceStarted=Date.now();
   for(const parent of [...pinItems(roots),...blankBoard.nodes()]){
-    if(Date.now()-sliceStarted>8){await new Promise(resolve=>setTimeout(resolve,0));sliceStarted=Date.now();if(epoch!==generatedEpoch)return;}
+    if(Date.now()-sliceStarted>8){await new Promise(resolve=>setTimeout(resolve,0));sliceStarted=Date.now();if(epoch!==generatedEpoch || generatedRefreshQueued)return;}
     const node=defaultEntryNode(parent);
-    if(!runs[itemKey(node)])continue;
+    if(!runs[itemKey(node)] || !Object.keys(runs[itemKey(node)]).length)continue;
     const image=imageFor(node);if(!image)continue;
-    const reference=await imageReference(image);
-    if(epoch!==generatedEpoch)return;
-    next.set(itemKey(node),{image,tags:generatedTags(runs[itemKey(node)],reference,saved[JOYTAG_ACTIVATED]===true)});
+    const prior=generatedIndex.get(itemKey(node)),endHash=window.atlasDebug?.performance.begin('index.image-reference');
+    let reference;try{reference=prior?.image===image && prior.reference?prior.reference:await imageReference(image);}finally{endHash?.();}
+    if(epoch!==generatedEpoch || generatedRefreshQueued)return;
+    next.set(itemKey(node),{image,reference,tags:generatedTags(runs[itemKey(node)],reference,saved[JOYTAG_ACTIVATED]===true)});
   }
-  if(epoch!==generatedEpoch)return;
+  if(epoch!==generatedEpoch || generatedRefreshQueued)return;
   generatedIndex=next;
   // Preserve mounted images and scroll position when labels arrive.
   for(const block of blocks.values())for(const card of block.children)updateTagCard(card.atlasNode);
@@ -122,7 +138,7 @@ $('joytag-enabled').onchange=async()=>{
   const enabled=$('joytag-enabled').checked;++modelChoiceEpoch;$('joytag-enabled').disabled=true;
   try{await chrome.storage.local.set({[JOYTAG_ACTIVATED]:enabled});applyJoyTagSetting(enabled);await refreshGeneratedIndex();if(selected)await showGeneratedTags(selected);$('model-choice-status').textContent='Saved.';}catch{$('model-choice-status').textContent='Could not save. Please retry.';await loadModelChoiceSetting();}finally{$('joytag-enabled').disabled=false;}
 };
-chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && (changes[JOYTAG_ACTIVATED] || changes[TAGGING_RESULTS] || changes[TAG_REMOVALS])){if(changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);refreshGeneratedIndex().catch(()=>status('Saved generated tags could not be loaded.'));}});
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && (changes[JOYTAG_ACTIVATED] || changes[TAGGING_RESULTS] || changes[TAG_REMOVALS])){generationSnapshotVersion++;if(generationSnapshot){generationSnapshot={...generationSnapshot};for(const key of [JOYTAG_ACTIVATED,TAGGING_RESULTS,TAG_REMOVALS])if(changes[key])generationSnapshot[key]=changes[key].newValue;}if(changes[JOYTAG_ACTIVATED])applyJoyTagSetting(changes[JOYTAG_ACTIVATED].newValue===true);refreshGeneratedIndex(true).catch(()=>status('Saved generated tags could not be loaded.'));}});
 loadModelChoiceSetting();
 async function loadTaggingChoices(node){
   const key=itemKey(node),request=++taggingChoiceEpoch;
@@ -158,8 +174,11 @@ async function showGeneratedTags(node){
   const host=$('detail-generated-tags');
   host.replaceChildren();
   try{
-    const [stored,activation,reference]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED),imageReference(imageFor(node))]);
-    const runs=stored[TAGGING_RESULTS]?.[itemKey(node)] || {},animeEnabled=activation[JOYTAG_ACTIVATED]===true;
+    const stored=await readGenerationSnapshot();
+    const runs=stored[TAGGING_RESULTS]?.[itemKey(node)] || {},animeEnabled=stored[JOYTAG_ACTIVATED]===true;
+    if(version!==generatedRenderVersion || itemKey(selected)!==itemKey(node) || !Object.keys(runs).length)return;
+    const image=imageFor(node),prior=generatedIndex.get(itemKey(node));
+    const reference=prior?.image===image && prior.reference?prior.reference:await imageReference(image);
     if(version!==generatedRenderVersion || itemKey(selected)!==itemKey(node))return;
     const human=new Set(humanTagsFor(node).map(tagKey));
     const grouped=new Map(generatedTags(runs,reference,animeEnabled).map(entry=>[entry.label.normalize('NFKC').toLowerCase(),entry]));
@@ -669,9 +688,9 @@ async function start(){
 
 
 }
-chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex(true);if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
 window.atlasDebug?.performance.registerState('pinboard',()=>({
-  renderer_revision:4,overscan_rows:1,image_geometry_entries:imageGeometry.size,failed_image_entries:failedImages.size,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
+  renderer_revision:5,tag_index_running:!!generatedRefresh,tag_index_queued:generatedRefreshQueued,overscan_rows:1,image_geometry_entries:imageGeometry.size,failed_image_entries:failedImages.size,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
   nearby_budget:limit,layout_dirty:windowLayoutDirty,window_update_pending:!!frame,layout_blocked:!!boardLayoutBlocked(),
   assets_ready:boardAssetsReady,held_cards:cardHolds.active().length,layout_positions:positions.length
 }));

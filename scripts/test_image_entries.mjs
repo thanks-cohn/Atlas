@@ -41,3 +41,8 @@ await racing.add(owner,'https://images.example/concurrent.jpg',{provider:'web'})
 releaseOldRead();await staleLoad;
 assert.equal(racing.gallery(owner).entries.length,countBefore+1,'A stale read must not erase the newly committed image from the view cache');
 console.log('PASS: delayed pre-add storage reads cannot roll back gallery count/cache after commit.');
+// Migrating an untagged legacy image must not emit empty global tag-state writes.
+const writes=[],clean={};const quiet=createImageEntries({storage:{get:async keys=>Object.fromEntries(keys.map(key=>[key,clean[key]])),set:async value=>{writes.push(Object.keys(value));Object.assign(clean,value);}},lock:fn=>fn(),uuid:()=>crypto.randomUUID()});
+await quiet.ensure('https://fixture.test/untagged',{id:'untagged',url:'https://fixture.test/untagged'},'https://fixture.test/image.jpg');
+assert(writes.every(keys=>!keys.includes(RUNS) && !keys.includes(REMOVALS)),'Empty imports should not notify every tag-index consumer');
+console.log('PASS: untagged legacy-gallery import does not write empty global model/removal maps; existing nonempty provenance migration remains tested.');

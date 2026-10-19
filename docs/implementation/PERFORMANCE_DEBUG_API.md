@@ -258,3 +258,15 @@ Deterministic tests verify ten-minute cap, baseline/trend bounds, optional heap 
 normal-mode cap, cleanup, opt-in Settings controls and clipboard fallback. Browser
 soak/memory-timeline proof NOT_RUN here: Chromium still unavailable. Acceptance018
 remains open; next evidence should contain revision4 state and the slow interval.
+
+## Owner soak evidence and revision5
+
+Actual193-second renderer4 capture is saved in evidence; see backlog021 for exact
+numbers and interpretation. It shows bounded card DOM but repeated full generated
+index activity and2.294s input queues. Revision5 adds tag_index_running/queued,
+`storage.tag-index-read`, `index.image-reference` and
+`storage.gallery-transaction`. Async span durations are elapsed, may overlap and
+must not be summed as CPU/continuous blocked time. Revised source skips empty
+results, avoids empty global writes, caches unchanged image identities/current model
+snapshots, coalesces rebuilds and defers hidden bookmark chooser population. Browser
+post-fix timing remains pending; do not declare all prolonged-use lag resolved.

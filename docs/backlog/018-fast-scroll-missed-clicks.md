@@ -59,3 +59,8 @@ one-row bounds. Settings copy stops recording, copies JSON or displays a selecta
 fallback. Future agent can compare baseline/end state and work sources without
 requiring the owner to narrate each stall, but needs a report from the actual slow
 browser or an executable-browser reproduction. Lag/root cause remains OPEN.
+
+New owner soak capture received (renderer4,193 seconds): input queues reach2.294s
+with at most24 mounted cards; full generated index runs26 times. Concrete empty
+result/import/hash and eager chooser causes corrected in021. This narrows the
+investigation beyond DOM scope; keep actual smoothness/click/Escape acceptance OPEN.

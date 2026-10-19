@@ -1582,3 +1582,43 @@ verified on eviction. Required check_project:170 tests,3 failures,3 errors,33 sk
 full suite not green. Browser prolongation/latency/visual proof NOT_RUN, no executable.
 Next: owner Record lag during normal use, Copy when degraded, compare baseline/end
 and work counters. Keep018/016 open. Tiny startup batch plan remains unimplemented.
+
+## 2026-10-19 — Actual prolonged-use capture; generated-index churn correction
+
+Owner supplies Pasted text(20261019-135313).txt and confirms use-dependent lag.
+Persisted exact JSON in docs/evidence/performance-2026-10-19/OWNER_PROLONGED_USE_CAPTURE.json.
+193.296s,renderer4,301 items: max24 mounted cards;387 board renders mean6.58ms/max46.9ms;
+26 generated-index spans mean1963ms/max5652ms/total51038.9ms elapsed. Input queue
+max2293.8ms,heartbeat drift4018.5ms. Async elapsed totals may overlap and are not CPU.
+DOM623->peak1099->1004; tag buttons215 constant. Heap21.17MB->peak160.82MB->105.72MB,
+with intermediate drops; does NOT prove a retained-memory leak. Exact source SHA
+unknown beyond revision4 marker. Keep overall lag/click/Escape acceptance open.
+
+Added021 with evidence/source mechanisms. Legacy gallery ensure emitted empty
+RUNS/removal entries; index treated empty result objects as present and hashed
+images anyway, so visiting more cards grew useless work. Stop empty global writes,
+keep existing data and skip old empty records. Single-flight/trailing index refresh;
+current model snapshot updated by storage events and guarded from stale reads;
+gallery-only refresh reuses it; explicit refresh remains fresh. Unchanged images
+reuse SHA references; changed images rehash. Preview shares cached state/reference
+and skips hashing untagged images. Hidden Add Existing Bookmark chooser now builds
+its candidates/options only on explicit opening, preserving UI/link behavior.
+
+Revision5 diagnostics: index running/queued, tag-state storage read, reference hash
+and gallery transaction spans (elapsed, not isolated CPU). Fixed: permissions,
+model/display gates, original predictions/removals, note drafts, attachments and
+source data. Constrained: state events/explicit refresh must invalidate cache;
+changed images must invalidate hashes. Fluid: scheduling, derived caches and hidden
+chooser construction. No deletion, native/model reinstallation or stylesheet change.
+
+PASS: full Node pinboard;50 coalesced requests peak concurrency1;80 empty entries
+plus one result hash only that result; cached refresh no extra read/hash; changed
+image invalidates; stale read cannot replace newer settings. Gallery empty-write
+and existing provenance/migration/recovery tests PASS.50 previews with5000 chooser
+candidates do no chooser work until clicked. Generation, preview connections,
+preview sections and profiler regressions PASS; git diff --check PASS. Required
+check170 tests:3 failures,3 errors,33 skipped;22 local links valid. Same existing
+container native/supervisor READY failures; full suite not green. Chromium missing;
+no actual post-change speedup claimed. Next: repeat owner soak and compare index,
+read/hash, queue/drift and heap trends; investigate remaining gallery/GC/paint if slow.
+Tiny progressive startup remains planned, not implemented in this correction.

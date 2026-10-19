@@ -93,7 +93,7 @@ const render=pinboard.slice(pinboard.indexOf('async function showGeneratedTags(n
 let pending=[];const host={children:[],replaceChildren(...children){this.children=children;},append(...children){this.children.push(...children);}};
 const chrome={storage:{local:{get:key=>key==='runs'?new Promise(resolve=>pending.push(resolve)):Promise.resolve({anime:false})}}};
 const selected={id:'same'},itemKey=node=>node?.id;
-const show=new Function('chrome','$','imageReference','imageFor','itemKey','selected','humanTagsFor','generatedTags','tagKey','removedTags','removableTag','el',`let generatedRenderVersion=0; const TAGGING_RESULTS='runs',JOYTAG_ACTIVATED='anime'; ${render}; return showGeneratedTags;`)(chrome,()=>host,async()=> 'cover',()=> 'image',itemKey,selected,()=>[],generatedTags,tagKey,()=>({}),(_node,label)=>({label}),(_type,label)=>({label}));
+const show=new Function('chrome','$','imageReference','imageFor','itemKey','selected','humanTagsFor','generatedTags','tagKey','removedTags','removableTag','el',`let generatedRenderVersion=0;const generatedIndex=new Map();const readGenerationSnapshot=async()=>({...await chrome.storage.local.get('runs'),...await chrome.storage.local.get('anime')}); const TAGGING_RESULTS='runs',JOYTAG_ACTIVATED='anime'; ${render}; return showGeneratedTags;`)(chrome,()=>host,async()=> 'cover',()=> 'image',itemKey,selected,()=>[],generatedTags,tagKey,()=>({}),(_node,label)=>({label}),(_type,label)=>({label}));
 const older=show(selected),newer=show(selected);
 pending[1]({runs:{same:compact}});await newer;
 pending[0]({runs:{same:compact}});await older;

@@ -537,7 +537,7 @@ console.log('PASS: 1,000-event fast-scroll burst coalesces to latest viewport, i
 const scenarioStart=scroll;let paints=0;
 const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distance:1700},{isActive:()=>true,afterPaint:async()=>{listeners.scroll();flush();paints++;}});
 assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
-assert.equal(debugStates.get('pinboard')().renderer_revision,4);
+assert.equal(debugStates.get('pinboard')().renderer_revision,5);
 console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
 // Model availability must not blink while card-specific choices are read.
 vm.runInContext("applyJoyTagSetting(true);selected={id:'anime-test',url:'https://fixture.test/anime'};taggingChoiceKey=itemKey(selected);",context);
@@ -572,3 +572,30 @@ for(const [width,height] of [[1100,768],[340,640],[1100,480]]){
 }
 assert.equal(debugStates.get('pinboard')().overscan_rows,1);
 console.log('PASS: desktop/mobile and rapid reversal retain every visible card and at most one adjacent card per column on either side, even with legacy144 budget.');
+// Repeated index requests share one worker, with a single trailing refresh.
+await vm.runInContext('refreshGeneratedIndex(true)',context);
+const realIndexLoader=context.loadGeneratedIndex;let releaseIndex,indexLoads=0,activeIndexes=0,peakIndexes=0;
+context.loadGeneratedIndex=async()=>{indexLoads++;activeIndexes++;peakIndexes=Math.max(peakIndexes,activeIndexes);if(indexLoads===1)await new Promise(resolve=>releaseIndex=resolve);activeIndexes--;};
+const indexing=vm.runInContext('refreshGeneratedIndex()',context);
+for(let index=0;index<50;index++)assert.equal(vm.runInContext(index%2?'refreshGeneratedIndex()':'refreshGeneratedIndex(true)',context),indexing);
+releaseIndex();await indexing;assert.equal(indexLoads,2);assert.equal(peakIndexes,1);context.loadGeneratedIndex=realIndexLoader;
+// A cached state avoids whole-store reads; unchanged covers avoid repeated hashing.
+const realGet=storage.get,realReference=context.imageReference;let tagReads=0,hashes=0;
+storage.get=async keys=>{if(Array.isArray(keys) && keys.includes('atlas-image-tagging-runs-v1'))tagReads++;return realGet(keys);};
+context.imageReference=async source=>{hashes++;return realReference(source);};
+const indexFixtureNode=vm.runInContext('defaultEntryNode(collectionNodes()[0])',context);const indexFixtureSource=context.imageFor(indexFixtureNode);
+data['atlas-image-tagging-runs-v1']={...Object.fromEntries(Array.from(vm.runInContext('collectionNodes().slice(1,81).map(node=>itemKey(defaultEntryNode(node)))',context),key=>[key,{}])),[vm.runInContext('itemKey(defaultEntryNode(collectionNodes()[0]))',context)]:{objects:[{image_reference:indexFixtureSource,suggestions:[{tag:'Fixture tag'}]}]}};
+vm.runInContext('generatedIndex=new Map();generationSnapshot=null;',context);
+await vm.runInContext('refreshGeneratedIndex()',context);assert.equal(hashes,1);assert.equal(tagReads,1);
+for(let index=0;index<10;index++)await vm.runInContext('refreshGeneratedIndex(true)',context);
+assert.equal(hashes,1,'Unchanged image references must not be rehashed');assert.equal(tagReads,1,'Gallery-only refreshes must reuse model-state snapshot');
+const actualImageFor=context.imageFor;context.imageFor=()=> 'https://fixture.test/changed.png';await vm.runInContext('refreshGeneratedIndex(true)',context);assert.equal(hashes,2,'Changed images require a new identity hash');context.imageFor=actualImageFor;
+storage.get=realGet;context.imageReference=realReference;
+console.log('PASS: index refresh bursts coalesce without overlap; unchanged images reuse identity and gallery-only refreshes avoid whole-tag-state storage reads.');
+// A delayed storage read cannot replace a newer onChanged snapshot.
+let releaseStateRead;storage.get=keys=>Array.isArray(keys) && keys.includes('atlas-image-tagging-runs-v1')?new Promise(resolve=>releaseStateRead=resolve):realGet(keys);
+const staleStateRead=vm.runInContext('readGenerationSnapshot(false)',context);
+context.latestGenerationFixture={'atlas-image-tagging-runs-v1':{},'atlas-joytag-enabled-v1':true,'atlas-card-tag-removals-v1':{}};
+vm.runInContext('generationSnapshotVersion++;generationSnapshot=latestGenerationFixture;',context);
+releaseStateRead({'atlas-joytag-enabled-v1':false});assert.equal((await staleStateRead)['atlas-joytag-enabled-v1'],true);storage.get=realGet;
+console.log('PASS: newer storage-event model settings survive an older pending state read.');
