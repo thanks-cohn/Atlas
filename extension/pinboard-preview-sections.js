@@ -39,5 +39,11 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
     chooser.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();chooser.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus?.();}};
     chooser.append(search,select,attach,feedback);footer.append(trigger,chooser);host.append(footer);
   }
-  return {setContent(key,value={}){const changed=identity!==key;identity=key;content=value;if(changed){active=null;editing=false;focusedBookmark=null;}if(!editing)notes();bookmarks();sync();}};
+  return {setContent(key,value={},options={}){
+    const changed=identity!==key,preserve=changed && options.preserve===true;
+    if(preserve && drafts.has(identity)){drafts.set(key,drafts.get(identity));drafts.delete(identity);}
+    identity=key;content=value;
+    if(changed && !preserve){active=null;editing=false;focusedBookmark=null;}
+    if(!editing || preserve)notes();bookmarks();sync();
+  }};
 }

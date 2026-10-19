@@ -203,19 +203,44 @@ $('run-image-tagging').onclick=async()=>{
   }catch(error){report(error.message || 'Tag generation failed.');}
   finally{taggingBusy=false;updateTaggingAction();}
 };
-function openDetailContent(node){
+let detailOpenVersion=0,detailImageVersion=0;
+function showDetailImage(source,title){
+  const version=++detailImageVersion,image=$('detail-image'),placeholder=$('detail-image-placeholder');
+  image.onload=null;image.onerror=null;image.hidden=true;placeholder.hidden=false;
+  $('detail-image-status').textContent=source?'Loading image…':'No image saved';image.alt=title || 'Card image';
+  if(!source){image.removeAttribute('src');return;}
+  image.onload=()=>{if(version!==detailImageVersion)return;image.hidden=false;placeholder.hidden=true;};
+  image.onerror=()=>{if(version!==detailImageVersion)return;image.hidden=true;placeholder.hidden=false;$('detail-image-status').textContent='Image unavailable. Your connected items are still accessible.';};
+  image.src=source;
+  if(image.complete && image.naturalWidth>0)image.onload();
+}
+function openDetailContent(node,{preserveConnections=false}={}){
   if(node?.entryId && !storedEntry(node))return;
-  previewingLinkedImage=false;$('preview-add-tag').disabled=false;selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
-  $('detail-image').hidden=!image;if(image)$('detail-image').src=image;else $('detail-image').removeAttribute('src');
-  $('detail-image').alt=node.title || 'Card image';
-  const details=metadata(node);previewSections.setContent(itemKey(node),{sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))});
+  if(!preserveConnections)previewingLinkedImage=false;$('preview-add-tag').disabled=previewingLinkedImage;selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
+  if(!preserveConnections || !previewingLinkedImage)showDetailImage(image,node.title);
+  const details=metadata(node);previewSections.setContent(itemKey(node),{sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))},{preserve:preserveConnections});
   $('detail-link').hidden=!node.url;if(node.url)$('detail-link').href=node.url;else $('detail-link').removeAttribute('href');
   $('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));
   $('edit-authored-card').hidden=$('delete-authored-card').hidden=!authored(parentNode(node));
   paintImageNavigation(node);
   loadTaggingChoices(node);showGeneratedTags(node);
 }
-async function openDetail(node){try{const parent=parentNode(node);await ensureImages(parent);const gallery=imageEntries.gallery(galleryOwner(parent));const entry=gallery.entries.find(e=>e.id===(node.entryId || gallery.defaultId)) || gallery.entries[0];openDetailContent(entry?entryNode(parent,entry):parent);document.documentElement.setAttribute('data-pin-open','');$('detail').showModal();$('detail-scroll').scrollTop=0;}catch(error){status(error.message || 'Could not open this image.');}}
+async function openDetail(node){
+  const request=++detailOpenVersion,parent=parentNode(node);
+  try{
+    // Open synchronously from cached state: storage/native initialization is not
+    // a prerequisite for reading already available connections.
+    document.documentElement.setAttribute('data-pin-open','');
+    if(!$('detail').open)$('detail').showModal();
+    openDetailContent(defaultEntryNode(node));$('detail-scroll').scrollTop=0;
+    if(imageEntries.gallery(galleryOwner(parent)))return;
+    await ensureImages(parent);
+    if(request!==detailOpenVersion || !$('detail').open || selected?.entryId || galleryOwner(selected)!==galleryOwner(parent))return;
+    const gallery=imageEntries.gallery(galleryOwner(parent));
+    const entry=gallery?.entries.find(e=>e.id===(node.entryId || gallery.defaultId)) || gallery?.entries[0];
+    openDetailContent(entry?entryNode(parent,entry):parent,{preserveConnections:true});
+  }catch(error){if(request===detailOpenVersion && $('detail').open)setTaggingChoiceStatus(error.message || 'Image details could not be loaded. Cached connections remain available.');}
+}
 
 const editTags=installTagEditor({localAdapter:node=>{
   node=defaultEntryNode(node);
@@ -233,7 +258,7 @@ const editTags=installTagEditor({localAdapter:node=>{
 $('preview-add-tag').onclick=()=>{if(!selected)return;tagsChangedURL=itemKey(selected);editTags(selected);};
 async function previewCatalog(body){const response=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(response?.ok===false || !response?.data || !Number.isSafeInteger(response.revision))throw Error('Connect your companion and try again.');return response;}
 const writePreviewConnection=connectionWriter({catalog:previewCatalog,validateBookmark:async node=>{const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Reopen the preview.');},isAuthored:authored,local:(node,action,value)=>blankBoard.connect(node,action,value),onSnapshot:data=>{associations=indexAssociations(data);metadataState='ready';}});
-const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');if(node.entryId){if(action==='bookmark'){const [current]=await chrome.bookmarks.get(value.id);if(current?.url!==value.url)throw Error('This bookmark changed.');}await imageEntries.mutate(node.galleryOwner,node.entryId,entry=>{const field=action==='note'?'notes':'bookmarks',list=entry[field];if(value.editing){const old=list.find(item=>item.id===value.id);if(!old || old.title!==value.originalTitle || old.text!==value.originalText)throw Error('This note changed. Reopen it.');}const next=action==='note'?{id:value.id,title:value.title,text:value.text}:{id:value.id,title:value.title,url:value.url};const index=list.findIndex(item=>action==='note'?item.id===value.id:item.url===value.url);if(index<0)list.push(next);else list[index]=next;},action+'-saved');}else await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();paintImageNavigation(selected);$('preview-add-tag').disabled=previewingLinkedImage;const shown=image || imageFor(selected);if(shown)$('detail-image').src=shown;$('detail-image').hidden=!shown;$('detail-image').alt=title || selected?.title || 'Card image';$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
+const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');if(node.entryId){if(action==='bookmark'){const [current]=await chrome.bookmarks.get(value.id);if(current?.url!==value.url)throw Error('This bookmark changed.');}await imageEntries.mutate(node.galleryOwner,node.entryId,entry=>{const field=action==='note'?'notes':'bookmarks',list=entry[field];if(value.editing){const old=list.find(item=>item.id===value.id);if(!old || old.title!==value.originalTitle || old.text!==value.originalText)throw Error('This note changed. Reopen it.');}const next=action==='note'?{id:value.id,title:value.title,text:value.text}:{id:value.id,title:value.title,url:value.url};const index=list.findIndex(item=>action==='note'?item.id===value.id:item.url===value.url);if(index<0)list.push(next);else list[index]=next;},action+'-saved');}else await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();paintImageNavigation(selected);$('preview-add-tag').disabled=previewingLinkedImage;const shown=image || imageFor(selected);showDetailImage(shown,title || selected?.title);$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
 const cardHolds=createCardHold({onRelease:()=>updatePriorities()});
 function holdCard(node){const position=positionById.get(node.id);if(!position)return;const mounted=[...blocks.values()].flatMap(block=>[...block.children]).find(card=>card.atlasNode.id===node.id),rect=mounted?.getBoundingClientRect(),root=$('pins').getBoundingClientRect();const actual=rect && Number.isFinite(rect.left) && Number.isFinite(root.left)?{...position,x:rect.left-root.left,y:rect.top-root.top}:position;cardHolds.hold(node.id,actual);}
 let tagsChangedURL=null;
@@ -461,7 +486,7 @@ window.addEventListener('scroll',scheduleWindow,{passive:true});
 window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
 $('edit-authored-card').onclick=()=>{const node=parentNode(selected);$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(parentNode(selected)) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(parentNode(selected));$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
-$('close').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>{$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');});
+$('close').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>{detailOpenVersion++;detailImageVersion++;$('detail-image').onload=null;$('detail-image').onerror=null;$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');});
 $('replace-image').onclick=()=>pickImage(selected);
 $('cancel-image').onclick=()=>$('image-source').close();
 $('image-source').addEventListener('close',()=>{if(!$('detail').open)document.documentElement.removeAttribute('data-pin-open');});

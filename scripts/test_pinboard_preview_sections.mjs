@@ -21,3 +21,8 @@ assert.match(noteCSS,/#detail button\.preview-note\{[^}]*height:72px/);
 assert.match(noteCSS,/-webkit-line-clamp:2/);
 assert(!readFileSync('extension/pinboard-preview-sections.js','utf8').includes('text:draft.text.trim()'));
 console.log('PASS: saved notes use compact 72px rows with two-line excerpts; expanded editor preserves original whitespace.');
+
+// Initial gallery hydration must not collapse notes or throw away a typed draft.
+value={notes:[],bookmarks:[]};view.setContent('legacy',value);get('notes').onclick();get('notes-panel').children[0].children[0].onclick();form=get('notes-panel').children[0];form.children[0].children[0].value='Still typing';form.children[0].children[0].oninput();form.children[1].children[0].value='Keep this draft';form.children[1].children[0].oninput();
+view.setContent('migrated-entry',value,{preserve:true});assert.equal(get('notes-panel').hidden,false);form=get('notes-panel').children[0];assert.equal(form.children[0].children[0].value,'Still typing');assert.equal(form.children[1].children[0].value,'Keep this draft');await form.onsubmit({preventDefault(){}});assert.equal(saved.at(-1).key,'migrated-entry');
+console.log('PASS: delayed gallery hydration preserves an open notes panel and typed draft, saving to the resolved image identity.');

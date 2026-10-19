@@ -459,3 +459,17 @@ assert.match($('image-status').textContent,/IMAGE_DECODE_FAILED/);
 assert.equal(data[galleryModule.IMAGE_ENTRIES][localOwner].entries.length,localCount+1);
 assert.equal($('upload-image').disabled,false);
 console.log('PASS: actual local-file add appends independently, updates count/arrows, keeps default and origin, and shows decode failures without closing chooser or altering gallery.');
+
+// Slow gallery setup must not delay opening/connected content, or reopen a closed dialog.
+$('detail').close();let releasePreviewSetup;context.previewSetupGate=new Promise(resolve=>releasePreviewSetup=resolve);
+vm.runInContext("this.originalEnsureImages=ensureImages;ensureImages=()=>previewSetupGate;this.delayedPreview=openDetail({id:'instant-preview',title:'Immediate connections',url:'https://instant.example/card'});",context);
+assert.equal($('detail').open,true,'Dialog opens before pending gallery initialization resolves');
+assert.equal($('detail-title').textContent,'Immediate connections');assert.equal(previewContent.key,'https://instant.example/card');
+assert.equal($('detail-image-placeholder').hidden,false);
+$('detail').close();releasePreviewSetup();await context.delayedPreview;assert.equal($('detail').open,false,'Late completion cannot reopen a closed preview');
+vm.runInContext('ensureImages=originalEnsureImages;',context);
+vm.runInContext("showDetailImage('https://images.example/slow-a.jpg','A')",context);const staleImageLoad=$('detail-image').onload;
+vm.runInContext("showDetailImage('https://images.example/slow-b.jpg','B')",context);staleImageLoad();assert.equal($('detail-image').hidden,true,'Old image completion cannot reveal stale pixels');
+$('detail-image').onload();assert.equal($('detail-image').hidden,false);assert.equal($('detail-image-placeholder').hidden,true);
+vm.runInContext("showDetailImage('https://images.example/broken.jpg','Broken')",context);$('detail-image').onerror();assert.equal($('detail-image-placeholder').hidden,false);assert.match($('detail-image-status').textContent,/connected items/);
+console.log('PASS: preview and cached connections open synchronously during delayed setup, close invalidates pending work, placeholder load/error states and stale-image protection.');

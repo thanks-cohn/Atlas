@@ -20,6 +20,9 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 
 | 012 | [Catalog and relationship management crowds the shelf](012-catalog-relationships-crowd-shelf.md) | Implemented — shelf shortcut removed; Chrome confirmation pending |
 
+| 013 | [Pin preview waits for gallery setup](013-pin-preview-blocked-by-gallery-setup.md) | Implemented — Chrome confirmation pending |
+| 014 | [Container outline overlaps card edges](014-pinboard-container-focus-outline-overlap.md) | Styling adjusted — Chrome verification pending |
+
 ## Adding an item
 
 Use the next unused number (`002`, `003`, …) and a descriptive filename. Keep numbers stable when items are reordered or completed. Add the item to this index.

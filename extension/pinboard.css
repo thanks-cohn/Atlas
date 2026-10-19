@@ -349,3 +349,13 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 #detail button.preview-note{height:72px;min-height:72px;max-height:72px;padding:10px 20px;overflow:hidden}
 #detail .preview-note h3{margin:0 0 3px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #detail .preview-note p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;white-space:normal;line-height:16px;max-height:32px}
+
+/* Media never gates the preview's independently usable connected content. */
+#detail-image[hidden],#detail-image-placeholder[hidden]{display:none!important}
+.detail-image-placeholder{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:88px;padding:16px;box-sizing:border-box;border:1px solid var(--pin-line);border-radius:10px;background:var(--pin-panel,#faf7f9);color:var(--pin-muted,#856b78);font-size:12px}
+.detail-placeholder-logo{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:#315f53;color:#fff;font-family:Georgia,serif;font-size:30px;font-weight:700}
+
+/* Virtual-window focus belongs outside the cards, not on top of their edges. */
+#pins:focus{outline:1px solid var(--pin-line);outline-offset:6px;border-radius:4px}
+#pins:focus-visible{outline:2px solid var(--pin-red);outline-offset:6px}
+[data-board-appearance=dark] .detail-image-placeholder{background:var(--night-surface);color:#bbcee5}

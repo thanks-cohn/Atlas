@@ -1317,3 +1317,21 @@ Owner requested exact before/after commits for reversibility. Verified Git paren
 Added full SHA/link table, comparison, selective reverse-order revert preparation,
 focused validation and saved-checkpoint compatibility caveat to Fetch behavior
 record. Documentation only: no source rollback or user-data deletion performed.
+
+
+## 2026-10-19 — Immediate connected-content preview and media placeholder
+
+Owner clarifies instant pop-out is for notes/linked items while image loads. Moved
+showModal/cached-content rendering before storage/gallery setup; cached gallery
+opens without a new setup wait. Async continuation is guarded against close/card
+changes. Added Atlas placeholder, independent load/error, stale media callbacks
+and same-card hydration preserving open notes/drafts/linked-image focus.
+Owner screenshot perimeter concern recorded014: inferred #pins focus outline now
+has6px outward offset, without changing masonry dimensions. Delay issue013 and
+implementation/INSTANT_PIN_PREVIEW.md capture evidence and acceptance boundaries.
+Focused pinboard, preview-sections and connection tests PASS; actual Chrome visual
+and latency acceptance pending. No helper rebuild or data migration requested.
+
+Required project check:170 tests, failures3/errors3/skips33;22 local links valid.
+Same pre-existing native bootstrap/supervisor environment failures; full suite is
+not a pass. Focused UI regression suites and JavaScript syntax checks pass.
