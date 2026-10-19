@@ -197,7 +197,7 @@ class WindowsSupervisorContractTests(unittest.TestCase):
         worker = Supervisor(state, 'a' * 32)
         with patch('atlas_companion.supervisor.health', return_value=False), patch('atlas_native.__main__.connect', return_value={'token': 'never-output'}) as connect:
             self.assertEqual(worker.step(), 'READY')
-            connect.assert_called_once_with(state, 'chrome-extension://' + 'a' * 32)
+            connect.assert_called_once_with(state, 'chrome-extension://' + 'a' * 32, issue_token=False)
         self.assertIsNone(worker.child)
 
     def test_existing_stop_marker_is_respected_on_delayed_start(self):

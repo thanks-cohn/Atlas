@@ -109,7 +109,7 @@ def prove(state, origin, connection):
         raise ValueError('Companion must keep proof connection open')
 
 
-def _connect(state, origin):
+def _connect(state, origin, *, issue_token=True):
     record(state, 'NATIVE_CONNECT', 'CONNECT_STARTED')
     if not state.known_origin(origin):
         raise ValueError('Extension has been revoked; explicitly reinstall to authorize')
@@ -156,6 +156,11 @@ def _connect(state, origin):
                 else:
                     record(state, 'NATIVE_WAKE', 'SERVICE_START_TIMEOUT')
                     raise ValueError('Companion did not start')
+        # Recovery supervision only needs fresh possession proof. It must not
+        # rotate a browser credential issued by a concurrent native connection.
+        if not issue_token:
+            record(state, 'NATIVE_CONNECT', 'CONNECT_READY')
+            return {'ok': True, 'protocol': 'atlas.local.v1', 'port': PORT}
         # Reuse the proven TCP connection. Never reconnect while sending credentials.
         proven_socket = connection.sock
         record(state, 'NATIVE_PROOF', 'PROOF_OK')
@@ -173,7 +178,7 @@ def _connect(state, origin):
         connection.close()
 
 
-def connect(state, origin):
+def connect(state, origin, *, issue_token=True):
     # Serialize demand-wake and token rotation across concurrent native hosts.
     record(state, 'NATIVE_WAKE_LOCK', 'LOCK_WAIT_STARTED')
     deadline = time.monotonic() + 8
@@ -181,7 +186,7 @@ def connect(state, origin):
         try:
             with RuntimeLock(state, 'wake'):
                 try:
-                    return _connect(state, origin)
+                    return _connect(state, origin, issue_token=issue_token)
                 except Exception as exc:
                     record(state, 'NATIVE_CONNECT', error_code(exc))
                     raise

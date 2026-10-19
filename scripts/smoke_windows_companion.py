@@ -260,7 +260,14 @@ def main():
                 assert time.monotonic() < deadline, 'Supervisor did not restore the failed helper'
                 time.sleep(0.3)
             token = connect()
-            assert len(request('/v1/grants')[1]['grants']) == 2
+            # Reproduce the recovery race deterministically: a supervisor can
+            # have observed failed health before a browser finishes reconnecting.
+            # Its later proof/wake must leave that browser credential usable.
+            from atlas_native.__main__ import connect as recovery_connect
+            recovered = recovery_connect(state, origin, issue_token=False)
+            assert recovered['ok'] and 'token' not in recovered
+            code, grants = request('/v1/grants')
+            assert code == 200 and len(grants['grants']) == 2, (code, grants)
             print('PASS opt-in installed supervisor immediately starts and automatically restores an attested failed helper.')
             disabled = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'disable'],
                                       env=env,capture_output=True,timeout=30)

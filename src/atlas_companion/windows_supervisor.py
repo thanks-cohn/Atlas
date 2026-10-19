@@ -126,8 +126,8 @@ class Supervisor(BaseSupervisor):
             from atlas_native.__main__ import connect
             try:
                 # Shared wake arbitration and handle-attested recovery account for
-                # frozen bootloader children. Discard bootstrap credentials.
-                connect(self.state, self.origin)
+                # frozen bootloader children. Never invalidate a browser session.
+                connect(self.state, self.origin, issue_token=False)
                 self.last_status = 'READY'
                 self.failures = 0
             except (APIError, OSError, ValueError, http.client.HTTPException):
