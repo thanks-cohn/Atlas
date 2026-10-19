@@ -1137,3 +1137,15 @@ resizable textarea; saving/reopening returns to compact rows. Expanded state is
 not persisted. Save validates nonblank text without trimming original whitespace.
 Preview section contracts and whitespace checks PASS; actual Chrome visual QA
 pending. No original note content is shortened by the presentation clamp.
+
+## 2026-10-19 — Add Image cache rollback and invisible errors
+
+Bug 011 fix candidate: delayed pre-add storage read reproducibly rolled back the
+committed gallery cache. Read epochs plus commit invalidation prevent stale cache
+replacement. Keep image chooser open/input inside active modal until success;
+decode/hash/storage errors stay visible with retries. Tests now exercise real local
+file onchange through independent append/count/arrows/default/origin preservation,
+plus failure feedback and stale-read order (failed before, passed after). Image
+entry/file and pinboard suites, package build and whitespace checks PASS; actual
+owner Chrome confirmation pending. No helper/model change. Background tagging 007
+remains unresolved and is not part of this fix.

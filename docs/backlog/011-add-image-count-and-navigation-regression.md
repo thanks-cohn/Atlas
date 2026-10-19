@@ -29,3 +29,20 @@ separate notes/tags. Record exact cause and regression tests before marking Done
 Starting points: extension/pinboard.js pickImage, image-file handler, appendImage,
 paintImageNavigation, storage change listener; image-entries.js; image-file.js;
 scripts/test_pinboard.mjs and scripts/test_image_entries.mjs.
+
+## Fix candidate — 2026-10-19
+
+Reproduced a cache rollback with a controlled delayed storage.get: begin gallery
+load, commit add, finish old read -> cache loses the new entry (6 instead of 7).
+image-entries.js now versions reads and invalidates older reads on committed writes.
+The regression fails before and passes after this change. This is a proven defect,
+not proof it is the only cause of the owner's report.
+
+Local-file selection now keeps its chooser open during decode/hash/save; input is
+inside that active modal, errors appear in image-status, retry controls reenable,
+and chooser closes only on success. URL save surfaces actual error text too.
+Actual file onchange integration test proves independent append, updated count,
+new-entry selection, both arrows, unchanged default, retained original filename,
+and visible decode failure with gallery preserved. Image entry/file/pinboard suites,
+packaging and whitespace checks pass. Browser primitives are doubled; owner Chrome
+file-picker/navigation/reload confirmation remains pending. Do not mark Done yet.

@@ -465,7 +465,7 @@ $('close').onclick=()=>$('detail').close();$('detail').addEventListener('close',
 $('replace-image').onclick=()=>pickImage(selected);
 $('cancel-image').onclick=()=>$('image-source').close();
 $('image-source').addEventListener('close',()=>{if(!$('detail').open)document.documentElement.removeAttribute('data-pin-open');});
-$('upload-image').onclick=()=>{$('image-source').close();$('image-file').value='';$('image-file').click();};
+$('upload-image').onclick=()=>{$('image-file').value='';$('image-file').click();};
 async function ensureImages(parent){
   const owner=galleryOwner(parent);await imageEntries.load();if(imageEntries.gallery(owner))return;
   const image=imageFor(parent),details=metadata(parent);
@@ -500,16 +500,20 @@ $('save-image-url').onclick=async()=>{
   const image=publicImageURL($('cover-url').value.trim()),node=imageTarget || selected;
   if(!image || image.length>8192){$('image-status').textContent='Enter a public HTTP(S) image URL without credentials or signed access tokens.';return;}
   $('save-image-url').disabled=true;
-  try{const origin=await urlImageOrigin(image);await saveImage(node,image,origin);$('image-source').close();}catch{$('image-status').textContent='Could not save the image reference. Existing covers are unchanged.';}
+  try{const origin=await urlImageOrigin(image);await saveImage(node,image,origin);$('image-source').close();}catch(error){$('image-status').textContent=(error.message || 'Could not save the image reference.')+' Existing images are unchanged.';}
   finally{$('save-image-url').disabled=false;}
 };
 $('image-file').onchange=async()=>{
   const file=$('image-file').files?.[0],node=imageTarget || selected;if(!file || !node)return;
+  $('upload-image').disabled=$('save-image-url').disabled=true;
+  $('image-status').textContent='Preparing image…';
   try{
-    status('Preparing bookmark image…');
     const image=await rasterImage(file,60000),origin=await localImageOrigin(file);
+    $('image-status').textContent='Saving image…';
     await saveImage(node,image,origin);
-  }catch(error){status((error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Try a smaller image; existing bookmarks are unchanged.');}
+    $('image-source').close();
+  }catch(error){$('image-status').textContent=(error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Existing images are unchanged.';}
+  finally{$('upload-image').disabled=$('save-image-url').disabled=false;}
 };
 const coverFetch=installCoverFetch({
   getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim(),selectionTags().map(selectionKey),$('tags-only').checked]),

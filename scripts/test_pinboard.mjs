@@ -433,3 +433,28 @@ assert.equal(vm.runInContext('itemKey(selected)',context),persistentKey);
 assert($('detail-generated-tags').children.some(chip=>chip.children[0].textContent==='Persistent Result'));
 assert(vm.runInContext('tagsFor(selected)',context).includes('Persistent Result'));
 console.log('PASS: generated gallery tags survive close, other-card visit, cache reload and reopening without another inference.');
+
+// Exercise the real local-file chooser handler, not saveImage directly.
+const localOwner=vm.runInContext('selected.galleryOwner',context);
+const localCount=data[galleryModule.IMAGE_ENTRIES][localOwner].entries.length;
+const priorDefault=data[galleryModule.IMAGE_ENTRIES][localOwner].defaultId;
+$('replace-image').onclick();assert.equal($('image-source').open,true);
+$('upload-image').onclick();assert.equal($('image-source').open,true,'Keep the modal and its error status visible during file selection/save');
+const localFile=Object.assign(new Blob(['local test bytes'],{type:'image/png'}),{name:'chosen.png'});
+$('image-file').files=[localFile];context.rasterImage=async()=> 'data:image/png;base64,AA==';
+await $('image-file').onchange();await tick();await tick();
+assert.equal($('image-source').open,false);
+assert.equal(data[galleryModule.IMAGE_ENTRIES][localOwner].entries.length,localCount+1);
+assert.equal(data[galleryModule.IMAGE_ENTRIES][localOwner].defaultId,priorDefault);
+assert.equal($('image-position').textContent,(localCount+1)+' / '+(localCount+1));
+assert.equal($('previous-image').disabled,false);assert.equal($('next-image').disabled,false);
+const uploadedId=vm.runInContext('selected.entryId',context);
+assert.equal(data[galleryModule.IMAGE_ENTRIES][localOwner].entries.at(-1).origin.filename,'chosen.png');
+$('previous-image').onclick();assert.notEqual(vm.runInContext('selected.entryId',context),uploadedId);
+$('next-image').onclick();assert.equal(vm.runInContext('selected.entryId',context),uploadedId);
+$('replace-image').onclick();context.rasterImage=async()=>{throw Error('IMAGE_DECODE_FAILED');};
+await $('image-file').onchange();assert.equal($('image-source').open,true);
+assert.match($('image-status').textContent,/IMAGE_DECODE_FAILED/);
+assert.equal(data[galleryModule.IMAGE_ENTRIES][localOwner].entries.length,localCount+1);
+assert.equal($('upload-image').disabled,false);
+console.log('PASS: actual local-file add appends independently, updates count/arrows, keeps default and origin, and shows decode failures without closing chooser or altering gallery.');
