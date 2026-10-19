@@ -494,3 +494,29 @@ $('detail').handlers.keydown({key:'Escape',target:{closest:()=>null},preventDefa
 assert(preventedEscape);assert.equal($('detail').open,false);assert.deepEqual(cards(),mountedBeforeEscape);
 releaseEscapeSetup();await context.escapePreview;assert.equal($('detail').open,false);vm.runInContext('ensureImages=originalEscapeEnsure;',context);document.querySelector=previousQuerySelector;
 console.log('PASS: cards/Atlas placeholders render before blocked cover storage and companion metadata; Escape closes immediately during setup and keeps mounted cards.');
+// Ordinary scroll must reuse geometry; image/layout changes still rebuild it.
+$('detail').close();$('image-source').close();await settleBoardClose();flush();
+let layoutCalls=0;const masonry=context.heldMasonry;
+context.heldMasonry=(...args)=>{layoutCalls++;return masonry(...args);};
+vm.runInContext('renderWindow()',context);const baselineLayouts=layoutCalls;
+for(const top of [200,400,800,400,0]){scroll=top;listeners.scroll();flush();}
+assert.equal(layoutCalls,baselineLayouts,'Scrolling unchanged cards must not recompute whole-board masonry');
+listeners.resize();flush();assert.equal(layoutCalls,baselineLayouts+1,'Resize must invalidate cached layout');
+vm.runInContext('scheduleWindow();',context);listeners.scroll();flush();
+assert.equal(layoutCalls,baselineLayouts+2,'A scroll queued after a data change must not hide invalidation');
+vm.runInContext('items=[...items];',context);listeners.scroll();flush();
+assert.equal(layoutCalls,baselineLayouts+3,'A different filtered/ranked item sequence must rebuild geometry');
+const loaded=cards().find(card=>card.children[0]?.children[0]?.tag==='img');
+if(loaded){loaded.children[0].children[0].naturalWidth=800;loaded.children[0].children[0].naturalHeight=1200;loaded.children[0].children[0].onload();flush();assert.equal(layoutCalls,baselineLayouts+4,'Intrinsic image size must invalidate cached layout');loaded.children[0].children[0].onload();flush();assert.equal(layoutCalls,baselineLayouts+4,'An unchanged reloaded image must reuse geometry');}
+// Cached aliases preserve exact-ID precedence, null suppression and URL validation.
+const bigImage='data:image/png;base64,'+'A'.repeat(600000);
+let enumerations=0;const snapshot=new Proxy({a:{url:'https://x.test/a',image:bigImage},b:{url:'https://x.test/a',image:null},c:{url:'https://x.test/b',image:'javascript:bad'}},{ownKeys(target){enumerations++;return Reflect.ownKeys(target);}});
+const reader=coversModule.createBookmarkCoverReader(snapshot);
+for(const n of [{id:'alias',url:'https://x.test/a'},{id:'b',url:'https://x.test/a'},{id:'c',url:'https://x.test/b'},{id:'a',url:'https://x.test/new.jpg'}])assert.equal(reader(n),coversModule.bookmarkCover(n,snapshot));
+const count=enumerations;for(let i=0;i<1000;i++)assert.equal(reader({id:'alias',url:'https://x.test/a'}),bigImage);
+assert.equal(enumerations,count,'Repeated reads must not enumerate the cover map');
+const next=coversModule.createBookmarkCoverReader({...snapshot,a:{url:'https://x.test/a',image:null}});
+assert.equal(next({id:'a',url:'https://x.test/a'}),null,'New snapshot observes removed cover');
+const signature=vm.runInContext("cardSignature({id:'large',url:'https://x.test/a',title:'Large'})",context);
+assert.ok(Array.isArray(signature),'Card identity must not serialize image bytes');
+console.log('PASS: scroll reuses masonry; resize, item changes and image geometry invalidate it; queued updates win over scroll; snapshot cover lookup preserves validation and avoids repeated scans.');

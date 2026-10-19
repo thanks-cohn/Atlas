@@ -1,0 +1,1760 @@
+{
+  "schema": "atlas.performance.v1",
+  "active": false,
+  "started_at_utc": "2026-10-19T11:50:23.854Z",
+  "elapsed_ms": 15223.7,
+  "visibility": "visible",
+  "support": {
+    "longtask": true,
+    "event": true,
+    "layout-shift": true,
+    "resource": true
+  },
+  "sample_limit": 240,
+  "dropped_samples": 1168,
+  "totals": {
+    "frame": 600,
+    "loop": 180,
+    "span": 29,
+    "layout": 2,
+    "longtask": 29,
+    "event": 383,
+    "input": 113,
+    "paint": 72,
+    "coalesced_paint_jobs": 39
+  },
+  "summary": {
+    "layout:shift": {
+      "retained_count": 2,
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "max_ms": 0
+    },
+    "longtask:main-thread": {
+      "retained_count": 29,
+      "p50_ms": 160,
+      "p95_ms": 241,
+      "max_ms": 371
+    },
+    "span:render.window": {
+      "retained_count": 28,
+      "p50_ms": 138.2,
+      "p95_ms": 219,
+      "max_ms": 351
+    },
+    "paint:input.keydown": {
+      "retained_count": 60,
+      "p50_ms": 199.9,
+      "p95_ms": 391.7,
+      "max_ms": 396.1
+    },
+    "input:keydown": {
+      "retained_count": 60,
+      "p50_ms": 92.5,
+      "p95_ms": 209.4,
+      "max_ms": 245.8
+    },
+    "event:browser-input": {
+      "retained_count": 60,
+      "p50_ms": 224,
+      "p95_ms": 416,
+      "max_ms": 472
+    },
+    "loop:timer-drift": {
+      "retained_count": 1,
+      "p50_ms": 254.7,
+      "p95_ms": 254.7,
+      "max_ms": 254.7
+    }
+  },
+  "samples": [
+    {
+      "type": "layout",
+      "name": "shift",
+      "at_ms": 7091.5,
+      "duration_ms": 0,
+      "value": 0.40380162283081705
+    },
+    {
+      "type": "layout",
+      "name": "shift",
+      "at_ms": 7091.7,
+      "duration_ms": 0,
+      "value": 0.01340226143993805
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 7092.8,
+      "duration_ms": 97
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 7158.3,
+      "duration_ms": 64.4
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 7242.1,
+      "duration_ms": 82
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 7319,
+      "duration_ms": 67.1
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 7399,
+      "duration_ms": 105
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10081.5,
+      "duration_ms": 63.3
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10209.1,
+      "duration_ms": 116
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 10229.8,
+      "duration_ms": 73
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 10230.2,
+      "duration_ms": 137
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10371.6,
+      "duration_ms": 138.8
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 10381.2,
+      "duration_ms": 148
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10622.8,
+      "duration_ms": 104.6
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10749.1,
+      "duration_ms": 110.2
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 10892.4,
+      "duration_ms": 131
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 11139.9,
+      "duration_ms": 215.8
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11190.5,
+      "duration_ms": 278.8,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11190.6,
+      "duration_ms": 277.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11190.7,
+      "duration_ms": 276.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 11347.7,
+      "duration_ms": 156.5
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11389.2,
+      "duration_ms": 230.6,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11389.4,
+      "duration_ms": 229.8,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11389.5,
+      "duration_ms": 229.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11389.6,
+      "duration_ms": 229.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 11608.9,
+      "duration_ms": 219
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11631.5,
+      "duration_ms": 264.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11631.6,
+      "duration_ms": 261.8,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11631.7,
+      "duration_ms": 260.5,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11631.7,
+      "duration_ms": 259,
+      "status": "opportunity"
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643,
+      "duration_ms": 112
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643.2,
+      "duration_ms": 122
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643.2,
+      "duration_ms": 147
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643.2,
+      "duration_ms": 241
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643.2,
+      "duration_ms": 202
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 11643.3,
+      "duration_ms": 241
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11650.3,
+      "duration_ms": 26.5,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11650.4,
+      "duration_ms": 25.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11650.7,
+      "duration_ms": 24.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11651.5,
+      "duration_ms": 24.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11702.7,
+      "duration_ms": 54.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11715.3,
+      "duration_ms": 16.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 11880.7,
+      "duration_ms": 165.2
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 11909.9,
+      "duration_ms": 197.6,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 12261.1,
+      "duration_ms": 351
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12287.6,
+      "duration_ms": 245.8,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12288.4,
+      "duration_ms": 213.2,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12289.2,
+      "duration_ms": 175.7,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12290,
+      "duration_ms": 156.8,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12290.8,
+      "duration_ms": 127.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12291.3,
+      "duration_ms": 97.4,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12291.8,
+      "duration_ms": 66,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12292.3,
+      "duration_ms": 38.2,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12294.2,
+      "duration_ms": 9.5,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.3,
+      "duration_ms": 396.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.4,
+      "duration_ms": 395,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.5,
+      "duration_ms": 393.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.6,
+      "duration_ms": 391.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.7,
+      "duration_ms": 391,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12296.7,
+      "duration_ms": 390,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 12465,
+      "duration_ms": 168.1
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12478.2,
+      "duration_ms": 163.8,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12479.1,
+      "duration_ms": 134.4,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12479.7,
+      "duration_ms": 104.5,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12480.3,
+      "duration_ms": 75.2,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12481.1,
+      "duration_ms": 45.8,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12481.7,
+      "duration_ms": 15.8,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12487.7,
+      "duration_ms": 207.5,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12487.8,
+      "duration_ms": 206.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 12640,
+      "duration_ms": 151.9
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12663.9,
+      "duration_ms": 168.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12664.7,
+      "duration_ms": 138.3,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12665.2,
+      "duration_ms": 108.5,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12665.7,
+      "duration_ms": 78.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12666.3,
+      "duration_ms": 49.3,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12666.7,
+      "duration_ms": 19.6,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.1,
+      "duration_ms": 192.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.2,
+      "duration_ms": 192.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.2,
+      "duration_ms": 191.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.3,
+      "duration_ms": 190.9,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.3,
+      "duration_ms": 190.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12671.4,
+      "duration_ms": 189.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 12813.6,
+      "duration_ms": 142.1
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12824.8,
+      "duration_ms": 147.3,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12825.8,
+      "duration_ms": 117.7,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12826.4,
+      "duration_ms": 88.5,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12826.8,
+      "duration_ms": 57.7,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12827.3,
+      "duration_ms": 27.8,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12829.6,
+      "duration_ms": 165.6,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12829.8,
+      "duration_ms": 165.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 12959.6,
+      "duration_ms": 129.6
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12968.6,
+      "duration_ms": 138.2,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12969.6,
+      "duration_ms": 109.6,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12971,
+      "duration_ms": 80.6,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12971.7,
+      "duration_ms": 51,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 12972,
+      "duration_ms": 20.3,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12974.4,
+      "duration_ms": 149.6,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12974.4,
+      "duration_ms": 148.5,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12974.5,
+      "duration_ms": 148.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12974.5,
+      "duration_ms": 147.6,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 12974.5,
+      "duration_ms": 147.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 13112.9,
+      "duration_ms": 138.2
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13190.4,
+      "duration_ms": 209.4,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13191.2,
+      "duration_ms": 179.4,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13191.9,
+      "duration_ms": 150.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13193.6,
+      "duration_ms": 121.5,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13195,
+      "duration_ms": 92.5,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13196.1,
+      "duration_ms": 63.4,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13197,
+      "duration_ms": 34.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13199.1,
+      "duration_ms": 5,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13202.9,
+      "duration_ms": 234.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13203.1,
+      "duration_ms": 233.5,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13203.2,
+      "duration_ms": 232.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 13357.1,
+      "duration_ms": 153.6
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13433.4,
+      "duration_ms": 210.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13436,
+      "duration_ms": 182.1,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13437,
+      "duration_ms": 152.9,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13437.9,
+      "duration_ms": 123.7,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13438.4,
+      "duration_ms": 94,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13438.8,
+      "duration_ms": 63.9,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13439.1,
+      "duration_ms": 34.2,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13441.8,
+      "duration_ms": 251.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13441.9,
+      "duration_ms": 250.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13441.9,
+      "duration_ms": 249.9,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13442,
+      "duration_ms": 248.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13442.1,
+      "duration_ms": 247,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 13587.2,
+      "duration_ms": 144.9
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 13656.1,
+      "duration_ms": 68.7,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13658.9,
+      "duration_ms": 225.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13659,
+      "duration_ms": 223,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13659.1,
+      "duration_ms": 222.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 13781.9,
+      "duration_ms": 122.8
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 13856,
+      "duration_ms": 199.9,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 13978.8,
+      "duration_ms": 122.7
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 14043.5,
+      "duration_ms": 117.1,
+      "trusted": true
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 14164.7,
+      "duration_ms": 117.2
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 14182.4,
+      "duration_ms": 138.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.1,
+      "duration_ms": 186
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.1,
+      "duration_ms": 371
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.2,
+      "duration_ms": 184
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.2,
+      "duration_ms": 180
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.2,
+      "duration_ms": 155
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.2,
+      "duration_ms": 140
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.3,
+      "duration_ms": 216
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.3,
+      "duration_ms": 234
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.3,
+      "duration_ms": 214
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.3,
+      "duration_ms": 195
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.4,
+      "duration_ms": 189
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14187.4,
+      "duration_ms": 134
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.7,
+      "duration_ms": 368,
+      "queue_ms": 138.2,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.7,
+      "duration_ms": 344,
+      "queue_ms": 109.5,
+      "handler_ms": 1.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.7,
+      "duration_ms": 312,
+      "queue_ms": 80.5,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.7,
+      "duration_ms": 280,
+      "queue_ms": 51,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.8,
+      "duration_ms": 248,
+      "queue_ms": 20.3,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.8,
+      "duration_ms": 224,
+      "queue_ms": 0.5,
+      "handler_ms": 0.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.8,
+      "duration_ms": 224,
+      "queue_ms": 0.6,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.9,
+      "duration_ms": 224,
+      "queue_ms": 0.6,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.9,
+      "duration_ms": 224,
+      "queue_ms": 0.6,
+      "handler_ms": 0.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.9,
+      "duration_ms": 224,
+      "queue_ms": 0.7,
+      "handler_ms": 0.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.9,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14190.9,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191,
+      "duration_ms": 472,
+      "queue_ms": 209.3,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 440,
+      "queue_ms": 179.4,
+      "handler_ms": 0.4
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 408,
+      "queue_ms": 150,
+      "handler_ms": 0.9
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 376,
+      "queue_ms": 121.4,
+      "handler_ms": 1.3
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 352,
+      "queue_ms": 92.5,
+      "handler_ms": 0.7
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 320,
+      "queue_ms": 63.3,
+      "handler_ms": 0.5
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.1,
+      "duration_ms": 288,
+      "queue_ms": 33.9,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.2,
+      "duration_ms": 256,
+      "queue_ms": 4.6,
+      "handler_ms": 0.8
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.2,
+      "duration_ms": 248,
+      "queue_ms": 2.4,
+      "handler_ms": 0.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.3,
+      "duration_ms": 248,
+      "queue_ms": 2.5,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.3,
+      "duration_ms": 248,
+      "queue_ms": 2.5,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.3,
+      "duration_ms": 248,
+      "queue_ms": 2.5,
+      "handler_ms": 0.3
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.3,
+      "duration_ms": 248,
+      "queue_ms": 2.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.3,
+      "duration_ms": 248,
+      "queue_ms": 2.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 440,
+      "queue_ms": 209.9,
+      "handler_ms": 2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 416,
+      "queue_ms": 181.9,
+      "handler_ms": 0.8
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 384,
+      "queue_ms": 152.8,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 352,
+      "queue_ms": 123.5,
+      "handler_ms": 0.5
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 320,
+      "queue_ms": 93.9,
+      "handler_ms": 0.3
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 296,
+      "queue_ms": 63.7,
+      "handler_ms": 0.4
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.4,
+      "duration_ms": 264,
+      "queue_ms": 34.1,
+      "handler_ms": 0.4
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.5,
+      "duration_ms": 248,
+      "queue_ms": 23.1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.5,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.6,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.6,
+      "duration_ms": 224,
+      "queue_ms": 0.8,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14191.6,
+      "duration_ms": 224,
+      "queue_ms": 1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.1,
+      "duration_ms": 224,
+      "queue_ms": 1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.4,
+      "duration_ms": 280,
+      "queue_ms": 68.6,
+      "handler_ms": 0.7
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.4,
+      "duration_ms": 208,
+      "queue_ms": 0.9,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.5,
+      "duration_ms": 208,
+      "queue_ms": 0.9,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.5,
+      "duration_ms": 208,
+      "queue_ms": 0.9,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.5,
+      "duration_ms": 208,
+      "queue_ms": 1.1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.5,
+      "duration_ms": 288,
+      "queue_ms": 76.4,
+      "handler_ms": 0.1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.6,
+      "duration_ms": 216,
+      "queue_ms": 1.1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.6,
+      "duration_ms": 216,
+      "queue_ms": 1.1,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.6,
+      "duration_ms": 216,
+      "queue_ms": 1.1,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.7,
+      "duration_ms": 216,
+      "queue_ms": 1.3,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14192.7,
+      "duration_ms": 216,
+      "queue_ms": 1.3,
+      "handler_ms": 0
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 14450.9,
+      "duration_ms": 155.5
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 14459.6,
+      "duration_ms": 56.6,
+      "trusted": true
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.5,
+      "duration_ms": 256,
+      "queue_ms": 117,
+      "handler_ms": 1
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.5,
+      "duration_ms": 136,
+      "queue_ms": 1.2,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.6,
+      "duration_ms": 136,
+      "queue_ms": 1.2,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.7,
+      "duration_ms": 136,
+      "queue_ms": 1.2,
+      "handler_ms": 0.2
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.7,
+      "duration_ms": 136,
+      "queue_ms": 1.4,
+      "handler_ms": 0
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14462.7,
+      "duration_ms": 136,
+      "queue_ms": 1.4,
+      "handler_ms": 0
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14462.7,
+      "duration_ms": 166
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 14469.9,
+      "duration_ms": 10.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 14647,
+      "duration_ms": 159.1
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 14808.6,
+      "duration_ms": 150.3
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14815.7,
+      "duration_ms": 169
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 14815.7,
+      "duration_ms": 158
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14816.1,
+      "duration_ms": 80,
+      "queue_ms": 56.5,
+      "handler_ms": 0.8
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 14905.9,
+      "duration_ms": 1.2,
+      "trusted": true
+    },
+    {
+      "type": "event",
+      "name": "browser-input",
+      "at_ms": 14919.2,
+      "duration_ms": 16,
+      "queue_ms": 1.1,
+      "handler_ms": 0.6
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 14934.9,
+      "duration_ms": 28.9,
+      "status": "opportunity"
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 15032.3,
+      "duration_ms": 97.4
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15094.5,
+      "duration_ms": 159.6,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15095.7,
+      "duration_ms": 130.8,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15096.6,
+      "duration_ms": 101.2,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15097.5,
+      "duration_ms": 71.9,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15098.1,
+      "duration_ms": 42,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15099.3,
+      "duration_ms": 12.5,
+      "trusted": true
+    },
+    {
+      "type": "span",
+      "name": "render.window",
+      "at_ms": 15212,
+      "duration_ms": 108
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15219,
+      "duration_ms": 102.3,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15219.6,
+      "duration_ms": 72.9,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15220,
+      "duration_ms": 43,
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "name": "keydown",
+      "at_ms": 15220.4,
+      "duration_ms": 13.2,
+      "trusted": true
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15221.8,
+      "duration_ms": 127.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15221.9,
+      "duration_ms": 126.1,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15221.9,
+      "duration_ms": 125.2,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15222,
+      "duration_ms": 124.4,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15222,
+      "duration_ms": 123.8,
+      "status": "opportunity"
+    },
+    {
+      "type": "paint",
+      "name": "input.keydown",
+      "at_ms": 15222.1,
+      "duration_ms": 122.7,
+      "status": "opportunity"
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 15223.4,
+      "duration_ms": 160
+    },
+    {
+      "type": "longtask",
+      "name": "main-thread",
+      "at_ms": 15223.4,
+      "duration_ms": 117
+    },
+    {
+      "type": "loop",
+      "name": "timer-drift",
+      "at_ms": 15223.4,
+      "duration_ms": 254.7
+    }
+  ],
+  "dom": {
+    "mounted_cards": 24,
+    "open_dialogs": 1,
+    "loading_images": 2,
+    "scroll_locked": true
+  }
+}

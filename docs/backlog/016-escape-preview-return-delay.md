@@ -26,3 +26,8 @@ Owner follow-up: Escape still lags, browser page memory around90MB. This superse
 any inference that the earlier change fixed perceived latency. Added opt-in timing
 surface and deferred board layout/reset behind modals, resuming after a close-paint
 opportunity. Root cause and real Chrome improvement remain unproven. Keep open.
+
+
+Owner scroll capture now proves slow render.window work (median138.2ms, max351ms);
+scroll caching/signature/cover-reader correction recorded in017. No retained
+preview.close span, so Escape-specific before/after proof remains UNKNOWN/open.

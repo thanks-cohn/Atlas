@@ -8,7 +8,7 @@ import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
 import {PINBOARDS_KEY,PINBOARD_SETTINGS,BATCH,pinItems,boardRecord,cardLimit,tagQuery,createPinboard} from './pinboard-model.js';
-import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCover,setBookmarkCover,directImage} from './bookmark-covers.js';
+import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY,bookmarkCover,createBookmarkCoverReader,setBookmarkCover,directImage} from './bookmark-covers.js';
 import {publicImageURL} from './pages-store.js';
 import {rasterImage} from './image-file.js';
 const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.createElement(tag);node.textContent=text;return node;};
@@ -19,6 +19,7 @@ let boardAssetsReady=false,boardAssetsPromise=Promise.resolve();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
 let blocks=new Map(),frame=0,limit=72;
+let windowLayoutDirty=true,windowLayoutCache=null;
 let deferredBoardWindow=false,deferredBoardReset=false,boardResumePending=false;
 const boardLayoutBlocked=()=>boardResumePending || $('detail').open || $('image-source').open;
 const topSpacer=el('div'),bottomSpacer=el('div');topSpacer.className=bottomSpacer.className='pin-spacer';
@@ -36,7 +37,9 @@ function defaultEntryNode(node){if(node?.entryId)return node;const gallery=image
 const hostLabel=node=>node.url?new URL(node.url).hostname:'Personal card';
 function collectionNodes(query=''){const nodes=$('folder').value==='blank'?blankBoard.nodes():pinItems(roots,$('folder').value);const text=query.trim().toLocaleLowerCase();return text?nodes.filter(node=>(node.title+' '+(node.url || '')).toLocaleLowerCase().includes(text)):nodes;}
 function metadata(node){if(node?.entryId){const entry=storedEntry(node);return {tags:entry?.tags || [],notes:entry?.notes || [],bookmarks:entry?.bookmarks || [],image:entry?.image || null,note:''};}const projected=defaultEntryNode(node);if(projected!==node)return metadata(projected);if(imageEntries.gallery(galleryOwner(node)))return {tags:[],notes:[],bookmarks:[],image:null,note:''};if(authored(node))return blankBoard.metadata(node);return associations.get(node.url) || {note:'',tags:[],image:null};}
-function imageFor(node){const gallery=imageEntries.gallery(galleryOwner(node));if(node?.entryId || gallery){const entry=node?.entryId?storedEntry(node):gallery.entries.find(e=>e.id===gallery.defaultId);const source=entry?.image;return source && !failedImages.has(source)?(source.startsWith('data:')?source:publicImageURL(source)):null;}const value=authored(node)?metadata(node).image:(bookmarkCover(node,covers) || metadata(node).image);if(failedImages.has(value))return null;return value?.startsWith('data:')?value:publicImageURL(value);}
+let coverReaderSnapshot=null,coverReader=null;
+function savedCover(node){if(coverReaderSnapshot!==covers){coverReaderSnapshot=covers;coverReader=createBookmarkCoverReader(covers);}return coverReader(node);}
+function imageFor(node){const gallery=imageEntries.gallery(galleryOwner(node));if(node?.entryId || gallery){const entry=node?.entryId?storedEntry(node):gallery.entries.find(e=>e.id===gallery.defaultId);const source=entry?.image;return source && !failedImages.has(source)?(source.startsWith('data:')?source:publicImageURL(source)):null;}const value=authored(node)?metadata(node).image:(savedCover(node) || metadata(node).image);if(failedImages.has(value))return null;return value?.startsWith('data:')?value:publicImageURL(value);}
 function link(node,label){if(!node.url){const button=el('button',label);button.type='button';button.onclick=()=>openDetail(node);return button;}const a=el('a',label);a.href=node.url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 function pickImage(node){imageTarget=parentNode(node);selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
 function humanTagsFor(node){const tags=new Map();for(const tag of metadata(node).tags){if(typeof tag==='string' && tagKey(tag) && !tags.has(tagKey(tag)))tags.set(tagKey(tag),tag.trim());}return [...tags.values()];}
@@ -268,13 +271,16 @@ const previewSections=installPreviewSections({getBookmarks:()=>pinItems(roots),g
 const cardHolds=createCardHold({onRelease:()=>updatePriorities()});
 function holdCard(node){const position=positionById.get(node.id);if(!position)return;const mounted=[...blocks.values()].flatMap(block=>[...block.children]).find(card=>card.atlasNode.id===node.id),rect=mounted?.getBoundingClientRect(),root=$('pins').getBoundingClientRect();const actual=rect && Number.isFinite(rect.left) && Number.isFinite(root.left)?{...position,x:rect.left-root.left,y:rect.top-root.top}:position;cardHolds.hold(node.id,actual);}
 let tagsChangedURL=null;
-function cardSignature(node){return JSON.stringify([node.title,node.url,imageFor(node)]);}
+// Compare references directly: serializing a saved base64 image on every scroll
+// allocates a second image-sized string for every mounted card.
+function cardSignature(node){return [node.title,node.url,imageFor(node),boardAssetsReady];}
+function sameCardSignature(a,b){return a?.length===b.length && a.every((value,index)=>value===b[index]);}
 function card(node){
   const article=el('article');article.className='pin';article.atlasNode=node;article.atlasSignature=cardSignature(node);for(const event of ['pointermove','pointerdown','keydown','focusin'])article.addEventListener(event,()=>cardHolds.touch(node.id));const image=imageFor(node);
   if(image){
     const button=el('button');button.className='pin-visual';button.setAttribute('aria-label','Preview '+(node.title || node.url));
     const geometry=imageGeometry.get(image);button.style.aspectRatio=geometry || '4 / 3';
-    const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;imageGeometry.set(image,ratio);button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow();};img.src=image;button.onclick=()=>openDetail(node);
+    const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{let changed=false;if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;changed=imageGeometry.get(image)!==ratio;imageGeometry.set(image,ratio);if(button.style.aspectRatio!==ratio)button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow(!changed);};img.src=image;button.onclick=()=>openDetail(node);
     img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow();};
     const copy=el('div');copy.className='pin-copy';const strip=tagStrip(node),copyHeight=strip?138:78;copy.style.height=copyHeight+'px';button.style.height='calc(100% - '+copyHeight+'px)';const title=link(node,node.title || hostLabel(node));title.className='pin-title';const url=link(node,hostLabel(node));url.className='pin-url';copy.append(title,url);if(strip)copy.append(strip);article.append(button,copy);
     const tagEdit=el('button');tagEdit.className='image-tag-edit';tagEdit.type='button';tagEdit.style.bottom=(copyHeight+16)+'px';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);
@@ -290,20 +296,26 @@ function columns(){
   const width=$('pins').clientWidth || 1100;
   return window.innerWidth<=540 ? 2 : Math.max(1,Math.min(7,Math.floor((width+20)/230)));
 }
-function scheduleWindow(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow();});}
-function positionCard(element,position){if(!position)return;Object.assign(element.style,{position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'});}
-function renderWindow(preserveAnchor=true){if(boardLayoutBlocked()){deferredBoardWindow=true;return;}const end=window.atlasDebug?.performance.begin('render.window');try{return renderWindowWork(preserveAnchor);}finally{end?.();}}
-function renderWindowWork(preserveAnchor=true){
+function scheduleWindow(reuseLayout=false){if(reuseLayout!==true)windowLayoutDirty=true;if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow(true,!windowLayoutDirty);});}
+function positionCard(element,position){if(!position)return;const style={position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'};for(const [key,value] of Object.entries(style))if(element.style[key]!==value)element.style[key]=value;}
+function renderWindow(preserveAnchor=true,reuseLayout=false){if(boardLayoutBlocked()){deferredBoardWindow=true;return;}const end=window.atlasDebug?.performance.begin('render.window');try{return renderWindowWork(preserveAnchor,reuseLayout);}finally{end?.();}}
+function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
   const mountedById=new Map(mounted.map(element=>[element.atlasNode.id,element]));
   const anchor=(preserveAnchor?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
   const oldAnchor=anchor?.getBoundingClientRect().top;
   const cols=columns(),gap=window.innerWidth<=540?12:20,width=(($('pins').clientWidth || 1100)-(cols-1)*gap)/cols;
-  const layout=heldMasonry(items,cols,width,gap,node=>{
+  const reservations=cardHolds.active(),holds=JSON.stringify(reservations.map(({id,x,y,width,height})=>[id,x,y,width,height]));
+  const cached=windowLayoutCache;
+  const canReuse=reuseLayout && !windowLayoutDirty && cached?.items===items && cached.cols===cols && cached.width===width && cached.gap===gap && cached.holds===holds;
+  const endLayout=window.atlasDebug?.performance.begin('render.layout');
+  const layout=canReuse?cached.layout:heldMasonry(items,cols,width,gap,node=>{
     const image=imageFor(node),parts=(imageGeometry.get(image) || '4 / 3').split('/').map(Number),ratio=parts[0]/parts[1];
     const visual=image?Math.max(window.innerWidth<=540?120:160,Math.min(480,width/ratio)):0;
     const extra=tagsFor(node).length?60:0;return image?visual+78+extra:108+extra;
-  },cardHolds.active());positions=layout.positions;const ends=layout.ends;
+  },reservations);
+  endLayout?.();windowLayoutDirty=false;windowLayoutCache={items,cols,width,gap,holds,layout};
+  positions=layout.positions;const ends=[...layout.ends];
   positionById=new Map(positions.map(position=>[position.node.id,position]));
   const composerRegion=blankBoard.region?.();
   if($('folder').value==='blank' && blankBoard.composing?.() && composerRegion){
@@ -323,7 +335,7 @@ function renderWindowWork(preserveAnchor=true){
   for(const index of wantedBatches){let block=blocks.get(index);if(!block){block=el('div');block.className='pin-block';blocks.set(index,block);}
     const existing=new Map([...block.children].map(element=>[element.atlasNode.id,element]));
     const wanted=selected.filter(position=>Math.floor(position.index/BATCH)===index);
-    const nodes=wanted.map(position=>{const prior=existing.get(position.node.id) || mountedById.get(position.node.id);const element=prior?.atlasSignature===cardSignature(position.node)?prior:card(position.node);element.atlasNode=position.node;positionCard(element,position);return element;});
+    const nodes=wanted.map(position=>{const prior=existing.get(position.node.id) || mountedById.get(position.node.id);const element=sameCardSignature(prior?.atlasSignature,cardSignature(position.node))?prior:card(position.node);element.atlasNode=position.node;positionCard(element,position);return element;});
     if(nodes.length!==block.children.length || nodes.some((node,i)=>node!==block.children[i])){
       if([...block.children].some(element=>element.contains(document.activeElement) && !nodes.includes(element))){$('pins').tabIndex=-1;$('pins').focus({preventScroll:true});}
       block.replaceChildren(...nodes);
@@ -518,7 +530,7 @@ $('cancel-new-board').onclick=()=>$('new-board-dialog').close();
 $('new-board-form').onsubmit=async event=>{event.preventDefault();const title=$('new-board-title').value.trim();if(!title || title.length>200)return;try{if(renamingBoard){await navigator.locks.request('atlas-pages-v1',async()=>{if(boardId){const saved=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};const board=boardRecord(saved[boardId]);await chrome.storage.local.set({[PINBOARDS_KEY]:{...saved,[boardId]:{...board,title}}});for(const option of $('folder').options)if(option.value==='board:'+boardId)option.textContent=title;}else await chrome.storage.local.set({'atlas.pinboard.default-title.v1':title});});$('title').textContent=title;document.title=title+' · Atlas Pinboard';$('new-board-dialog').close();return;}const id=crypto.randomUUID();await navigator.locks.request('atlas-pages-v1',()=>createPinboard(chrome.storage.local,{id:'',url:''},title,id,'blank'));location.href='pinboard.html?id='+encodeURIComponent(id);}catch{$('new-board-status').textContent='Could not create this pinboard. Please try again.';}};
 $('images-only').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();saveSettings();};
 $('card-limit').onchange=()=>{limit=cardLimit($('card-limit').value);renderWindow();saveSettings();};
-window.addEventListener('scroll',scheduleWindow,{passive:true});
+window.addEventListener('scroll',()=>scheduleWindow(true),{passive:true});
 window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
 $('edit-authored-card').onclick=()=>{const node=parentNode(selected);$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(parentNode(selected)) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(parentNode(selected));$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
