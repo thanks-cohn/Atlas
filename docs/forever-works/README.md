@@ -4,6 +4,9 @@
 
 Our guiding contract: **preserve the purpose and indispensable behavior; permit mechanisms, languages, UI frameworks, transport and product topology to change when replacement proof succeeds.**
 
+Implemented source behavior and its evidence are indexed separately in
+[Implemented behavior and verification](../implementation/README.md).
+
 Read:
 
 **Guiding product doctrine:** [Build Now. Use Forever.](BUILT_NOW_USE_FOREVER.md) — collect, curate, compose, export, transpose and publish from reusable Atlas entries and Pieces; proposed interoperability and preservation contract (not shipped universal portability).

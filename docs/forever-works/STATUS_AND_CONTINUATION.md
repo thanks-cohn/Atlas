@@ -1296,3 +1296,15 @@ more than two retries. Implemented initial+two retry ceiling per bookmark ID/URL
 shared by sticky Visible and per-card controls; version3 pending reservations/counts
 persist before retry network work. No automatic retry on scrolling/reload. Cap
 shows visible notice. Focused Fetch/pinboard regressions PASS; Chrome network NOT_RUN.
+
+
+## 2026-10-19 — Detailed implemented Fetch record
+
+Owner requests extensive ACTUALLY DONE documentation. Added implementation/README.md
+as an implemented-behavior/evidence index and rewrote AUTOMATIC_VIEWPORT_COVERS.md
+with current source-traced purpose, before/after behavior, control matrix,
+permission flow, viewport scheduling, retrieval bounds, preserved data, version3
+checkpoint/retry reservations, concrete scenarios, actual test results and explicit
+limits. Supersedes earlier shorthand version2 wording. Distinguishes per-board
+counts from global coordination and pending browser acceptance from tested source.
+Documentation-only change; checked links and whitespace, no runtime changes.
