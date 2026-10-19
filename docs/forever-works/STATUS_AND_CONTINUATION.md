@@ -1244,3 +1244,12 @@ Real Chrome visual acceptance NOT_RUN. No native-helper rebuild is required.
 Required project check: 170 tests, failures3/errors3/skips33;22 model links valid.
 The same pre-existing native bootstrap/supervisor startup limitations remain;
 full suite is not a pass. JavaScript focused regressions and syntax checks pass.
+
+
+## 2026-10-19 — Catalog management shelf crowding recorded
+
+Owner rejects the crowded diamond Catalogs & relationships panel in the shelf and
+requests catalog/relationship management on a separate page. Recorded backlog012
+and indexed it. Existing data/identity, linking, notes/tags, export and authenticated
+companion contracts must survive relocation. No UI removal/relocation implemented
+in this documentation-only change; choice of retained diamond link is unresolved.

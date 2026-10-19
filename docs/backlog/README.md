@@ -18,6 +18,8 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 
 | 011 | [Add Image does not update count or navigation](011-add-image-count-and-navigation-regression.md) | Backlog — unresolved |
 
+| 012 | [Catalog and relationship management crowds the shelf](012-catalog-relationships-crowd-shelf.md) | Backlog — move management to a dedicated page |
+
 ## Adding an item
 
 Use the next unused number (`002`, `003`, …) and a descriptive filename. Keep numbers stable when items are reordered or completed. Add the item to this index.
