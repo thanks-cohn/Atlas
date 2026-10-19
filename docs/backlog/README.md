@@ -40,3 +40,5 @@ Owner direction (2026-10-19): when an issue is observed or discovered but not fi
 record it here before ending work. Separate evidence from hypotheses, state what
 remains unresolved, and give reproduction/closure criteria. Mentioning an issue
 in conversation or testing a nearby path is not a fix. Keep this index current.
+
+- [018 — Fast-scroll stalls and missed clicks](018-fast-scroll-missed-clicks.md): indexed window selection and improved agent diagnostics implemented; real-browser acceptance open.

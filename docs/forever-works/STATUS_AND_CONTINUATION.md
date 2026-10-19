@@ -1416,3 +1416,42 @@ and Escape acceptance remain OPEN.
 Validation: scripts/test_pinboard.mjs, test_bookmarks.mjs, test_fetch_covers.mjs and test_performance_debug.mjs passed. Required check_project.py result follows below.
 
 Required check:170 tests,3 failures,3 errors,33 skipped;22 local model records valid. Failures/errors remain the pre-existing container native-bootstrap/supervisor READY limitations (same signature as prior run); no full-suite pass claimed. git diff --check passed. Next: owner pull/reload, repeat scroll and Escape capture, compare render.window and render.layout; keep016/017 open until measured browser acceptance.
+
+## 2026-10-19 — Fast-scroll investigation and autonomous performance surface
+
+Owner reports fast-scroll catch-up/stutter, missed image clicks and slower Escape
+with use; requests real solutions and better diagnostics for future agents.
+Before follow-up: e1a7f77a8f042ff577bd25878df6cd2a162429ae. Owner's installed source
+version is not verified; no post-e1a7f77 latency capture exists. Added backlog018;
+016/017 remain open. Lazy loading and DOM windowing were already present.
+
+Indexed viewport selection replaces whole-list per-scroll sort/scan. Reuse sorted
+geometry and ID maps; cached scroll skips card signature/anchor reads. Invalidation,
+visible coverage, buffer bounds and held positions remain tested. Evicted images
+lose callbacks and scroll-detached sources; replaced/reset card images release old
+handlers. Original saved images and metadata stay intact; ranking exit visuals
+retain image sources for their existing bounded animations.
+
+Added numeric renderer state revision2, bounded capture-wide phase/work aggregates,
+click queue/paint timing, scoped non-overlapping scenarios and scroll-stress.
+Added scripts/benchmark_pinboard_browser.mjs for isolated synthetic bookmarks with
+substantial saved data URIs, real Chromium paint and trusted wheel/click/Escape,
+CPU throttling, budget checks and alternate source-root comparisons. It never uses
+owner storage or native helper, blocks external traffic and identifies fixture
+proof separately from MV3 integration. Runner syntax PASS; browser execution
+BLOCKED: Chromium absent and attempted download returned truncated/non-ZIP data.
+No hardware speedup claimed. docs/implementation/PINBOARD_SCROLL_PERFORMANCE.md
+has exact continuation and primary browser guidance.
+
+Node test_pinboard, test_performance_debug, test_bookmarks and test_fetch_covers
+PASS. Regression:1,000 scroll events ->one queued callback/latest viewport,
+fewer than200 inspected positions for1,000 cards, zero unchanged-viewport card
+creation; resize/image/data changes rebuild; evicted handlers cleared. Scenario
+steps/scroll restoration, privacy bounds, aggregation and restart/overlap checks
+pass. Required check_project run retains the known native-bootstrap/supervisor
+READY failures; final counts recorded with run result. Next: run real Chromium
+before/after, compare phase/input/candidate/DOM data, then owner extension timing.
+
+Required check result:170 tests,3 failures,3 errors,33 skipped;22 local model
+records valid. Failure signature is the same pre-existing container native/bootstrap
+and supervisor READY limitation. Full suite is not green. git diff --check PASS.

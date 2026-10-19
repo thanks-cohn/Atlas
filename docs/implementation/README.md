@@ -17,3 +17,5 @@ For historical execution results, read
 [Status and continuation](../forever-works/STATUS_AND_CONTINUATION.md). For unfinished
 work, use [the backlog](../backlog/README.md). Keep implementation, tests, owner
 observations and future intent separate when adding entries here.
+
+- [Pinboard scroll performance and autonomous reproduction](PINBOARD_SCROLL_PERFORMANCE.md): indexed viewport selection, numeric work/phase diagnostics, repeatable stress scenario and isolated Chromium runner. Real-browser execution blocked in the current environment; owner acceptance open.

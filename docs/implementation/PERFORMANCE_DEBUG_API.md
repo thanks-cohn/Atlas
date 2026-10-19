@@ -214,3 +214,12 @@ checks pass for1,000 cards, scrolling/mounting, invalidation, snapshot cover saf
 large saved image references, gallery/navigation/tags and immediate close. These
 are behavior checks, not measured real-browser speed. Owner before/after scrolling
 and Escape acceptance remain OPEN.
+
+## Fast-scroll follow-up
+
+See [PINBOARD_SCROLL_PERFORMANCE.md](PINBOARD_SCROLL_PERFORMANCE.md) for the
+renderer_revision2 state reader, bounded capture-wide `measurements`,
+`pinboard.scroll-stress`, click timing and isolated Chromium benchmark runner.
+Measurements preserve phase maxima after raw sample eviction. This supplements
+the actual owner capture now stored in evidence; post-fix browser timing and
+Escape/missed-click proof remain pending, not a claimed performance pass.

@@ -35,3 +35,16 @@ await assert.rejects(()=>api.run('missing'),/NOT_ACTIVE/);
 api.start();api.register('test',async()=>({ok:true}));assert.deepEqual(await api.run('test'),{ok:true});await assert.rejects(()=>api.run('missing'),/UNAVAILABLE/);api.stop();
 env.PerformanceObserver=undefined;api.start();assert.equal(api.snapshot().support.longtask,false);assert.equal(api.check().rules.find(item=>item.name==='trusted-input-queue').status,'insufficient-data');api.stop();
 console.log('PASS: opt-in idle cost, capture deadline/cleanup, bounded samples, retained interaction spans, input budgets, observer capability gaps, privacy, hidden-tab exclusion, paint cancellation and scenario API.');
+
+api.registerState('test-state',()=>({cards:24,ready:true,title:'PRIVATE',nested:{secret:true},invalid:Infinity}));
+api.measure('render.positions-inspected',999);assert.deepEqual(api.snapshot().measurements,{});
+api.start();for(let index=0;index<1000;index++)api.measure('render.positions-inspected',index%5);
+const aggregate=api.snapshot().measurements['render.positions-inspected'];assert.equal(aggregate.count,1000);assert.equal(aggregate.mean,2);assert.equal(aggregate.max,4);
+assert.equal(api.snapshot().application['test-state'].cards,24);assert(!JSON.stringify(api.snapshot()).includes('PRIVATE'));
+for(let index=0;index<100;index++)api.measure('metric.'+index,index);assert.equal(Object.keys(api.snapshot().measurements).length,32);
+api.stop();api.clear();assert.equal(Object.keys(api.snapshot().measurements).length,0);
+console.log('PASS: bounded numeric aggregates survive sample eviction, idle measurement is inactive and application state excludes text and nested content.');
+
+api.start();let release,scoped;api.register('waiting',async(_,probe)=>{scoped=probe;await new Promise(resolve=>release=resolve);return probe.isActive();});
+const running=api.run('waiting');await assert.rejects(()=>api.run('test'),/BUSY/);api.stop();api.start();assert.equal(scoped.isActive(),false);release();assert.equal(await running,false);api.stop();
+console.log('PASS: scenarios reject overlap and cannot continue measuring a replacement capture.');

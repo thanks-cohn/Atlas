@@ -3,8 +3,9 @@
   const env=window,clock=()=>env.performance.now(),CAPACITY=240,MAX_MS=30000;
   const samples=[],observers=[],listeners=[],paintJobs=new Set();
   const noop=()=>{};
+  let scenarioRunning=false;
   let active=false,frame=0,loop=0,deadline=0,generation=0,lastFrame=0,due=0,dropped=0,started=null,stopped=0;
-  const supported={},totals={},scenarios=new Map();let startedUTC=null;
+  const supported={},totals={},scenarios=new Map(),measurements=new Map(),stateReaders=new Map();let startedUTC=null;
   const round=value=>Math.round(value*100)/100;
   const label=value=>typeof value==='string' && /^[a-zA-Z0-9_.:-]{1,64}$/.test(value)?value:'custom';
   const visible=()=>!env.document.hidden;
@@ -20,7 +21,7 @@
   function begin(name){
     if(!active)return noop;
     const at=clock(),epoch=generation;let ended=false;
-    return ()=>{if(ended || epoch!==generation)return;ended=true;record('span',name,clock()-at);};
+    return ()=>{if(ended || epoch!==generation)return;ended=true;const duration=clock()-at;measure('time.'+label(name),duration);record('span',name,duration);};
   }
   function afterPaint(name='paint.opportunity'){
     if(!active)return Promise.resolve({status:'inactive'});
@@ -56,7 +57,7 @@
     for(const job of [...paintJobs])job.finish('cancelled');
     return snapshot();
   }
-  function clear(){samples.length=0;dropped=0;for(const key of Object.keys(totals))delete totals[key];}
+  function clear(){measurements.clear();samples.length=0;dropped=0;for(const key of Object.keys(totals))delete totals[key];}
   function start({durationMs=10000}={}){
     stop();clear();for(const key of Object.keys(supported))delete supported[key];
     active=true;generation++;const epoch=generation;started=clock();startedUTC=new Date().toISOString();stopped=0;lastFrame=0;
@@ -75,7 +76,7 @@
     const heartbeat=()=>{if(!active || epoch!==generation)return;if(visible())record('loop','timer-drift',Math.max(0,clock()-due));due=clock()+50;loop=env.setTimeout(heartbeat,50);};
     loop=env.setTimeout(heartbeat,50);
     listen('visibilitychange',()=>{lastFrame=0;due=clock()+50;},true);
-    for(const type of ['pointerdown','keydown','wheel'])listen(type,event=>{
+    for(const type of ['pointerdown','click','keydown','wheel'])listen(type,event=>{
       if(!visible())return;
       const eventAt=Number(event.timeStamp),lag=clock()-eventAt;
       if(Number.isFinite(eventAt) && lag>=0 && lag<60000)record('input',type,lag,{trusted:event.isTrusted===true});
@@ -95,9 +96,18 @@
       return [name,{retained_count:values.length,p50_ms:percentile(.5),p95_ms:percentile(.95),max_ms:values.at(-1)}];
     }));
   }
+  function measure(name,value){
+    if(!active || !Number.isFinite(value))return;
+    const key=label(name);if(!measurements.has(key) && measurements.size>=32)return;
+    const prior=measurements.get(key) || {count:0,sum:0,min:value,max:value,last:value};
+    prior.count++;prior.sum+=value;prior.min=Math.min(prior.min,value);prior.max=Math.max(prior.max,value);prior.last=value;measurements.set(key,prior);
+  }
+  function applicationState(){
+    const result={};for(const [name,read] of stateReaders){try{const value=read(),safe={};for(const [key,item] of Object.entries(value || {}).slice(0,32))if(/^[a-zA-Z0-9_.:-]{1,64}$/.test(key) && (typeof item==='boolean' || Number.isFinite(item)))safe[key]=item;result[name]=safe;}catch{result[name]={unavailable:true};}}return result;
+  }
   function snapshot(){
     const doc=env.document,count=selector=>doc.querySelectorAll(selector).length;
-    return {schema:'atlas.performance.v1',active,started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),dom:{mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
+    return {schema:'atlas.performance.v1',active,started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),measurements:Object.fromEntries([...measurements].map(([key,value])=>[key,{...value,mean:round(value.sum/value.count)}])),application:applicationState(),dom:{mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
   }
   function check({frameGapMs=50,inputMs=100,loopDriftMs=100,interactionMs=100}={}){
     const report=snapshot(),rules=[];
@@ -111,10 +121,11 @@
   async function probe({durationMs=2000}={}){
     const config=start({durationMs});await new Promise(resolve=>env.setTimeout(resolve,config.duration_ms));return stop();
   }
-  const api={start,stop,clear,snapshot,check,probe,begin,afterPaint,
+  const api={start,stop,clear,snapshot,check,probe,begin,afterPaint,measure,
+    registerState(name,read){if(typeof read!=='function')throw Error('STATE_READER_REQUIRED');if(stateReaders.size>=8 && !stateReaders.has(label(name)))throw Error('STATE_READER_LIMIT');stateReaders.set(label(name),read);},
     isActive:()=>active,
     register(name,fn){if(typeof fn!=='function')throw Error('SCENARIO_HANDLER_REQUIRED');scenarios.set(label(name),fn);},
-    async run(name,options={}){if(!active)throw Error('PERFORMANCE_CAPTURE_NOT_ACTIVE');const action=scenarios.get(name);if(!action)throw Error('PERFORMANCE_SCENARIO_UNAVAILABLE');const end=begin('scenario.'+name);try{return await action(options,api);}finally{end();}}
+    async run(name,options={}){if(!active)throw Error('PERFORMANCE_CAPTURE_NOT_ACTIVE');if(scenarioRunning)throw Error('PERFORMANCE_SCENARIO_BUSY');const action=scenarios.get(name);if(!action)throw Error('PERFORMANCE_SCENARIO_UNAVAILABLE');const epoch=generation,end=begin('scenario.'+name);scenarioRunning=true;const scoped={...api,isActive:()=>active && epoch===generation,afterPaint:name=>epoch===generation?afterPaint(name):Promise.resolve({status:'cancelled'})};try{return await action(options,scoped);}finally{scenarioRunning=false;end();}}
   };
   env.atlasDebug ||= {};
   env.atlasDebug.performance=api;

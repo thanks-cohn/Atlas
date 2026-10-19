@@ -302,21 +302,26 @@ function renderWindow(preserveAnchor=true,reuseLayout=false){if(boardLayoutBlock
 function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
   const mountedById=new Map(mounted.map(element=>[element.atlasNode.id,element]));
-  const anchor=(preserveAnchor?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
-  const oldAnchor=anchor?.getBoundingClientRect().top;
   const cols=columns(),gap=window.innerWidth<=540?12:20,width=(($('pins').clientWidth || 1100)-(cols-1)*gap)/cols;
   const reservations=cardHolds.active(),holds=JSON.stringify(reservations.map(({id,x,y,width,height})=>[id,x,y,width,height]));
   const cached=windowLayoutCache;
   const canReuse=reuseLayout && !windowLayoutDirty && cached?.items===items && cached.cols===cols && cached.width===width && cached.gap===gap && cached.holds===holds;
+  const anchor=(preserveAnchor && !canReuse?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
+  const oldAnchor=anchor?.getBoundingClientRect().top;
   const endLayout=window.atlasDebug?.performance.begin('render.layout');
   const layout=canReuse?cached.layout:heldMasonry(items,cols,width,gap,node=>{
     const image=imageFor(node),parts=(imageGeometry.get(image) || '4 / 3').split('/').map(Number),ratio=parts[0]/parts[1];
     const visual=image?Math.max(window.innerWidth<=540?120:160,Math.min(480,width/ratio)):0;
     const extra=tagsFor(node).length?60:0;return image?visual+78+extra:108+extra;
   },reservations);
-  endLayout?.();windowLayoutDirty=false;windowLayoutCache={items,cols,width,gap,holds,layout};
+  endLayout?.();windowLayoutDirty=false;windowLayoutCache=canReuse?cached:{items,cols,width,gap,holds,layout};
   positions=layout.positions;const ends=[...layout.ends];
-  positionById=new Map(positions.map(position=>[position.node.id,position]));
+  if(!canReuse){
+    positionById=new Map(positions.map(position=>[position.node.id,position]));
+    const byY=[...positions].sort((a,b)=>a.y-b.y || a.index-b.index);let edge=-Infinity;
+    windowLayoutCache.byY=byY;windowLayoutCache.bottoms=byY.map(position=>edge=Math.max(edge,position.y+position.height));
+  }
+  window.atlasDebug?.performance.measure('render.layout-reused',Number(canReuse));
   const composerRegion=blankBoard.region?.();
   if($('folder').value==='blank' && blankBoard.composing?.() && composerRegion){
     const column=ends.indexOf(Math.min(...ends));Object.assign(composerRegion.style,{position:'absolute',left:(column*(width+gap))+'px',top:ends[column]+'px',width:width+'px',margin:'0'});
@@ -326,16 +331,29 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   // Keep the same visible card anchored as intrinsic image ratios become known.
   if(anchor && oldAnchor!==undefined){const next=positionById.get(anchor.atlasNode.id);const prior=parseFloat(anchor.style.top);if(next && Number.isFinite(prior)){const delta=next.y-prior;if(Math.abs(delta)>1)window.scrollBy({top:delta,behavior:'instant'});}}
   const top=localScroll(),bottom=top+(window.innerHeight || 768);
-  const visible=positions.filter(position=>position.y+position.height>=top && position.y<=bottom);
-  const chosen=new Set(visible.map(position=>position.index));
-  // Fill the remaining budget with nearest neighbors, never whole remote batches.
-  for(const position of [...positions].sort((a,b)=>Math.abs(a.y-top)-Math.abs(b.y-top))){if(chosen.size>=limit)break;chosen.add(position.index);}
-  const selected=positions.filter(position=>chosen.has(position.index)),wantedBatches=new Set(selected.map(position=>Math.floor(position.index/BATCH)));
+  const endSelect=window.atlasDebug?.performance.begin('render.select');
+  const {byY,bottoms}=windowLayoutCache;
+  const lowerBound=(array,value,get=value=>value)=>{let lo=0,hi=array.length;while(lo<hi){const mid=(lo+hi)>>>1;if(get(array[mid])<value)lo=mid+1;else hi=mid;}return lo;};
+  // A prefix maximum handles held rectangles even when masonry order is irregular.
+  const chosen=new Set();let inspected=0;
+  for(let index=lowerBound(bottoms,top);index<byY.length && byY[index].y<=bottom;index++){
+    const position=byY[index];inspected++;if(position.y+position.height>=top)chosen.add(position.index);
+  }
+  let right=lowerBound(byY,top,position=>position.y),left=right-1;
+  while(chosen.size<limit && (left>=0 || right<byY.length)){
+    const takeLeft=left>=0 && (right>=byY.length || top-byY[left].y<byY[right].y-top);
+    const position=takeLeft?byY[left--]:byY[right++];inspected++;chosen.add(position.index);
+  }
+  const selected=[...chosen].sort((a,b)=>a-b).map(index=>positions[index]),grouped=new Map();
+  for(const position of selected){const batch=Math.floor(position.index/BATCH);if(!grouped.has(batch))grouped.set(batch,[]);grouped.get(batch).push(position);}
+  const wantedBatches=new Set(grouped.keys());endSelect?.();
+  window.atlasDebug?.performance.measure('render.positions-inspected',inspected);
+  const endMount=window.atlasDebug?.performance.begin('render.mount');let created=0,reused=0;
   for(const [index,block] of blocks)if(!wantedBatches.has(index)){if(block.contains(document.activeElement)){$('pins').tabIndex=-1;$('pins').focus({preventScroll:true});}block.remove();blocks.delete(index);}
   for(const index of wantedBatches){let block=blocks.get(index);if(!block){block=el('div');block.className='pin-block';blocks.set(index,block);}
     const existing=new Map([...block.children].map(element=>[element.atlasNode.id,element]));
-    const wanted=selected.filter(position=>Math.floor(position.index/BATCH)===index);
-    const nodes=wanted.map(position=>{const prior=existing.get(position.node.id) || mountedById.get(position.node.id);const element=sameCardSignature(prior?.atlasSignature,cardSignature(position.node))?prior:card(position.node);element.atlasNode=position.node;positionCard(element,position);return element;});
+    const wanted=grouped.get(index);
+    const nodes=wanted.map(position=>{const prior=existing.get(position.node.id) || mountedById.get(position.node.id);const keep=prior && (canReuse || sameCardSignature(prior.atlasSignature,cardSignature(position.node)));const element=keep?prior:card(position.node);if(keep)reused++;else created++;element.atlasNode=position.node;positionCard(element,position);return element;});
     if(nodes.length!==block.children.length || nodes.some((node,i)=>node!==block.children[i])){
       if([...block.children].some(element=>element.contains(document.activeElement) && !nodes.includes(element))){$('pins').tabIndex=-1;$('pins').focus({preventScroll:true});}
       block.replaceChildren(...nodes);
@@ -344,10 +362,14 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   topSpacer.style.height=(selected[0]?.y || 0)+'px';bottomSpacer.style.height='0px';
   const wanted=[topSpacer,...[...blocks].sort((a,b)=>a[0]-b[0]).map(([,block])=>block),...(composerRegion?[composerRegion]:[]),bottomSpacer];
   const current=[...$('pins').children];if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
+  // Evicted image elements must not keep requesting work after leaving the window.
+  for(const element of mounted)if(!element.isConnected)releaseCardImage(element,canReuse);
+  endMount?.();window.atlasDebug?.performance.measure('render.cards-created',created);window.atlasDebug?.performance.measure('render.cards-reused',reused);
   coverFetch.discover();
   status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'}` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
-function resetBlocks(){if(boardLayoutBlocked()){deferredBoardReset=true;deferredBoardWindow=true;return;}blocks.clear();$('pins').replaceChildren();renderWindow();}
+function releaseCardImage(element,clearSource=true){const image=element.querySelector('img');if(image){image.onload=null;image.onerror=null;if(clearSource)image.removeAttribute('src');}}
+function resetBlocks(){if(boardLayoutBlocked()){deferredBoardReset=true;deferredBoardWindow=true;return;}for(const block of blocks.values())for(const element of block.children)releaseCardImage(element);blocks.clear();$('pins').replaceChildren();renderWindow();}
 const selectionKey=tag=>tag.normalize('NFKC').trim().toLowerCase();
 function selectionTags(){return [...new Map([...highlightedTags,...tagQuery($('search').value).tags].map(tag=>[selectionKey(tag),tag])).values()];}
 function isSelectedTag(tag){return selectionTags().some(value=>selectionKey(value)===selectionKey(tag));}
@@ -436,7 +458,7 @@ function updateTagCard(node){
 function updateCoverCard(node){
   const block=[...blocks.values()].find(block=>[...block.children].some(element=>element.atlasNode?.id===node.id));if(!block)return;
   const old=[...block.children].find(element=>element.atlasNode.id===node.id);if(old.atlasNode.url!==node.url)return;
-  const replacement=card(node);positionCard(replacement,positionById.get(node.id));old.replaceWith(replacement);scheduleWindow();
+  const replacement=card(node);positionCard(replacement,positionById.get(node.id));releaseCardImage(old);old.replaceWith(replacement);scheduleWindow();
 }
 async function saveSettings(){try{await chrome.storage.local.set({[PINBOARD_SETTINGS]:{version:1,limit,imagesOnly:$('images-only').checked,tagsOnly:$('tags-only').checked}});}catch{status('PINBOARD_SETTINGS_SAVE_FAILED: Your current view still works; settings were not saved.');}}
 function indexAssociations(data){
@@ -637,6 +659,24 @@ async function start(){
 
 }
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
+window.atlasDebug?.performance.registerState('pinboard',()=>({
+  renderer_revision:2,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
+  nearby_budget:limit,layout_dirty:windowLayoutDirty,window_update_pending:!!frame,layout_blocked:!!boardLayoutBlocked(),
+  assets_ready:boardAssetsReady,held_cards:cardHolds.active().length,layout_positions:positions.length
+}));
+window.atlasDebug?.performance.register('pinboard.scroll-stress',async(options,probe)=>{
+  if((document.querySelectorAll?.('dialog[open]') || []).length)throw Error('CLOSE_EXISTING_DIALOGS_FIRST');
+  const steps=Math.max(2,Math.min(60,Math.floor(Number(options.steps) || 24))),start=window.scrollY;
+  const distance=Math.max(100,Math.min(6000,Number(options.distance) || window.innerHeight*2 || 1500));
+  let completed=0,peak=0;
+  try{for(let index=0;index<steps && probe.isActive();index++){
+    const direction=Math.floor(index/4)%2?-1:1;
+    window.scrollBy({top:direction*distance,behavior:'instant'});
+    await probe.afterPaint('scenario.scroll');
+    peak=Math.max(peak,[...blocks.values()].reduce((count,block)=>count+block.children.length,0));completed++;
+  }}finally{window.scrollTo({top:start,behavior:'instant'});}
+  return {completed_steps:completed,peak_mounted_cards:peak,synthetic_scroll:true,trusted_input:false};
+});
 window.atlasDebug?.performance.register('pinboard.preview-cycle',async(options,probe)=>{
   if((document.querySelectorAll?.('dialog[open]') || []).length)throw Error('CLOSE_EXISTING_DIALOGS_FIRST');
   const cycles=Math.max(1,Math.min(10,Math.floor(Number(options.cycles) || 3)));let completed=0;

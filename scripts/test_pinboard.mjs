@@ -41,7 +41,9 @@ const elements=new Map();const document={querySelector:()=>new El(),getElementBy
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun,tagKey,checkpointTags}=await moduleOf('pinboard-generation.js');
 const galleryModule=await import('../extension/image-entries.js');
-const context={installSourceNavigation:()=>{},...galleryModule,structuredClone,crypto,createImageEntries:options=>galleryModule.createImageEntries({...options,lock:fn=>fn()}),heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:options=>{previewOptions=options;return {setContent:(key,value)=>previewContent={key,...value}};},TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,tagKey,checkpointTags,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return node=>{tagEditorNode=node;};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const debugScenarios=new Map(),debugStates=new Map();
+const debugPerformance={begin:()=>()=>{},afterPaint:()=>Promise.resolve({status:'inactive'}),measure(){},register:(name,fn)=>debugScenarios.set(name,fn),registerState:(name,fn)=>debugStates.set(name,fn)};
+const context={installSourceNavigation:()=>{},...galleryModule,structuredClone,crypto,createImageEntries:options=>galleryModule.createImageEntries({...options,lock:fn=>fn()}),heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:options=>{previewOptions=options;return {setContent:(key,value)=>previewContent={key,...value}};},TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,tagKey,checkpointTags,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return node=>{tagEditorNode=node;};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{atlasDebug:{performance:debugPerformance},scrollTo:({top})=>scroll=top,get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -49,7 +51,7 @@ const flush=()=>{const work=frames.splice(0);for(const fn of work)fn();};
 const settleBoardClose=async()=>{flush();flush();await tick();flush();};
 flush();assert.equal(cards().length,72);
 const originalCard=cards()[0];
-scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));
+scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));assert.equal(originalCard.children[0].children[0].onload,null,'Evicted images must not keep scheduling layout');assert.equal(originalCard.children[0].children[0].onerror,null);
 assert.ok(parseFloat($('pins').children[0].style.height)>0);
 scroll=0;listeners.scroll();flush();assert.equal(cards().length,72);assert.notEqual(cards()[0],originalCard);
 $('card-limit').value='24';$('card-limit').onchange();await tick();assert.equal(cards().length,24);assert.equal(data[model.PINBOARD_SETTINGS].limit,24);
@@ -520,3 +522,20 @@ assert.equal(next({id:'a',url:'https://x.test/a'}),null,'New snapshot observes r
 const signature=vm.runInContext("cardSignature({id:'large',url:'https://x.test/a',title:'Large'})",context);
 assert.ok(Array.isArray(signature),'Card identity must not serialize image bytes');
 console.log('PASS: scroll reuses masonry; resize, item changes and image geometry invalidate it; queued updates win over scroll; snapshot cover lookup preserves validation and avoids repeated scans.');
+// A burst consumes only the latest scroll position and examines a bounded neighborhood.
+const measured=new Map();context.window.atlasDebug={performance:{begin:()=>()=>{},measure:(name,value)=>{const list=measured.get(name) || [];list.push(value);measured.set(name,list);}}};
+vm.runInContext('renderWindow()',context);flush();measured.clear();
+for(let index=0;index<1000;index++){scroll=index%2?12000:0;listeners.scroll();}
+scroll=2000;listeners.scroll();assert.equal(frames.length,1,'Scroll burst queues only one window update');flush();
+assert.equal(measured.get('render.layout-reused').length,1);assert.equal(measured.get('render.layout-reused')[0],1);
+assert.ok(measured.get('render.positions-inspected')[0]<200,'Selecting a viewport must not scan/sort all 1,000 positions');
+const viewport=vm.runInContext('positions.filter(p=>p.y+p.height>=localScroll() && p.y<=localScroll()+768).map(p=>p.node.id)',context),mountedIDs=new Set(cards().map(card=>card.atlasNode.id));
+for(const id of viewport)assert(mountedIDs.has(id),'Latest viewport card must be mounted after coalescing');
+listeners.scroll();flush();assert.equal(measured.get('render.cards-created').at(-1),0,'Unchanged viewport keeps existing card objects');
+console.log('PASS: 1,000-event fast-scroll burst coalesces to latest viewport, indexed selection examines fewer than200 positions and unchanged viewport creates zero cards.');
+
+const scenarioStart=scroll;let paints=0;
+const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distance:1700},{isActive:()=>true,afterPaint:async()=>{listeners.scroll();flush();paints++;}});
+assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
+assert.equal(debugStates.get('pinboard')().renderer_revision,2);
+console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
