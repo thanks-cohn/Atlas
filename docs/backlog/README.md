@@ -16,6 +16,8 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 | 009 | [Audit one authoritative pinboard name](009-pinboard-title-single-source-audit.md) | Backlog — unresolved |
 | 010 | [Keep programmatic current tags fresh after manual changes](010-current-tag-checkpoint-freshness.md) | Backlog — unresolved |
 
+| 011 | [Add Image does not update count or navigation](011-add-image-count-and-navigation-regression.md) | Backlog — unresolved |
+
 ## Adding an item
 
 Use the next unused number (`002`, `003`, …) and a descriptive filename. Keep numbers stable when items are reordered or completed. Add the item to this index.
