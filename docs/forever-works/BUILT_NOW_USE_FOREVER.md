@@ -1,8 +1,8 @@
-# ATLAS — Built Now. Use Forever.
+# ATLAS — Build Now. Use Forever.
 
 **Status:** Owner-directed product doctrine and proposed interoperability architecture. NOT a claim that universal export, adapters, Cloudflare publishing, Any-Shape transplantation, or formal Forever Works validation already ship.  
 **Recorded:** 2026-10-18  
-**Product promise:** **Built Now. Use Forever.**
+**Product promise:** **Build Now. Use Forever.**
 
 ## The thesis
 
@@ -91,4 +91,4 @@ Treat implementations as replaceable evidence of purpose, not the purpose itself
 
 GrapesJS supplies a visual editing foundation and component patterns, but Atlas's proposed differentiator is the *portable semantic asset graph and composition/preservation contract*, with publishing as one expression of reusable source material. Existing tools may overlap in many features; uniqueness is a hypothesis to verify by interoperability, user experience and actual external adoption.
 
-**Owner's guiding phrase:** **Built Now. Use Forever.**
+**Owner's guiding phrase:** **Build Now. Use Forever.**
