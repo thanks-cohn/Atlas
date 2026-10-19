@@ -1308,3 +1308,12 @@ checkpoint/retry reservations, concrete scenarios, actual test results and expli
 limits. Supersedes earlier shorthand version2 wording. Distinguishes per-board
 counts from global coordination and pending browser acceptance from tested source.
 Documentation-only change; checked links and whitespace, no runtime changes.
+
+
+## 2026-10-19 — Fetch commit boundaries and revert instructions
+
+Owner requested exact before/after commits for reversibility. Verified Git parents:
+2cb4694 baseline ->6b9d881 automatic ->9996b5b sticky cap ->bf9046b docs.
+Added full SHA/link table, comparison, selective reverse-order revert preparation,
+focused validation and saved-checkpoint compatibility caveat to Fetch behavior
+record. Documentation only: no source rollback or user-data deletion performed.

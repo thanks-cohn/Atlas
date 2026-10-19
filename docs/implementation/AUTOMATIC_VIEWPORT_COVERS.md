@@ -9,6 +9,65 @@
 network and visual acceptance is pending. This is an extension-source change;
 no new native helper or image-tagging model is needed.
 
+## Exact before/after commits and rollback
+
+These boundaries were checked against the actual Git parent chain on 2026-10-19.
+They identify the source changes; this section does not execute a rollback.
+
+| Boundary | Exact commit | Meaning |
+| --- | --- | --- |
+| Before either Fetch change | [`2cb4694129c76da6d1590f24e52f0a235d7b31ce`](https://github.com/thanks-cohn/Atlas/commit/2cb4694129c76da6d1590f24e52f0a235d7b31ce) | Manual cover fetching; includes the shelf startup repair. This is the parent of the automatic-fetch change. |
+| After automatic fetching, before bounded sticky retries | [`6b9d881ff7200a8510e3d295742247e32c16686d`](https://github.com/thanks-cohn/Atlas/commit/6b9d881ff7200a8510e3d295742247e32c16686d) | Automatic viewport fetching, remembered misses and Settings opt-out; explicit per-card retry has no new two-retry ceiling yet. |
+| After both behavior changes | [`9996b5bff38eab0e9caf6d5e4c60ff5c36079622`](https://github.com/thanks-cohn/Atlas/commit/9996b5bff38eab0e9caf6d5e4c60ff5c36079622) | Sticky Visible retries remembered misses; persistent initial-plus-two-retry policy. |
+| Detailed behavior documentation | [`bf9046b28ffa409b2f706e8163b5c77d7e04f3dd`](https://github.com/thanks-cohn/Atlas/commit/bf9046b28ffa409b2f706e8163b5c77d7e04f3dd) | Documentation-only index and expanded record; does not change runtime behavior. |
+
+For a comparison of the complete behavior change, compare
+[`2cb4694...9996b5b`](https://github.com/thanks-cohn/Atlas/compare/2cb4694129c76da6d1590f24e52f0a235d7b31ce...9996b5bff38eab0e9caf6d5e4c60ff5c36079622).
+The implementation changed `extension/fetch-covers.js`, `extension/pinboard.html`,
+Fetch tests and their documentation/status entries.
+
+### Revert the behavior while retaining later work
+
+Use a clean working tree and a new rollback branch. Review later changes first:
+a revert may conflict if subsequent work edits the same lines. Revert the two
+implementation commits in reverse chronological order, not a reset of the whole
+branch. From the Atlas repository, an example preparation sequence is:
+
+```bat
+git status --short
+git switch -c rollback/viewport-cover-fetch
+git revert --no-commit 9996b5bff38eab0e9caf6d5e4c60ff5c36079622 6b9d881ff7200a8510e3d295742247e32c16686d
+git diff --cached --stat
+git diff --check
+node scripts/test_fetch_covers.mjs
+node scripts/test_pinboard.mjs
+```
+
+Only proceed past the status check when the working tree is clean. The command
+stages reversal for review; it does not commit or publish it. Resolve conflicts
+and inspect the actual resulting behavior before making a rollback commit. To
+abandon an in-progress conflicted revert, use `git revert --abort`.
+Reload Atlas in Chrome after choosing and committing the desired source state.
+No native helper reinstall is required for these JavaScript/HTML changes.
+
+To remove only the sticky two-retry policy while keeping automatic viewport
+fetching, revert `9996b5bff38eab0e9caf6d5e4c60ff5c36079622` alone instead.
+Disabling automatic fetching in Settings is the simpler supported opt-out when
+no source rollback is wanted; it does not remove the sticky retry policy.
+
+### Saved-data effects of reverting source
+
+A Git revert changes source files; it does not delete saved covers, human notes,
+tags, gallery entries, browser preferences or attempt history. Keep those records.
+The older manual implementation accepts version1 checkpoints, not the new v3
+retry document; it can ignore newer attempt records and permit another manual
+attempt. Therefore a source rollback is not a promise that the newer persistent
+retry ceiling remains enforced. Returning to the new implementation can read its
+retained v3 history again, unless an intervening older implementation overwrote
+that checkpoint. Back up browser data before an experiment if preserving exact
+retry history matters. Do not clear Atlas storage or reset the whole repository
+just to reverse this feature. No rollback has been performed as part of this record.
+
 ## Purpose and owner direction
 
 A bookmark pinboard should populate naturally as the user browses. Requiring
