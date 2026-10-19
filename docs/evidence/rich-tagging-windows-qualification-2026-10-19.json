@@ -1,0 +1,2125 @@
+{
+  "schema": "atlas.rich-tagging.windows-qualification.v1",
+  "commit": "68f249806a538208040e79f3dc92e41f4d7a0626",
+  "run_id": 39196142502,
+  "job_id": 117879227673,
+  "workflow": "https://github.com/thanks-cohn/Atlas/actions/runs/39196142502",
+  "installed_test_step": "success",
+  "artifact_upload": "success",
+  "ubuntu_run": 39196142514,
+  "ubuntu_status": "success",
+  "photos": {
+    "schema": "atlas.windows.rich-photos.v1",
+    "transport": "installed EXE, authenticated HTTP, no Python PATH, original bundle folders unavailable",
+    "fixtures": [
+      {
+        "id": "demo1",
+        "url": "https://github.com/xinyu1205/recognize-anything/blob/main/images/demo/demo1.jpg",
+        "sha256": "1b2906f4058a69936df49cb6156ec4cd117a286b420e1eb14764033bf8f3c05f",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "76c55d8d-c642-4a21-bfdf-7f7652501e72",
+            "suggestions": [
+              {
+                "tag": "dog",
+                "score": 0.9999757465255824,
+                "category": "objects"
+              },
+              {
+                "tag": "living room",
+                "score": 0.9998168560342069,
+                "category": "objects"
+              },
+              {
+                "tag": "couch",
+                "score": 0.9996926814684356,
+                "category": "objects"
+              },
+              {
+                "tag": "sit",
+                "score": 0.952359140090328,
+                "category": "objects"
+              },
+              {
+                "tag": "carpet",
+                "score": 0.8656709479248658,
+                "category": "objects"
+              },
+              {
+                "tag": "room",
+                "score": 0.8582185836164375,
+                "category": "objects"
+              },
+              {
+                "tag": "blanket",
+                "score": 0.8452147370496104,
+                "category": "objects"
+              },
+              {
+                "tag": "green",
+                "score": 0.8336514162775391,
+                "category": "objects"
+              },
+              {
+                "tag": "picture frame",
+                "score": 0.8255124995492883,
+                "category": "objects"
+              },
+              {
+                "tag": "home",
+                "score": 0.8253009879739096,
+                "category": "objects"
+              },
+              {
+                "tag": "plant",
+                "score": 0.808123856604627,
+                "category": "objects"
+              },
+              {
+                "tag": "armchair",
+                "score": 0.704240741670496,
+                "category": "objects"
+              },
+              {
+                "tag": "wood floor",
+                "score": 0.6736743996579789,
+                "category": "objects"
+              },
+              {
+                "tag": "hassock",
+                "score": 0.6682950411138505,
+                "category": "objects"
+              },
+              {
+                "tag": "wall lamp",
+                "score": 0.6522370494866129,
+                "category": "objects"
+              },
+              {
+                "tag": "lamp",
+                "score": 0.6422965049967436,
+                "category": "objects"
+              },
+              {
+                "tag": "pillow",
+                "score": 0.6123464862100998,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1453068288,
+              "peak_commit_bytes": 1562275840
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 5.630055499999912
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "eb564d66-04a2-4357-8d86-f1f0825cb271",
+            "suggestions": [],
+            "person_count": 0,
+            "people": [],
+            "aggregation": {
+              "people": 0,
+              "adults": 0,
+              "children": 0,
+              "age_unknown": 0,
+              "adult_male": 0,
+              "adult_female": 0,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 0
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 638033920,
+              "peak_commit_bytes": 615739392
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 4.876045500000032
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "e500f014-dab9-43bc-a800-b15b55fb7e23",
+            "suggestions": [
+              {
+                "tag": "plant",
+                "score": 0.79782
+              },
+              {
+                "tag": "potted_plant",
+                "score": 0.73464
+              },
+              {
+                "tag": "original",
+                "score": 0.71735
+              },
+              {
+                "tag": "cup",
+                "score": 0.71015
+              },
+              {
+                "tag": "couch",
+                "score": 0.70749
+              },
+              {
+                "tag": "indoors",
+                "score": 0.64552
+              },
+              {
+                "tag": "no_humans",
+                "score": 0.6434
+              },
+              {
+                "tag": "table",
+                "score": 0.60192
+              },
+              {
+                "tag": "wooden_floor",
+                "score": 0.54527
+              },
+              {
+                "tag": "cat",
+                "score": 0.53428
+              },
+              {
+                "tag": "mug",
+                "score": 0.5337
+              },
+              {
+                "tag": "rug",
+                "score": 0.50901
+              },
+              {
+                "tag": "chair",
+                "score": 0.49956
+              },
+              {
+                "tag": "carpet",
+                "score": 0.46397
+              },
+              {
+                "tag": "blanket",
+                "score": 0.46327
+              },
+              {
+                "tag": "solo",
+                "score": 0.46196
+              },
+              {
+                "tag": "scenery",
+                "score": 0.45697
+              },
+              {
+                "tag": "lying",
+                "score": 0.45055
+              },
+              {
+                "tag": "1girl",
+                "score": 0.43812
+              },
+              {
+                "tag": "animal",
+                "score": 0.43549
+              },
+              {
+                "tag": "pillow",
+                "score": 0.43036
+              },
+              {
+                "tag": "floor",
+                "score": 0.42677
+              },
+              {
+                "tag": "vase",
+                "score": 0.42458
+              },
+              {
+                "tag": "coffee",
+                "score": 0.41456
+              },
+              {
+                "tag": "painting_(object)",
+                "score": 0.41249
+              },
+              {
+                "tag": "armchair",
+                "score": 0.40706
+              },
+              {
+                "tag": "photoshop_(medium)",
+                "score": 0.4043
+              },
+              {
+                "tag": "barefoot",
+                "score": 0.40363
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 529842176,
+              "peak_commit_bytes": 506208256
+            },
+            "seconds": 4.182846400000017
+          }
+        ]
+      },
+      {
+        "id": "demo2",
+        "url": "https://github.com/xinyu1205/recognize-anything/blob/main/images/demo/demo2.jpg",
+        "sha256": "5c5159bf7114d08967f95475176670043115b157bf700efa34190260cd917662",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "a4dc4cc7-37ee-44e7-adbe-62ac6217fd1b",
+            "suggestions": [
+              {
+                "tag": "city",
+                "score": 0.9989451839062916,
+                "category": "objects"
+              },
+              {
+                "tag": "christmas market",
+                "score": 0.9944491171471623,
+                "category": "objects"
+              },
+              {
+                "tag": "person",
+                "score": 0.9881930677955517,
+                "category": "objects"
+              },
+              {
+                "tag": "snow",
+                "score": 0.890323586880038,
+                "category": "objects"
+              },
+              {
+                "tag": "walk",
+                "score": 0.8764781548105322,
+                "category": "objects"
+              },
+              {
+                "tag": "building",
+                "score": 0.870549276014564,
+                "category": "objects"
+              },
+              {
+                "tag": "town",
+                "score": 0.845549500375952,
+                "category": "objects"
+              },
+              {
+                "tag": "market",
+                "score": 0.8304487253834646,
+                "category": "objects"
+              },
+              {
+                "tag": "snowy",
+                "score": 0.8040707159627026,
+                "category": "objects"
+              },
+              {
+                "tag": "winter",
+                "score": 0.7846841231396541,
+                "category": "objects"
+              },
+              {
+                "tag": "stall",
+                "score": 0.7838489930868284,
+                "category": "objects"
+              },
+              {
+                "tag": "town square",
+                "score": 0.7446789836619297,
+                "category": "objects"
+              },
+              {
+                "tag": "market square",
+                "score": 0.7419398910250521,
+                "category": "objects"
+              },
+              {
+                "tag": "floor",
+                "score": 0.7069405956914615,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1450569728,
+              "peak_commit_bytes": 1560403968
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 5.783526600000073
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "74dc710f-7842-4229-881a-721669530d02",
+            "suggestions": [
+              {
+                "tag": "6 people",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "people"
+              },
+              {
+                "tag": "5 adults",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adults"
+              },
+              {
+                "tag": "2 adult females",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adult_female"
+              }
+            ],
+            "person_count": 6,
+            "people": [
+              {
+                "subject_id": 0,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    916.03466796875,
+                    615.5101013183594,
+                    1034.6578369140625,
+                    849.2940979003906
+                  ],
+                  "score": 0.7917090654373169
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 38.59130749106407,
+                "appearance_estimate": "female",
+                "appearance_scores": {
+                  "male": 0.032620545476675034,
+                  "female": 0.9673795104026794
+                },
+                "raw_head": [
+                  -1.6713615655899048,
+                  1.7182869911193848,
+                  -0.1836778074502945
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 1,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    1053.6094970703125,
+                    588.3709716796875,
+                    1099.3936767578125,
+                    720.0357666015625
+                  ],
+                  "score": 0.537613034248352
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 31.234277546405792,
+                "appearance_estimate": null,
+                "appearance_scores": {
+                  "male": 0.2146862894296646,
+                  "female": 0.7853137254714966
+                },
+                "raw_head": [
+                  -0.6556957364082336,
+                  0.6412097811698914,
+                  -0.24398133158683777
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 2,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    1011.4775695800781,
+                    594.8000793457031,
+                    1057.9811706542969,
+                    721.9125671386719
+                  ],
+                  "score": 0.5124531388282776
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 32.62213784456253,
+                "appearance_estimate": null,
+                "appearance_scores": {
+                  "male": 0.20658183097839355,
+                  "female": 0.7934181690216064
+                },
+                "raw_head": [
+                  -0.6686522364616394,
+                  0.6770015954971313,
+                  -0.23260542750358582
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 3,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    725.3074645996094,
+                    583.2032470703125,
+                    757.3778381347656,
+                    672.91748046875
+                  ],
+                  "score": 0.4650949239730835
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 34.82190725207329,
+                "appearance_estimate": null,
+                "appearance_scores": {
+                  "male": 0.23615527153015137,
+                  "female": 0.7638447284698486
+                },
+                "raw_head": [
+                  -0.5904634594917297,
+                  0.583411693572998,
+                  -0.21457453072071075
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 4,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    1117.4458618164062,
+                    583.4193420410156,
+                    1170.9159545898438,
+                    712.2105407714844
+                  ],
+                  "score": 0.40733858942985535
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 34.52832239866257,
+                "appearance_estimate": "female",
+                "appearance_scores": {
+                  "male": 0.1501588672399521,
+                  "female": 0.8498410582542419
+                },
+                "raw_head": [
+                  -0.8741804361343384,
+                  0.8591751456260681,
+                  -0.2169809639453888
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 5,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    694.70263671875,
+                    579.7093811035156,
+                    724.4278564453125,
+                    664.8033142089844
+                  ],
+                  "score": 0.40107542276382446
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": null,
+                "appearance_estimate": null,
+                "appearance_scores": null,
+                "raw_head": null,
+                "estimate_status": "insufficient-resolution",
+                "age_group_estimate": "unknown"
+              }
+            ],
+            "aggregation": {
+              "people": 6,
+              "adults": 5,
+              "children": 0,
+              "age_unknown": 1,
+              "adult_male": 0,
+              "adult_female": 2,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 4
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 637775872,
+              "peak_commit_bytes": 615612416
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 10.012296800000058
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "5ad54465-3d83-4b6c-87ec-1abe244a29c6",
+            "suggestions": [
+              {
+                "tag": "tree",
+                "score": 0.74471
+              },
+              {
+                "tag": "snow",
+                "score": 0.71957
+              },
+              {
+                "tag": "winter",
+                "score": 0.65084
+              },
+              {
+                "tag": "scenery",
+                "score": 0.59669
+              },
+              {
+                "tag": "original",
+                "score": 0.56201
+              },
+              {
+                "tag": "window",
+                "score": 0.55557
+              },
+              {
+                "tag": "outdoors",
+                "score": 0.54752
+              },
+              {
+                "tag": "sky",
+                "score": 0.54613
+              },
+              {
+                "tag": "day",
+                "score": 0.54335
+              },
+              {
+                "tag": "building",
+                "score": 0.5372
+              },
+              {
+                "tag": "winter_clothes",
+                "score": 0.51582
+              },
+              {
+                "tag": "house",
+                "score": 0.5145
+              },
+              {
+                "tag": "motor_vehicle",
+                "score": 0.48215
+              },
+              {
+                "tag": "christmas_tree",
+                "score": 0.47912
+              },
+              {
+                "tag": "hat",
+                "score": 0.47904
+              },
+              {
+                "tag": "bare_tree",
+                "score": 0.47372
+              },
+              {
+                "tag": "photoshop_(medium)",
+                "score": 0.45325
+              },
+              {
+                "tag": "christmas",
+                "score": 0.43517
+              },
+              {
+                "tag": "6+boys",
+                "score": 0.42605
+              },
+              {
+                "tag": "blue_sky",
+                "score": 0.42472
+              },
+              {
+                "tag": "road",
+                "score": 0.41598
+              },
+              {
+                "tag": "lamppost",
+                "score": 0.40194
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 529539072,
+              "peak_commit_bytes": 505905152
+            },
+            "seconds": 4.187816300000009
+          }
+        ]
+      },
+      {
+        "id": "bus",
+        "url": "https://github.com/ultralytics/ultralytics/blob/main/ultralytics/assets/bus.jpg",
+        "sha256": "c02019c4979c191eb739ddd944445ef408dad5679acab6fd520ef9d434bfbc63",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "d0f5a356-5f8b-445c-9697-b24cd6ff4e17",
+            "suggestions": [
+              {
+                "tag": "bus",
+                "score": 0.9999241450219495,
+                "category": "objects"
+              },
+              {
+                "tag": "road",
+                "score": 0.9992580876933158,
+                "category": "objects"
+              },
+              {
+                "tag": "person",
+                "score": 0.9946672028326525,
+                "category": "objects"
+              },
+              {
+                "tag": "walk",
+                "score": 0.983305866941582,
+                "category": "objects"
+              },
+              {
+                "tag": "blue",
+                "score": 0.859023671451251,
+                "category": "objects"
+              },
+              {
+                "tag": "pavement",
+                "score": 0.8454202868534629,
+                "category": "objects"
+              },
+              {
+                "tag": "city bus",
+                "score": 0.8253398283378037,
+                "category": "objects"
+              },
+              {
+                "tag": "man",
+                "score": 0.813506041942443,
+                "category": "objects"
+              },
+              {
+                "tag": "cross",
+                "score": 0.8050642749345501,
+                "category": "objects"
+              },
+              {
+                "tag": "tour bus",
+                "score": 0.746707861216811,
+                "category": "objects"
+              },
+              {
+                "tag": "bus stop",
+                "score": 0.7008898864671276,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1449390080,
+              "peak_commit_bytes": 1561657344
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 5.746669300000008
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "63d230fc-de07-4f23-8f31-8a4dc4fb5a61",
+            "suggestions": [
+              {
+                "tag": "4 people",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "people"
+              },
+              {
+                "tag": "4 adults",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adults"
+              },
+              {
+                "tag": "2 adult males",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adult_male"
+              }
+            ],
+            "person_count": 4,
+            "people": [
+              {
+                "subject_id": 0,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    47.67708921432495,
+                    394.8734550476074,
+                    246.90032243728638,
+                    907.0800704956055
+                  ],
+                  "score": 0.8809788227081299
+                },
+                "face": {
+                  "kind": "face",
+                  "box": [
+                    113.88626861572266,
+                    420.3585648536682,
+                    154.83095741271973,
+                    469.3423361778259
+                  ],
+                  "score": 0.6170399188995361
+                },
+                "association": "unique-containment",
+                "age_estimate": 35.78512546420097,
+                "appearance_estimate": "male",
+                "appearance_scores": {
+                  "male": 0.9971166849136353,
+                  "female": 0.0028833365067839622
+                },
+                "raw_head": [
+                  2.928927183151245,
+                  -2.916992664337158,
+                  -0.2066792994737625
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 1,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    222.97473907470703,
+                    403.97549057006836,
+                    346.6058464050293,
+                    860.4193153381348
+                  ],
+                  "score": 0.8584197759628296
+                },
+                "face": {
+                  "kind": "face",
+                  "box": [
+                    269.14372301101685,
+                    423.7447786331177,
+                    306.8081431388855,
+                    471.8703031539917
+                  ],
+                  "score": 0.6139141917228699
+                },
+                "association": "unique-containment",
+                "age_estimate": 30.433579683303833,
+                "appearance_estimate": "male",
+                "appearance_scores": {
+                  "male": 0.9971233010292053,
+                  "female": 0.0028766621835529804
+                },
+                "raw_head": [
+                  2.9287586212158203,
+                  -2.919485092163086,
+                  -0.2505444288253784
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 2,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    665.1984615325928,
+                    389.0274839401245,
+                    809.000467300415,
+                    882.3068361282349
+                  ],
+                  "score": 0.7993204593658447
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 22.70368081331253,
+                "appearance_estimate": null,
+                "appearance_scores": {
+                  "male": 0.44723719358444214,
+                  "female": 0.5527628064155579
+                },
+                "raw_head": [
+                  -0.09906968474388123,
+                  0.11277027428150177,
+                  -0.3139042556285858
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 3,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    0.41478753089904785,
+                    547.0080327987671,
+                    76.79858565330505,
+                    872.4901056289673
+                  ],
+                  "score": 0.537049412727356
+                },
+                "face": null,
+                "association": "body-only",
+                "age_estimate": 33.20957297086716,
+                "appearance_estimate": null,
+                "appearance_scores": {
+                  "male": 0.6267811059951782,
+                  "female": 0.37321892380714417
+                },
+                "raw_head": [
+                  0.2589867115020752,
+                  -0.2594454288482666,
+                  -0.22779038548469543
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              }
+            ],
+            "aggregation": {
+              "people": 4,
+              "adults": 4,
+              "children": 0,
+              "age_unknown": 0,
+              "adult_male": 2,
+              "adult_female": 0,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 2
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 636772352,
+              "peak_commit_bytes": 614576128
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 9.075178100000016
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "4edd31eb-c88a-4873-845f-06e6b90ee4e2",
+            "suggestions": [
+              {
+                "tag": "multiple_boys",
+                "score": 0.82628
+              },
+              {
+                "tag": "jeans",
+                "score": 0.79447
+              },
+              {
+                "tag": "photo_(medium)",
+                "score": 0.7809
+              },
+              {
+                "tag": "denim",
+                "score": 0.75378
+              },
+              {
+                "tag": "road",
+                "score": 0.70847
+              },
+              {
+                "tag": "street",
+                "score": 0.6786
+              },
+              {
+                "tag": "pants",
+                "score": 0.65667
+              },
+              {
+                "tag": "facial_hair",
+                "score": 0.65243
+              },
+              {
+                "tag": "outdoors",
+                "score": 0.64325
+              },
+              {
+                "tag": "shoes",
+                "score": 0.60811
+              },
+              {
+                "tag": "city",
+                "score": 0.59831
+              },
+              {
+                "tag": "beard",
+                "score": 0.56628
+              },
+              {
+                "tag": "jacket",
+                "score": 0.5631
+              },
+              {
+                "tag": "motor_vehicle",
+                "score": 0.56048
+              },
+              {
+                "tag": "building",
+                "score": 0.54553
+              },
+              {
+                "tag": "shirt",
+                "score": 0.53255
+              },
+              {
+                "tag": "2boys",
+                "score": 0.5252
+              },
+              {
+                "tag": "male_focus",
+                "score": 0.51926
+              },
+              {
+                "tag": "3boys",
+                "score": 0.51681
+              },
+              {
+                "tag": "car",
+                "score": 0.51186
+              },
+              {
+                "tag": "sunglasses",
+                "score": 0.49958
+              },
+              {
+                "tag": "brown_hair",
+                "score": 0.48919
+              },
+              {
+                "tag": "day",
+                "score": 0.47089
+              },
+              {
+                "tag": "sneakers",
+                "score": 0.45002
+              },
+              {
+                "tag": "product_placement",
+                "score": 0.42228
+              },
+              {
+                "tag": "blue_pants",
+                "score": 0.41863
+              },
+              {
+                "tag": "red_shirt",
+                "score": 0.41379
+              },
+              {
+                "tag": "short_hair",
+                "score": 0.40744
+              },
+              {
+                "tag": "english_text",
+                "score": 0.40744
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 526131200,
+              "peak_commit_bytes": 502394880
+            },
+            "seconds": 4.269089699999995
+          }
+        ]
+      },
+      {
+        "id": "zidane",
+        "url": "https://github.com/ultralytics/ultralytics/blob/main/ultralytics/assets/zidane.jpg",
+        "sha256": "16d73869e3267a7d4ed00de8e860833bd1657c1b252e94c0c348277adc7b6edb",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "f7c09036-f7db-4f92-96c4-9a622bd680a0",
+            "suggestions": [
+              {
+                "tag": "football player",
+                "score": 0.9994256946281473,
+                "category": "objects"
+              },
+              {
+                "tag": "manager",
+                "score": 0.9889397690310363,
+                "category": "objects"
+              },
+              {
+                "tag": "man",
+                "score": 0.941920820741266,
+                "category": "objects"
+              },
+              {
+                "tag": "coach",
+                "score": 0.9390281226374516,
+                "category": "objects"
+              },
+              {
+                "tag": "hand",
+                "score": 0.8778262440337976,
+                "category": "objects"
+              },
+              {
+                "tag": "football team",
+                "score": 0.8756362500681613,
+                "category": "objects"
+              },
+              {
+                "tag": "player",
+                "score": 0.872507370311087,
+                "category": "objects"
+              },
+              {
+                "tag": "match",
+                "score": 0.8434153214707233,
+                "category": "objects"
+              },
+              {
+                "tag": "sideline",
+                "score": 0.7525269147517535,
+                "category": "objects"
+              },
+              {
+                "tag": "referee",
+                "score": 0.717072384737415,
+                "category": "objects"
+              },
+              {
+                "tag": "head coach",
+                "score": 0.709187317062406,
+                "category": "objects"
+              },
+              {
+                "tag": "football match",
+                "score": 0.6695294244693147,
+                "category": "objects"
+              },
+              {
+                "tag": "playingfield",
+                "score": 0.64679483531504,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1448914944,
+              "peak_commit_bytes": 1560170496
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 5.806115299999988
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "00fdc9af-e42a-409d-a40f-d055b1a99a48",
+            "suggestions": [
+              {
+                "tag": "2 people",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "people"
+              },
+              {
+                "tag": "2 adults",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adults"
+              },
+              {
+                "tag": "2 adult males",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adult_male"
+              }
+            ],
+            "person_count": 2,
+            "people": [
+              {
+                "subject_id": 0,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    743.8354797363281,
+                    37.2265625,
+                    1156.6862487792969,
+                    715.711669921875
+                  ],
+                  "score": 0.9110945463180542
+                },
+                "face": {
+                  "kind": "face",
+                  "box": [
+                    915.8393859863281,
+                    116.25787353515625,
+                    1055.1298522949219,
+                    280.77783203125
+                  ],
+                  "score": 0.7552765607833862
+                },
+                "association": "unique-containment",
+                "age_estimate": 61.70033021271229,
+                "appearance_estimate": "male",
+                "appearance_scores": {
+                  "male": 0.9973268508911133,
+                  "female": 0.00267310650087893
+                },
+                "raw_head": [
+                  2.960601329803467,
+                  -2.961236000061035,
+                  0.005740411579608917
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              },
+              {
+                "subject_id": 1,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    116.73590087890625,
+                    195.085693359375,
+                    981.0037231445312,
+                    716.0823974609375
+                  ],
+                  "score": 0.8662861585617065
+                },
+                "face": {
+                  "kind": "face",
+                  "box": [
+                    548.4232788085938,
+                    274.68194580078125,
+                    664.9804077148438,
+                    451.74591064453125
+                  ],
+                  "score": 0.44200098514556885
+                },
+                "association": "unique-containment",
+                "age_estimate": 42.64450478553772,
+                "appearance_estimate": "male",
+                "appearance_scores": {
+                  "male": 0.997227132320404,
+                  "female": 0.0027728937566280365
+                },
+                "raw_head": [
+                  2.9421119689941406,
+                  -2.9429752826690674,
+                  -0.15045487880706787
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              }
+            ],
+            "aggregation": {
+              "people": 2,
+              "adults": 2,
+              "children": 0,
+              "age_unknown": 0,
+              "adult_male": 2,
+              "adult_female": 0,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 0
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 636809216,
+              "peak_commit_bytes": 614256640
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 7.303233199999909
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "3cd3e07a-10d9-4be4-97c9-68aecb8d5853",
+            "suggestions": [
+              {
+                "tag": "multiple_boys",
+                "score": 0.88846
+              },
+              {
+                "tag": "2boys",
+                "score": 0.84347
+              },
+              {
+                "tag": "real_life",
+                "score": 0.51087
+              },
+              {
+                "tag": "male_focus",
+                "score": 0.46865
+              },
+              {
+                "tag": "photo_(medium)",
+                "score": 0.40194
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 526790656,
+              "peak_commit_bytes": 503238656
+            },
+            "seconds": 4.27031850000003
+          }
+        ]
+      },
+      {
+        "id": "astronaut",
+        "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/astronaut.png",
+        "sha256": "88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "14e06f47-cb1f-473a-8d7c-43c4872288e7",
+            "suggestions": [
+              {
+                "tag": "astronaut",
+                "score": 0.9999881843533792,
+                "category": "objects"
+              },
+              {
+                "tag": "woman",
+                "score": 0.9999325100337194,
+                "category": "objects"
+              },
+              {
+                "tag": "person",
+                "score": 0.9698429319548858,
+                "category": "objects"
+              },
+              {
+                "tag": "space",
+                "score": 0.9036300578021081,
+                "category": "objects"
+              },
+              {
+                "tag": "helmet",
+                "score": 0.9026171045639282,
+                "category": "objects"
+              },
+              {
+                "tag": "rocket",
+                "score": 0.899563762639718,
+                "category": "objects"
+              },
+              {
+                "tag": "flag",
+                "score": 0.8780270928239873,
+                "category": "objects"
+              },
+              {
+                "tag": "space shuttle",
+                "score": 0.8727567401795853,
+                "category": "objects"
+              },
+              {
+                "tag": "stand",
+                "score": 0.8655055827165813,
+                "category": "objects"
+              },
+              {
+                "tag": "pose",
+                "score": 0.8637101287773511,
+                "category": "objects"
+              },
+              {
+                "tag": "smile",
+                "score": 0.8037239491376758,
+                "category": "objects"
+              },
+              {
+                "tag": "spacecraft",
+                "score": 0.7023646115807565,
+                "category": "objects"
+              },
+              {
+                "tag": "mission",
+                "score": 0.6537260131991709,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1446469632,
+              "peak_commit_bytes": 1508950016
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 10.307665200000088
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "3fabf658-d26e-473f-ba92-e62dae9571bd",
+            "suggestions": [
+              {
+                "tag": "1 person",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "people"
+              },
+              {
+                "tag": "1 adult",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adults"
+              },
+              {
+                "tag": "1 adult female",
+                "score": null,
+                "category": "people",
+                "derived": true,
+                "count_key": "adult_female"
+              }
+            ],
+            "person_count": 1,
+            "people": [
+              {
+                "subject_id": 0,
+                "body": {
+                  "kind": "person",
+                  "box": [
+                    16.7281005859375,
+                    12.673046875,
+                    368.8201416015625,
+                    511.70224609375
+                  ],
+                  "score": 0.9231652617454529
+                },
+                "face": {
+                  "kind": "face",
+                  "box": [
+                    180.8443359375,
+                    78.9734619140625,
+                    269.569482421875,
+                    177.3815185546875
+                  ],
+                  "score": 0.7842532396316528
+                },
+                "association": "unique-containment",
+                "age_estimate": 34.22234645485878,
+                "appearance_estimate": "female",
+                "appearance_scores": {
+                  "male": 0.002804623683914542,
+                  "female": 0.9971953630447388
+                },
+                "raw_head": [
+                  -2.9301021099090576,
+                  2.943575143814087,
+                  -0.2194889634847641
+                ],
+                "estimate_status": "model-estimate",
+                "age_group_estimate": "adult"
+              }
+            ],
+            "aggregation": {
+              "people": 1,
+              "adults": 1,
+              "children": 0,
+              "age_unknown": 0,
+              "adult_male": 0,
+              "adult_female": 1,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 0
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 634265600,
+              "peak_commit_bytes": 612495360
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 8.485629899999935
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "f4774ba6-c957-442f-b3c0-371851cb4a92",
+            "suggestions": [
+              {
+                "tag": "photo_(medium)",
+                "score": 0.77325
+              },
+              {
+                "tag": "solo",
+                "score": 0.71757
+              },
+              {
+                "tag": "real_life",
+                "score": 0.71638
+              },
+              {
+                "tag": "helmet",
+                "score": 0.65942
+              },
+              {
+                "tag": "smile",
+                "score": 0.6468
+              },
+              {
+                "tag": "grin",
+                "score": 0.62953
+              },
+              {
+                "tag": "1boy",
+                "score": 0.6273
+              },
+              {
+                "tag": "male_focus",
+                "score": 0.57496
+              },
+              {
+                "tag": "american_flag",
+                "score": 0.53636
+              },
+              {
+                "tag": "flag",
+                "score": 0.45277
+              },
+              {
+                "tag": "blonde_hair",
+                "score": 0.45056
+              },
+              {
+                "tag": "spacesuit",
+                "score": 0.43607
+              },
+              {
+                "tag": "teeth",
+                "score": 0.43247
+              },
+              {
+                "tag": "cosplay",
+                "score": 0.43071
+              },
+              {
+                "tag": "brown_hair",
+                "score": 0.42801
+              },
+              {
+                "tag": "blurry",
+                "score": 0.4037
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 516411392,
+              "peak_commit_bytes": 492728320
+            },
+            "seconds": 6.33789349999995
+          }
+        ]
+      },
+      {
+        "id": "chelsea",
+        "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/chelsea.png",
+        "sha256": "596aa1e7cb875eb79f437e310381d26b338a81c2da23439704a73c4651e8c4bb",
+        "runs": [
+          {
+            "source": "objects",
+            "model": "RAM++:matmul-int8-ort1.20.1",
+            "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+            "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+            "run_id": "dd996478-3199-41d3-8ff8-4c7d4737d348",
+            "suggestions": [
+              {
+                "tag": "cat",
+                "score": 0.9999948834173911,
+                "category": "objects"
+              },
+              {
+                "tag": "sit",
+                "score": 0.9074535588214502,
+                "category": "objects"
+              },
+              {
+                "tag": "eye",
+                "score": 0.888694379478503,
+                "category": "objects"
+              },
+              {
+                "tag": "green",
+                "score": 0.8823709129855033,
+                "category": "objects"
+              },
+              {
+                "tag": "close-up",
+                "score": 0.8024782906161002,
+                "category": "objects"
+              },
+              {
+                "tag": "tabby",
+                "score": 0.789768934565604,
+                "category": "objects"
+              },
+              {
+                "tag": "stare",
+                "score": 0.7650845166405054,
+                "category": "objects"
+              },
+              {
+                "tag": "computer",
+                "score": 0.7159041541925693,
+                "category": "objects"
+              }
+            ],
+            "resources": {
+              "peak_working_set_bytes": 1446739968,
+              "peak_commit_bytes": 1558265856
+            },
+            "components": [
+              {
+                "role": "rampp",
+                "model": "RAM++:matmul-int8-ort1.20.1",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+                "file": "ram-plus-matmul-int8.onnx"
+              },
+              {
+                "role": "labels",
+                "model": "RAM++:labels",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+                "file": "ram_tag_list.txt"
+              },
+              {
+                "role": "thresholds",
+                "model": "RAM++:thresholds",
+                "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+                "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+                "file": "ram_tag_list_threshold.txt"
+              }
+            ],
+            "seconds": 6.691806000000042
+          },
+          {
+            "source": "people",
+            "model": "iitolstykh/mivolo_v2",
+            "model_version": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+            "model_sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+            "run_id": "031103e7-6a4a-474f-92a3-89f7791a2d4a",
+            "suggestions": [],
+            "person_count": 0,
+            "people": [],
+            "aggregation": {
+              "people": 0,
+              "adults": 0,
+              "children": 0,
+              "age_unknown": 0,
+              "adult_male": 0,
+              "adult_female": 0,
+              "boys": 0,
+              "girls": 0,
+              "appearance_unknown": 0
+            },
+            "policy": {
+              "adult_age": 18,
+              "age_boundary_margin": 4,
+              "appearance_min_score": 0.8,
+              "detector_min_score": 0.4,
+              "nms_iou": 0.5,
+              "minimum_crop_pixels": 32,
+              "classification_limit": 64
+            },
+            "resources": {
+              "peak_working_set_bytes": 632967168,
+              "peak_commit_bytes": 611033088
+            },
+            "components": [
+              {
+                "role": "people_detector",
+                "model": "iitolstykh/YOLO-Face-Person-Detector",
+                "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+                "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+                "file": "person-face.onnx"
+              },
+              {
+                "role": "mivolo",
+                "model": "iitolstykh/mivolo_v2",
+                "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+                "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+                "file": "mivolo-v2.onnx"
+              }
+            ],
+            "seconds": 7.891558799999984
+          },
+          {
+            "source": "anime",
+            "model": "fancyfeast/joytag",
+            "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+            "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+            "run_id": "df245ff2-4d25-4faf-b6d9-57230ec071f6",
+            "suggestions": [
+              {
+                "tag": "cat",
+                "score": 0.79855
+              },
+              {
+                "tag": "photo_(medium)",
+                "score": 0.78733
+              },
+              {
+                "tag": "no_humans",
+                "score": 0.77087
+              },
+              {
+                "tag": "animal",
+                "score": 0.56806
+              },
+              {
+                "tag": "close-up",
+                "score": 0.5602
+              },
+              {
+                "tag": "animal_focus",
+                "score": 0.5487
+              },
+              {
+                "tag": "whiskers",
+                "score": 0.52825
+              },
+              {
+                "tag": "looking_at_viewer",
+                "score": 0.48465
+              },
+              {
+                "tag": "blurry",
+                "score": 0.46024
+              },
+              {
+                "tag": "green_eyes",
+                "score": 0.44289
+              },
+              {
+                "tag": "solo",
+                "score": 0.42648
+              },
+              {
+                "tag": "original",
+                "score": 0.41184
+              }
+            ],
+            "person_count": null,
+            "resources": {
+              "peak_working_set_bytes": 515649536,
+              "peak_commit_bytes": 491925504
+            },
+            "seconds": 5.909930799999984
+          }
+        ]
+      }
+    ]
+  },
+  "build_receipt": {
+    "source_sha256": "88a53d2434f313f92ef9facc74ee5eb199e1e3be6087d3e25c741b1104f7c48e",
+    "artifact": "atlas-companion.exe",
+    "debug_artifact": "debug.exe",
+    "sha256": "c662f7c2c5338d3b61354c88c228f9f7b4f84b35bacfa5a780727df50b219543",
+    "bytes": 13530353,
+    "engine_files": 619,
+    "engine_bytes": 215820553,
+    "model_bytes": 1642827985,
+    "tagging_profile": "rich-candidate",
+    "platform": "Windows-2025Server-10.0.26100-SP0",
+    "architecture": "AMD64",
+    "python": "3.12.10",
+    "pyinstaller": "6.16.0",
+    "layout": "small-helper/separate-onedir-engine/shared-model-cache",
+    "status": "unsigned development build; actual low-memory owner hardware acceptance NOT_RUN"
+  },
+  "recovery_events": [
+    {
+      "id": 5,
+      "time_ms": 1792381847243,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 49,
+      "time_ms": 1792381982845,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 67,
+      "time_ms": 1792381991709,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 82,
+      "time_ms": 1792382002058,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 93,
+      "time_ms": 1792382007510,
+      "stage": "SUPERVISOR_HEALTH",
+      "code": "HEALTH_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 94,
+      "time_ms": 1792382019535,
+      "stage": "SUPERVISOR_HEALTH",
+      "code": "HEALTH_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 99,
+      "time_ms": 1792382022753,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 104,
+      "time_ms": 1792382028803,
+      "stage": "SUPERVISOR_WAKE",
+      "code": "RECOVERY_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 125,
+      "time_ms": 1792382043503,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    }
+  ],
+  "scope": {
+    "photos": 6,
+    "photo_model_requests": 18,
+    "annotated_people_count_targets": 5,
+    "things_tags": 76,
+    "joytag": "six-photo tag sets and scores match source baseline within 0.001",
+    "recovery": "passed installed test and delayed proof-only credential regression"
+  },
+  "limitations": [
+    "Prior run 39195395053 exceeded supervisor recovery deadline; the diagnostic run passed but did not establish the cause of the earlier timeout. Extended recovery soak remains open.",
+    "Real Chrome MV3/native callbacks and owner hardware acceptance NOT_RUN.",
+    "Broad semantic/age/appearance accuracy and difficult-scene evaluation remain unqualified.",
+    "Detector proprietary distribution rights remain unresolved.",
+    "Quantized RAM++ output varied slightly by Windows runner CPU; source benchmark had 74 total Things tags, this run 76. No deterministic cross-CPU tag identity or precision guarantee."
+  ],
+  "artifact": {
+    "id": 12162317075,
+    "url": "https://github.com/thanks-cohn/Atlas/actions/runs/39196142502/artifacts/12162317075",
+    "sha256": "57904b50df72a7133fdb5bcd3fb600cfb809f835b35b58e1d3aba7fe24dca6d4",
+    "bytes": 1275760156,
+    "expires_at": "2026-11-02T03:54:13Z"
+  },
+  "windows_contract_tests": {
+    "run": 48,
+    "skipped": 1
+  },
+  "rich_contract_tests": {
+    "run": 8,
+    "skipped": 0
+  },
+  "installed_test_categories": [
+    "frozen models and core isolation",
+    "18 installed photo requests",
+    "native wake and byte-exact idempotent copy",
+    "mkdir/rename/move/trash/restore",
+    "attested restart and credential rotation",
+    "suspended-helper recovery",
+    "live upgrade preserves cache/grants/receipts",
+    "supervisor recovery and delayed credential-preservation regression",
+    "supervisor disable and revoked grant denial",
+    "owned uninstall preserves state",
+    "frozen GUI launch and second invocation",
+    "Tk grants/permissions/manual-pairing management"
+  ]
+}

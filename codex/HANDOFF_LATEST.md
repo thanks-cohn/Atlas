@@ -1,6 +1,6 @@
 ## ACTIVE CHECKPOINT — rich tagging, 2026-10-19 UTC
 
-Start with [cold-agent handoff](HANDOFF_RICH_TAGGING_2026-10-19.md) and [machine-readable state](RICH_TAGGING_HANDOFF_STATE.json). Branch `implement/rich-photo-tagging`, not main. Real candidate code and six-photo evidence are committed; default remains legacy, JoyTag untouched. Hosted Ubuntu CI passed; Windows qualification is ongoing/unverified. Read that checkpoint before older entries below.
+Start with [cold-agent handoff](HANDOFF_RICH_TAGGING_2026-10-19.md) and [machine-readable state](RICH_TAGGING_HANDOFF_STATE.json). Branch `implement/rich-photo-tagging`, not main. Real candidate code and six-photo evidence are committed; default remains legacy, JoyTag untouched. Hosted Ubuntu and installed Windows qualification run `39196142502` passed. [Tested candidate](https://github.com/thanks-cohn/Atlas/actions/runs/39196142502/artifacts/12162317075) and [trial/rollback guide](../docs/implementation/RICH_TAGGING_WINDOWS_TRIAL.md) are available. Actual Chrome/hardware, broader accuracy, recovery soak and detector-distribution gates remain. Read that checkpoint before older entries below.
 
 # ATLAS handoff — Linux and Windows companion recovery, 2026-10-15
 

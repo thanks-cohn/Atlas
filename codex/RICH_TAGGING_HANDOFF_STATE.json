@@ -15,18 +15,18 @@
   },
   "targeted_python_tests": 23,
   "hosted_ubuntu": {
-    "run_id": 39181393688,
+    "run_id": 39196142514,
     "status": "success",
     "tests": 168,
     "skipped": 33
   },
   "windows_original_run": {
     "run_id": 39181393607,
-    "last_observed": "in_progress: export environment/model preparation",
-    "success_claimed": false
+    "status": "success",
+    "scope": "original synthetic and installed helper smoke; six-photo suite was added later"
   },
-  "followup_windows_photo_test": "added; syntax checked; inspect newest workflow run after this handoff commit",
-  "next_action": "Inspect latest rich-tagging Windows workflow on this branch; preserve logs and fix failures without weakening hashes/parity. Then complete annotated-data, Chrome, hardware and detector-license gates.",
+  "followup_windows_photo_test": "Passed all 18 installed requests on six real photos in run 39196142502; five count targets and JoyTag parity passed.",
+  "next_action": "Use the tested candidate for actual Chrome/owner-hardware acceptance; complete broader labeled accuracy, recovery soak and detector-distribution gates before promoting defaults.",
   "handoff": "codex/HANDOFF_RICH_TAGGING_2026-10-19.md",
   "implementation_record": "docs/forever-works/RICH_TAGGING_IMPLEMENTATION.md",
   "benchmark": "docs/evidence/rich-tagging-benchmark-2026-10-19.json",
@@ -35,5 +35,40 @@
     "all historical and human data",
     "pairing/grants/native capabilities",
     "working-AI rollback tag"
-  ]
+  ],
+  "continuation_commit": "68f249806a538208040e79f3dc92e41f4d7a0626",
+  "windows_previous_photo_run": {
+    "run_id": 39181698704,
+    "status": "failure",
+    "photo_requests_passed": 18,
+    "photos": 6,
+    "people_count_targets_passed": 5,
+    "joytag_parity": "passed for all six photos",
+    "failure": "supervisor recovery invalidated browser credential after reconnect"
+  },
+  "windows_recovery_fix": "Supervision uses proof/wake without issuing a browser token; ordinary native browser connections retain rotation and same-connection health verification.",
+  "windows_current_run": {
+    "run_id": 39196142502,
+    "commit": "68f249806a538208040e79f3dc92e41f4d7a0626",
+    "status": "success",
+    "success_claimed": true,
+    "artifact": {
+      "id": 12162317075,
+      "url": "https://github.com/thanks-cohn/Atlas/actions/runs/39196142502/artifacts/12162317075",
+      "sha256": "57904b50df72a7133fdb5bcd3fb600cfb809f835b35b58e1d3aba7fe24dca6d4",
+      "bytes": 1275760156,
+      "expires_at": "2026-11-02T03:54:13Z"
+    }
+  },
+  "trial_guide": "docs/implementation/RICH_TAGGING_WINDOWS_TRIAL.md",
+  "windows_recovery_attempts": [
+    {
+      "run_id": 39195395053,
+      "commit": "17bff8bc8fe91b1e3d0083b1da673d0a1e370328",
+      "status": "failure",
+      "photo_requests_passed": 18,
+      "failure": "Supervisor did not restore the failed helper within 40 seconds"
+    }
+  ],
+  "windows_evidence": "docs/evidence/rich-tagging-windows-qualification-2026-10-19.json"
 }

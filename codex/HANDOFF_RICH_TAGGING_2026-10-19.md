@@ -4,6 +4,33 @@ Snapshot: 2026-10-19 UTC / 2026-10-18 America/Chicago. Owner requested this expl
 checkpoint before ending the session. Continue implementation; do not restart
 with another proposal. This handoff is self-contained with repository evidence.
 
+## Continuation checkpoint — current
+
+The session resumed on this branch. Commit `17bff8b` fixes the Windows
+supervisor/browser credential race found after every installed photo test passed.
+Commit `68f2498` adds bounded secret-free supervisor diagnostics and retains reports
+on failed qualification runs. Hosted Ubuntu run `39196142514` and complete Windows
+run `39196142502` passed at `68f249806a538208040e79f3dc92e41f4d7a0626`.
+
+[Download tested candidate](https://github.com/thanks-cohn/Atlas/actions/runs/39196142502/artifacts/12162317075)
+(1,275,760,156-byte archive; Actions retention until 2026-11-02 UTC).
+Install/rollback: [Windows trial](../docs/implementation/RICH_TAGGING_WINDOWS_TRIAL.md).
+Durable exact outputs/receipt: [Windows evidence](../docs/evidence/rich-tagging-windows-qualification-2026-10-19.json).
+Executable SHA-256: `c662f7c2c5338d3b61354c88c228f9f7b4f84b35bacfa5a780727df50b219543`.
+
+All 18 installed photo requests passed; five count targets matched and JoyTag
+tag/score parity passed. This runner produced 76 Things tags versus the original
+source benchmark's 74 (legacy 13). Quantized outputs can vary with CPU; richer
+yield is not proof of precision. The candidate passed native/filesystem/recovery/
+upgrade/disable/uninstall and frozen/Tk management checks without Python on PATH.
+
+Do not erase prior failure provenance: `39195395053` exceeded the 40-second
+supervisor deadline; the instrumented run passed but did not establish why that
+previous timeout occurred. Extended recovery soak remains open. Default remains
+legacy; actual Chrome/owner-hardware acceptance, broader labeled accuracy and
+compatible detector-distribution terms remain promotion gates. The original
+checkpoint below is historical evidence, not the latest Windows status.
+
 ## Checkout and first action
 
 Repository: https://github.com/thanks-cohn/Atlas

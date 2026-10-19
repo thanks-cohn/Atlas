@@ -4,7 +4,7 @@ Any human or software agent can work here. This file communicates repository con
 
 ## Active task checkpoint — 2026-10-19 UTC
 
-For rich tagging continuation, start at `codex/HANDOFF_RICH_TAGGING_2026-10-19.md` and `codex/RICH_TAGGING_HANDOFF_STATE.json` on branch `implement/rich-photo-tagging`. The candidate is implemented and source-tested; default legacy and JoyTag are preserved. Check the latest Windows CI before claiming a finished replacement.
+For rich tagging continuation, start at `codex/HANDOFF_RICH_TAGGING_2026-10-19.md` and `codex/RICH_TAGGING_HANDOFF_STATE.json` on branch `implement/rich-photo-tagging`. The candidate is implemented and installed-Windows-tested at `68f2498` (run `39196142502`); default legacy and JoyTag are preserved. Read the current checkpoint for trial artifacts and the remaining Chrome/hardware/accuracy/recovery-soak/distribution gates before claiming promotion.
 
 ## Read this order
 

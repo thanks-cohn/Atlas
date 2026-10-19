@@ -156,3 +156,24 @@ representative annotated photos, resource acceptance and detector licensing.
 ## Cold-agent checkpoint
 
 See `codex/HANDOFF_RICH_TAGGING_2026-10-19.md` and the companion JSON state. Hosted Ubuntu run 39181393688 passed 168 tests (33 skipped), 22 linkage records and all workflow steps. Local six native startup failures were independently reproduced on the unchanged baseline. Original Windows candidate run 39181393607 was still preparing exports at handoff. Follow-up Windows smoke adds all six real photos through installed authenticated HTTP and JoyTag parity, but its Windows execution remains unverified until the latest branch run completes.
+
+## Resumed qualification — tested Windows candidate
+
+At `68f2498`, hosted Ubuntu `39196142514` and full Windows run `39196142502` pass.
+All 18 installed photo requests, five annotated count targets, JoyTag score/set
+parity, no-Python/no-original-bundle installation, native/filesystem/recovery,
+upgrade/cache preservation, supervisor disable, revocation, uninstall, frozen GUI
+and Tk checks passed. The supervisor no longer rotates browser credentials during
+its own recovery; a delayed recovery-proof regression checks token preservation.
+Failed runs now retain bounded secret-free diagnostic and photo/build reports.
+
+[Windows evidence](../evidence/rich-tagging-windows-qualification-2026-10-19.json)
+contains exact installed outputs/receipt and failure provenance. A prior 40-second
+recovery timeout was not reproduced in the instrumented run; its cause remains
+unestablished and recovery soak is still required. This runner yielded 76 Things
+tags versus 74 in the source benchmark, showing quantized cross-CPU variability.
+False/contextual predictions remain; no broad precision/age-accuracy claim follows.
+
+[Trial and rollback](../implementation/RICH_TAGGING_WINDOWS_TRIAL.md). Default
+legacy and JoyTag are preserved. Actual Chrome/owner-hardware acceptance, broader
+labeled accuracy and detector distribution terms remain promotion gates.

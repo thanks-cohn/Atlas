@@ -1024,3 +1024,46 @@ workflow added separately; actual Windows artifact, Chrome runtime, difficult
 photos/children, laptop resource use and AGPL detector distribution remain release
 gates. Default profile is deliberately not promoted. Continue from the executed
 Windows result and measured report, not by re-creating another proposal.
+
+## 2026-10-19 UTC — resume rich tagging Windows qualification
+
+The prior six-photo Windows run `39181698704` successfully reproduced pinned
+exports, built the frozen engine and small helper, and passed all 18 installed
+photo/model requests (including five person-count targets and JoyTag parity).
+It then failed in supervisor recovery: the supervisor's delayed native connect
+rotated a browser credential after the browser had already reconnected. The
+`/v1/grants` assertion received an authentication error, not a grants result.
+This run did not publish a qualified artifact.
+
+Fix `17bff8bc8fe91b1e3d0083b1da673d0a1e370328`: the native recovery path now supports
+internal proof/wake without issuing a token. Windows supervision uses this path
+under the existing wake mutex; ordinary browser connect still rotates and verifies
+its credential on the proven connection. Pairing, revocation, grants, process
+attestation and JoyTag are unchanged. The portable real-HTTP regression proves
+recovery retains a valid browser credential and still denies revoked enrollment.
+The installed Windows smoke reproduces a delayed supervisor proof after browser
+connect and checks the credential remains valid.
+
+Hosted Ubuntu run `39195395083` passed. Local full check remains 168 tests, three
+failures + three errors + 33 skips in the same native startup paths; direct
+startup reproduces `Permission denied: /proc/6/exe` in this environment. This is
+not a full local pass. Targeted native real-HTTP, rich-contract, Windows installer
+decision, generation, tag editor, image-entry and 21 worker-contract checks passed;
+extension packaging and compilation/whitespace checks passed.
+
+Windows run `39195395053` then passed photos but exceeded the supervisor recovery
+deadline. Commit `68f2498` retains bounded secret-free supervisor diagnostics and
+photo/build reports even after a later failure. The full instrumented Windows run
+`39196142502` passed, including the delayed-supervisor credential regression,
+upgrade, revocation, disable, uninstall, frozen GUI and Tk management. Hosted
+Ubuntu `39196142514` also passed. The previous timeout was not reproduced and its
+cause remains unestablished; extended recovery soak remains a gate.
+
+The tested Windows archive is artifact `12162317075`, 1,275,760,156 bytes,
+SHA256 `57904b50df72a7133fdb5bcd3fb600cfb809f835b35b58e1d3aba7fe24dca6d4`.
+See [durable exact outputs and receipt](../evidence/rich-tagging-windows-qualification-2026-10-19.json)
+and [trial/rollback instructions](../implementation/RICH_TAGGING_WINDOWS_TRIAL.md).
+This runner produced 76 qualified Things tags across six photos (source baseline
+74; legacy 13); quantized CPU differences and known false/contextual tags prevent
+an accuracy guarantee. Default remains legacy. Actual Chrome/owner hardware,
+broader labeled accuracy and compatible detector terms remain promotion gates.
