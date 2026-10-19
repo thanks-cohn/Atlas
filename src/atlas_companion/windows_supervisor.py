@@ -104,6 +104,7 @@ class Supervisor(BaseSupervisor):
         import time
         from .supervisor import health
         from .security import APIError
+        from .diagnostics import record, error_code
         if self.port != 17892:
             raise ValueError('Windows native recovery uses the fixed companion port 17892')
         if not self.state.known_origin(self.origin):
@@ -114,11 +115,13 @@ class Supervisor(BaseSupervisor):
         except (OSError, ValueError, http.client.HTTPException):
             ready = False
         if ready:
+            record(self.state, 'SUPERVISOR_HEALTH', 'HEALTH_OK')
             self.failures = 0
             self.next_start = 0
             self.last_status = 'READY'
             return self.last_status
         self.failures = min(self.failures + 1, 6)
+        record(self.state, 'SUPERVISOR_HEALTH', 'HEALTH_FAILED')
         self.last_status = 'NEEDS_REPAIR'
         now = time.monotonic()
         if now >= self.next_start:
@@ -126,12 +129,13 @@ class Supervisor(BaseSupervisor):
             from atlas_native.__main__ import connect
             try:
                 # Shared wake arbitration and handle-attested recovery account for
-                # frozen bootloader children. Discard bootstrap credentials.
-                connect(self.state, self.origin)
+                # frozen bootloader children. Never invalidate a browser session.
+                connect(self.state, self.origin, issue_token=False)
+                record(self.state, 'SUPERVISOR_WAKE', 'RECOVERY_READY')
                 self.last_status = 'READY'
                 self.failures = 0
-            except (APIError, OSError, ValueError, http.client.HTTPException):
-                pass
+            except (APIError, OSError, ValueError, http.client.HTTPException) as exc:
+                record(self.state, 'SUPERVISOR_WAKE', error_code(exc))
         return self.last_status
 
     def run(self, stop=None):

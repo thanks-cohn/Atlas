@@ -1008,3 +1008,645 @@ Passed image-entry transaction/hash/isolation tests, actual pinboard/store/galle
 Added `PROPOSAL_DIRECTORY_PINBOARDS_REUSABLE_OBJECTS_AND_SAVED_STATES.md`, indexed in the inheritance README. Preserves owner direction: apply the shared pinboard to authorized local/R2 directories; persist per-item tags/notes; mark whole cards/popups as reusable Objects with a distinct non-star control; select them beside Notes/Bookmarks; save composition arrangements as states; retain connected data for framework access/export; delete/recover the object and its arrangement together. Proposed contracts distinguish content/internal arrangement/host placement, link/snapshot/duplicate/move, reference removal/object deletion and metadata recovery/asset backup. Existing containment, provenance, privacy and consent boundaries remain authoritative.
 
 Validation: documentation reviewed against object grammar and image Recovery contracts; runtime tests NOT_RUN (documentation only). No runtime or migrations changed. Next: inventory current adapters, object identities and Recovery transactions, choose an additive versioned schema, then prove one adapter/Object/state vertical slice before claiming portability.
+
+## 2026-10-19 UTC — executable rich tagging candidate
+
+Owner-authorized implementation replaces non-JoyTag adapters in an isolated rich
+profile while default legacy and `working-AI` remain intact. See
+[RICH_TAGGING_IMPLEMENTATION.md](RICH_TAGGING_IMPLEMENTATION.md) for fixed/fluid
+obligations, exact checkpoints, export fixes, licensing and source map. RAM++
+MatMul-only INT8 and MiVOLO v2 + face/person ONNX detector ran on six source photos:
+74 qualified Things tags versus 13 legacy tags; count targets matched on five
+annotated-count examples; crowded-market count/demographic/semantic accuracy are
+unqualified. Every JoyTag suggestion/score matched between profiles. Structured
+people records, counts, policies, component hashes and full source predictions now
+survive append-only provenance. No user cards/notes/assets/history are migrated or
+deleted. Existing interface and optional Anime gate are preserved.
+
+Proof: 23 targeted Python tests, generation JS regressions and actual authenticated
+source HTTP smoke passed. Full project: 168 tests; 3 failures, 3 errors, 33 skips;
+22 linkage records valid. Native-bootstrap/supervisor startup failures require
+baseline comparison and are not represented as a passing suite. Windows candidate
+workflow added separately; actual Windows artifact, Chrome runtime, difficult
+photos/children, laptop resource use and AGPL detector distribution remain release
+gates. Default profile is deliberately not promoted. Continue from the executed
+Windows result and measured report, not by re-creating another proposal.
+
+## 2026-10-19 UTC — resume rich tagging Windows qualification
+
+The prior six-photo Windows run `39181698704` successfully reproduced pinned
+exports, built the frozen engine and small helper, and passed all 18 installed
+photo/model requests (including five person-count targets and JoyTag parity).
+It then failed in supervisor recovery: the supervisor's delayed native connect
+rotated a browser credential after the browser had already reconnected. The
+`/v1/grants` assertion received an authentication error, not a grants result.
+This run did not publish a qualified artifact.
+
+Fix `17bff8bc8fe91b1e3d0083b1da673d0a1e370328`: the native recovery path now supports
+internal proof/wake without issuing a token. Windows supervision uses this path
+under the existing wake mutex; ordinary browser connect still rotates and verifies
+its credential on the proven connection. Pairing, revocation, grants, process
+attestation and JoyTag are unchanged. The portable real-HTTP regression proves
+recovery retains a valid browser credential and still denies revoked enrollment.
+The installed Windows smoke reproduces a delayed supervisor proof after browser
+connect and checks the credential remains valid.
+
+Hosted Ubuntu run `39195395083` passed. Local full check remains 168 tests, three
+failures + three errors + 33 skips in the same native startup paths; direct
+startup reproduces `Permission denied: /proc/6/exe` in this environment. This is
+not a full local pass. Targeted native real-HTTP, rich-contract, Windows installer
+decision, generation, tag editor, image-entry and 21 worker-contract checks passed;
+extension packaging and compilation/whitespace checks passed.
+
+Windows run `39195395053` then passed photos but exceeded the supervisor recovery
+deadline. Commit `68f2498` retains bounded secret-free supervisor diagnostics and
+photo/build reports even after a later failure. The full instrumented Windows run
+`39196142502` passed, including the delayed-supervisor credential regression,
+upgrade, revocation, disable, uninstall, frozen GUI and Tk management. Hosted
+Ubuntu `39196142514` also passed. The previous timeout was not reproduced and its
+cause remains unestablished; extended recovery soak remains a gate.
+
+The tested Windows archive is artifact `12162317075`, 1,275,760,156 bytes,
+SHA256 `57904b50df72a7133fdb5bcd3fb600cfb809f835b35b58e1d3aba7fe24dca6d4`.
+See [durable exact outputs and receipt](../evidence/rich-tagging-windows-qualification-2026-10-19.json)
+and [trial/rollback instructions](../implementation/RICH_TAGGING_WINDOWS_TRIAL.md).
+This runner produced 76 qualified Things tags across six photos (source baseline
+74; legacy 13); quantized CPU differences and known false/contextual tags prevent
+an accuracy guarantee. Default remains legacy. Actual Chrome/owner hardware,
+broader labeled accuracy and compatible detector terms remain promotion gates.
+
+## 2026-10-19 — owner trial: repeated tags and compact checkpoints
+
+Owner observed repeated chips after rerunning tagging and requires one displayed
+label/current state, with deduplicated timestamped checkpoints and execution/batch
+references kept separately. Fixed an asynchronous detail-render race: latest
+render wins, replaces children atomically, and stale successes/errors cannot
+append. Normalize whitespace/case/Unicode for display; human labels also dedupe.
+Equivalent model outputs share one browser result (newest retained); original
+per-execution evidence stays in the companion. People projection uses only latest
+People run, never adds counts across runs. Other source choices remain additive.
+Separate `atlas-image-tagging-checkpoints-v1` stores unique sorted tag states per
+image plus timestamped numbered execution references and batch UUIDs. Existing
+run storage remains readable; checkpoints begin with the next generation. This
+is internal history, not a new visible history browser. Inference score changes
+alone do not duplicate a browser state; companion evidence retains exact scores.
+
+Executed: generation contracts including actual renderer out-of-order completion,
+equivalent-run compaction, state/checkpoint reuse, run retry idempotency and latest
+People count regression. Owner Chrome confirmation remains pending. No helper
+binary/model change; existing tested candidate installation remains usable.
+
+Owner refinement: history stores initial tags once, then base-checkpoint references
+and added/removed labels for changed states. Identical reruns reference the existing
+checkpoint with `change: unchanged`; returning to an earlier state reuses it too.
+`checkpointState` reconstructs snapshots iteratively. Tests cover delta reconstruction,
+unchanged reruns and return-to-prior state. Display remains the unique current tags.
+
+## 2026-10-19 — remove redundant Faces option; recommendation research
+
+Owner requested Faces removal, preserving Things, People and Settings-activated
+Anime/JoyTag. Removed the Faces checkbox and its preference/read/run handlers;
+legacy saved face evidence remains readable. Pinboard and generation regression
+suites passed. Added `docs/implementation/CARD_TAG_RECOMMENDATION_RESEARCH.md`:
+proposed local association/co-occurrence baseline and optional MiniLM ONNX semantic
+ranking; neither recommendation engine nor UI is claimed implemented.
+
+Owner additionally reports generated tags disappearing on card exit. A new actual
+pinboard-handler regression generates a gallery result, closes, visits a different
+card, rebuilds the index from stored data and reopens: PASS in DOM/API doubles.
+The reported owner Chrome disappearance is not reproduced here; do not claim its
+root cause established. Apply latest render-race fix and observe actual Chrome
+before escalating diagnostics. Generated labels must persist unless explicitly
+suppressed; deduplication is never permission to erase the remaining label.
+
+## 2026-10-19 — renamed pinboard title startup flash
+
+Owner observed old/default name before saved rename. Startup resolved names only
+after full bookmark/companion/card refresh. Load authoritative saved/default name
+first; initial heading is hidden until that read settles, with generic fallback
+on failure. Card loading no longer delays the title. Rename loader deferred-read
+regressions (named/default boards), pinboard suite and whitespace checks PASS;
+actual Chrome visual confirmation pending.
+
+## 2026-10-19 — compact saved Notes rows
+
+Owner screenshot showed long note content consuming the entire preview. Saved
+note buttons now match Add Note's 72px row, with single-line title and two-line
+clamped excerpt. Existing click-to-edit expansion reveals full text in the
+resizable textarea; saving/reopening returns to compact rows. Expanded state is
+not persisted. Save validates nonblank text without trimming original whitespace.
+Preview section contracts and whitespace checks PASS; actual Chrome visual QA
+pending. No original note content is shortened by the presentation clamp.
+
+## 2026-10-19 — Add Image cache rollback and invisible errors
+
+Bug 011 fix candidate: delayed pre-add storage read reproducibly rolled back the
+committed gallery cache. Read epochs plus commit invalidation prevent stale cache
+replacement. Keep image chooser open/input inside active modal until success;
+decode/hash/storage errors stay visible with retries. Tests now exercise real local
+file onchange through independent append/count/arrows/default/origin preservation,
+plus failure feedback and stale-read order (failed before, passed after). Image
+entry/file and pinboard suites, package build and whitespace checks PASS; actual
+owner Chrome confirmation pending. No helper/model change. Background tagging 007
+remains unresolved and is not part of this fix.
+
+## 2026-10-19 — Visit source preference proposal
+
+Recorded owner-approved Settings direction in PROPOSAL_VISIT_SOURCE_BEHAVIOR.md:
+source website left/Atlas right split view, or current separate-tab behavior;
+fall back to a tab when actual browser capability is unavailable. Shared preference,
+preserved card state and runtime verification gates specified. Proposal only;
+no browser API support, code or UI implementation claimed.
+
+## 2026-10-19 — Visit source split-view trial implementation
+
+Verified official Chrome 155 Tabs API supports splitWithTabId with current tab
+index for new source on left; no additional permissions. Added shared pinboard
+Settings preference (default separate tab), validated explicit source clicks,
+actual-current-tab pairing, owned source reuse and safe separate-tab fallback.
+Shelf is an existing global side panel outside the two-tab split; no shelf API or
+pinboard navigation/state reset. Existing unrelated splits are preserved.
+Source navigation and pinboard suites, packaging and whitespace checks PASS;
+source regression added to verify.yml. No local Chrome executable: actual Chrome
+155 shelf+pinboard+source layout NOT_RUN. Proposal now records implementation,
+API-derived scenario and precise remaining owner visual gates. No helper update.
+
+## 2026-10-19 — detailed PNG rejected by overly small preview budget
+
+Bug011 owner PNG is3,910,879 bytes,1024x1536 RGBA, within import/decode limits.
+60K-character card/composer preview budget plus480px resize floor caused rejection.
+Raise those bounded previews to175K characters and add384/320/256/192 fallback
+sizes. Original asset unchanged; inference payload budgets unchanged. Pillow
+measurement supports smaller fallback; Chrome encoder itself NOT_RUN here.
+Image-file boundary regression, pinboard/blank suites, packaging/whitespace PASS.
+
+## 2026-10-19 — owner retires People; reduced candidate build
+
+Owner directs removing slow People pipeline and weights, retaining general RAM++
+and Settings-activated JoyTag, simplifying to Generate tags? + initially unchecked
+general box and optional Anime box. No recommendation model is bundled yet.
+Removed MiVOLO/detector from active rich manifest/export/runtime dispatch. Reduced
+Windows model manifest includes RAM++ assets and unchanged JoyTag assets only;
+legacy normal build remains separate. Exclude retired People module from reduced
+frozen build; prune unused generated distribution models. Model bytes drop from
+1,642,827,985 to1,239,072,821 (403,755,164 bytes saved); archive size needs actual
+Windows artifact measurement. Old saved People evidence remains readable; no user
+state/cache deletions. Installed old models require separately verified cleanup
+AFTER reduced install, not git pull. Source-only removed-model tests and JoyTag
+fingerprint plus UI/generation/source navigation checks pass. Windows rebuild
+qualification pending at publication; do not present historical artifact as reduced.
+Background job recovery007 remains unresolved, including general/Anime jobs.
+
+
+## 2026-10-19 — Compact recovery and bounded scrolling
+
+Explicit owner direction: Recovery follows compact note presentation, rectangular
+rows expanding on double-click, infinite lazy scrolling now and pagination later.
+Fixed: recovery record identity, provenance, restore/export and saved data.
+Constrained: DOM grows with viewport height, not total recovery count. Fluid:
+row presentation, detail dialog and later navigation/pagination mechanism.
+
+Implemented `extension/image-recovery.js`, `explorer.html`, `explorer.css`:
+72px collapsed rows on an 80px stride, newest first, viewport window with six
+overscan rows per side and spacer heights. Double-click opens one full responsive
+detail dialog; Enter/Space provide keyboard access. Closing discards expanded DOM,
+not data; expansion is transient. Restore/export remain in detail view. This
+replaces existing 20-entry pagination per current owner direction; future user
+pagination remains planned. Full records still load from the existing single
+Chrome storage document: DOM is bounded, storage reads are not yet paged.
+
+Verification: `node scripts/test_image_recovery.mjs` PASS with 5,000 records,
+at most18 rows at480px, forward/back scroll, double-click/keyboard expansion,
+close cleanup and no storage writes on expansion. `test_image_entries.mjs` PASS.
+Actual Chrome visual/scroll acceptance NOT_RUN in this container. Future work:
+paginated storage/index reads and real Chrome cross-size/focus/scroll validation.
+
+Required `python scripts/check_project.py`: 170 tests, failures3/errors3/skips33;
+22 local model links valid. Same native bootstrap/supervisor startup failures as
+prior container run; full suite is not a pass. Focused recovery/entry tests pass.
+
+
+## 2026-10-19 — Single file explorer sidebar entry
+
+Owner asked for one elegant far-left file access point: highest authorized root
+by default, with explicitly selected overrides in Settings regardless of hierarchy.
+Implemented `explorer-entry-point.js`, explorer rendering/settings and saved
+`atlas.explorer.entry-point.v1` grant/path preference. Main All locations keeps all
+grants reachable; no permission changes or inferred parent access. Folder tree
+navigation now occurs in the main explorer rather than multiple sidebar roots.
+Settings can select any authorized root or the currently open subfolder, and
+Automatic restores the default. Unavailable saved grant temporarily falls back.
+See `docs/implementation/EXPLORER_SINGLE_ENTRY_POINT.md` for reconstruction and
+fixed/constrained/fluid obligations. Focused entry-point tests PASS (actual
+render/settings/navigation handlers with doubles); recovery regression PASS.
+Real Chrome visual acceptance NOT_RUN. No native-helper rebuild is required.
+
+Required project check: 170 tests, failures3/errors3/skips33;22 model links valid.
+The same pre-existing native bootstrap/supervisor startup limitations remain;
+full suite is not a pass. JavaScript focused regressions and syntax checks pass.
+
+
+## 2026-10-19 — Catalog management shelf crowding recorded
+
+Owner rejects the crowded diamond Catalogs & relationships panel in the shelf and
+requests catalog/relationship management on a separate page. Recorded backlog012
+and indexed it. Existing data/identity, linking, notes/tags, export and authenticated
+companion contracts must survive relocation. No UI removal/relocation implemented
+in this documentation-only change; choice of retained diamond link is unresolved.
+
+
+## 2026-10-19 — Remove redundant diamond shelf shortcut
+
+Owner clarifies dedicated page already exists. Removed diamond Catalogs & links
+shortcut only; no new page or data migration. Graph binding tolerates absent
+shortcut; recovery navigation and operation-inspection handler updated. Contextual
+Organize remains. Bug012 updated with superseding direction. Recovery regression,
+JS syntax and absent-shortcut assertion PASS; owner Chrome confirmation pending.
+
+
+## 2026-10-19 — Repair Bookmarks startup after diamond removal
+
+Owner screenshot UI failure with helper Ready traced to bookmarks.js listener on
+removed library button. Removed stale binding. test_bookmarks now deliberately
+returns null for removed ID, asserting actual markup absence. This tests full
+Bookmarks initialization, unlike previous permissive test DOM. Focused Bookmarks,
+Recovery and entry-point tests PASS. Owner Chrome reload confirmation pending.
+No helper reinstall or data cleanup is needed.
+
+
+## 2026-10-19 — Default viewport cover fetching with durable misses
+
+Owner accepts automatic fetching for visible cards and explicitly requires no
+endless retry of unsuccessful attempts. Implemented in fetch-covers.js with
+Board Settings opt-out, already-granted permission checks (no startup prompt),
+serial requests and nearby200px discovery. Version2 attempt map retains misses
+across filters/reloads; explicit per-card Fetch retries. Existing selected covers
+and manual All mode preserved. See implementation/AUTOMATIC_VIEWPORT_COVERS.md
+for obligations, permission/queue behavior and checkpoint migration.
+Focused fetch and full pinboard JS suites PASS; actual Chrome network/UI NOT_RUN.
+
+Required project check:170 tests, failures3/errors3/skips33,22 model links valid.
+Same native startup/supervisor environment failures as earlier; not a full pass.
+
+
+## 2026-10-19 — Sticky cover retry budget
+
+Owner clarifies sticky Fetch should retrigger unsuccessful visible cards but never
+more than two retries. Implemented initial+two retry ceiling per bookmark ID/URL,
+shared by sticky Visible and per-card controls; version3 pending reservations/counts
+persist before retry network work. No automatic retry on scrolling/reload. Cap
+shows visible notice. Focused Fetch/pinboard regressions PASS; Chrome network NOT_RUN.
+
+
+## 2026-10-19 — Detailed implemented Fetch record
+
+Owner requests extensive ACTUALLY DONE documentation. Added implementation/README.md
+as an implemented-behavior/evidence index and rewrote AUTOMATIC_VIEWPORT_COVERS.md
+with current source-traced purpose, before/after behavior, control matrix,
+permission flow, viewport scheduling, retrieval bounds, preserved data, version3
+checkpoint/retry reservations, concrete scenarios, actual test results and explicit
+limits. Supersedes earlier shorthand version2 wording. Distinguishes per-board
+counts from global coordination and pending browser acceptance from tested source.
+Documentation-only change; checked links and whitespace, no runtime changes.
+
+
+## 2026-10-19 — Fetch commit boundaries and revert instructions
+
+Owner requested exact before/after commits for reversibility. Verified Git parents:
+2cb4694 baseline ->6b9d881 automatic ->9996b5b sticky cap ->bf9046b docs.
+Added full SHA/link table, comparison, selective reverse-order revert preparation,
+focused validation and saved-checkpoint compatibility caveat to Fetch behavior
+record. Documentation only: no source rollback or user-data deletion performed.
+
+
+## 2026-10-19 — Immediate connected-content preview and media placeholder
+
+Owner clarifies instant pop-out is for notes/linked items while image loads. Moved
+showModal/cached-content rendering before storage/gallery setup; cached gallery
+opens without a new setup wait. Async continuation is guarded against close/card
+changes. Added Atlas placeholder, independent load/error, stale media callbacks
+and same-card hydration preserving open notes/drafts/linked-image focus.
+Owner screenshot perimeter concern recorded014: inferred #pins focus outline now
+has6px outward offset, without changing masonry dimensions. Delay issue013 and
+implementation/INSTANT_PIN_PREVIEW.md capture evidence and acceptance boundaries.
+Focused pinboard, preview-sections and connection tests PASS; actual Chrome visual
+and latency acceptance pending. No helper rebuild or data migration requested.
+
+Required project check:170 tests, failures3/errors3/skips33;22 local links valid.
+Same pre-existing native bootstrap/supervisor environment failures; full suite is
+not a pass. Focused UI regression suites and JavaScript syntax checks pass.
+
+
+## 2026-10-19 — Progressive first cards and direct Escape
+
+Owner reports blank startup canvas and delayed Escape. refresh now renders scoped
+bookmarks with interactive Atlas placeholders before cover/gallery reads and
+companion/index completion. Local assets gate automatic cover-fetch eligibility
+and legacy gallery migration, not the open preview shell. Preserve saved-board
+scope/title and image/tag filters. Escape/cancel/X share no-await close cleanup,
+keep board nodes mounted, invalidate pending setup/media and unlock scrolling.
+Generated-index work yields in8ms slices. Regression deliberately stalls saved
+covers, companion response and preview setup. Pinboard, title, sections and Fetch
+focused suites pass. Actual Chrome timing/paint acceptance remains pending; no
+claim that arbitrary main-thread stalls can be preempted. Backlog015/016 and
+INSTANT_PIN_PREVIEW.md record limits and continuation.
+
+Required project check:170 tests, failures3/errors3/skips33;22 links valid.
+Same native startup/supervisor environment failures persist; full suite not passed.
+
+
+## 2026-10-19 — Fetch rollback and opt-in performance debug API
+
+Owner reports stutter since automatic Fetch and continuing Escape lag at~90MB.
+Reverted fetch module/test to2cb4694 and original manual dock, removing automatic
+checkbox and new retry policy while retaining saved data and later preview/startup
+fixes. No trace establishes fetch as sole cause. Added performance-debug.js in
+Pinboard/Explorer: atlasDebug.performance explicit start/stop/probe/snapshot/check,
+bounded30s/240samples, longtask/EventTiming/frame/drift/layout/resource support,
+source spans, safe DOM counts and explicit preview-cycle scenario. No capture
+observers/listeners/timers by default, no uploads/content/URL collection. Shelf
+existing diagnostics includes a snapshot. Board layout/reset is deferred behind
+modals and resumes after close paint opportunity. Actual Chrome lag NOT proven fixed.
+Tests: profiler deterministic contract, manual Fetch, full pinboard, bookmarks,
+entry-point, recovery, preview sections/connections/title pass. No local Chrome.
+Backlog016 reopened continuedlag;017 records rollback and acceptance. Detailed
+API examples/limits in implementation/PERFORMANCE_DEBUG_API.md. Historical Fetch
+record clearly marked REVERTED. Required Python suite result follows when complete.
+
+Required project check:170 tests, failures3/errors3/skips33;22 model links valid.
+Same existing native bootstrap/supervisor environment failures; not a full pass.
+Manual-fetch source/test are byte-for-byte baseline2cb4694. No user data deleted.
+
+
+## 2026-10-19 owner scrolling capture and source correction
+
+Owner reports scrolling stutters, lags and jumps. Supplied capture is saved at
+`docs/evidence/performance-2026-10-19/OWNER_SCROLL_CAPTURE.json`. Exact source commit
+of that capture is UNKNOWN; received after d95c7ac. In 15.224 seconds it counted29
+long tasks and29 spans; retained28 render.window spans: median138.2ms, p95 219ms,
+maximum351ms. Retained input queue delay median92.5ms, maximum245.8ms. Only24 cards
+were mounted at end; one dialog was open. Retained spans do not include preview.close:
+this establishes slow board rendering, not an isolated Escape root cause.
+
+Source inspection found whole-board masonry recalculated on every scroll,
+image-sized JSON signatures for mounted cards, and repeated linear saved-cover
+alias scans/validation. These are observed source costs; their individual share of
+the owner's timing is not yet measured. Lazy loading was never removed.
+
+Correction: scroll reuses layout while item sequence, width, column count, gap and
+held rectangles match. Data/image changes invalidate it; queued invalidation wins
+over scroll. Resize rebuilds. Known unchanged image ratios reuse layout. Per-card
+identity compares fields directly without serializing image bytes. A storage-
+snapshot reader indexes aliases once and memoizes validation, preserving exact-ID
+precedence, null suppression, safe reference checks and first-alias behavior. New
+cover snapshots replace the reader. Unchanged card style values are not rewritten.
+Layout ends are copied before composer adjustments so cached positions stay intact.
+
+Fixed obligations: all cards remain reachable; viewport DOM stays bounded; images
+remain lazy; manual Fetch and stored images/tags/notes stay unchanged. Constrained:
+image dimensions, ranking/filtering, resize and hold changes must invalidate layout.
+Fluid: ephemeral cache and rendering strategy. No storage schema/migration changes.
+
+Added render.layout span for the next Chrome capture. Node DOM/API regression
+checks pass for1,000 cards, scrolling/mounting, invalidation, snapshot cover safety,
+large saved image references, gallery/navigation/tags and immediate close. These
+are behavior checks, not measured real-browser speed. Owner before/after scrolling
+and Escape acceptance remain OPEN.
+
+Validation: scripts/test_pinboard.mjs, test_bookmarks.mjs, test_fetch_covers.mjs and test_performance_debug.mjs passed. Required check_project.py result follows below.
+
+Required check:170 tests,3 failures,3 errors,33 skipped;22 local model records valid. Failures/errors remain the pre-existing container native-bootstrap/supervisor READY limitations (same signature as prior run); no full-suite pass claimed. git diff --check passed. Next: owner pull/reload, repeat scroll and Escape capture, compare render.window and render.layout; keep016/017 open until measured browser acceptance.
+
+## 2026-10-19 — Fast-scroll investigation and autonomous performance surface
+
+Owner reports fast-scroll catch-up/stutter, missed image clicks and slower Escape
+with use; requests real solutions and better diagnostics for future agents.
+Before follow-up: e1a7f77a8f042ff577bd25878df6cd2a162429ae. Owner's installed source
+version is not verified; no post-e1a7f77 latency capture exists. Added backlog018;
+016/017 remain open. Lazy loading and DOM windowing were already present.
+
+Indexed viewport selection replaces whole-list per-scroll sort/scan. Reuse sorted
+geometry and ID maps; cached scroll skips card signature/anchor reads. Invalidation,
+visible coverage, buffer bounds and held positions remain tested. Evicted images
+lose callbacks and scroll-detached sources; replaced/reset card images release old
+handlers. Original saved images and metadata stay intact; ranking exit visuals
+retain image sources for their existing bounded animations.
+
+Added numeric renderer state revision2, bounded capture-wide phase/work aggregates,
+click queue/paint timing, scoped non-overlapping scenarios and scroll-stress.
+Added scripts/benchmark_pinboard_browser.mjs for isolated synthetic bookmarks with
+substantial saved data URIs, real Chromium paint and trusted wheel/click/Escape,
+CPU throttling, budget checks and alternate source-root comparisons. It never uses
+owner storage or native helper, blocks external traffic and identifies fixture
+proof separately from MV3 integration. Runner syntax PASS; browser execution
+BLOCKED: Chromium absent and attempted download returned truncated/non-ZIP data.
+No hardware speedup claimed. docs/implementation/PINBOARD_SCROLL_PERFORMANCE.md
+has exact continuation and primary browser guidance.
+
+Node test_pinboard, test_performance_debug, test_bookmarks and test_fetch_covers
+PASS. Regression:1,000 scroll events ->one queued callback/latest viewport,
+fewer than200 inspected positions for1,000 cards, zero unchanged-viewport card
+creation; resize/image/data changes rebuild; evicted handlers cleared. Scenario
+steps/scroll restoration, privacy bounds, aggregation and restart/overlap checks
+pass. Required check_project run retains the known native-bootstrap/supervisor
+READY failures; final counts recorded with run result. Next: run real Chromium
+before/after, compare phase/input/candidate/DOM data, then owner extension timing.
+
+Required check result:170 tests,3 failures,3 errors,33 skipped;22 local model
+records valid. Failure signature is the same pre-existing container native/bootstrap
+and supervisor READY limitation. Full suite is not green. git diff --check PASS.
+
+## 2026-10-19 — Consistent theme-colored loading glyph
+
+Owner requests one consistent red A in the light/Pinterest card loader using the
+same Pinterest-style UI font; blue/cyan remains the dark/Tumblr theme accent.
+Saved-cover startup and actual-image loading now share one glyph rule: header's
+system-ui sans-serif,750 weight,28px,38x42px tile,13px radius and theme color.
+Removed green/Georgia declarations from initial/preview placeholders. Shared
+rule also keeps preview fallback consistent. Light startup/image-loader backgrounds
+match; dark startup/image-loader colors match. Loading/data lifecycle, lazy images,
+card windowing and all user storage unchanged. This is a CSS presentation fix.
+
+Verification: full test_pinboard.mjs DOM/API suite PASS; git diff --check PASS.
+Actual Chrome visual verification NOT_RUN (browser executable still unavailable).
+Required check_project.py result recorded below; prior native READY limitations
+must not be presented as new loader behavior failures or as a full-suite pass.
+
+Required loader task check:170 tests,3 failures,3 errors,33 skipped;22 model
+links valid. Same pre-existing native-bootstrap/supervisor READY limitations;
+no full-suite pass. No new Python changes were made in the follow-up below.
+
+## 2026-10-19 — Anime choice flicker and next Images-section intent
+
+Owner reports Anime checkbox appearing/disappearing and asks to log/investigate.
+Added backlog019. Found direct JS hide->async show cycle in loadTaggingChoices,
+repeated by preview content refresh/gallery initialization. Removed per-card reads
+of global model availability; only live Settings state controls visibility.
+Same-card refresh retains selections; settings read revisions and per-card request
+invalidation prevent stale async replies undoing newer settings/checkbox changes.
+JoyTag remains off/hidden by default and changes neither run nor download models.
+Full Node pinboard suite PASS, including blocked-read visibility, concurrent global
+disable and user-choice supersession regressions. Browser flicker/CSS overlap
+acceptance UNKNOWN; do not claim any separate CSS overlap was observed.
+
+Owner's next advancement: Images dropdown alongside Notes and Bookmarks in pop-out,
+vertically scrollable for phones/small screens. Recorded as future NOT_IMPLEMENTED
+proposal PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md; gallery relationship/actions remain
+open, and no extra discovery/storage/deletion semantics were assumed.
+
+Owner clarification: Images initially shows a large rectangle with centered plus.
+The add tile scrolls away with the content and reappears on scroll-up; not sticky
+or floating. Proposal updated; remains future work.
+
+Owner further clarifies: Images plus opens the same-looking Add Image/upload
+prompt as the current pop-out. Underlying wiring may differ; visual/interaction
+presentation must match. Proposal records shared chooser UI as preferred approach
+without assuming gallery/storage/default-cover behavior.
+
+## 2026-10-19 — Owner clarifies connecting/pairing purpose
+
+The Images section is meant to teach the user that Atlas connects and pairs things
+inside the main extension window. Future hierarchies/arrangements link images,
+notes, bookmarks and eventually Objects created in this framework, such as cards
+and slides. Added this explicit owner intent to PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md.
+Objects/hierarchy semantics remain future work, not an implementation claim.
+Distinguish source items from their contextual relationships; do not assume copying,
+source movement or deletion semantics merely from adding a connection UI.
+Documentation-only; no runtime changes or additional tests required.
+
+## 2026-10-19 — Progressive Pinterest population / tight viewport requirement
+
+Owner reports continued severe lag and requests3–4 initial cards to visibly show
+progress, then progressive population. Distant cards beyond roughly two rows above
+and below the viewport should not stay mounted or consume ongoing image/render
+work. Owner explicitly adds: preserve aesthetic Pinterest population/style, and
+write this down. Added backlog020 with intent, row-equivalent ambiguity for masonry,
+proposed acceptance/diagnostics and real-browser proof requirements. This update
+is documentation only; rendering/CSS unchanged and no completion claimed. Existing
+016/018 lag and missed-click acceptance remains OPEN. Full collection must stay
+scroll-reachable; progressive availability must not turn into mounting every card.
+Validation: git diff --check; no runtime tests needed for documentation-only change.
+
+Owner refines pacing: perhaps one card, then two, then two more; in-card image
+loading remains visible as the Pinterest composition fills. Counts are illustrative,
+not a rigid mandate. Updated020; small batches/viewport bounds remain future work.
+
+## 2026-10-19 — Strict ONE-row active card window
+
+Owner reports continued fast-scroll lag and narrows desired buffer to maybe ONE
+row above/below viewport. This supersedes020's two-row allowance, while Pinterest
+masonry aesthetics remain fixed. Implemented spatial selection: cached per-column
+Y lists; every viewport-intersecting card plus at most one preceding/following card
+per column. Legacy24..144 budgets can only reduce this allowance, never fill with
+distant cards. Scroll eviction releases detached image callbacks and sources.
+Records, data indices/geometry and permission boundaries unchanged. Tiny progressive
+startup batches are STILL PLANNED, not included or claimed done by this correction.
+
+Updated Settings copy to explain the hard one-row bound without changing styling.
+Debug renderer_revision3 reports overscan_rows1, visible/buffer counts and viewport
+bounds; card eviction count plus full DOM/image/tag-button counts improve diagnosis
+beyond a card-only count. One-row checks exercise desktop/mobile, different viewport
+heights, far jumps and rapid reversals under legacy144 cap. All visible cards present;
+no extra distant rows mounted. Existing obsolete test which demanded keeping a
+ranked card30 positions away now checks eviction with old handlers cleared; records
+and ranking are retained. Node pinboard, profiler and Fetch suites PASS; diff check
+PASS. Actual Chrome speed, missed-click and Escape acceptance remain UNKNOWN/open.
+Required project-check result follows. No unsolicited automatic network Fetch added.
+
+Required check:170 tests,3 failures,3 errors,33 skipped;22 local model records
+valid. Same pre-existing container native/bootstrap/supervisor READY limitation;
+full suite is not green. Actual Chromium benchmark still blocked by unavailable
+executable/download. Next: pull/reload and compare revision3 captures and feel;
+retain lag reports as open until browser evidence supports closing them.
+
+## 2026-10-19 — Prolonged-use lag remains OPEN; soak diagnostics
+
+Owner reports severe lag after prolonged use despite one-row changes. Do not call
+this fixed or infer a leak without evidence. Exact owner running build UNKNOWN.
+Source audit adds eviction cleanup for1600ms hover-reveal timers; not a proven root
+cause. No speculative redesign/automatic Fetch or data deletion introduced.
+
+Board Settings Record lag starts opt-in five-minute capture; Copy lag report stops
+and copies JSON or offers a selectable textarea fallback. API soak cap ten minutes,
+ordinary start cap30 seconds unchanged. Bounded five-second trend keeps baseline
+plus latest59 points; raw samples240, metrics32, pending paint jobs8 remain bounded.
+Timeline: whole/card/image/tag DOM counts, sanitized numeric renderer state,
+optional JS heap, known-image pixels and interval main-thread/input/drift maxima.
+Renderer revision4 adds geometry/failure cache counts, scheduling reasons and image
+pixel measurements. No background sampling until opt-in and no automatic uploads.
+JS heap/pixels are explicitly not whole-browser/decoded/GPU memory measurements.
+
+Node profiler/soak/UI tests and full pinboard regression PASS; timer-release hook
+verified on eviction. Required check_project:170 tests,3 failures,3 errors,33 skips;
+22 local model links valid. Same existing native/bootstrap/supervisor READY failures;
+full suite not green. Browser prolongation/latency/visual proof NOT_RUN, no executable.
+Next: owner Record lag during normal use, Copy when degraded, compare baseline/end
+and work counters. Keep018/016 open. Tiny startup batch plan remains unimplemented.
+
+## 2026-10-19 — Actual prolonged-use capture; generated-index churn correction
+
+Owner supplies Pasted text(20261019-135313).txt and confirms use-dependent lag.
+Persisted exact JSON in docs/evidence/performance-2026-10-19/OWNER_PROLONGED_USE_CAPTURE.json.
+193.296s,renderer4,301 items: max24 mounted cards;387 board renders mean6.58ms/max46.9ms;
+26 generated-index spans mean1963ms/max5652ms/total51038.9ms elapsed. Input queue
+max2293.8ms,heartbeat drift4018.5ms. Async elapsed totals may overlap and are not CPU.
+DOM623->peak1099->1004; tag buttons215 constant. Heap21.17MB->peak160.82MB->105.72MB,
+with intermediate drops; does NOT prove a retained-memory leak. Exact source SHA
+unknown beyond revision4 marker. Keep overall lag/click/Escape acceptance open.
+
+Added021 with evidence/source mechanisms. Legacy gallery ensure emitted empty
+RUNS/removal entries; index treated empty result objects as present and hashed
+images anyway, so visiting more cards grew useless work. Stop empty global writes,
+keep existing data and skip old empty records. Single-flight/trailing index refresh;
+current model snapshot updated by storage events and guarded from stale reads;
+gallery-only refresh reuses it; explicit refresh remains fresh. Unchanged images
+reuse SHA references; changed images rehash. Preview shares cached state/reference
+and skips hashing untagged images. Hidden Add Existing Bookmark chooser now builds
+its candidates/options only on explicit opening, preserving UI/link behavior.
+
+Revision5 diagnostics: index running/queued, tag-state storage read, reference hash
+and gallery transaction spans (elapsed, not isolated CPU). Fixed: permissions,
+model/display gates, original predictions/removals, note drafts, attachments and
+source data. Constrained: state events/explicit refresh must invalidate cache;
+changed images must invalidate hashes. Fluid: scheduling, derived caches and hidden
+chooser construction. No deletion, native/model reinstallation or stylesheet change.
+
+PASS: full Node pinboard;50 coalesced requests peak concurrency1;80 empty entries
+plus one result hash only that result; cached refresh no extra read/hash; changed
+image invalidates; stale read cannot replace newer settings. Gallery empty-write
+and existing provenance/migration/recovery tests PASS.50 previews with5000 chooser
+candidates do no chooser work until clicked. Generation, preview connections,
+preview sections and profiler regressions PASS; git diff --check PASS. Required
+check170 tests:3 failures,3 errors,33 skipped;22 local links valid. Same existing
+container native/supervisor READY failures; full suite not green. Chromium missing;
+no actual post-change speedup claimed. Next: repeat owner soak and compare index,
+read/hash, queue/drift and heap trends; investigate remaining gallery/GC/paint if slow.
+Tiny progressive startup remains planned, not implemented in this correction.
+
+
+## 2026-10-19 — Read-only preview browsing (renderer6)
+
+
+Owner direction: prolonged scrolling and preview use must remain responsive, and Escape must return immediately. Existing images, generated tags, human tags, notes, bookmarks and Recovery must survive performance changes.
+
+## Evidence and diagnosis
+
+`docs/evidence/performance-2026-10-19/OWNER_READONLY_PREVIEW_BASELINE.json` records renderer revision5 for about108seconds and301 items. Seven generated-index refreshes averaged53.57ms (maximum98.7ms), compared with1963ms in the earlier renderer4 capture. These were different workloads and durations, not a controlled speedup benchmark.
+
+Input queue delay still reached2068ms. Seven gallery transactions took5008.6–12060.9ms elapsed, averaging6592.8ms. The span starts inside the gallery lock and includes asynchronous storage operations; it does not prove continuous CPU blocking for that duration. Source inspection found ordinary opening of an unvisited legacy card called ensureImages, migrating it and rewriting shared gallery storage. Heap ended below its initial value; this capture does not establish a monotonically retained memory leak.
+
+## Implemented source change — renderer revision6
+
+Opening a preview is read-only. Cached content opens immediately; delayed asset/metadata hydration is guarded against a closed or superseded preview. Legacy images project as a single image with1 /1 navigation and a selected default indicator, without creating a gallery. Existing persisted galleries retain their normal entry navigation. Storage notifications refresh only an open preview and preserve connection drafts.
+
+Migration now happens when an explicit action requires image-entry ownership. Generating tags materializes the selected legacy image before saving results and transfers the captured Things/Anime choices to its entry identity. Explicit removal materializes the intended image and preserves the existing Recovery transaction. Add-image behavior remains covered by the existing regression. Human metadata keeps its supported legacy adapters until gallery migration; no storage format was changed.
+
+Fixed: image ownership, deduplicated tag projection, persisted annotations, Recovery and user-selected models. Constrained: existing storage schema and transaction atomicity. Fluid: migration timing and read-only preview projection. This does not remove existing records, cached results or user content.
+
+## Verification and remaining work
+
+Node pinboard tests pass, including50 legacy preview open/close cycles with zero migrations and zero writes, explicit legacy removal with Recovery, delayed setup/Escape, generated-image ownership and image addition. Image-entry, generation, preview-section and performance-debug suites pass. Required Python project check ran170 tests:3 failures,3 errors,33 skipped; native bootstrap/supervisor READY checks remain blocked/failing in this container. All22 model links validate. No real Chromium benchmark ran; owner-browser improvement is pending.
+
+Explicit gallery mutations still copy/budget/write shared gallery storage and may remain slow. Background tagging after leaving a card remains tracked separately in007. Tiny-batch aesthetic startup remains a proposal, not implemented here. Keep022 and018 open until a sustained owner capture validates responsiveness.
+
+Revert boundary: parent commit eef42ed0853255049a39e82e7c4879e79c1f9574; this change is isolated in the following commit titled `Make pinboard preview browsing read-only`.

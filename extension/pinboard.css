@@ -343,3 +343,31 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 [data-board-appearance=dark] .image-entry-controls{border-color:var(--pin-line)}
 [data-board-appearance=dark] #default-image[aria-pressed=true]{color:#ffe19a;background:#443923;border-color:#8e7844}
 @media(max-width:480px){.image-entry-controls{gap:6px}.image-entry-navigation{gap:5px}.image-entry-controls button{padding:7px}#image-position{font-size:10px}}
+
+/* Saved notes start as the same compact row as Add Note. Expansion belongs to
+   the transient editor; original text/spacing stays in storage. */
+#detail button.preview-note{height:72px;min-height:72px;max-height:72px;padding:10px 20px;overflow:hidden}
+#detail .preview-note h3{margin:0 0 3px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#detail .preview-note p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;white-space:normal;line-height:16px;max-height:32px}
+
+/* Media never gates the preview's independently usable connected content. */
+#detail-image[hidden],#detail-image-placeholder[hidden]{display:none!important}
+.detail-image-placeholder{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:88px;padding:16px;box-sizing:border-box;border:1px solid var(--pin-line);border-radius:10px;background:var(--pin-panel,#faf7f9);color:var(--pin-muted,#856b78);font-size:12px}
+.detail-placeholder-logo{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:var(--pin-red);color:#fff;font-family:system-ui,sans-serif;font-size:28px;font-weight:750}
+
+/* Virtual-window focus belongs outside the cards, not on top of their edges. */
+#pins:focus{outline:1px solid var(--pin-line);outline-offset:6px;border-radius:4px}
+#pins:focus-visible{outline:2px solid var(--pin-red);outline-offset:6px}
+[data-board-appearance=dark] .detail-image-placeholder{background:var(--night-surface);color:#bbcee5}
+
+.pin-initial-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;height:100%;padding:10px 14px;border:0;border-radius:inherit;background:var(--pin-panel,#faf7f9);text-align:center;overflow:hidden}
+.pin-initial-cover>strong{display:grid;place-items:center;flex:0 0 28px;width:28px;border-radius:8px;background:var(--pin-red);color:#fff;font-family:system-ui,sans-serif;font-size:28px;line-height:1}
+.pin-initial-cover>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}
+.pin-initial-cover>small{font-size:10px;opacity:.65}
+[data-board-appearance=dark] .pin-initial-cover{background:var(--night-surface);color:#bbcee5}
+
+/* One theme glyph across saved-cover, image-loading and preview placeholders. */
+:is(.pin-initial-cover>strong,.pin-loading strong,.detail-placeholder-logo){display:grid;place-items:center;flex:0 0 42px;width:38px;height:42px;margin:0;padding:0;border:0;border-radius:13px;background:var(--pin-red);color:#fff;font:750 28px/1 system-ui,sans-serif;letter-spacing:-.08em}
+.pin-initial-cover{background:#f8f3f4;color:#a47b85}
+:root[data-board-appearance=dark] :is(.pin-initial-cover,.pin-loading){background:#171c34;color:var(--night-muted)}
+:root[data-board-appearance=dark] :is(.pin-initial-cover>strong,.pin-loading strong,.detail-placeholder-logo){background:var(--board-accent);color:#092333}

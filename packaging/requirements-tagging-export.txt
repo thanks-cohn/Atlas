@@ -1,0 +1,4 @@
+# RAM++ MatMul INT8 build-only quantization. No People exporters.
+onnx==1.17.0
+numpy==1.26.4
+onnxruntime==1.20.1

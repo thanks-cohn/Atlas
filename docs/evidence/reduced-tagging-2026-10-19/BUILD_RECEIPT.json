@@ -1,0 +1,17 @@
+{
+  "source_sha256": "116bc01e9ffcb62bac2aeacfa0128a2ce0725dcbc49b8d3acdc919677691654a",
+  "artifact": "atlas-companion.exe",
+  "debug_artifact": "debug.exe",
+  "sha256": "ee6af8134b390c44faa8497864f79d9b8d51882d3ccd5518de656bcc828c1925",
+  "bytes": 13520794,
+  "engine_files": 619,
+  "engine_bytes": 215809386,
+  "model_bytes": 1239072821,
+  "tagging_profile": "rich-candidate",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "architecture": "AMD64",
+  "python": "3.12.10",
+  "pyinstaller": "6.16.0",
+  "layout": "small-helper/separate-onedir-engine/shared-model-cache",
+  "status": "unsigned development build; actual low-memory owner hardware acceptance NOT_RUN"
+}

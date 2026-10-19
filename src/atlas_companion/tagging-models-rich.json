@@ -1,0 +1,25 @@
+{
+  "rampp": {
+    "file": "ram-plus-matmul-int8.onnx",
+    "model": "RAM++:matmul-int8-ort1.20.1",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+    "bytes": 872815995
+  },
+  "rampp_labels": {
+    "file": "ram_tag_list.txt",
+    "model": "RAM++:labels",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+    "bytes": 41904,
+    "url": "https://huggingface.co/CannotFindObject/RAM_ONNX/resolve/6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18/ram_tag_list.txt"
+  },
+  "rampp_thresholds": {
+    "file": "ram_tag_list_threshold.txt",
+    "model": "RAM++:thresholds",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+    "bytes": 22016,
+    "url": "https://huggingface.co/CannotFindObject/RAM_ONNX/resolve/6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18/ram_tag_list_threshold.txt"
+  }
+}

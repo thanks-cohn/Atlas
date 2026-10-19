@@ -20,10 +20,29 @@ def main():
     if importlib.metadata.version('pyinstaller')!='6.16.0':raise SystemExit('Use pinned PyInstaller==6.16.0')
     from prepare_tagging_models import prepare
     output=ROOT/'dist/windows';output.mkdir(parents=True,exist_ok=True)
-    prepare(output/'tagging-models')
+    rich = '--rich-tagging' in sys.argv[1:]
+    prepare(output/'tagging-models', keys=('anime','anime_labels') if rich else None)
+    model_manifest = ROOT/'src/atlas_companion/tagging-models.json'
+    profile_manifest = ROOT/'src/atlas_companion/tagging-profile.json'
+    if rich:
+        from prepare_rich_tagging_models import prepare as prepare_rich
+        prepare_rich(output/'tagging-models')
+        generated = ROOT/'build/windows/rich'; generated.mkdir(parents=True, exist_ok=True)
+        legacy = json.loads(model_manifest.read_text())
+        combined = {**{key:legacy[key] for key in ('anime','anime_labels')}, **json.loads((ROOT/'src/atlas_companion/tagging-models-rich.json').read_text())}
+        allowed={spec['file'] for spec in combined.values()}
+        for stale in (output/'tagging-models').iterdir():
+            if stale.is_file() and stale.name not in allowed: stale.unlink()
+        model_manifest = generated/'tagging-models.json'
+        model_manifest.write_text(json.dumps(combined, indent=2), encoding='utf-8')
+        profile_manifest = generated/'tagging-profile.json'
+        profile_manifest.write_text(json.dumps({'profile':'rich','status':'candidate; representative-image and owner acceptance required'}), encoding='utf-8')
     common=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--noupx','--paths',str(ROOT/'src'),
             '--distpath',str(output),'--workpath',str(ROOT/'build/windows'),'--specpath',str(ROOT/'build/windows')]
-    model_data=['--add-data',str(ROOT/'src/atlas_companion/tagging-models.json')+';atlas_companion']
+    if rich: common += ['--exclude-module','atlas_companion.people_tags']
+    model_data=['--add-data',str(model_manifest)+';atlas_companion',
+                '--add-data',str(profile_manifest)+';atlas_companion',
+                '--add-data',str(ROOT/'src/atlas_companion/tagging-models-rich.json')+';atlas_companion']
     subprocess.run(common+['--onedir','--name','atlas-tagging-engine','--collect-all','onnxruntime',
         '--collect-all','cv2','--collect-all','PIL',*model_data,str(ROOT/'packaging/tagging_engine_entry.py')],check=True)
     engine=output/'tagging-engine'
@@ -50,7 +69,8 @@ def main():
     receipt={'source_sha256':source.hexdigest(),'artifact':binary.name,'debug_artifact':'debug.exe',
              'sha256':sha(binary),'bytes':binary.stat().st_size,'engine_files':len(engine_spec['files']),
              'engine_bytes':sum(x['bytes'] for x in engine_spec['files'].values()),
-             'model_bytes':sum(x['bytes'] for x in json.loads((ROOT/'src/atlas_companion/tagging-models.json').read_text()).values()),
+             'model_bytes':sum(x['bytes'] for x in json.loads(model_manifest.read_text()).values()),
+             'tagging_profile':'rich-candidate' if rich else 'legacy',
              'platform':platform.platform(),'architecture':platform.machine(),'python':platform.python_version(),
              'pyinstaller':'6.16.0','layout':'small-helper/separate-onedir-engine/shared-model-cache',
              'status':'unsigned development build; actual low-memory owner hardware acceptance NOT_RUN'}

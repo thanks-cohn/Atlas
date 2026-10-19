@@ -2,6 +2,10 @@
 
 Any human or software agent can work here. This file communicates repository contracts, not requirements for a particular provider or coding assistant.
 
+## Active task checkpoint — 2026-10-19 UTC
+
+Start at `codex/HANDOFF_REDUCED_TAGGING_2026-10-19.md` and `codex/REDUCED_TAGGING_HANDOFF_STATE.json`. Owner retired People; current runtime c4dfe16 retains RAM++ and optional unchanged JoyTag. Windows run39221439574 passed tests/build/frozen/installed checks and was uploading at handoff; verify final artifact. Background tagging job recovery007 remains unresolved. Historical rich handoff does not supersede this owner revision.
+
 ## Read this order
 
 1. `README.md`

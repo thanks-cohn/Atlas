@@ -42,9 +42,15 @@ class NativeTests(unittest.TestCase):
                 with patch.object(native, 'PORT', server.server_port):
                     response = native.connect(state, 'chrome-extension://' + extension)
                     self.assertTrue(state.authenticate('chrome-extension://' + extension, response['token']))
+                    recovered = native.connect(state, 'chrome-extension://' + extension, issue_token=False)
+                    self.assertTrue(recovered['ok'])
+                    self.assertNotIn('token', recovered)
+                    self.assertTrue(state.authenticate('chrome-extension://' + extension, response['token']))
                     state.revoke_client(extension)
                     with self.assertRaises(ValueError):
                         native.connect(state, 'chrome-extension://' + extension)
+                    with self.assertRaises(ValueError):
+                        native.connect(state, 'chrome-extension://' + extension, issue_token=False)
             finally:
                 server.shutdown()
                 server.server_close()

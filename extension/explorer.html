@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="performance-debug.js"></script>
     <script src="boot-diagnostics.js"></script>
     <title>ATLAS — Your files, connected</title>
     <link rel="stylesheet" href="explorer.css" />
@@ -21,33 +22,30 @@
         </div>
         <div class="section-label">WORKSPACE</div>
         <button id="activity" class="nav-home">
-          ↶ <span>Activity & recovery</span></button
-        ><button id="library" class="nav-home">
-          ◇ <span>Catalogs & links</span>
-        </button>
+          ↶ <span>Activity & recovery</span></button>
         <a class="nav-home gallery-showcase-link" href="pinboard.html" target="_blank" rel="noopener">▦ <span>Pinboard</span></a>
         <a class="nav-home gallery-showcase-link" href="page.html" target="_blank" rel="noopener">▧ <span>Gallery showcase</span></a>
         <button id="image-recovery-open" class="nav-home">↺ <span>Recovery</span></button>
         <button id="bookmarks-open" class="nav-home">☆ <span>Bookmarks</span></button>
         <div class="section-label locations-label">
-          AUTHORIZED FOLDERS
+          FILES
           <button id="reload-grants" title="Reload authorized folders">
             ↻
           </button>
         </div>
         <button id="add-location" class="add-location">＋ Add location</button>
-        <nav id="roots" aria-label="Authorized folders"></nav>
+        <nav id="roots" aria-label="File explorer entry point"></nav>
         <div class="sidebar-bottom">
           <span class="privacy-dot"></span> Local first. Yours always.<button
             id="connection"
-            title="Connection settings"
+            title="Explorer settings"
           >
             ⚙
           </button>
         </div>
       </aside>
       <main>
-        <section id="image-recovery-workspace" hidden aria-label="Image recovery"><div class="heading"><div><div class="eyebrow">YOUR HISTORY</div><h1>Recovery</h1><p>Image references, connections and tag provenance.</p></div></div><p id="image-recovery-count" role="status"></p><div id="image-recovery-list"></div><nav class="recovery-paging" aria-label="Recovery pages"><button id="image-recovery-prev">Previous</button><span id="image-recovery-page"></span><button id="image-recovery-next">Next</button></nav></section>
+        <section id="image-recovery-workspace" hidden aria-label="Image recovery"><div class="heading"><div><div class="eyebrow">YOUR HISTORY</div><h1>Recovery</h1><p>Image references, connections and tag provenance.</p></div></div><p id="image-recovery-count" role="status"></p><div id="image-recovery-list"></div><p class="recovery-hint">Double-click a row to expand. Keyboard: Enter or Space.</p><dialog id="image-recovery-dialog" aria-label="Recovery entry"><button id="image-recovery-close" autofocus>Close</button><div id="image-recovery-detail"></div></dialog></section>
         <section id="bookmarks-workspace" hidden aria-label="Browser bookmarks">
           <div class="heading"><div><div class="eyebrow">YOUR BROWSER</div><h1>Bookmarks</h1><p>Chrome folders and bookmarks, in their original order.</p></div></div>
           <div class="toolbar"><button id="bookmarks-up" title="Parent bookmark folder">↑</button><button id="bookmarks-refresh">Refresh</button><button id="bookmarks-new">＋ Bookmark</button><button id="bookmarks-folder">＋ Folder</button></div>
@@ -175,6 +173,15 @@
       </aside>
     </div>
     <div id="context-menu" class="context-menu" role="menu" hidden></div>
+    <dialog id="explorer-settings-dialog" aria-labelledby="explorer-settings-title">
+      <div class="details-top"><h2 id="explorer-settings-title">Explorer settings</h2><button id="explorer-settings-close" aria-label="Close settings">×</button></div>
+      <label>Sidebar folder<select id="entry-point-choice"></select></label>
+      <p>Show one entry point. Automatic uses the highest authorized folder; Atlas never grants access to its parents. Choosing a folder here overrides the hierarchy.</p>
+      <button id="entry-point-current" type="button">Use the currently open folder</button>
+      <p>Other authorized locations remain available in this list. This setting does not move files or remove access.</p>
+      <p id="entry-point-status" role="status"></p>
+      <button id="explorer-connection-settings" type="button">Connection & authorized locations</button>
+    </dialog>
     <dialog id="pair-dialog">
       <form id="pair-form">
         <div class="dialog-icon">A</div>

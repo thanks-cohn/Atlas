@@ -15,3 +15,20 @@ get('notes-panel').children.find(node=>node.className==='preview-note').onclick(
 view.setContent('second',{available:false});assert.equal(get('notes-panel').hidden,true);assert.equal(get('notes-panel').children[1].textContent,'Notes are unavailable right now.');
 const html=readFileSync('extension/pinboard.html','utf8'),css=readFileSync('extension/pinboard.css','utf8');assert.match(html,/▶<\/span>Notes/);assert.match(html,/▶<\/span>Bookmarks/);assert.match(css,/bottom:calc\(100% \+ 8px\)/);
 console.log('PASS: exclusive panels, note draft/error/save, existing-bookmark chooser, safe links, focused bookmark image swap and reset.');
+
+const noteCSS=readFileSync('extension/pinboard.css','utf8');
+assert.match(noteCSS,/#detail button\.preview-note\{[^}]*height:72px/);
+assert.match(noteCSS,/-webkit-line-clamp:2/);
+assert(!readFileSync('extension/pinboard-preview-sections.js','utf8').includes('text:draft.text.trim()'));
+console.log('PASS: saved notes use compact 72px rows with two-line excerpts; expanded editor preserves original whitespace.');
+
+// Initial gallery hydration must not collapse notes or throw away a typed draft.
+value={notes:[],bookmarks:[]};view.setContent('legacy',value);get('notes').onclick();get('notes-panel').children[0].children[0].onclick();form=get('notes-panel').children[0];form.children[0].children[0].value='Still typing';form.children[0].children[0].oninput();form.children[1].children[0].value='Keep this draft';form.children[1].children[0].oninput();
+view.setContent('migrated-entry',value,{preserve:true});assert.equal(get('notes-panel').hidden,false);form=get('notes-panel').children[0];assert.equal(form.children[0].children[0].value,'Still typing');assert.equal(form.children[1].children[0].value,'Keep this draft');await form.onsubmit({preventDefault(){}});assert.equal(saved.at(-1).key,'migrated-entry');
+console.log('PASS: delayed gallery hydration preserves an open notes panel and typed draft, saving to the resolved image identity.');
+let chooserReads=0;const deferredView=context.installPreviewSections({getBookmarks:()=>{chooserReads++;return Array.from({length:5000},(_,index)=>({id:String(index),title:'Fixture '+index,url:'https://fixture.test/'+index}));}});
+for(let index=0;index<50;index++)deferredView.setContent('fixture-'+index,{notes:[],bookmarks:[]});
+assert.equal(chooserReads,0,'Opening previews must not build a hidden full-library chooser');
+const lazyFooter=get('bookmarks-panel').children.at(-1),lazySelect=lazyFooter.children[1].children[1];assert.equal(lazySelect.children.length,0);
+lazyFooter.children[0].onclick();assert.equal(chooserReads,1);assert.equal(lazySelect.children.length,5000);lazyFooter.children[0].onclick();lazyFooter.children[0].onclick();assert.equal(chooserReads,1);
+console.log('PASS: fifty previews leave the5000-bookmark chooser empty until Add Existing Bookmark is explicitly opened.');

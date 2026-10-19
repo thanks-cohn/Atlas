@@ -228,7 +228,7 @@ export function createGraphUI({ api, ask, notice, chosen, getGrant }) {
       notice(error.message);
     }
   }
-  $("library").onclick = open;
+  if ($("library")) $("library").onclick = open;
   $("library-close").onclick = () => $("library-dialog").close();
   $("catalog-filter").onchange = render;
   $("catalog-create").onclick = run(async () => {

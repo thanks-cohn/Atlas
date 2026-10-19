@@ -58,6 +58,10 @@ def decode(body):
 
 def predict(state, body):
     kind = body.get('model')
+    if kind != 'anime':
+        from .rich_tags import enabled, predict as rich_predict
+        if enabled():
+            return rich_predict(state, body)
     if kind not in ('objects', 'face', 'anime'):
         raise APIError('TAG_MODEL_INVALID', 'Choose Things, Faces or Anime.', 400)
     try:

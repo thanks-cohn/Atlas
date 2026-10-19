@@ -20,7 +20,7 @@ export async function rasterImage(file, maxChars = 700000) {
     if (!bitmap.width || !bitmap.height || bitmap.width*bitmap.height>40000000) throw failure('IMAGE_DIMENSIONS','This image exceeds the current 40-megapixel decoding limit.');
     const canvas=document.createElement('canvas'),context=canvas.getContext('2d');
     if (!context) throw failure('IMAGE_CANVAS_UNAVAILABLE','Chrome could not create an image preview.');
-    for (const edge of [1600,1280,1024,800,640,480]) {
+    for (const edge of [1600,1280,1024,800,640,480,384,320,256,192]) {
       const scale=Math.min(1,edge/Math.max(bitmap.width,bitmap.height));
       canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
       context.drawImage(bitmap,0,0,canvas.width,canvas.height);

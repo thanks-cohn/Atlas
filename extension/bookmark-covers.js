@@ -28,6 +28,21 @@ export function bookmarkCover(node, covers) {
   if(saved?.url===(node.url || '') && saved.image===null)return null;
   return saved?.url === (node.url || '') && safeCoverReference(saved.image) ? saved.image : directImage(node.url);
 }
+// Reader for an immutable storage snapshot. Keep alias lookup and image validation
+// out of scroll work; constructing a new reader observes the next snapshot.
+export function createBookmarkCoverReader(covers) {
+  const byURL=new Map(),validated=new Map();
+  for(const cover of Object.values(covers))if(cover && !byURL.has(cover.url))byURL.set(cover.url,cover);
+  return node=>{
+    const url=node.url || '',saved=Object.hasOwn(covers,node.id)?covers[node.id]:byURL.get(url);
+    if(saved?.url===url){
+      if(saved.image===null)return null;
+      if(!validated.has(saved.image))validated.set(saved.image,safeCoverReference(saved.image));
+      if(validated.get(saved.image))return saved.image;
+    }
+    return directImage(node.url);
+  };
+}
 export function setBookmarkCover(covers, node, image, budgetMiB=64) {
   if (image !== null && !safeCoverReference(image)) throw new Error('BOOKMARK_IMAGE_INVALID');
   const result = {...covers};

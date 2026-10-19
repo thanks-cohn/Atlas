@@ -16,3 +16,12 @@ for(let i=0;i<20;i++)assert.ok((await context.rasterImage(png,175000)).length<=1
 await assert.rejects(()=>context.rasterImage(png,1),error=>error.code==='IMAGE_PREVIEW_BUDGET');
 context.createImageBitmap=async()=>{throw Error('decoder');};await assert.rejects(()=>context.rasterImage(png),error=>error.code==='IMAGE_DECODE_FAILED');
 console.log('PASS image signature sniffing without MIME, adaptive bounded encoding and actionable size/type/decode failures (browser primitives doubled).');
+// Detailed/transparent PNG: the former smallest 480px encoding exceeds the
+// old 60K budget, but a 384px fallback fits. Never reject solely at 480px.
+let currentCanvas;
+context.createImageBitmap=async()=>({width:1024,height:1536,close(){closed++;}});
+context.document.createElement=()=>currentCanvas={getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/webp;base64,'+'A'.repeat(Math.max(currentCanvas.width,currentCanvas.height)>=480?69444:48164)};
+assert((await context.rasterImage(png,60000)).length<=60000);
+assert.equal(Math.max(currentCanvas.width,currentCanvas.height),384);
+assert((await context.rasterImage(png,175000)).length<=175000);
+console.log('PASS: detailed PNG preview falls below former 480px floor when necessary; card budget remains bounded.');

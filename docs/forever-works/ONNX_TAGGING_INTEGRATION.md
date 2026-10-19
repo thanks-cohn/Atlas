@@ -67,3 +67,12 @@ actual Chrome visual acceptance. Windows CI additionally executes all three real
 models through `atlas-companion.exe --tagging-smoke` on a synthetic white image,
 then existing native/UI smoke tests. Check CI outcome before claiming a usable
 Windows download. Packaging terms and upstream notices are under `packaging/`.
+
+## 2026-10-19 implementation checkpoint
+
+The legacy behavior above remains the default rollback profile. Actual RAM++ and
+MiVOLO v2 plus a face/person detector now exist as an isolated rich candidate at
+the same authenticated API boundary. Read [Rich tagging implementation](RICH_TAGGING_IMPLEMENTATION.md)
+for exact checkpoints, executable adapters, measured outputs, source/Windows
+verification distinctions, provenance additions and remaining promotion gates.
+This is no longer proposal-only work, and is not yet a promoted production replacement.

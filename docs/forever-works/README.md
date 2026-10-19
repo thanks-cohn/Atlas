@@ -4,6 +4,9 @@
 
 Our guiding contract: **preserve the purpose and indispensable behavior; permit mechanisms, languages, UI frameworks, transport and product topology to change when replacement proof succeeds.**
 
+Implemented source behavior and its evidence are indexed separately in
+[Implemented behavior and verification](../implementation/README.md).
+
 Read:
 
 **Guiding product doctrine:** [Build Now. Use Forever.](BUILT_NOW_USE_FOREVER.md) — collect, curate, compose, export, transpose and publish from reusable Atlas entries and Pieces; proposed interoperability and preservation contract (not shipped universal portability).
@@ -111,3 +114,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 ## Directory pinboards and saved reusable Objects
 
 - [Directory Pinboards, Reusable Objects and Saved Composition States](PROPOSAL_DIRECTORY_PINBOARDS_REUSABLE_OBJECTS_AND_SAVED_STATES.md) — owner-directed local/R2 directory pinboards, distinct object marking and Objects selector, grouped content, saved arrangements, whole-object Recovery and portable project reuse. Proposal only; implementation and compatibility proofs remain pending.
+
+- [Visit source behavior](PROPOSAL_VISIT_SOURCE_BEHAVIOR.md) — Settings trial for source-on-left split view or existing separate-tab navigation, with fallback; API tests pass, real Chrome 155 layout confirmation pending.
+
+- [Preview Images disclosure proposal](PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md): future vertically scrollable Images section alongside Notes and Bookmarks, including narrow/mobile screens; not implemented.

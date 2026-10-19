@@ -22,6 +22,7 @@ def main():
         raise SystemExit('Requires an actual Windows kernel.')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('binary', type=Path)
+    parser.add_argument('--tagging-fixtures', type=Path, help='Explicit pinned source benchmark JSON; evaluate photos through the installed EXE')
     args = parser.parse_args()
     from atlas_companion.windows_state import WindowsState
     from atlas_companion.windows_runtime import stop_attested_service
@@ -93,7 +94,7 @@ def main():
                 return value['token']
             token = connect()
             def request(path, body=None, credential=None):
-                connection = http.client.HTTPConnection('127.0.0.1', 17892, timeout=15)
+                connection = http.client.HTTPConnection('127.0.0.1', 17892, timeout=120 if path == '/v1/tag-image' else 15)
                 try:
                     connection.request('POST' if body is not None else 'GET', path,
                         json.dumps(body) if body is not None else None,
@@ -122,6 +123,37 @@ def main():
                 assert (private/'evidence/tagging-runs.jsonl').exists()
                 cache_stamp=(private/'tagging-models/joytag.onnx').stat().st_mtime_ns
                 print('PASS installed ONNX HTTP works with download folders unavailable, no Python PATH; worker peak bytes:',predictions['resources'])
+                if args.tagging_fixtures:
+                    import hashlib, io, urllib.request
+                    from PIL import Image, ImageOps
+                    fixtures=json.loads(args.tagging_fixtures.read_text())['fixtures']
+                    photo_report={'schema':'atlas.windows.rich-photos.v1','transport':'installed EXE, authenticated HTTP, no Python PATH, original bundle folders unavailable','fixtures':[]}
+                    report_path=binary.parent/'PHOTO_BENCHMARK.json'
+                    for fixture in fixtures:
+                        url=fixture['url'].replace('https://github.com/','https://raw.githubusercontent.com/').replace('/blob/','/')
+                        with urllib.request.urlopen(url,timeout=30) as download:
+                            raw=download.read(8*1024*1024+1)
+                        assert len(raw)<=8*1024*1024 and hashlib.sha256(raw).hexdigest()==fixture['sha256'],'Fixture hash changed'
+                        with Image.open(io.BytesIO(raw)) as opened:
+                            photo=ImageOps.exif_transpose(opened).convert('RGB');photo.thumbnail((1280,1280))
+                            buffer=io.BytesIO();photo.save(buffer,format='JPEG',quality=90)
+                        image='data:image/jpeg;base64,'+base64.b64encode(buffer.getvalue()).decode()
+                        sample={'id':fixture['id'],'url':fixture['url'],'sha256':fixture['sha256'],'runs':[]}
+                        photo_report['fixtures'].append(sample)
+                        for model in ('objects','anime'):
+                            started=time.perf_counter()
+                            code,result=request('/v1/tag-image',{'model':model,'item_id':'windows-photo:'+fixture['id'],'image':image})
+                            assert code==200 and result['run_id'],(code,result)
+                            sample['runs'].append({**{k:result[k] for k in ('source','model','model_version','model_sha256','run_id','suggestions','person_count','people','aggregation','policy','resources','components') if k in result},'seconds':time.perf_counter()-started})
+                            report_path.write_text(json.dumps(photo_report,indent=2)+'\n')
+                            if model=='objects':
+                                assert len(result['predictions'])==4585 and len(result['suggestions'])>=5
+                            if model=='anime':
+                                baseline=next(x for x in fixture['runs'] if x['profile']=='legacy' and x['requested_model']=='anime')
+                                expected={x['tag']:x['score'] for x in baseline['suggestions']}
+                                actual={x['tag']:x['score'] for x in result['suggestions']}
+                                assert expected.keys()==actual.keys() and all(abs(expected[k]-actual[k])<=.001 for k in expected),'JoyTag Windows/source parity changed'
+                            print('PASS installed Windows photo HTTP:',fixture['id'],model,len(result['suggestions']),'tags',flush=True)
             finally:
                 for folder,held in reversed(hidden):held.rename(folder)
 
@@ -223,10 +255,19 @@ def main():
                         break
                 except (OSError, ValueError, http.client.HTTPException):
                     pass
-                assert time.monotonic() < deadline, 'Supervisor did not restore the failed helper'
+                if time.monotonic() >= deadline:
+                    from atlas_companion.diagnostics import snapshot
+                    raise AssertionError('Supervisor did not restore the failed helper: ' + json.dumps(snapshot(state)))
                 time.sleep(0.3)
             token = connect()
-            assert len(request('/v1/grants')[1]['grants']) == 2
+            # Reproduce the recovery race deterministically: a supervisor can
+            # have observed failed health before a browser finishes reconnecting.
+            # Its later proof/wake must leave that browser credential usable.
+            from atlas_native.__main__ import connect as recovery_connect
+            recovered = recovery_connect(state, origin, issue_token=False)
+            assert recovered['ok'] and 'token' not in recovered
+            code, grants = request('/v1/grants')
+            assert code == 200 and len(grants['grants']) == 2, (code, grants)
             print('PASS opt-in installed supervisor immediately starts and automatically restores an attested failed helper.')
             disabled = subprocess.run([str(runtime),'supervise','--state-dir',str(private),'--extension-id',extension,'disable'],
                                       env=env,capture_output=True,timeout=30)
@@ -249,6 +290,13 @@ def main():
             assert not state.known_origin(origin)
             print('PASS owned uninstall removes registration, revokes enrollment and preserves user data.')
         finally:
+            from atlas_companion.diagnostics import snapshot
+            (binary.parent/'SUPERVISOR_DIAGNOSTICS.json').write_text(json.dumps(snapshot(state),indent=2)+'\n')
+            try:
+                from atlas_companion.windows_supervisor import startup as supervision
+                supervision(state, extension, 17892, 'disable', install_dir=app)
+            except Exception:
+                pass
             try:
                 stop_attested_service(state,17892)
             except Exception:

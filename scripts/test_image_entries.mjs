@@ -28,3 +28,21 @@ const one=await store.add(owner,identical.url,identical);await store.mutate(owne
 const two=await store.add(owner,identical.url,identical);assert.notEqual(one.id,two.id);assert.deepEqual(two.tags,[]);assert.deepEqual(two.notes,[]);assert.deepEqual(two.bookmarks,[]);assert.deepEqual(two.runs,{});assert.equal(two.origin.sha256,one.origin.sha256);
 const {urlImageOrigin}=await import('../extension/image-entries.js');globalThis.chrome={permissions:{request:async()=>false}};const denied=await urlImageOrigin(identical.url);assert.equal(denied.url,identical.url);assert.equal(denied.sha256,null);assert.equal(denied.hashStatus,'unavailable');delete globalThis.chrome;
 console.log('PASS: identical URL/hash can be added again with zero inherited human/model data; unreadable URL retains its origin without a fake digest.');
+
+// A storage-change read begun before Add Image must not restore the old cache
+// after the committed transaction, or count/arrows regress to one entry.
+let releaseOldRead,holdRead=false;
+const racingStorage={...storage,get:async keys=>{const value=await storage.get(keys);if(holdRead && keys===IMAGE_ENTRIES){holdRead=false;await new Promise(resolve=>releaseOldRead=resolve);}return value;}};
+const racing=createImageEntries({storage:racingStorage,uuid:()=>String(++sequence),lock:fn=>fn()});
+await racing.load();
+const countBefore=racing.gallery(owner).entries.length;
+holdRead=true;const staleLoad=racing.load();await new Promise(resolve=>setTimeout(resolve,0));
+await racing.add(owner,'https://images.example/concurrent.jpg',{provider:'web'});
+releaseOldRead();await staleLoad;
+assert.equal(racing.gallery(owner).entries.length,countBefore+1,'A stale read must not erase the newly committed image from the view cache');
+console.log('PASS: delayed pre-add storage reads cannot roll back gallery count/cache after commit.');
+// Migrating an untagged legacy image must not emit empty global tag-state writes.
+const writes=[],clean={};const quiet=createImageEntries({storage:{get:async keys=>Object.fromEntries(keys.map(key=>[key,clean[key]])),set:async value=>{writes.push(Object.keys(value));Object.assign(clean,value);}},lock:fn=>fn(),uuid:()=>crypto.randomUUID()});
+await quiet.ensure('https://fixture.test/untagged',{id:'untagged',url:'https://fixture.test/untagged'},'https://fixture.test/image.jpg');
+assert(writes.every(keys=>!keys.includes(RUNS) && !keys.includes(REMOVALS)),'Empty imports should not notify every tag-index consumer');
+console.log('PASS: untagged legacy-gallery import does not write empty global model/removal maps; existing nonempty provenance migration remains tested.');
