@@ -1,3 +1,12 @@
+> Final qualification update: run 39221439574 completed SUCCESS, including archive
+> upload. Artifact 12171179764 is 922,962,062 bytes (~923 MB, ~28% smaller).
+> SHA256: 5909e0f739c92925a816081696148b05968457873ab501efe3dc7c6c8ca73dce.
+> Helper SHA256: ee6af8134b390c44faa8497864f79d9b8d51882d3ccd5518de656bcc828c1925.
+> Engine 215,809,386 bytes; model files 1,239,072,821 bytes. Tiny reports inspected
+> and preserved in docs/evidence/reduced-tagging-2026-10-19/. Trial guide updated.
+> Pending/upload wording below records the interruption checkpoint and is superseded.
+> Owner installation/cache cleanup and bug 007 remain outstanding.
+
 # ATLAS cold-agent handoff — 2026-10-19 08:20 UTC
 
 ## Start here

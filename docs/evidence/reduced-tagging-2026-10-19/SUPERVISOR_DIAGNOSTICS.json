@@ -1,0 +1,889 @@
+{
+  "schema": "atlas.diagnostics.v1",
+  "component_version": "0.1.4",
+  "platform": "windows",
+  "events": [
+    {
+      "id": 1,
+      "time_ms": 1792397918400,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 2,
+      "time_ms": 1792397918422,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 3,
+      "time_ms": 1792397918455,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 4,
+      "time_ms": 1792397920495,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 5,
+      "time_ms": 1792397920527,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 6,
+      "time_ms": 1792397920554,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 7,
+      "time_ms": 1792397922127,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 8,
+      "time_ms": 1792397922154,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 9,
+      "time_ms": 1792397922210,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 10,
+      "time_ms": 1792397922233,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 11,
+      "time_ms": 1792397922260,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 12,
+      "time_ms": 1792397922353,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 13,
+      "time_ms": 1792397922850,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 14,
+      "time_ms": 1792397925811,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 15,
+      "time_ms": 1792397929640,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 16,
+      "time_ms": 1792397931975,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 17,
+      "time_ms": 1792397935493,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 18,
+      "time_ms": 1792397937890,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 19,
+      "time_ms": 1792397941205,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 20,
+      "time_ms": 1792397943626,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 21,
+      "time_ms": 1792397946892,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 22,
+      "time_ms": 1792397949389,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 23,
+      "time_ms": 1792397952978,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 24,
+      "time_ms": 1792397955399,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 25,
+      "time_ms": 1792397958897,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 26,
+      "time_ms": 1792397961353,
+      "stage": "HTTP_TAG_IMAGE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 27,
+      "time_ms": 1792397961400,
+      "stage": "HTTP_GRANTS",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 28,
+      "time_ms": 1792397961447,
+      "stage": "HTTP_GRANTS",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 29,
+      "time_ms": 1792397961512,
+      "stage": "HTTP_LIST",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 30,
+      "time_ms": 1792397961718,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 31,
+      "time_ms": 1792397961799,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 32,
+      "time_ms": 1792397961927,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 33,
+      "time_ms": 1792397962081,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 34,
+      "time_ms": 1792397962265,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 35,
+      "time_ms": 1792397962406,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 36,
+      "time_ms": 1792397962592,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 37,
+      "time_ms": 1792397962799,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 38,
+      "time_ms": 1792397962978,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 39,
+      "time_ms": 1792397964176,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 40,
+      "time_ms": 1792397964203,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 41,
+      "time_ms": 1792397964230,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 42,
+      "time_ms": 1792397966288,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 43,
+      "time_ms": 1792397966313,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 44,
+      "time_ms": 1792397966343,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 45,
+      "time_ms": 1792397967903,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 46,
+      "time_ms": 1792397967930,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 47,
+      "time_ms": 1792397967981,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 48,
+      "time_ms": 1792397968009,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 49,
+      "time_ms": 1792397968035,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 50,
+      "time_ms": 1792397968066,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 51,
+      "time_ms": 1792397968542,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 52,
+      "time_ms": 1792397968588,
+      "stage": "HTTP_GATE_OR_ROUTE",
+      "code": "UNPAIRED",
+      "duration_ms": null
+    },
+    {
+      "id": 53,
+      "time_ms": 1792397968621,
+      "stage": "HTTP_GRANTS",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 54,
+      "time_ms": 1792397968732,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 55,
+      "time_ms": 1792397969663,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 56,
+      "time_ms": 1792397969691,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 57,
+      "time_ms": 1792397969723,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 58,
+      "time_ms": 1792397971781,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 59,
+      "time_ms": 1792397972006,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 60,
+      "time_ms": 1792397974044,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 61,
+      "time_ms": 1792397974079,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 62,
+      "time_ms": 1792397975639,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 63,
+      "time_ms": 1792397975811,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 64,
+      "time_ms": 1792397975863,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 65,
+      "time_ms": 1792397975888,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 66,
+      "time_ms": 1792397975916,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 67,
+      "time_ms": 1792397975947,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 68,
+      "time_ms": 1792397976439,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 69,
+      "time_ms": 1792397976499,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 70,
+      "time_ms": 1792397980344,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 71,
+      "time_ms": 1792397980370,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 72,
+      "time_ms": 1792397980402,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 73,
+      "time_ms": 1792397982433,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 74,
+      "time_ms": 1792397982460,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 75,
+      "time_ms": 1792397982492,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 76,
+      "time_ms": 1792397983560,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 77,
+      "time_ms": 1792397983591,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 78,
+      "time_ms": 1792397983647,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 79,
+      "time_ms": 1792397983675,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 80,
+      "time_ms": 1792397983704,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 81,
+      "time_ms": 1792397983732,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 82,
+      "time_ms": 1792397984453,
+      "stage": "HTTP_GRANTS",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 83,
+      "time_ms": 1792397984517,
+      "stage": "HTTP_OPERATE",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 84,
+      "time_ms": 1792397987295,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 85,
+      "time_ms": 1792397987326,
+      "stage": "SUPERVISOR_HEALTH",
+      "code": "HEALTH_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 86,
+      "time_ms": 1792397999368,
+      "stage": "SUPERVISOR_HEALTH",
+      "code": "HEALTH_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 87,
+      "time_ms": 1792397999396,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 88,
+      "time_ms": 1792397999423,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 89,
+      "time_ms": 1792397999452,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 90,
+      "time_ms": 1792398001490,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 91,
+      "time_ms": 1792398001520,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 92,
+      "time_ms": 1792398001551,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 93,
+      "time_ms": 1792398003123,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 94,
+      "time_ms": 1792398003151,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 95,
+      "time_ms": 1792398003177,
+      "stage": "SUPERVISOR_WAKE",
+      "code": "RECOVERY_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 96,
+      "time_ms": 1792398003544,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 97,
+      "time_ms": 1792398004731,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 98,
+      "time_ms": 1792398004755,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 99,
+      "time_ms": 1792398004784,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 100,
+      "time_ms": 1792398004851,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 101,
+      "time_ms": 1792398004879,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 102,
+      "time_ms": 1792398004935,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 103,
+      "time_ms": 1792398004959,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 104,
+      "time_ms": 1792398004992,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 105,
+      "time_ms": 1792398005020,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 106,
+      "time_ms": 1792398005506,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 107,
+      "time_ms": 1792398005531,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 108,
+      "time_ms": 1792398005560,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 109,
+      "time_ms": 1792398005615,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 110,
+      "time_ms": 1792398005648,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 111,
+      "time_ms": 1792398005683,
+      "stage": "HTTP_GRANTS",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 112,
+      "time_ms": 1792398008486,
+      "stage": "NATIVE_WAKE_LOCK",
+      "code": "LOCK_WAIT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 113,
+      "time_ms": 1792398008513,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 114,
+      "time_ms": 1792398008545,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 115,
+      "time_ms": 1792398010803,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_TRANSPORT_FAILED",
+      "duration_ms": null
+    },
+    {
+      "id": 116,
+      "time_ms": 1792398010840,
+      "stage": "NATIVE_WAKE",
+      "code": "SERVICE_SPAWN_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 117,
+      "time_ms": 1792398010875,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 118,
+      "time_ms": 1792398012419,
+      "stage": "HTTP_BOOTSTRAP_PROOF",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 119,
+      "time_ms": 1792398012450,
+      "stage": "NATIVE_PROOF",
+      "code": "PROOF_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 120,
+      "time_ms": 1792398012507,
+      "stage": "NATIVE_PAIR",
+      "code": "TOKEN_ROTATED",
+      "duration_ms": null
+    },
+    {
+      "id": 121,
+      "time_ms": 1792398012535,
+      "stage": "NATIVE_HEALTH",
+      "code": "HEALTH_CHECK_STARTED",
+      "duration_ms": null
+    },
+    {
+      "id": 122,
+      "time_ms": 1792398012567,
+      "stage": "HTTP_HEALTH",
+      "code": "HTTP_OK",
+      "duration_ms": null
+    },
+    {
+      "id": 123,
+      "time_ms": 1792398012598,
+      "stage": "NATIVE_CONNECT",
+      "code": "CONNECT_READY",
+      "duration_ms": null
+    },
+    {
+      "id": 124,
+      "time_ms": 1792398013111,
+      "stage": "HTTP_GATE_OR_ROUTE",
+      "code": "UNAUTHORIZED",
+      "duration_ms": null
+    }
+  ],
+  "coverage": [
+    "native_wake",
+    "native_proof",
+    "token_rotation",
+    "http_gate",
+    "http_routes"
+  ],
+  "omitted": [
+    "tokens",
+    "headers",
+    "file_paths",
+    "file_contents",
+    "exception_messages"
+  ]
+}

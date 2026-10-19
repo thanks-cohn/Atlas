@@ -1,0 +1,1178 @@
+{
+  "schema": "atlas.windows.rich-photos.v1",
+  "transport": "installed EXE, authenticated HTTP, no Python PATH, original bundle folders unavailable",
+  "fixtures": [
+    {
+      "id": "demo1",
+      "url": "https://github.com/xinyu1205/recognize-anything/blob/main/images/demo/demo1.jpg",
+      "sha256": "1b2906f4058a69936df49cb6156ec4cd117a286b420e1eb14764033bf8f3c05f",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "91780f25-9d27-4bd5-9f04-27c029a7e68d",
+          "suggestions": [
+            {
+              "tag": "dog",
+              "score": 0.9999682486318912,
+              "category": "objects"
+            },
+            {
+              "tag": "living room",
+              "score": 0.9998301381245166,
+              "category": "objects"
+            },
+            {
+              "tag": "couch",
+              "score": 0.9996337992131401,
+              "category": "objects"
+            },
+            {
+              "tag": "sit",
+              "score": 0.9510277874801822,
+              "category": "objects"
+            },
+            {
+              "tag": "carpet",
+              "score": 0.8666920288627478,
+              "category": "objects"
+            },
+            {
+              "tag": "room",
+              "score": 0.8585458414734456,
+              "category": "objects"
+            },
+            {
+              "tag": "blanket",
+              "score": 0.842484748644166,
+              "category": "objects"
+            },
+            {
+              "tag": "green",
+              "score": 0.8385987805554441,
+              "category": "objects"
+            },
+            {
+              "tag": "home",
+              "score": 0.8313876714257188,
+              "category": "objects"
+            },
+            {
+              "tag": "picture frame",
+              "score": 0.8231260538883542,
+              "category": "objects"
+            },
+            {
+              "tag": "plant",
+              "score": 0.809568800457043,
+              "category": "objects"
+            },
+            {
+              "tag": "armchair",
+              "score": 0.7026295111433615,
+              "category": "objects"
+            },
+            {
+              "tag": "hassock",
+              "score": 0.6803786388762965,
+              "category": "objects"
+            },
+            {
+              "tag": "wood floor",
+              "score": 0.6775231276963932,
+              "category": "objects"
+            },
+            {
+              "tag": "lamp",
+              "score": 0.6420656551150647,
+              "category": "objects"
+            },
+            {
+              "tag": "pillow",
+              "score": 0.6204928881063441,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1450319872,
+            "peak_commit_bytes": 1513230336
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.0228786000000127
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "460ac50e-b042-474f-b3a3-85f99d904fec",
+          "suggestions": [
+            {
+              "tag": "plant",
+              "score": 0.79782
+            },
+            {
+              "tag": "potted_plant",
+              "score": 0.73464
+            },
+            {
+              "tag": "original",
+              "score": 0.71735
+            },
+            {
+              "tag": "cup",
+              "score": 0.71015
+            },
+            {
+              "tag": "couch",
+              "score": 0.7075
+            },
+            {
+              "tag": "indoors",
+              "score": 0.64551
+            },
+            {
+              "tag": "no_humans",
+              "score": 0.64339
+            },
+            {
+              "tag": "table",
+              "score": 0.6019
+            },
+            {
+              "tag": "wooden_floor",
+              "score": 0.54527
+            },
+            {
+              "tag": "cat",
+              "score": 0.53428
+            },
+            {
+              "tag": "mug",
+              "score": 0.53371
+            },
+            {
+              "tag": "rug",
+              "score": 0.50902
+            },
+            {
+              "tag": "chair",
+              "score": 0.49953
+            },
+            {
+              "tag": "carpet",
+              "score": 0.46396
+            },
+            {
+              "tag": "blanket",
+              "score": 0.46327
+            },
+            {
+              "tag": "solo",
+              "score": 0.46197
+            },
+            {
+              "tag": "scenery",
+              "score": 0.45697
+            },
+            {
+              "tag": "lying",
+              "score": 0.45054
+            },
+            {
+              "tag": "1girl",
+              "score": 0.43812
+            },
+            {
+              "tag": "animal",
+              "score": 0.43551
+            },
+            {
+              "tag": "pillow",
+              "score": 0.43037
+            },
+            {
+              "tag": "floor",
+              "score": 0.42676
+            },
+            {
+              "tag": "vase",
+              "score": 0.42457
+            },
+            {
+              "tag": "coffee",
+              "score": 0.41455
+            },
+            {
+              "tag": "painting_(object)",
+              "score": 0.41249
+            },
+            {
+              "tag": "armchair",
+              "score": 0.40705
+            },
+            {
+              "tag": "photoshop_(medium)",
+              "score": 0.40429
+            },
+            {
+              "tag": "barefoot",
+              "score": 0.40361
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 528744448,
+            "peak_commit_bytes": 505081856
+          },
+          "seconds": 2.3257198999999673
+        }
+      ]
+    },
+    {
+      "id": "demo2",
+      "url": "https://github.com/xinyu1205/recognize-anything/blob/main/images/demo/demo2.jpg",
+      "sha256": "5c5159bf7114d08967f95475176670043115b157bf700efa34190260cd917662",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "d3bde405-6c9e-47bd-be52-ca08b8fb9a91",
+          "suggestions": [
+            {
+              "tag": "city",
+              "score": 0.9986411531899867,
+              "category": "objects"
+            },
+            {
+              "tag": "christmas market",
+              "score": 0.9945270411283225,
+              "category": "objects"
+            },
+            {
+              "tag": "person",
+              "score": 0.9861468761864118,
+              "category": "objects"
+            },
+            {
+              "tag": "snow",
+              "score": 0.8898439899919928,
+              "category": "objects"
+            },
+            {
+              "tag": "walk",
+              "score": 0.8723740679994516,
+              "category": "objects"
+            },
+            {
+              "tag": "building",
+              "score": 0.8658458068114683,
+              "category": "objects"
+            },
+            {
+              "tag": "market",
+              "score": 0.8439071001675881,
+              "category": "objects"
+            },
+            {
+              "tag": "town",
+              "score": 0.8423718272788042,
+              "category": "objects"
+            },
+            {
+              "tag": "snowy",
+              "score": 0.8043312560865377,
+              "category": "objects"
+            },
+            {
+              "tag": "stall",
+              "score": 0.7929134642623056,
+              "category": "objects"
+            },
+            {
+              "tag": "winter",
+              "score": 0.7735828062939443,
+              "category": "objects"
+            },
+            {
+              "tag": "market square",
+              "score": 0.7505116654429139,
+              "category": "objects"
+            },
+            {
+              "tag": "town square",
+              "score": 0.74877790538102,
+              "category": "objects"
+            },
+            {
+              "tag": "floor",
+              "score": 0.7060226484260268,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1450708992,
+            "peak_commit_bytes": 1560723456
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.1252719999999954
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "8a728d11-b46a-4003-9627-c555efcdd945",
+          "suggestions": [
+            {
+              "tag": "tree",
+              "score": 0.7447
+            },
+            {
+              "tag": "snow",
+              "score": 0.71957
+            },
+            {
+              "tag": "winter",
+              "score": 0.65083
+            },
+            {
+              "tag": "scenery",
+              "score": 0.59668
+            },
+            {
+              "tag": "original",
+              "score": 0.56201
+            },
+            {
+              "tag": "window",
+              "score": 0.55558
+            },
+            {
+              "tag": "outdoors",
+              "score": 0.54751
+            },
+            {
+              "tag": "sky",
+              "score": 0.54612
+            },
+            {
+              "tag": "day",
+              "score": 0.54334
+            },
+            {
+              "tag": "building",
+              "score": 0.53721
+            },
+            {
+              "tag": "winter_clothes",
+              "score": 0.51583
+            },
+            {
+              "tag": "house",
+              "score": 0.51452
+            },
+            {
+              "tag": "motor_vehicle",
+              "score": 0.48216
+            },
+            {
+              "tag": "christmas_tree",
+              "score": 0.47913
+            },
+            {
+              "tag": "hat",
+              "score": 0.47903
+            },
+            {
+              "tag": "bare_tree",
+              "score": 0.47371
+            },
+            {
+              "tag": "photoshop_(medium)",
+              "score": 0.45325
+            },
+            {
+              "tag": "christmas",
+              "score": 0.43517
+            },
+            {
+              "tag": "6+boys",
+              "score": 0.42606
+            },
+            {
+              "tag": "blue_sky",
+              "score": 0.42471
+            },
+            {
+              "tag": "road",
+              "score": 0.41597
+            },
+            {
+              "tag": "lamppost",
+              "score": 0.40193
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 528465920,
+            "peak_commit_bytes": 504717312
+          },
+          "seconds": 2.3863684000000376
+        }
+      ]
+    },
+    {
+      "id": "bus",
+      "url": "https://github.com/ultralytics/ultralytics/blob/main/ultralytics/assets/bus.jpg",
+      "sha256": "c02019c4979c191eb739ddd944445ef408dad5679acab6fd520ef9d434bfbc63",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "bc9dea5c-7c37-4b7c-b467-28e3cc10c454",
+          "suggestions": [
+            {
+              "tag": "bus",
+              "score": 0.99991846069439,
+              "category": "objects"
+            },
+            {
+              "tag": "road",
+              "score": 0.9992679408346269,
+              "category": "objects"
+            },
+            {
+              "tag": "person",
+              "score": 0.9951746125318791,
+              "category": "objects"
+            },
+            {
+              "tag": "walk",
+              "score": 0.9814328056809887,
+              "category": "objects"
+            },
+            {
+              "tag": "blue",
+              "score": 0.8649742503347383,
+              "category": "objects"
+            },
+            {
+              "tag": "pavement",
+              "score": 0.8415366653407327,
+              "category": "objects"
+            },
+            {
+              "tag": "city bus",
+              "score": 0.8189594046371216,
+              "category": "objects"
+            },
+            {
+              "tag": "man",
+              "score": 0.8132905995154401,
+              "category": "objects"
+            },
+            {
+              "tag": "cross",
+              "score": 0.8080110755521084,
+              "category": "objects"
+            },
+            {
+              "tag": "tour bus",
+              "score": 0.7481107300146018,
+              "category": "objects"
+            },
+            {
+              "tag": "bus stop",
+              "score": 0.706762583288278,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1449340928,
+            "peak_commit_bytes": 1558061056
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.2244249999999965
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "6cd2510a-fc1a-4f10-b9c8-d52914bd4645",
+          "suggestions": [
+            {
+              "tag": "multiple_boys",
+              "score": 0.82628
+            },
+            {
+              "tag": "jeans",
+              "score": 0.79446
+            },
+            {
+              "tag": "photo_(medium)",
+              "score": 0.78091
+            },
+            {
+              "tag": "denim",
+              "score": 0.75376
+            },
+            {
+              "tag": "road",
+              "score": 0.70845
+            },
+            {
+              "tag": "street",
+              "score": 0.67859
+            },
+            {
+              "tag": "pants",
+              "score": 0.65664
+            },
+            {
+              "tag": "facial_hair",
+              "score": 0.65242
+            },
+            {
+              "tag": "outdoors",
+              "score": 0.64324
+            },
+            {
+              "tag": "shoes",
+              "score": 0.60809
+            },
+            {
+              "tag": "city",
+              "score": 0.5983
+            },
+            {
+              "tag": "beard",
+              "score": 0.56628
+            },
+            {
+              "tag": "jacket",
+              "score": 0.56309
+            },
+            {
+              "tag": "motor_vehicle",
+              "score": 0.56048
+            },
+            {
+              "tag": "building",
+              "score": 0.54553
+            },
+            {
+              "tag": "shirt",
+              "score": 0.53254
+            },
+            {
+              "tag": "2boys",
+              "score": 0.52523
+            },
+            {
+              "tag": "male_focus",
+              "score": 0.51927
+            },
+            {
+              "tag": "3boys",
+              "score": 0.51679
+            },
+            {
+              "tag": "car",
+              "score": 0.51186
+            },
+            {
+              "tag": "sunglasses",
+              "score": 0.49958
+            },
+            {
+              "tag": "brown_hair",
+              "score": 0.48919
+            },
+            {
+              "tag": "day",
+              "score": 0.47088
+            },
+            {
+              "tag": "sneakers",
+              "score": 0.44999
+            },
+            {
+              "tag": "product_placement",
+              "score": 0.42228
+            },
+            {
+              "tag": "blue_pants",
+              "score": 0.41861
+            },
+            {
+              "tag": "red_shirt",
+              "score": 0.41379
+            },
+            {
+              "tag": "short_hair",
+              "score": 0.40743
+            },
+            {
+              "tag": "english_text",
+              "score": 0.40742
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 524611584,
+            "peak_commit_bytes": 501043200
+          },
+          "seconds": 2.4113980000000197
+        }
+      ]
+    },
+    {
+      "id": "zidane",
+      "url": "https://github.com/ultralytics/ultralytics/blob/main/ultralytics/assets/zidane.jpg",
+      "sha256": "16d73869e3267a7d4ed00de8e860833bd1657c1b252e94c0c348277adc7b6edb",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "7d800f63-0efb-41fa-a77e-57a258ff59a6",
+          "suggestions": [
+            {
+              "tag": "football player",
+              "score": 0.9995472551395611,
+              "category": "objects"
+            },
+            {
+              "tag": "manager",
+              "score": 0.9904912801138279,
+              "category": "objects"
+            },
+            {
+              "tag": "coach",
+              "score": 0.9386296126487006,
+              "category": "objects"
+            },
+            {
+              "tag": "man",
+              "score": 0.9260162428078115,
+              "category": "objects"
+            },
+            {
+              "tag": "hand",
+              "score": 0.8829221713692711,
+              "category": "objects"
+            },
+            {
+              "tag": "football team",
+              "score": 0.8812854192470304,
+              "category": "objects"
+            },
+            {
+              "tag": "player",
+              "score": 0.8775626439008659,
+              "category": "objects"
+            },
+            {
+              "tag": "match",
+              "score": 0.8391040559328041,
+              "category": "objects"
+            },
+            {
+              "tag": "sideline",
+              "score": 0.7543346518670299,
+              "category": "objects"
+            },
+            {
+              "tag": "referee",
+              "score": 0.7074574272473518,
+              "category": "objects"
+            },
+            {
+              "tag": "head coach",
+              "score": 0.7031683198595041,
+              "category": "objects"
+            },
+            {
+              "tag": "football match",
+              "score": 0.6672658081763649,
+              "category": "objects"
+            },
+            {
+              "tag": "playingfield",
+              "score": 0.6565931587624653,
+              "category": "objects"
+            },
+            {
+              "tag": "football game",
+              "score": 0.6522285455110248,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1449127936,
+            "peak_commit_bytes": 1510547456
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.1274435999999923
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "17e45b40-bd05-4cc8-a22b-2c38cb27aac2",
+          "suggestions": [
+            {
+              "tag": "multiple_boys",
+              "score": 0.88845
+            },
+            {
+              "tag": "2boys",
+              "score": 0.84347
+            },
+            {
+              "tag": "real_life",
+              "score": 0.51087
+            },
+            {
+              "tag": "male_focus",
+              "score": 0.46865
+            },
+            {
+              "tag": "photo_(medium)",
+              "score": 0.40194
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 526544896,
+            "peak_commit_bytes": 502808576
+          },
+          "seconds": 2.527546099999995
+        }
+      ]
+    },
+    {
+      "id": "astronaut",
+      "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/astronaut.png",
+      "sha256": "88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "3449473a-4903-4520-8f8c-79aa6b30d76d",
+          "suggestions": [
+            {
+              "tag": "astronaut",
+              "score": 0.9999908293219886,
+              "category": "objects"
+            },
+            {
+              "tag": "woman",
+              "score": 0.9999183417972378,
+              "category": "objects"
+            },
+            {
+              "tag": "person",
+              "score": 0.9657632995107279,
+              "category": "objects"
+            },
+            {
+              "tag": "rocket",
+              "score": 0.9103484802664156,
+              "category": "objects"
+            },
+            {
+              "tag": "space",
+              "score": 0.9071492850729446,
+              "category": "objects"
+            },
+            {
+              "tag": "helmet",
+              "score": 0.9057081756169526,
+              "category": "objects"
+            },
+            {
+              "tag": "flag",
+              "score": 0.8807725690589828,
+              "category": "objects"
+            },
+            {
+              "tag": "space shuttle",
+              "score": 0.8734232968745516,
+              "category": "objects"
+            },
+            {
+              "tag": "pose",
+              "score": 0.8626175217806646,
+              "category": "objects"
+            },
+            {
+              "tag": "stand",
+              "score": 0.862303891487261,
+              "category": "objects"
+            },
+            {
+              "tag": "smile",
+              "score": 0.8009910418417995,
+              "category": "objects"
+            },
+            {
+              "tag": "spacecraft",
+              "score": 0.7080168157807233,
+              "category": "objects"
+            },
+            {
+              "tag": "mission",
+              "score": 0.6678776832200863,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1445838848,
+            "peak_commit_bytes": 1508143104
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.198092299999985
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "f027882b-bfbc-4b27-9bd7-de5ab6e02e41",
+          "suggestions": [
+            {
+              "tag": "photo_(medium)",
+              "score": 0.77326
+            },
+            {
+              "tag": "solo",
+              "score": 0.71756
+            },
+            {
+              "tag": "real_life",
+              "score": 0.71637
+            },
+            {
+              "tag": "helmet",
+              "score": 0.65944
+            },
+            {
+              "tag": "smile",
+              "score": 0.64681
+            },
+            {
+              "tag": "grin",
+              "score": 0.62954
+            },
+            {
+              "tag": "1boy",
+              "score": 0.6273
+            },
+            {
+              "tag": "male_focus",
+              "score": 0.57495
+            },
+            {
+              "tag": "american_flag",
+              "score": 0.53638
+            },
+            {
+              "tag": "flag",
+              "score": 0.45281
+            },
+            {
+              "tag": "blonde_hair",
+              "score": 0.45056
+            },
+            {
+              "tag": "spacesuit",
+              "score": 0.43607
+            },
+            {
+              "tag": "teeth",
+              "score": 0.43247
+            },
+            {
+              "tag": "cosplay",
+              "score": 0.43069
+            },
+            {
+              "tag": "brown_hair",
+              "score": 0.42801
+            },
+            {
+              "tag": "blurry",
+              "score": 0.40374
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 517230592,
+            "peak_commit_bytes": 493604864
+          },
+          "seconds": 2.4131878999999685
+        }
+      ]
+    },
+    {
+      "id": "chelsea",
+      "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/chelsea.png",
+      "sha256": "596aa1e7cb875eb79f437e310381d26b338a81c2da23439704a73c4651e8c4bb",
+      "runs": [
+        {
+          "source": "objects",
+          "model": "RAM++:matmul-int8-ort1.20.1",
+          "model_version": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+          "model_sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+          "run_id": "05883288-f8c7-417a-939f-a66c6a5717ec",
+          "suggestions": [
+            {
+              "tag": "cat",
+              "score": 0.9999955194429857,
+              "category": "objects"
+            },
+            {
+              "tag": "sit",
+              "score": 0.9037640564756699,
+              "category": "objects"
+            },
+            {
+              "tag": "eye",
+              "score": 0.8881735112029288,
+              "category": "objects"
+            },
+            {
+              "tag": "green",
+              "score": 0.8800481978052719,
+              "category": "objects"
+            },
+            {
+              "tag": "tabby",
+              "score": 0.7964531128640078,
+              "category": "objects"
+            },
+            {
+              "tag": "stare",
+              "score": 0.7743054111419037,
+              "category": "objects"
+            }
+          ],
+          "resources": {
+            "peak_working_set_bytes": 1445986304,
+            "peak_commit_bytes": 1506783232
+          },
+          "components": [
+            {
+              "role": "rampp",
+              "model": "RAM++:matmul-int8-ort1.20.1",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+              "file": "ram-plus-matmul-int8.onnx"
+            },
+            {
+              "role": "labels",
+              "model": "RAM++:labels",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+              "file": "ram_tag_list.txt"
+            },
+            {
+              "role": "thresholds",
+              "model": "RAM++:thresholds",
+              "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+              "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+              "file": "ram_tag_list_threshold.txt"
+            }
+          ],
+          "seconds": 3.220119900000043
+        },
+        {
+          "source": "anime",
+          "model": "fancyfeast/joytag",
+          "model_version": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+          "model_sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
+          "run_id": "9096febb-dc91-4185-961d-aed4bffbadd3",
+          "suggestions": [
+            {
+              "tag": "cat",
+              "score": 0.79857
+            },
+            {
+              "tag": "photo_(medium)",
+              "score": 0.78733
+            },
+            {
+              "tag": "no_humans",
+              "score": 0.77088
+            },
+            {
+              "tag": "animal",
+              "score": 0.56806
+            },
+            {
+              "tag": "close-up",
+              "score": 0.56019
+            },
+            {
+              "tag": "animal_focus",
+              "score": 0.54871
+            },
+            {
+              "tag": "whiskers",
+              "score": 0.52824
+            },
+            {
+              "tag": "looking_at_viewer",
+              "score": 0.48464
+            },
+            {
+              "tag": "blurry",
+              "score": 0.46022
+            },
+            {
+              "tag": "green_eyes",
+              "score": 0.44289
+            },
+            {
+              "tag": "solo",
+              "score": 0.42649
+            },
+            {
+              "tag": "original",
+              "score": 0.41184
+            }
+          ],
+          "person_count": null,
+          "resources": {
+            "peak_working_set_bytes": 516239360,
+            "peak_commit_bytes": 492552192
+          },
+          "seconds": 2.44174670000001
+        }
+      ]
+    }
+  ]
+}

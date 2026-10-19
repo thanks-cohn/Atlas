@@ -1,18 +1,13 @@
-> Owner revision, 2026-10-19: People has been retired. The reduced candidate
-> retains RAM++ plus Settings-activated JoyTag and starts general selection empty.
-> The artifact link below is the historical three-model candidate, NOT the new
-> reduced package. New Windows qualification/build must complete before providing
-> its replacement download. Source/extension changes alone do not shrink an
-> already installed helper/model cache. Do not delete private Atlas state.
-
 # Rich photo tagging Windows trial
 
 Use the **atlas-rich-tagging-CANDIDATE-windows-x86_64** artifact from a successful
 `Qualify rich tagging Windows candidate` run on `implement/rich-photo-tagging`.
-[Download the tested archive](https://github.com/thanks-cohn/Atlas/actions/runs/39196142502/artifacts/12162317075)
-(about 1.28 GB download; 1.64 GB model files before engine/helper overhead).
-Archive SHA-256: `57904b50df72a7133fdb5bcd3fb600cfb809f835b35b58e1d3aba7fe24dca6d4`.
-Executable SHA-256: `c662f7c2c5338d3b61354c88c228f9f7b4f84b35bacfa5a780727df50b219543`.
+[Download the tested archive](https://github.com/thanks-cohn/Atlas/actions/runs/39221439574/artifacts/12171179764)
+(922,962,062 bytes download, about 923 MB; approximately 1.48 GB unpacked
+before filesystem overhead, including 1,239,072,821 model bytes and a
+215,809,386-byte engine). This is about 28% smaller than the previous download.
+Archive SHA-256: `5909e0f739c92925a816081696148b05968457873ab501efe3dc7c6c8ca73dce`.
+Executable SHA-256: `ee6af8134b390c44faa8497864f79d9b8d51882d3ccd5518de656bcc828c1925`.
 The Actions artifact expires 2026-11-02 UTC; rebuild the pinned workflow afterward.
 The ordinary Windows helper still uses the legacy models. A Git checkout or an
 extension-only reload does not replace the installed AI engine.
@@ -30,21 +25,26 @@ extension-only reload does not replace the installed AI engine.
    atlas-companion.exe install --extension-id YOUR_EXACT_EXTENSION_ID --consent --upgrade
    ```
 
-4. Reconnect the installed companion in Atlas. Choose a photograph and explicitly
-   Generate Tags. Things now uses RAM++; People uses the face/person detector and
-   MiVOLO v2. Existing Faces selection aliases that People pass in this candidate.
-   Anime stays absent until JoyTag is activated in Settings; its model is unchanged.
-5. Confirm results persist after reopening the card and restarting Chrome. Check
-   independently selected Things and People, Run All with Anime disabled, optional
-   Anime after activation, a second image entry, and unchanged human tags/notes.
-   Test a small set first; generation is sequential and CPU inference can take
-   several seconds. Earlier source measurements used roughly 1.5–1.6 GiB peak RAM
-   for Things, not including Chrome or the rest of the system.
+4. Reconnect the installed companion. General generation now says **Generate tags?**
+   and starts unchecked. RAM++ handles general image tags. People/Faces and their
+   weights are excluded. Anime appears only after JoyTag activation in Settings;
+   JoyTag is unchanged.
+5. Test general tags, optional Anime, a second image entry, and unchanged human
+   tags/notes. Check completed results after reopening. Background completion
+   after leaving a card is still unresolved (backlog 007); model retirement does
+   not fix that lifecycle issue. Owner low-memory hardware acceptance remains pending.
+
+The reduced Windows qualification passed frozen inference, installed authenticated
+HTTP inference on six photos with both retained models, recovery, upgrades and GUI
+smoke checks. Reports are saved in `docs/evidence/reduced-tagging-2026-10-19/`.
+After extraction completes and the helper hash matches, the downloaded ZIP can be
+deleted before installation. Existing installed obsolete model files are not
+removed automatically; preserve private state and inspect exact files separately.
 
 This is an unsigned evaluation candidate, not a promoted production default.
 Read the same run's `PHOTO_BENCHMARK.json` for executed installed-EXE photo output,
 and `docs/forever-works/RICH_TAGGING_IMPLEMENTATION.md` for accuracy and distribution
-gates. Model scores and age/appearance estimates are not verified annotations.
+gates. Model scores are not verified annotations.
 
 To roll back, extract a verified normal legacy bundle and explicitly upgrade the
 existing installation with that bundle using the same extension ID. Restore the
