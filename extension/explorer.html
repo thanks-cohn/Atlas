@@ -30,17 +30,17 @@
         <button id="image-recovery-open" class="nav-home">↺ <span>Recovery</span></button>
         <button id="bookmarks-open" class="nav-home">☆ <span>Bookmarks</span></button>
         <div class="section-label locations-label">
-          AUTHORIZED FOLDERS
+          FILES
           <button id="reload-grants" title="Reload authorized folders">
             ↻
           </button>
         </div>
         <button id="add-location" class="add-location">＋ Add location</button>
-        <nav id="roots" aria-label="Authorized folders"></nav>
+        <nav id="roots" aria-label="File explorer entry point"></nav>
         <div class="sidebar-bottom">
           <span class="privacy-dot"></span> Local first. Yours always.<button
             id="connection"
-            title="Connection settings"
+            title="Explorer settings"
           >
             ⚙
           </button>
@@ -175,6 +175,15 @@
       </aside>
     </div>
     <div id="context-menu" class="context-menu" role="menu" hidden></div>
+    <dialog id="explorer-settings-dialog" aria-labelledby="explorer-settings-title">
+      <div class="details-top"><h2 id="explorer-settings-title">Explorer settings</h2><button id="explorer-settings-close" aria-label="Close settings">×</button></div>
+      <label>Sidebar folder<select id="entry-point-choice"></select></label>
+      <p>Show one entry point. Automatic uses the highest authorized folder; Atlas never grants access to its parents. Choosing a folder here overrides the hierarchy.</p>
+      <button id="entry-point-current" type="button">Use the currently open folder</button>
+      <p>Other authorized locations remain available in this list. This setting does not move files or remove access.</p>
+      <p id="entry-point-status" role="status"></p>
+      <button id="explorer-connection-settings" type="button">Connection & authorized locations</button>
+    </dialog>
     <dialog id="pair-dialog">
       <form id="pair-form">
         <div class="dialog-icon">A</div>

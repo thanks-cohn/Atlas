@@ -1,7 +1,9 @@
+import {ENTRY_POINT_KEY,chooseEntryPoint} from "./explorer-entry-point.js";
 import { previewDefaults, previewStep, previewKind } from "./preview-navigation.js";
 import { createGraphUI } from "./graph.js";
 let previewSettings = {...previewDefaults};
 let previewEntry = null;
+let entryPointPreference=null;
 let previewSizeSettings = {maximumMiB:30, byExtension:{}};
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -410,69 +412,40 @@ function renderBreadcrumbs() {
     button(segment, path);
   }
 }
-function treeBranch(grant, path, label, root = false) {
-  const branch = text("div", "", "tree-branch");
-  const line = text("div", "", "tree-line");
-  const toggle = text("button", "›", "tree-toggle");
-  toggle.title = "Expand folder";
-  toggle.setAttribute("aria-label", "Expand " + label);
-  toggle.setAttribute("aria-expanded", "false");
-  const button = text("button", "", "tree-open" + (root ? " root-open" : ""));
-  button.dataset.id = grant.id;
-  button.dataset.path = path;
-  button.append(text("span", "▰"), text("span", label, "root-label"));
-  button.title = path || grant.root || label;
-  button.onclick = () => navigate(grant, path);
-  const children = text("div", "", "tree-children");
-  children.hidden = true;
-  let loaded = false;
-  toggle.onclick = async () => {
-    if (!children.hidden) {
-      children.hidden = true;
-      toggle.textContent = "›";
-      toggle.setAttribute("aria-expanded", "false");
-      return;
-    }
-    children.hidden = false;
-    toggle.textContent = "⌄";
-    toggle.setAttribute("aria-expanded", "true");
-    if (loaded) return;
-    children.replaceChildren(text("small", "Loading…"));
-    try {
-      const response = await api("/v1/list", {
-        grant: grant.id,
-        path,
-        offset: 0,
-        limit: 1000,
-      });
-      children.replaceChildren();
-      const folders = (response.entries || []).filter(dir).slice(0, 100);
-      for (const item of folders)
-        children.append(
-          treeBranch(grant, item.path || join(path, item.name), item.name),
-        );
-      if (!folders.length) children.append(text("small", "No subfolders"));
-      if ((response.total || 0) > 1000 || folders.length === 100)
-        children.append(
-          text("small", "More folders: open location to browse all."),
-        );
-      loaded = true;
-    } catch (error) {
-      children.replaceChildren(text("small", error.message));
-    }
-  };
-  line.append(toggle, button);
-  branch.append(line, children);
-  return branch;
+function renderEntryPoint(){
+  const roots=$("roots");roots.replaceChildren();
+  const entry=chooseEntryPoint(state.grants,entryPointPreference);
+  if(entry){
+    const button=text("button","","tree-open root-open");
+    button.dataset.id=entry.grant.id;button.dataset.path=entry.path;
+    button.append(text("span","▰"),text("span",entry.label,"root-label"));
+    button.title=[entry.grant.root,entry.path].filter(Boolean).join('/');
+    button.onclick=()=>navigate(entry.grant,entry.path);roots.append(button);
+  }
+  const select=$("entry-point-choice");select.replaceChildren();
+  select.append(new Option("Automatic — highest authorized folder", ""));
+  for(const grant of state.grants)select.append(new Option(grant.label || grant.root || grant.id,JSON.stringify({grantId:grant.id,path:''})));
+  const saved=entryPointPreference;
+  if(saved){
+    const value=JSON.stringify({grantId:saved.grantId,path:saved.path});
+    if(!state.grants.some(grant=>grant.id===saved.grantId && saved.path===''))select.append(new Option(entry?.grant.id===saved.grantId?'Chosen folder: '+entry.label:'Chosen location unavailable — using automatic',value));
+    select.value=value;
+  }else select.value='';
+  $("entry-point-current").disabled=!state.grant;
 }
+async function saveEntryPoint(preference){
+  try{await chrome.storage.local.set({[ENTRY_POINT_KEY]:preference});entryPointPreference=preference;renderEntryPoint();$("entry-point-status").textContent='Saved.';}
+  catch(error){$("entry-point-status").textContent=error.message || 'Setting could not be saved.';}
+}
+$("entry-point-choice").onchange=event=>saveEntryPoint(event.target.value?JSON.parse(event.target.value):null);
+$("entry-point-current").onclick=()=>{if(state.grant)return saveEntryPoint({grantId:state.grant.id,path:state.path});};
+$("explorer-settings-close").onclick=()=>$("explorer-settings-dialog").close();
+$("explorer-connection-settings").onclick=()=>{$("explorer-settings-dialog").close();showPair();};
 async function loadGrants() {
   const result = await api("/v1/grants");
   state.grants = result.grants || [];
   paired(true);
-  const roots = $("roots");
-  roots.replaceChildren();
-  for (const grant of state.grants)
-    roots.append(treeBranch(grant, "", grant.label || grant.id, true));
+  renderEntryPoint();
   if (state.grant) {
     const grant = state.grants.find((g) => g.id === state.grant.id);
     if (!grant) {
@@ -1144,7 +1117,7 @@ $("native-connect").onclick = async () => {
     button.disabled = false;
   }
 };
-$("connection").onclick = showPair;
+$("connection").onclick = () => {renderEntryPoint();$("entry-point-status").textContent="";$("explorer-settings-dialog").showModal();};
 $("connect-start").onclick = showPair;
 $("pair-cancel").onclick = () => $("pair-dialog").close();
 $("disconnect").onclick = async () => {
@@ -1353,7 +1326,8 @@ document.addEventListener("keydown", (event) => {
 window.dispatchEvent(new Event("atlas:boot-ready"));
 (async () => {
   try {
-    const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings", "previewSizeSettings"]);
+    const preferences = await chrome.storage.local.get(["view", "sort", "previewSettings", "previewSizeSettings", ENTRY_POINT_KEY]);
+    entryPointPreference=preferences[ENTRY_POINT_KEY] || null;
     if (preferences.previewSizeSettings) {
       const saved = preferences.previewSizeSettings;
       if (validPreviewSize(saved.maximumMiB)) previewSizeSettings.maximumMiB = saved.maximumMiB;

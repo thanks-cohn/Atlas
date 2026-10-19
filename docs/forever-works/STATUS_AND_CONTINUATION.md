@@ -1224,3 +1224,23 @@ paginated storage/index reads and real Chrome cross-size/focus/scroll validation
 Required `python scripts/check_project.py`: 170 tests, failures3/errors3/skips33;
 22 local model links valid. Same native bootstrap/supervisor startup failures as
 prior container run; full suite is not a pass. Focused recovery/entry tests pass.
+
+
+## 2026-10-19 — Single file explorer sidebar entry
+
+Owner asked for one elegant far-left file access point: highest authorized root
+by default, with explicitly selected overrides in Settings regardless of hierarchy.
+Implemented `explorer-entry-point.js`, explorer rendering/settings and saved
+`atlas.explorer.entry-point.v1` grant/path preference. Main All locations keeps all
+grants reachable; no permission changes or inferred parent access. Folder tree
+navigation now occurs in the main explorer rather than multiple sidebar roots.
+Settings can select any authorized root or the currently open subfolder, and
+Automatic restores the default. Unavailable saved grant temporarily falls back.
+See `docs/implementation/EXPLORER_SINGLE_ENTRY_POINT.md` for reconstruction and
+fixed/constrained/fluid obligations. Focused entry-point tests PASS (actual
+render/settings/navigation handlers with doubles); recovery regression PASS.
+Real Chrome visual acceptance NOT_RUN. No native-helper rebuild is required.
+
+Required project check: 170 tests, failures3/errors3/skips33;22 model links valid.
+The same pre-existing native bootstrap/supervisor startup limitations remain;
+full suite is not a pass. JavaScript focused regressions and syntax checks pass.
