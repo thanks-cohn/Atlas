@@ -6,7 +6,7 @@ Our guiding contract: **preserve the purpose and indispensable behavior; permit 
 
 Read:
 
-**Guiding product doctrine:** [Built Now. Use Forever.](BUILT_NOW_USE_FOREVER.md) — collect, curate, compose, export, transpose and publish from reusable Atlas entries and Pieces; proposed interoperability and preservation contract (not shipped universal portability).
+**Guiding product doctrine:** [Build Now. Use Forever.](BUILT_NOW_USE_FOREVER.md) — collect, curate, compose, export, transpose and publish from reusable Atlas entries and Pieces; proposed interoperability and preservation contract (not shipped universal portability).
 
 1. [MISSION_AND_SCOPE.md](MISSION_AND_SCOPE.md) — purpose, standalone value, business and boundaries.
 2. [RESOURCE_GRAPH_AND_CATALOGS.md](RESOURCE_GRAPH_AND_CATALOGS.md) — resource identities, tags, free text, catalog membership, cluster pairings and provider neutrality.
