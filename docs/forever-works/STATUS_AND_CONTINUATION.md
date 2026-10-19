@@ -1149,3 +1149,11 @@ plus failure feedback and stale-read order (failed before, passed after). Image
 entry/file and pinboard suites, package build and whitespace checks PASS; actual
 owner Chrome confirmation pending. No helper/model change. Background tagging 007
 remains unresolved and is not part of this fix.
+
+## 2026-10-19 — Visit source preference proposal
+
+Recorded owner-approved Settings direction in PROPOSAL_VISIT_SOURCE_BEHAVIOR.md:
+source website left/Atlas right split view, or current separate-tab behavior;
+fall back to a tab when actual browser capability is unavailable. Shared preference,
+preserved card state and runtime verification gates specified. Proposal only;
+no browser API support, code or UI implementation claimed.
