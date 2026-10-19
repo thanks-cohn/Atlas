@@ -23,6 +23,9 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 | 013 | [Pin preview waits for gallery setup](013-pin-preview-blocked-by-gallery-setup.md) | Implemented — Chrome confirmation pending |
 | 014 | [Container outline overlaps card edges](014-pinboard-container-focus-outline-overlap.md) | Styling adjusted — Chrome verification pending |
 
+| 015 | [Pinboard first render waits for metadata](015-pinboard-startup-waits-for-metadata.md) | Implemented — Chrome timing confirmation pending |
+| 016 | [Escape delays return from preview](016-escape-preview-return-delay.md) | Close path adjusted — Chrome latency confirmation pending |
+
 ## Adding an item
 
 Use the next unused number (`002`, `003`, …) and a descriptive filename. Keep numbers stable when items are reordered or completed. Add the item to this index.

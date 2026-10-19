@@ -1335,3 +1335,21 @@ and latency acceptance pending. No helper rebuild or data migration requested.
 Required project check:170 tests, failures3/errors3/skips33;22 local links valid.
 Same pre-existing native bootstrap/supervisor environment failures; full suite is
 not a pass. Focused UI regression suites and JavaScript syntax checks pass.
+
+
+## 2026-10-19 — Progressive first cards and direct Escape
+
+Owner reports blank startup canvas and delayed Escape. refresh now renders scoped
+bookmarks with interactive Atlas placeholders before cover/gallery reads and
+companion/index completion. Local assets gate automatic cover-fetch eligibility
+and legacy gallery migration, not the open preview shell. Preserve saved-board
+scope/title and image/tag filters. Escape/cancel/X share no-await close cleanup,
+keep board nodes mounted, invalidate pending setup/media and unlock scrolling.
+Generated-index work yields in8ms slices. Regression deliberately stalls saved
+covers, companion response and preview setup. Pinboard, title, sections and Fetch
+focused suites pass. Actual Chrome timing/paint acceptance remains pending; no
+claim that arbitrary main-thread stalls can be preempted. Backlog015/016 and
+INSTANT_PIN_PREVIEW.md record limits and continuation.
+
+Required project check:170 tests, failures3/errors3/skips33;22 links valid.
+Same native startup/supervisor environment failures persist; full suite not passed.

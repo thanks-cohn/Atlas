@@ -473,3 +473,23 @@ vm.runInContext("showDetailImage('https://images.example/slow-b.jpg','B')",conte
 $('detail-image').onload();assert.equal($('detail-image').hidden,false);assert.equal($('detail-image-placeholder').hidden,true);
 vm.runInContext("showDetailImage('https://images.example/broken.jpg','Broken')",context);$('detail-image').onerror();assert.equal($('detail-image-placeholder').hidden,false);assert.match($('detail-image-status').textContent,/connected items/);
 console.log('PASS: preview and cached connections open synchronously during delayed setup, close invalidates pending work, placeholder load/error states and stale-image protection.');
+
+// Render bookmark cards before slow saved covers and companion metadata finish.
+$('detail').close();$('folder').value='1';$('images-only').checked=false;$('tags-only').checked=false;$('search').value='';
+let releaseSavedCovers,releaseStartupMetadata;const coversGate=new Promise(resolve=>releaseSavedCovers=resolve),metadataGate=new Promise(resolve=>releaseStartupMetadata=resolve);
+const originalGet=storage.get,originalMessage=context.chrome.runtime.sendMessage;
+storage.get=async key=>{if(key===coversModule.COVER_KEY)await coversGate;return originalGet(key);};
+context.chrome.runtime.sendMessage=async message=>{if(message.path==='/v1/catalog'){await metadataGate;return {ok:false};}return originalMessage(message);};
+vm.runInContext('covers={};highlightedTags.clear();this.progressiveRefresh=refresh();',context);
+await new Promise(resolve=>setTimeout(resolve,20));assert(cards().length>0,'Cards exist before saved image storage resolves');assert(cards().some(card=>card.children.some(child=>child.className==='pin-initial-cover')),'Missing covers get an interactive Atlas placeholder');
+releaseSavedCovers();await new Promise(resolve=>setTimeout(resolve,20));assert(cards().length>0,'Cards remain visible while companion metadata is blocked');
+releaseStartupMetadata();await context.progressiveRefresh;storage.get=originalGet;context.chrome.runtime.sendMessage=originalMessage;
+// Escape closes synchronously, invalidates pending setup and does not rebuild the board.
+let releaseEscapeSetup;context.escapeSetupGate=new Promise(resolve=>releaseEscapeSetup=resolve);
+vm.runInContext("this.originalEscapeEnsure=ensureImages;ensureImages=()=>escapeSetupGate;this.escapePreview=openDetail({id:'escape-delayed',url:'https://escape.example/card',title:'Escape immediately'});",context);
+$('image-source').close();const previousQuerySelector=document.querySelector;document.querySelector=selector=>selector==='.pin-tag-editor[open]'?null:previousQuerySelector(selector);
+const mountedBeforeEscape=cards();let preventedEscape=false;
+$('detail').handlers.keydown({key:'Escape',target:{closest:()=>null},preventDefault(){preventedEscape=true;}});
+assert(preventedEscape);assert.equal($('detail').open,false);assert.deepEqual(cards(),mountedBeforeEscape);
+releaseEscapeSetup();await context.escapePreview;assert.equal($('detail').open,false);vm.runInContext('ensureImages=originalEscapeEnsure;',context);document.querySelector=previousQuerySelector;
+console.log('PASS: cards/Atlas placeholders render before blocked cover storage and companion metadata; Escape closes immediately during setup and keeps mounted cards.');

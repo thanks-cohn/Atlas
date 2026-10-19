@@ -15,6 +15,7 @@ const $=id=>document.getElementById(id),el=(tag,text='')=>{const node=document.c
 let previewingLinkedImage=false,imageTarget=null;
 let highlightedTags=new Set(),metadataState='loading';
 let roots=[],covers={},items=[],selected=null,associations=new Map();
+let boardAssetsReady=false,boardAssetsPromise=Promise.resolve();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
 let blocks=new Map(),frame=0,limit=72;
@@ -54,7 +55,9 @@ async function refreshGeneratedIndex(){
   const saved=await chrome.storage.local.get([TAGGING_RESULTS,JOYTAG_ACTIVATED,TAG_REMOVALS]);
   cardTagRemovals=saved[TAG_REMOVALS] || {};
   const runs=saved[TAGGING_RESULTS] || {},next=new Map();
+  let sliceStarted=Date.now();
   for(const parent of [...pinItems(roots),...blankBoard.nodes()]){
+    if(Date.now()-sliceStarted>8){await new Promise(resolve=>setTimeout(resolve,0));sliceStarted=Date.now();if(epoch!==generatedEpoch)return;}
     const node=defaultEntryNode(parent);
     if(!runs[itemKey(node)])continue;
     const image=imageFor(node);if(!image)continue;
@@ -278,7 +281,7 @@ function card(node){
   }else emptyCard(article,node);
   return article;
 }
-function emptyCard(article,node){const row=el('div');row.className='pin-empty';const url=link(node,node.url || node.title || 'Personal card');url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button',node.url?'Fetch':'Preview');fetch.className='fetch-one';fetch.setAttribute('aria-label',(node.url?'Fetch cover for ':'Preview ')+(node.title || node.url));fetch.onclick=()=>node.url?coverFetch.request(node):openDetail(node);article.append(fetch);const strip=tagStrip(node);const tagEdit=el('button');tagEdit.className='image-tag-edit empty-tag-edit';tagEdit.type='button';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=itemKey(node);editTags(defaultEntryNode(node));};article.append(tagEdit);if(strip){tagEdit.style.bottom='68px';article.className+=' pin-with-tags';article.append(strip);}}
+function emptyCard(article,node){if(!boardAssetsReady){const button=el('button');button.className='pin-initial-cover';button.type='button';button.setAttribute('aria-label','Open '+(node.title || node.url || 'card'));button.append(el('strong','A'),el('span',node.title || hostLabel(node)),el('small','Loading saved cover…'));button.onclick=()=>openDetail(node);article.append(button);return;}const row=el('div');row.className='pin-empty';const url=link(node,node.url || node.title || 'Personal card');url.className='pin-url';url.title=node.url;const add=el('button','+');add.setAttribute('aria-label','Add image to '+(node.title || node.url));add.onclick=()=>pickImage(node);row.append(url,add);article.append(row);const fetch=el('button',node.url?'Fetch':'Preview');fetch.className='fetch-one';fetch.setAttribute('aria-label',(node.url?'Fetch cover for ':'Preview ')+(node.title || node.url));fetch.onclick=()=>node.url?coverFetch.request(node):openDetail(node);article.append(fetch);const strip=tagStrip(node);const tagEdit=el('button');tagEdit.className='image-tag-edit empty-tag-edit';tagEdit.type='button';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=itemKey(node);editTags(defaultEntryNode(node));};article.append(tagEdit);if(strip){tagEdit.style.bottom='68px';article.className+=' pin-with-tags';article.append(strip);}}
 function localScroll(){return Math.max(0,-$('pins').getBoundingClientRect().top);}
 function columns(){
   const width=$('pins').clientWidth || 1100;
@@ -432,14 +435,41 @@ async function refreshAssociations(){
   // Tags belong to exact Atlas bookmark URLs; never infer tags from titles/domains.
   try{const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.ok===false || !result?.data)throw Error('Unavailable');associations=indexAssociations(result.data);metadataState='ready';}catch{metadataState=associations.size?'cached':'unavailable';}
 }
+let refreshVersion=0,initialBoardCollection=true;
 async function refresh(){
+  const request=++refreshVersion;
   try{
-    const chosen=$('folder').value || 'all';roots=await chrome.bookmarks.getTree();covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
+    let chosen=$('folder').value || 'all';
+    const tree=await chrome.bookmarks.getTree();if(request!==refreshVersion)return;roots=tree;
+    const savedBoards=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};
+    if(request!==refreshVersion)return;
+    if(boardId && initialBoardCollection){
+      try{chosen=boardRecord(savedBoards[boardId]).folderId;}
+      catch{items=[];resetBlocks();status('PINBOARD_NOT_FOUND: This saved pinboard is unavailable.');return;}
+      initialBoardCollection=false;
+    }
     $('folder').replaceChildren();const blank=el('option','Create Blank');blank.value='blank';$('folder').append(blank);const all=el('option','All Bookmarks');all.value='all';$('folder').append(all);
     function folders(nodes,path=[]){for(const node of nodes)if(!node.url){const trail=[...path,node.title].filter(Boolean);if(node.id && node.parentId!==undefined){const option=el('option',trail.join(' / '));option.value=node.id;$('folder').append(option);}folders(node.children || [],trail);}}
-    folders(roots);const savedBoards=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};for(const saved of Object.values(savedBoards)){try{const board=boardRecord(saved);const option=el('option',board.title);option.value='board:'+board.id;$('folder').append(option);}catch{}}$('folder').value=chosen;if(!$('folder').value)$('folder').value='all';
-    await blankBoard.load();await imageEntries.load();await refreshAssociations();await refreshGeneratedIndex();render();
-  }catch{status('PINBOARD_READ_FAILED: Could not read bookmarks. Reload the extension and check bookmark permission.');}
+    folders(roots);for(const saved of Object.values(savedBoards)){try{const board=boardRecord(saved);const option=el('option',board.title);option.value='board:'+board.id;$('folder').append(option);}catch{}}
+    if(![...$('folder').options].some(option=>option.value===chosen)){
+      $('folder').value='all';items=[];resetBlocks();status('PINBOARD_FOLDER_MISSING: Choose another folder to browse.');return;
+    }
+    $('folder').value=chosen;
+    boardAssetsReady=false;
+    // Bookmark structure is sufficient for the first usable cards. Do not make
+    // companion availability, tag hashing or image storage gate that first paint.
+    render();
+    boardAssetsPromise=Promise.all([
+      chrome.storage.local.get(COVER_KEY).then(saved=>{if(request===refreshVersion)covers=saved[COVER_KEY] || {};}),
+      blankBoard.load(),imageEntries.load()
+    ]);
+    await boardAssetsPromise;
+    if(request!==refreshVersion)return;
+    boardAssetsReady=true;render();
+    await refreshAssociations();if(request!==refreshVersion)return;
+    await refreshGeneratedIndex();if(request!==refreshVersion)return;
+    renderWindow();
+  }catch{if(request===refreshVersion)status('PINBOARD_READ_FAILED: Could not finish loading saved data. Already displayed cards remain available. Reload the extension if bookmark permission is missing.');}
 }
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:humanTagsFor(node)}),onChanged:async()=>{await refreshGeneratedIndex();updatePriorities();},onLayout:scheduleWindow});
 // Alt+Q clears browsing selection only. Escape remains exclusively available
@@ -486,12 +516,17 @@ window.addEventListener('scroll',scheduleWindow,{passive:true});
 window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
 $('edit-authored-card').onclick=()=>{const node=parentNode(selected);$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(parentNode(selected)) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(parentNode(selected));$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
-$('close').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>{detailOpenVersion++;detailImageVersion++;$('detail-image').onload=null;$('detail-image').onerror=null;$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');});
+function clearDetailMedia(){detailOpenVersion++;detailImageVersion++;$('detail-image').onload=null;$('detail-image').onerror=null;$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');}
+function closeDetail(){clearDetailMedia();$('detail').close();}
+$('close').onclick=closeDetail;
+$('detail').addEventListener('cancel',event=>{event.preventDefault();closeDetail();});
+$('detail').addEventListener('close',()=>{if(!$('detail').open)clearDetailMedia();});
 $('replace-image').onclick=()=>pickImage(selected);
 $('cancel-image').onclick=()=>$('image-source').close();
 $('image-source').addEventListener('close',()=>{if(!$('detail').open)document.documentElement.removeAttribute('data-pin-open');});
 $('upload-image').onclick=()=>{$('image-file').value='';$('image-file').click();};
 async function ensureImages(parent){
+  if(!boardAssetsReady)await boardAssetsPromise;
   const owner=galleryOwner(parent);await imageEntries.load();if(imageEntries.gallery(owner))return;
   const image=imageFor(parent),details=metadata(parent);
   if(image && !authored(parent) && ['loading','unavailable'].includes(metadataState)){await refreshAssociations();if(['loading','unavailable'].includes(metadataState))throw Error('Connect the companion once to preserve existing image annotations.');}
@@ -513,7 +548,7 @@ function paintImageNavigation(node){
 }
 function navigateImage(direction){const parent=parentNode(selected),gallery=imageEntries.gallery(galleryOwner(selected));if(!gallery?.entries.length)return;const index=gallery.entries.findIndex(e=>e.id===selected.entryId),entry=gallery.entries[(index+direction+gallery.entries.length)%gallery.entries.length];openDetailContent(entryNode(parent,entry));$('detail-scroll').scrollTop=0;}
 $('previous-image').onclick=()=>navigateImage(-1);$('next-image').onclick=()=>navigateImage(1);
-$('detail').addEventListener('keydown',event=>{if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.('input,textarea,select,[contenteditable],button,a') || $('image-source').open || document.querySelector('.pin-tag-editor[open]'))return;if(event.key==='ArrowLeft' || event.key==='ArrowRight'){event.preventDefault();navigateImage(event.key==='ArrowLeft'?-1:1);}});
+$('detail').addEventListener('keydown',event=>{if(event.key==='Escape' && !event.defaultPrevented && !$('image-source').open && !document.querySelector('.pin-tag-editor[open]')){event.preventDefault();closeDetail();return;}if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.('input,textarea,select,[contenteditable],button,a') || $('image-source').open || document.querySelector('.pin-tag-editor[open]'))return;if(event.key==='ArrowLeft' || event.key==='ArrowRight'){event.preventDefault();navigateImage(event.key==='ArrowLeft'?-1:1);}});
 $('default-image').onclick=async()=>{const node=selected;if(!node?.entryId)return;$('default-image').disabled=true;try{await imageEntries.setDefault(node.galleryOwner,node.entryId);await syncDefaultCover(parentNode(node));await refreshGeneratedIndex();render();if(itemKey(selected)===itemKey(node))paintImageNavigation(node);}catch(error){setTaggingChoiceStatus(error.message);}finally{if(selected)paintImageNavigation(selected);}};
 $('remove-image').onclick=async()=>{const node=selected;if(!node?.entryId || !window.confirm('Remove this image and its section? Its references, notes, bookmarks and tag history will be saved in Recovery. Original image files are not backed up.'))return;$('remove-image').disabled=true;try{const parent=parentNode(node),record=await imageEntries.remove(node.galleryOwner,node.entryId);await syncDefaultCover(parent);await refreshGeneratedIndex();render();if(galleryOwner(selected)===node.galleryOwner){const gallery=imageEntries.gallery(node.galleryOwner),entry=gallery.entries[Math.min(record.position,gallery.entries.length-1)];openDetailContent(entry?entryNode(parent,entry):parent);setTaggingChoiceStatus('Moved to Recovery.');}}catch(error){setTaggingChoiceStatus(error.message || 'Could not save Recovery. Image kept.');}finally{if(selected)paintImageNavigation(selected);}};
 
@@ -544,7 +579,7 @@ const coverFetch=installCoverFetch({
   getScope:()=>JSON.stringify([boardId,$('folder').value,$('search').value.trim(),selectionTags().map(selectionKey),$('tags-only').checked]),
   getNodes:()=>filteredNodes().filter(node=>!!node.url),
   getMounted:()=>[...blocks.values()].flatMap(block=>[...block.children].map(element=>({element,node:element.atlasNode}))),
-  hasCover:node=>!!imageFor(node),raster:rasterImage,
+  hasCover:node=>!boardAssetsReady || !!imageFor(node),raster:rasterImage,
   saveCover:async(node,image)=>{
     await imageEntries.load();const gallery=imageEntries.gallery(galleryOwner(node));if(gallery){if(imageFor(node))return false;const entry=await imageEntries.add(galleryOwner(node),image,{provider:'fetched-preview',pageURL:node.url || null,sha256:null,hashStatus:'unavailable',hashReason:'Original image bytes are not retained by cover fetch'});await imageEntries.setDefault(galleryOwner(node),entry.id);await syncDefaultCover(node);return true;}
     if(authored(node)){await blankBoard.patch(node,{image});return true;}
@@ -571,7 +606,7 @@ async function start(){
   await loadBoardTitle();
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;$('tags-only').checked=saved?.tagsOnly===true;}catch{}
   await refresh();
-  if(boardId){try{const board=boardRecord((await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY]?.[boardId]);$('title').textContent=board.title;document.title=board.title+' · Atlas Pinboard';const exists=[...$('folder').options].some(o=>o.value===board.folderId);$('folder').value=exists?board.folderId:'all';if(!exists){items=[];resetBlocks();status('PINBOARD_FOLDER_MISSING: Choose another folder to browse.');}else render();}catch{items=[];resetBlocks();status('PINBOARD_NOT_FOUND: This saved pinboard is unavailable.');}}
+
 
 }
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
