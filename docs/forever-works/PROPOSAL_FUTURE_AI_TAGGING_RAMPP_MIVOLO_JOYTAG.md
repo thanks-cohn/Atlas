@@ -70,3 +70,15 @@ For People, MiVOLO v2 is a potential age/appearance estimator but cannot replace
 5. Leave JoyTag untouched throughout. Do not report success merely because documentation, manifests or adapters have been edited.
 
 **State at recording:** Direction accepted; replacement **not yet implemented or validated**.
+
+## 2026-10-19 actual implementation
+
+See [Rich tagging implementation](RICH_TAGGING_IMPLEMENTATION.md). RAM++ and
+MiVOLO v2/detection ONNX adapters, reproducible pinned exports, structured people
+aggregation/provenance and extension routing have been implemented and executed
+on six photos. JoyTag outputs matched across profiles. The incompatible published
+INT8 export was rejected; Atlas's MatMul-only conversion runs on the pinned ORT.
+This supersedes the earlier "not implemented" description for the candidate
+source path only. Default legacy remains until Windows, representative-image,
+owner-device and detector distribution gates pass. Do not infer release acceptance
+from proposal text, edited manifests or synthetic smoke alone.

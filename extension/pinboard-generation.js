@@ -36,7 +36,7 @@ export async function generateModels({node,image,choices,send,save,status}) {
   if (choices.anime) models.push('anime');
   const results = {};
   for (const model of models) {
-    status('Generating '+({objects:'Things / People',face:'Faces',anime:'Anime'}[model])+'…');
+    status('Generating '+({objects:'Things / People',face:'Faces',people:'People',anime:'Anime'}[model])+'…');
     const response = await send({type:'api',path:'/v1/tag-image',body:{model,image,item_id:node.itemKey || node.url,display_choices:choices}});
     const result=response?.data || response;
     if (response?.ok===false || !Array.isArray(result?.suggestions)) {
@@ -44,8 +44,16 @@ export async function generateModels({node,image,choices,send,save,status}) {
       throw Error((error?.code ? error.code+': ' : '')+(error?.message || 'Companion did not return tag predictions.'));
     }
     // Preserve original predictions. Display selection is a separate field.
-    results[model] = {...result,display_choices:{...choices}};
-    await save(model,results[model]);
+    const source=result.source || model;
+    results[source] = {...result,display_choices:{...choices}};
+    await save(source,results[source]);
+    // New companions split photo tagging from structured People; old helpers
+    // keep their shared Things/People pass. Never run a second Faces alias.
+    if(model==='objects' && result.people_source==='people' && (choices.people || choices.face)){
+      const faceIndex=models.indexOf('face');
+      if(faceIndex!==-1)models.splice(faceIndex,1);
+      models.splice(models.indexOf(model)+1,0,'people');
+    }
   }
   return results;
 }
@@ -56,9 +64,9 @@ export function modelRuns(value){return Array.isArray(value)?value:(value?[value
 // Runs are additive for one chosen cover. Encoded preview bytes may vary between
 // requests; the stable cover reference decides whether this is the same image.
 export function mergeGeneratedRun(current,source,result){
-  if(!['objects','face','anime'].includes(source) || !result.image_reference)throw Error('Missing model or image identity.');
+  if(!['objects','people','face','anime'].includes(source) || !result.image_reference)throw Error('Missing model or image identity.');
   const next={};
-  for(const key of ['objects','face','anime']){
+  for(const key of ['objects','people','face','anime']){
     const matching=modelRuns(current?.[key]).filter(run=>run.image_reference===result.image_reference);
     if(matching.length)next[key]=matching;
   }
@@ -71,14 +79,14 @@ export function mergeGeneratedRun(current,source,result){
 // display choices and provenance; a later request cannot erase earlier choices.
 export function generatedTags(runs,reference,animeEnabled=false) {
   const grouped=new Map();
-  for(const source of ['objects','face','anime']){
+  for(const source of ['objects','people','face','anime']){
     if(source==='anime' && !animeEnabled)continue;
     for(const run of modelRuns(runs?.[source])){
       if(!reference || run.image_reference!==reference)continue;
       for(const suggestion of run.suggestions || []){
         if(typeof suggestion.tag!=='string')continue;
         const label=suggestion.tag.trim(),key=label.normalize('NFKC').toLowerCase();
-        if(source==='objects' && run.display_choices && (key==='person' ? !run.display_choices.people : !run.display_choices.objects))continue;
+        if(source==='objects' && run.display_choices && !run.display_choices[suggestion.category || (key==='person' ? 'people' : 'objects')])continue;
         if(!key)continue;
         if(!grouped.has(key))grouped.set(key,{label,sources:[]});
         grouped.get(key).sources.push({source,model:run.model,run_id:run.run_id,score:suggestion.score});

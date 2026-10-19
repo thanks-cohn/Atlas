@@ -57,7 +57,7 @@ def run(state, body):
     """Record each attempted inference, including failures and empty results."""
     started = time.perf_counter()
     source = body.get("model") if isinstance(body, dict) else None
-    model_id = {"objects": "yolo11n-coco-onnx", "face": "opencv-mobilefacenet-fer-onnx", "anime": "fancyfeast/joytag"}.get(source, "unknown")
+    model_id = {"objects": "yolo11n-coco-onnx", "face": "opencv-mobilefacenet-fer-onnx", "people": "iitolstykh/mivolo_v2", "anime": "fancyfeast/joytag"}.get(source, "unknown")
     success = False
     count = 0
     error_code = None
@@ -80,7 +80,7 @@ def run(state, body):
         event = {
             "schema": "atlas.tagging.metric.v1",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "source": source if source in ("objects", "face", "anime") else "unknown",
+            "source": source if source in ("objects", "people", "face", "anime") else "unknown",
             "model": model_id,
             "duration_ms": round((time.perf_counter() - started) * 1000, 3),
             "tag_count": count,

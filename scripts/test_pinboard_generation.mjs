@@ -51,3 +51,18 @@ const migrated=mergeGeneratedRun({objects:first},'face',faces);
 assert.deepEqual(generatedTags(migrated,'cover').map(t=>t.label),['cat','smile']);
 assert.equal(first.display_choices.people,false);assert.equal(first.image_payload_sha256,'encoded-a');
 console.log('PASS: Things → People → Faces and empty reruns accumulate, preview re-encoding does not erase tags, same-run saves are idempotent, legacy records migrate and replacement covers remain isolated.');
+
+// New rich helpers advertise the split after Things. Legacy helpers above keep
+// their original shared pass; optional Anime still requires activation/selection.
+calls=[];saved=[];
+await generateModels({...options,choices:{objects:true,people:true,face:true,anime:false},send:async request=>{
+ calls.push(request);return {ok:true,source:request.body.model,model:'rich-test',people_source:request.body.model==='objects'?'people':undefined,suggestions:[]};
+}});
+assert.deepEqual(calls.map(x=>x.body.model),['objects','people']);
+assert.deepEqual(saved.map(x=>x.source),['objects','people']);
+const structured={run_id:'person-run',source:'people',model:'mivolo',image_reference:'cover',people:[{age_estimate:32}],suggestions:[{tag:'1 adult male',score:null,category:'people'}]};
+const withPeople=mergeGeneratedRun(accumulated,'people',structured);
+assert.equal(withPeople.people[0].people[0].age_estimate,32);
+assert(generatedTags(withPeople,'cover').some(t=>t.label==='1 adult male'));
+assert(!generatedTags(withPeople,'cover').some(t=>t.sources.some(s=>s.source==='anime')));
+console.log('PASS: rich Things/People split runs once, structured source survives storage, Anime remains opt-in.');

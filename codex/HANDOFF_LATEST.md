@@ -102,3 +102,12 @@ Windows artifact smoke is `scripts/smoke_windows_companion.py`: install actual f
 A Windows empty-port connection can fail without taking Python's immediate ConnectionRefused path. Native wake now performs an exclusive bind availability check after connection failure; this authorizes only starting the fixed helper and never trusting/killing a listener. The Windows server reserves SO_EXCLUSIVEADDRUSE and disables SO_REUSEADDR to prevent competing listeners. A20-second elapsed startup bound permits cold onefile extraction; credentials still require fresh proof on the same connection. Live upgrade/uninstall quiesces optional supervision and only the verified receipt-owned, HMAC-attested helper before bounded executable unlink retries. Missing nested install/state directories are created component-by-component with explicit TokenUser ownership and retained no-reparse ancestors. Login Run uses a receipt/digest-verified short `--recover` command and refuses Windows' command-length limit rather than silently saving unusable startup.
 
 Final downstream work: physical desktop lifecycle verification is the earliest unmet continuity gate. Improve Windows menu/console-launch polish and auto-populate the recovery ID after first enrollment; currently rerunning the installed management UI fills its existing paired ID. Add meaningful transfer progress/cancel and secure directory copying after lifecycle proof. The existing unsigned artifact is development distribution, not Store approval or a security audit.
+
+## 2026-10-19 — Rich model implementation checkpoint
+
+Read `docs/forever-works/RICH_TAGGING_IMPLEMENTATION.md` and the source benchmark
+JSON before continuing. The candidate is executable; default release is legacy.
+Build rich candidates with `python scripts/build_windows_companion.py --rich-tagging`
+after reproducing assets with the isolated export environment; normal users still
+need no Python. Never change JoyTag to improve real-photo results. Complete Windows,
+Chrome, annotated-photo/children, laptop and AGPL-detector gates before promotion.

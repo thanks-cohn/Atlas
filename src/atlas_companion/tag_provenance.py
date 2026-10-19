@@ -41,7 +41,7 @@ def project(events):
                     'run_id': event['run_id'], 'model': event['model'],
                     'source': event['source'], 'prediction_index': index,
                     'score': prediction.get('score'),
-                    'eligible': (event.get('display_choices', {}).get('people' if key == 'person' else 'objects', True)
+                    'eligible': (event.get('display_choices', {}).get(prediction.get('category', 'people' if key == 'person' else 'objects'), True)
                                  if event['source'] == 'objects' else True),
                 })
         item['derived'] = list(grouped.values())
@@ -73,6 +73,10 @@ def record(state, body, result, duration_ms):
         'duration_ms': duration_ms, 'produced': result.get('suggestions', []),
         'resources': result.get('resources', {}),
         'display_choices': choices,
+        # Structured evidence is independent of normalized/displayed strings.
+        **{key: result[key] for key in ('person_count', 'people', 'detections',
+            'unassociated_faces', 'aggregation', 'policy', 'predictions',
+            'components', 'image_size', 'warnings', 'people_source') if key in result},
     }
     directory = Path(state.directory) / 'evidence'
     with _lock:

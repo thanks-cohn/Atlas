@@ -1,0 +1,15 @@
+# Build/export environment ONLY. Never collected into the inference engine.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
+onnx==1.17.0
+timm==0.8.13.dev0
+safetensors==0.5.3
+ultralytics==8.3.0
+omegaconf==2.3.0
+antlr4-python3-runtime==4.9.3
+huggingface_hub==0.30.2
+numpy==1.26.4
+onnxruntime==1.20.1
+opencv-python==4.11.0.86
+Pillow==11.2.1

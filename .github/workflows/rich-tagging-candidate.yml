@@ -1,0 +1,51 @@
+name: Qualify rich tagging Windows candidate
+on:
+  workflow_dispatch:
+  push:
+    branches: [implement/rich-photo-tagging]
+    paths:
+      - 'src/atlas_companion/**'
+      - 'scripts/*tagging*'
+      - 'scripts/build_windows_companion.py'
+      - 'packaging/**'
+      - '.github/workflows/rich-tagging-candidate.yml'
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned runtime tools
+        run: python -m pip install -r packaging/requirements-build.txt
+      - name: Reproduce candidates in a separate build-only export environment
+        run: |
+          python -m venv build/tagging-export-env
+          build/tagging-export-env/Scripts/python.exe -m pip install -r packaging/requirements-tagging-export.txt
+          build/tagging-export-env/Scripts/python.exe scripts/prepare_rich_tagging_models.py dist/windows/tagging-models
+      - name: Verify Windows boundaries and structured tagging contracts
+        run: |
+          $env:PYTHONPATH = 'src'
+          python -m unittest discover -s tests -p 'test_windows_*.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p 'test_rich_tagging.py' -v
+          exit $LASTEXITCODE
+      - name: Build separate candidate without replacing the normal helper
+        run: python scripts/build_windows_companion.py --rich-tagging
+      - name: Run actual frozen models and prove core isolation
+        run: dist/windows/atlas-companion.exe --tagging-smoke
+      - name: Verify existing native, HTTP and desktop behavior
+        run: |
+          python scripts/smoke_windows_companion.py dist/windows/atlas-companion.exe
+          python scripts/smoke_windows_launch.py dist/windows/atlas-companion.exe
+          python scripts/smoke_desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-rich-tagging-CANDIDATE-windows-x86_64
+          path: dist/windows/
+          if-no-files-found: error
+          retention-days: 14

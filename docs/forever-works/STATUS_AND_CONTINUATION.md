@@ -1001,3 +1001,26 @@ Implemented source: `extension/image-entries.js` and `image-recovery.js`, shared
 Storage is versioned Chrome-local combined JSON; legacy first-image import preserves observed metadata/runs. Native initial migration requires available companion metadata; browser-local new entries then work independently. File origins preserve filename (full path unavailable) and original-byte SHA-256; URLs retain their original location and observed-byte digest only when permissions/size/network allow. Hash-unavailable is explicit. Recovery retains no local pixel copies. R2 backup/API/durable external logs/recommendations remain unimplemented. Read `IMAGE_ENTRY_GALLERY_AND_RECOVERY_V1.md` for storage contracts, rollback and scale limits, source map and exact acceptance evidence.
 
 Passed image-entry transaction/hash/isolation tests, actual pinboard/store/gallery DOM regression path, bookmark shelf, preview sections/connections, generation/tag editor, blank-board, menu/appearance, image-file and rename suites; package and diff checks pass. Full check: 160 tests, 3 native readiness failures, 3 native-bootstrap/supervisor errors, 33 skips; 22 linkage records valid. No full-suite or Chrome visual/runtime pass claimed. Next gate: real Chrome/profile acceptance, missing-original relink repair, and durable/indexed history storage before any scale/longevity guarantee or optional R2 backup.
+
+## 2026-10-19 UTC — executable rich tagging candidate
+
+Owner-authorized implementation replaces non-JoyTag adapters in an isolated rich
+profile while default legacy and `working-AI` remain intact. See
+[RICH_TAGGING_IMPLEMENTATION.md](RICH_TAGGING_IMPLEMENTATION.md) for fixed/fluid
+obligations, exact checkpoints, export fixes, licensing and source map. RAM++
+MatMul-only INT8 and MiVOLO v2 + face/person ONNX detector ran on six source photos:
+74 qualified Things tags versus 13 legacy tags; count targets matched on five
+annotated-count examples; crowded-market count/demographic/semantic accuracy are
+unqualified. Every JoyTag suggestion/score matched between profiles. Structured
+people records, counts, policies, component hashes and full source predictions now
+survive append-only provenance. No user cards/notes/assets/history are migrated or
+deleted. Existing interface and optional Anime gate are preserved.
+
+Proof: 23 targeted Python tests, generation JS regressions and actual authenticated
+source HTTP smoke passed. Full project: 168 tests; 3 failures, 3 errors, 33 skips;
+22 linkage records valid. Native-bootstrap/supervisor startup failures require
+baseline comparison and are not represented as a passing suite. Windows candidate
+workflow added separately; actual Windows artifact, Chrome runtime, difficult
+photos/children, laptop resource use and AGPL detector distribution remain release
+gates. Default profile is deliberately not promoted. Continue from the executed
+Windows result and measured report, not by re-creating another proposal.

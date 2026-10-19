@@ -1,0 +1,39 @@
+{
+  "rampp": {
+    "file": "ram-plus-matmul-int8.onnx",
+    "model": "RAM++:matmul-int8-ort1.20.1",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "7b15cd2386af5495dbbf755ea2ed75959541e95170582d7637e8ce1a9f0b2aa3",
+    "bytes": 872815995
+  },
+  "rampp_labels": {
+    "file": "ram_tag_list.txt",
+    "model": "RAM++:labels",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "5d96d2f7225527480ad773aaac76b6e5c08a18adf6eae9ca7d2ab923d5e7bd8b",
+    "bytes": 41904,
+    "url": "https://huggingface.co/CannotFindObject/RAM_ONNX/resolve/6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18/ram_tag_list.txt"
+  },
+  "rampp_thresholds": {
+    "file": "ram_tag_list_threshold.txt",
+    "model": "RAM++:thresholds",
+    "revision": "6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18",
+    "sha256": "b6f81d0de1bc7f9c251af512c413eae976c77dbfbadf700d4e3d90510f4c6447",
+    "bytes": 22016,
+    "url": "https://huggingface.co/CannotFindObject/RAM_ONNX/resolve/6c4ca81fb841e359c043c1e8f92f62bf5c3b8c18/ram_tag_list_threshold.txt"
+  },
+  "mivolo": {
+    "file": "mivolo-v2.onnx",
+    "model": "iitolstykh/mivolo_v2",
+    "revision": "53393526c220e34cdd7b722b36d22b6f9e5f4241",
+    "sha256": "a8c405e7a89cb21d4574ebf17a6979c895e32f02dbd6fd280cdc5922cb2d4ccb",
+    "bytes": 115288349
+  },
+  "people_detector": {
+    "file": "person-face.onnx",
+    "model": "iitolstykh/YOLO-Face-Person-Detector",
+    "revision": "b3d071aedccd46a3b2d4b40609da6880a815f395",
+    "sha256": "d0c8c91a9d1d4418977f4f5af3e5e5022d9fd3e08f0de4bdac7dca2ad9bbacd8",
+    "bytes": 272743046
+  }
+}

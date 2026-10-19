@@ -49,3 +49,10 @@ Allow users to add, replace, and configure image tagging / tag recommendation mo
 - Unsupported architectures receive a clear explanation instead of silently claiming universal compatibility.
 
 **Decision state:** Feasible in principle, but implementation details, runtime compatibility, security, and packaging remain unverified. Do not mark as implemented.
+
+## 2026-10-19 implementation boundary
+
+The static [rich tagging candidate](../forever-works/RICH_TAGGING_IMPLEMENTATION.md)
+implements RAM++/MiVOLO and split source records beneath existing categories.
+It does **not** implement this dynamic model installation/renaming/marketplace
+proposal. Keep this backlog item open; no arbitrary model code is accepted by HTTP.
