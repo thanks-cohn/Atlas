@@ -200,13 +200,15 @@ async function showGeneratedTags(node){
 $('run-image-tagging').onclick=async()=>{
   updateTaggingAction();
   if($('run-image-tagging').disabled || !selected)return;
-  const node=selected;
+  let node=selected;
+  const initialKey=itemKey(node);
   const batchId=crypto.randomUUID(),batchAt=new Date().toISOString();
   const choices={objects:$('tag-image-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
   taggingBusy=true;updateTaggingAction();
   const report=message=>{if(itemKey(selected)===itemKey(node))setTaggingChoiceStatus(message);};
   try{
     report('Preparing image…');
+    if(!node.entryId){node=await materializeImageEntry(node);await navigator.locks.request('atlas-pages-v1',async()=>{const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[itemKey(node)]:{objects:choices.objects,anime:choices.anime}}});});if($('detail').open && itemKey(selected)===initialKey)openDetailContent(node,{preserveConnections:true});}
     const sourceImage=imageFor(node);
     const image=await generationImage(sourceImage);
     const reference=await imageReference(sourceImage);
@@ -260,12 +262,13 @@ async function openDetail(node){
     document.documentElement.setAttribute('data-pin-open','');
     if(!$('detail').open)$('detail').showModal();
     openDetailContent(defaultEntryNode(node));$('detail-scroll').scrollTop=0;endOpen?.();window.atlasDebug?.performance.afterPaint('preview.open');
-    if(imageEntries.gallery(galleryOwner(parent)))return;
-    await ensureImages(parent);
-    if(request!==detailOpenVersion || !$('detail').open || selected?.entryId || galleryOwner(selected)!==galleryOwner(parent))return;
-    const gallery=imageEntries.gallery(galleryOwner(parent));
-    const entry=gallery?.entries.find(e=>e.id===(node.entryId || gallery.defaultId)) || gallery?.entries[0];
-    openDetailContent(entry?entryNode(parent,entry):parent,{preserveConnections:true});
+    // Reading a preview must not write/migrate the shared gallery document.
+    // Only wait for read-only hydration if startup assets/metadata are pending.
+    if(boardAssetsReady && metadataState!=='loading')return;
+    if(!boardAssetsReady)await boardAssetsPromise;
+    if(metadataState==='loading')await refreshAssociations();
+    if(request!==detailOpenVersion || !$('detail').open || galleryOwner(selected)!==galleryOwner(parent))return;
+    openDetailContent(selected?.entryId?selected:defaultEntryNode(parent),{preserveConnections:true});
   }catch(error){if(request===detailOpenVersion && $('detail').open)setTaggingChoiceStatus(error.message || 'Image details could not be loaded. Cached connections remain available.');}finally{endOpen?.();}
 }
 
@@ -612,24 +615,34 @@ async function ensureImages(parent){
   const current=metadata(parent),notes=current.notes || (current.note?[{id:owner+':legacy-note',title:parent.title || 'Note',text:current.note}]:[]);
   await imageEntries.ensure(owner,{id:parent.id,url:parent.url || '',title:parent.title,kind:parent.kind || 'bookmark',cardId:parent.cardId || null,scope:boardId || 'default',aliases:pinItems(roots).filter(n=>n.url===parent.url).map(n=>n.id)},image,{tags:current.tags || [],notes,bookmarks:current.bookmarks || []});
 }
+async function materializeImageEntry(node){
+  if(node?.entryId)return node;
+  const parent=parentNode(node),image=imageFor(node);
+  if(!image)throw Error('This image is unavailable. Reopen the card.');
+  await ensureImages(parent);
+  const gallery=imageEntries.gallery(galleryOwner(parent));
+  const entry=gallery?.entries.find(entry=>entry.image===image);
+  if(!entry)throw Error('This image changed. Reopen the card before editing it.');
+  return entryNode(parent,entry);
+}
 async function syncDefaultCover(parent){
  const gallery=imageEntries.gallery(galleryOwner(parent));if(!gallery)return;
  if(authored(parent))await blankBoard.load();
  else covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};
 }
 function paintImageNavigation(node){
- const gallery=imageEntries.gallery(galleryOwner(node)),entries=gallery?.entries || [],index=entries.findIndex(e=>e.id===node.entryId);
- $('image-position').textContent=entries.length?(index+1)+' / '+entries.length:'No images';
+ const gallery=imageEntries.gallery(galleryOwner(node)),entries=gallery?.entries || [],index=entries.findIndex(e=>e.id===node.entryId),legacyImage=!gallery && !!imageFor(node);
+ $('image-position').textContent=entries.length?(index+1)+' / '+entries.length:legacyImage?'1 / 1':'No images';
  $('previous-image').disabled=$('next-image').disabled=entries.length<2;
  $('default-image').disabled=previewingLinkedImage || !node.entryId || !imageFor(node);
- const chosen=!previewingLinkedImage && !!node.entryId && gallery.defaultId===node.entryId;$('default-image').setAttribute('aria-pressed',String(chosen));$('default-image').textContent=chosen?'★':'☆';$('default-image').title=chosen?'Default cover':'Use as default cover';
- $('remove-image').disabled=previewingLinkedImage || !node.entryId;
+ const chosen=!previewingLinkedImage && (legacyImage || !!node.entryId && gallery.defaultId===node.entryId);$('default-image').setAttribute('aria-pressed',String(chosen));$('default-image').textContent=chosen?'★':'☆';$('default-image').title=chosen?'Default cover':'Use as default cover';
+ $('remove-image').disabled=previewingLinkedImage || (!node.entryId && !legacyImage);
 }
 function navigateImage(direction){const parent=parentNode(selected),gallery=imageEntries.gallery(galleryOwner(selected));if(!gallery?.entries.length)return;const index=gallery.entries.findIndex(e=>e.id===selected.entryId),entry=gallery.entries[(index+direction+gallery.entries.length)%gallery.entries.length];openDetailContent(entryNode(parent,entry));$('detail-scroll').scrollTop=0;}
 $('previous-image').onclick=()=>navigateImage(-1);$('next-image').onclick=()=>navigateImage(1);
 $('detail').addEventListener('keydown',event=>{if(event.key==='Escape' && !event.defaultPrevented && !$('image-source').open && !document.querySelector('.pin-tag-editor[open]')){event.preventDefault();closeDetail();return;}if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.('input,textarea,select,[contenteditable],button,a') || $('image-source').open || document.querySelector('.pin-tag-editor[open]'))return;if(event.key==='ArrowLeft' || event.key==='ArrowRight'){event.preventDefault();navigateImage(event.key==='ArrowLeft'?-1:1);}});
 $('default-image').onclick=async()=>{const node=selected;if(!node?.entryId)return;$('default-image').disabled=true;try{await imageEntries.setDefault(node.galleryOwner,node.entryId);await syncDefaultCover(parentNode(node));await refreshGeneratedIndex();render();if(itemKey(selected)===itemKey(node))paintImageNavigation(node);}catch(error){setTaggingChoiceStatus(error.message);}finally{if(selected)paintImageNavigation(selected);}};
-$('remove-image').onclick=async()=>{const node=selected;if(!node?.entryId || !window.confirm('Remove this image and its section? Its references, notes, bookmarks and tag history will be saved in Recovery. Original image files are not backed up.'))return;$('remove-image').disabled=true;try{const parent=parentNode(node),record=await imageEntries.remove(node.galleryOwner,node.entryId);await syncDefaultCover(parent);await refreshGeneratedIndex();render();if(galleryOwner(selected)===node.galleryOwner){const gallery=imageEntries.gallery(node.galleryOwner),entry=gallery.entries[Math.min(record.position,gallery.entries.length-1)];openDetailContent(entry?entryNode(parent,entry):parent);setTaggingChoiceStatus('Moved to Recovery.');}}catch(error){setTaggingChoiceStatus(error.message || 'Could not save Recovery. Image kept.');}finally{if(selected)paintImageNavigation(selected);}};
+$('remove-image').onclick=async()=>{let node=selected;if(!node || (!node.entryId && !imageFor(node)) || !window.confirm('Remove this image and its section? Its references, notes, bookmarks and tag history will be saved in Recovery. Original image files are not backed up.'))return;$('remove-image').disabled=true;try{node=await materializeImageEntry(node);const parent=parentNode(node),record=await imageEntries.remove(node.galleryOwner,node.entryId);await syncDefaultCover(parent);await refreshGeneratedIndex();render();if(galleryOwner(selected)===node.galleryOwner){const gallery=imageEntries.gallery(node.galleryOwner),entry=gallery.entries[Math.min(record.position,gallery.entries.length-1)];openDetailContent(entry?entryNode(parent,entry):parent);setTaggingChoiceStatus('Moved to Recovery.');}}catch(error){setTaggingChoiceStatus(error.message || 'Could not save Recovery. Image kept.');}finally{if(selected)paintImageNavigation(selected);}};
 
 async function saveImage(node,image,origin){
   const parent=parentNode(node);await ensureImages(parent);const entry=await imageEntries.add(galleryOwner(parent),image,origin || {provider:'web',url:image,sha256:null,hashStatus:'pending',observedAt:new Date().toISOString()});
@@ -688,9 +701,9 @@ async function start(){
 
 
 }
-chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex(true);if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex(true);if(selected && $('detail').open){const projected=selected.entryId?selected:defaultEntryNode(selected);if(!projected.entryId || storedEntry(projected))openDetailContent(projected,{preserveConnections:true});}scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
 window.atlasDebug?.performance.registerState('pinboard',()=>({
-  renderer_revision:5,tag_index_running:!!generatedRefresh,tag_index_queued:generatedRefreshQueued,overscan_rows:1,image_geometry_entries:imageGeometry.size,failed_image_entries:failedImages.size,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
+  renderer_revision:6,preview_read_only:true,tag_index_running:!!generatedRefresh,tag_index_queued:generatedRefreshQueued,overscan_rows:1,image_geometry_entries:imageGeometry.size,failed_image_entries:failedImages.size,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
   nearby_budget:limit,layout_dirty:windowLayoutDirty,window_update_pending:!!frame,layout_blocked:!!boardLayoutBlocked(),
   assets_ready:boardAssetsReady,held_cards:cardHolds.active().length,layout_positions:positions.length
 }));

@@ -111,7 +111,7 @@ context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired
 await $('refresh').onclick();flush();
 let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].children[0].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
 assert.equal(tagged.children[1].style.height,'138px');
-await strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.parentNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();await settleBoardClose();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
+await strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal((tagEditorNode.parentNode || tagEditorNode).id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();await settleBoardClose();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
 // Refresh retrieves edits to the existing catalog rather than requiring a new tab.
 tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].children[0].textContent,'Updated');
@@ -404,7 +404,7 @@ assert.equal(arrowPrevented,3);
 console.log('PASS: hovered tag arrows scroll only the tag viewport, clamp at boundaries and leave editors/unhovered board keys alone.');
 
 // Real gallery/store/preview wiring: image-scoped content, star, removal and restore.
-await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);
+await vm.runInContext('ensureImages(blankBoard.nodes()[0]);',context);await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);
 const firstEntry=vm.runInContext('selected.entryId',context),firstOwner=vm.runInContext('selected.galleryOwner',context);
 const firstImage=$('detail-image').src;
 await vm.runInContext("saveImage(selected,'https://images.example/gallery-b.jpg',{provider:'web',url:'https://images.example/gallery-b.jpg',sha256:'b-hash'})",context);
@@ -425,14 +425,14 @@ console.log('PASS: additive gallery UI preserves A, starts B empty, stores B tag
 // Owner regression: generated results survive leaving a gallery card, opening
 // another card, and rebuilding indexes from durable browser storage.
 $('folder').value='blank';$('search').value='';
-await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
+await vm.runInContext('ensureImages(blankBoard.nodes()[0]);',context);await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
 const persistentKey=vm.runInContext('itemKey(selected)',context);
 context.chrome.runtime.sendMessage=async message=>({ok:true,source:'objects',run_id:'persist-reopen',suggestions:[{tag:'Persistent Result',score:.9}]});
 $('tag-image-choice').checked=true;await $('run-image-tagging').onclick();
 assert(data['atlas-image-tagging-runs-v1'][persistentKey]);
 $('close').onclick();await settleBoardClose();await vm.runInContext('openDetail(blankBoard.nodes()[1])',context);await tick();await tick();$('close').onclick();await settleBoardClose();
 await vm.runInContext('imageEntries.load();generatedIndex=new Map();refreshGeneratedIndex()',context);
-await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
+await vm.runInContext('ensureImages(blankBoard.nodes()[0]);',context);await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
 assert.equal(vm.runInContext('itemKey(selected)',context),persistentKey);
 assert($('detail-generated-tags').children.some(chip=>chip.children[0].textContent==='Persistent Result'));
 assert(vm.runInContext('tagsFor(selected)',context).includes('Persistent Result'));
@@ -465,12 +465,12 @@ console.log('PASS: actual local-file add appends independently, updates count/ar
 
 // Slow gallery setup must not delay opening/connected content, or reopen a closed dialog.
 $('detail').close();let releasePreviewSetup;context.previewSetupGate=new Promise(resolve=>releasePreviewSetup=resolve);
-vm.runInContext("this.originalEnsureImages=ensureImages;ensureImages=()=>previewSetupGate;this.delayedPreview=openDetail({id:'instant-preview',title:'Immediate connections',url:'https://instant.example/card'});",context);
+vm.runInContext("this.originalPreviewAssets=boardAssetsPromise;this.originalPreviewReady=boardAssetsReady;boardAssetsReady=false;boardAssetsPromise=previewSetupGate;this.delayedPreview=openDetail({id:'instant-preview',title:'Immediate connections',url:'https://instant.example/card'});",context);
 assert.equal($('detail').open,true,'Dialog opens before pending gallery initialization resolves');
 assert.equal($('detail-title').textContent,'Immediate connections');assert.equal(previewContent.key,'https://instant.example/card');
 assert.equal($('detail-image-placeholder').hidden,false);
 $('detail').close();releasePreviewSetup();await context.delayedPreview;assert.equal($('detail').open,false,'Late completion cannot reopen a closed preview');
-vm.runInContext('ensureImages=originalEnsureImages;',context);
+vm.runInContext('boardAssetsPromise=originalPreviewAssets;boardAssetsReady=originalPreviewReady;',context);
 vm.runInContext("showDetailImage('https://images.example/slow-a.jpg','A')",context);const staleImageLoad=$('detail-image').onload;
 vm.runInContext("showDetailImage('https://images.example/slow-b.jpg','B')",context);staleImageLoad();assert.equal($('detail-image').hidden,true,'Old image completion cannot reveal stale pixels');
 $('detail-image').onload();assert.equal($('detail-image').hidden,false);assert.equal($('detail-image-placeholder').hidden,true);
@@ -489,12 +489,12 @@ releaseSavedCovers();await new Promise(resolve=>setTimeout(resolve,20));assert(c
 releaseStartupMetadata();await context.progressiveRefresh;storage.get=originalGet;context.chrome.runtime.sendMessage=originalMessage;
 // Escape closes synchronously, invalidates pending setup and does not rebuild the board.
 let releaseEscapeSetup;context.escapeSetupGate=new Promise(resolve=>releaseEscapeSetup=resolve);
-vm.runInContext("this.originalEscapeEnsure=ensureImages;ensureImages=()=>escapeSetupGate;this.escapePreview=openDetail({id:'escape-delayed',url:'https://escape.example/card',title:'Escape immediately'});",context);
+vm.runInContext("this.originalEscapeAssets=boardAssetsPromise;this.originalEscapeReady=boardAssetsReady;boardAssetsReady=false;boardAssetsPromise=escapeSetupGate;this.escapePreview=openDetail({id:'escape-delayed',url:'https://escape.example/card',title:'Escape immediately'});",context);
 $('image-source').close();const previousQuerySelector=document.querySelector;document.querySelector=selector=>selector==='.pin-tag-editor[open]'?null:previousQuerySelector(selector);
 const mountedBeforeEscape=cards();let preventedEscape=false;
 $('detail').handlers.keydown({key:'Escape',target:{closest:()=>null},preventDefault(){preventedEscape=true;}});
 assert(preventedEscape);assert.equal($('detail').open,false);assert.deepEqual(cards(),mountedBeforeEscape);
-releaseEscapeSetup();await context.escapePreview;assert.equal($('detail').open,false);vm.runInContext('ensureImages=originalEscapeEnsure;',context);document.querySelector=previousQuerySelector;
+releaseEscapeSetup();await context.escapePreview;assert.equal($('detail').open,false);vm.runInContext('boardAssetsPromise=originalEscapeAssets;boardAssetsReady=originalEscapeReady;',context);document.querySelector=previousQuerySelector;
 console.log('PASS: cards/Atlas placeholders render before blocked cover storage and companion metadata; Escape closes immediately during setup and keeps mounted cards.');
 // Ordinary scroll must reuse geometry; image/layout changes still rebuild it.
 $('detail').close();$('image-source').close();await settleBoardClose();flush();
@@ -523,7 +523,7 @@ const signature=vm.runInContext("cardSignature({id:'large',url:'https://x.test/a
 assert.ok(Array.isArray(signature),'Card identity must not serialize image bytes');
 console.log('PASS: scroll reuses masonry; resize, item changes and image geometry invalidate it; queued updates win over scroll; snapshot cover lookup preserves validation and avoids repeated scans.');
 // A burst consumes only the latest scroll position and examines a bounded neighborhood.
-const measured=new Map();context.window.atlasDebug={performance:{begin:()=>()=>{},measure:(name,value)=>{const list=measured.get(name) || [];list.push(value);measured.set(name,list);}}};
+const measured=new Map();context.window.atlasDebug={performance:{begin:()=>()=>{},afterPaint:()=>Promise.resolve(),measure:(name,value)=>{const list=measured.get(name) || [];list.push(value);measured.set(name,list);}}};
 vm.runInContext('renderWindow()',context);flush();measured.clear();
 for(let index=0;index<1000;index++){scroll=index%2?12000:0;listeners.scroll();}
 scroll=2000;listeners.scroll();assert.equal(frames.length,1,'Scroll burst queues only one window update');flush();
@@ -537,7 +537,7 @@ console.log('PASS: 1,000-event fast-scroll burst coalesces to latest viewport, i
 const scenarioStart=scroll;let paints=0;
 const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distance:1700},{isActive:()=>true,afterPaint:async()=>{listeners.scroll();flush();paints++;}});
 assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
-assert.equal(debugStates.get('pinboard')().renderer_revision,5);
+assert.equal(debugStates.get('pinboard')().renderer_revision,6);
 console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
 // Model availability must not blink while card-specific choices are read.
 vm.runInContext("applyJoyTagSetting(true);selected={id:'anime-test',url:'https://fixture.test/anime'};taggingChoiceKey=itemKey(selected);",context);
@@ -599,3 +599,20 @@ context.latestGenerationFixture={'atlas-image-tagging-runs-v1':{},'atlas-joytag-
 vm.runInContext('generationSnapshotVersion++;generationSnapshot=latestGenerationFixture;',context);
 releaseStateRead({'atlas-joytag-enabled-v1':false});assert.equal((await staleStateRead)['atlas-joytag-enabled-v1'],true);storage.get=realGet;
 console.log('PASS: newer storage-event model settings survive an older pending state read.');
+// Browsing old cards is read-only: no whole-gallery migration on open/close.
+const actualEnsureImages=context.ensureImages,actualSet=storage.set;let browseWrites=0,browseEnsures=0;
+storage.set=async value=>{browseWrites++;return actualSet(value);};context.ensureImages=async()=>{browseEnsures++;throw Error('Preview attempted a write migration');};
+vm.runInContext("boardAssetsReady=true;metadataState='ready';",context);
+for(let index=0;index<50;index++){
+ await context.openDetail({id:'readonly-'+index,title:'Read-only '+index,url:'https://readonly.fixture.test/'+index+'.jpg'});
+ assert.equal($('image-position').textContent,'1 / 1');assert.equal($('default-image').attrs['aria-pressed'],'true');assert.equal($('remove-image').disabled,false);
+ $('close').onclick();await settleBoardClose();
+}
+assert.equal(browseEnsures,0);assert.equal(browseWrites,0,'Fifty previews must not save gallery documents or preferences');context.ensureImages=actualEnsureImages;
+// Explicit legacy removal still migrates the intended image and records recovery.
+await context.openDetail({id:'readonly-remove',title:'Remove explicitly',url:'https://readonly.fixture.test/remove.jpg'});
+const recoveryBefore=(data[galleryModule.IMAGE_RECOVERY] || []).length;
+context.window.confirm=()=>true;await $('remove-image').onclick();
+assert.equal((data[galleryModule.IMAGE_RECOVERY] || []).length,recoveryBefore+1);assert.equal(data[galleryModule.IMAGE_RECOVERY].at(-1).imageReference,'https://readonly.fixture.test/remove.jpg');assert(browseWrites>0);assert.equal($('image-position').textContent,'No images');
+storage.set=actualSet;
+console.log('PASS: fifty legacy previews perform zero migrations/writes; virtual single-image controls remain usable and explicit removal preserves Recovery behavior.');
