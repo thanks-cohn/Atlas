@@ -189,10 +189,10 @@ $('run-image-tagging').onclick=async()=>{
       save:async(source,result)=>{
         result={...result,image_reference:reference,batch_id:batchId,batch_at:batchAt};
         await navigator.locks.request('atlas-pages-v1',async()=>{
-          const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAGGING_CHECKPOINTS,TAG_VOCABULARY,IMAGE_ENTRIES]),all=stored[TAGGING_RESULTS] || {};
+          const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAGGING_CHECKPOINTS,JOYTAG_ACTIVATED,TAG_VOCABULARY,IMAGE_ENTRIES]),all=stored[TAGGING_RESULTS] || {};
           if(node.entryId){if(!storedEntry(node))throw Error('The image was removed; results remain in companion evidence.');}
           const combined=mergeGeneratedRun(all[itemKey(node)],source,result);
-          const checkpoints=checkpointTags(stored[TAGGING_CHECKPOINTS]?.[itemKey(node)],combined,reference,{source,run_id:result.run_id,batch_id:batchId,batch_at:batchAt,at:new Date().toISOString()},choices.anime===true);
+          const checkpoints=checkpointTags(stored[TAGGING_CHECKPOINTS]?.[itemKey(node)],combined,reference,{source,run_id:result.run_id,batch_id:batchId,batch_at:batchAt,at:new Date().toISOString()},stored[JOYTAG_ACTIVATED]===true,{human:humanTagsFor(node),removed:removedTags(node)});
           const vocabulary=new Map((stored[TAG_VOCABULARY] || []).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
           for(const suggestion of result.suggestions || [])if(typeof suggestion.tag==='string' && suggestion.tag.trim()){const tag=suggestion.tag.trim(),key=tag.normalize('NFKC').toLowerCase();if(!vocabulary.has(key))vocabulary.set(key,tag);}
           const extra={};if(node.entryId){const galleries=structuredClone(stored[IMAGE_ENTRIES] || {}),entry=galleries[node.galleryOwner]?.entries.find(e=>e.id===node.entryId);if(!entry)throw Error('This image was removed.');entry.runs=combined;entry.history.push({id:crypto.randomUUID(),type:'model-run',actor:'model',source,runId:result.run_id || null,at:new Date().toISOString()});extra[IMAGE_ENTRIES]=galleries;}

@@ -80,8 +80,11 @@ export function checkpointState(history,number){
 
 // Compact presentation checkpoints are separate from untouched inference runs.
 // Identical states share a checkpoint, while every execution retains a reference.
-export function checkpointTags(current,runs,reference,execution,animeEnabled=false){
-  const tags=generatedTags(runs,reference,animeEnabled).map(t=>({key:tagKey(t.label),label:t.label})).sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
+export function checkpointTags(current,runs,reference,execution,animeEnabled=false,presentation={}){
+  const labels=new Map(),removed=new Set(Object.keys(presentation.removed || {}).map(tagKey));
+  for(const label of presentation.human || [])if(typeof label==='string' && tagKey(label))labels.set(tagKey(label),label.trim());
+  for(const tag of generatedTags(runs,reference,animeEnabled))if(!removed.has(tagKey(tag.label)) && !labels.has(tagKey(tag.label)))labels.set(tagKey(tag.label),tag.label);
+  const tags=[...labels].map(([key,label])=>({key,label})).sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
   const signature=JSON.stringify(tags.map(t=>t.key));
   const next=structuredClone(current || {schema:1,checkpoints:[],executions:[]});
   if(next.executions.some(e=>e.source===execution.source && e.run_id && e.run_id===execution.run_id))return next;
@@ -97,6 +100,7 @@ export function checkpointTags(current,runs,reference,execution,animeEnabled=fal
   next.executions.push({...execution,number:next.executions.length+1,checkpoint:checkpoint.number,
     previous:previous?.number || null,change:previous?.number===checkpoint.number?'unchanged':previous?'changed':'initial'});
   next.current=checkpoint.number;
+  next.current_tags=tags.map(t=>t.label);
   return next;
 }
 
