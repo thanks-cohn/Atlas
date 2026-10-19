@@ -50,3 +50,23 @@ The desired output is **maximum useful tag coverage**, rather than the current s
 AniTag2Vec and Dart v2 Vectors were discussed as recommendation research options, not an approved combined engine or a shipped dependency. Keep provider selection replaceable; prove vocabulary fit and results on ordinary-photo tags as well as optional anime tags. Do not silently substitute exact tag overlap or a title-based fallback while claiming a trained tag-embedding engine is connected.
 
 Execution checkpoint: (1) qualify and benchmark RAM++/MiVOLO v2 plus detector while preserving optional JoyTag; (2) integrate through the existing replaceable adapters, verify rich tag yield, per-image provenance, memory and Windows packaging; (3) connect and verify recommendations. Existing [open bugs](../backlog/README.md) remain open and must not be marked resolved by this roadmap update. Keep proven current functionality available until its replacement passes.
+
+
+## 2026-10-18 owner priority update — execute non-JoyTag replacement now
+
+The owner now explicitly prioritizes replacing **all current non-JoyTag tagging models** in pursuit of substantially richer and more useful predictions. This supersedes the earlier *UX-first before model investigation* ordering above; it does **not** authorize discarding working features or skipping safety/performance verification.
+
+**Preserve JoyTag without modifying its code, weights, thresholds, default-off Settings visibility, or output provenance.** The existing `objects`, `face`, and `detector` manifest entries, corresponding adapters and packaged behavior remain the rollback baseline until tested replacements pass.
+
+Research confirmed a candidate third-party RAM++ ONNX export at https://huggingface.co/benjaminjonard/ram-plus-onnx with a 384x384 image input, 4,585 output logits, ordered tags and per-label thresholds. This is a **candidate, not an audited production dependency**; verify checkpoint equivalence, attribution/licensing, fixed hashes, preprocessing, RAM, latency and real-image accuracy before adding it to build assets. Primary upstream: https://github.com/xinyu1205/recognize-anything .
+
+For People, MiVOLO v2 is a potential age/appearance estimator but cannot replace the entire detector + People vocabulary alone. Qualify a separate permissively distributable person detector and ensure the People category offers truly useful labels, counts and uncertainties; do not confuse appearance estimates with known identity or gender identity.
+
+**Implementation gates:**
+1. Benchmark real images against current YOLO11n + YuNet/FER and unmodified JoyTag; measure per-image precision, useful distinct tags, person coverage, cold-start, peak RAM, runtime and package size.
+2. Integrate qualifying replacement adapters at the existing `onnx_tags.py` / `/v1/tag-image` boundary. Respect model-specific inputs, normalizations, labels, thresholds and runtime restrictions; do not simply point the old parser at new weights.
+3. Install via pinned hashes and reproducible assets; maintain separate provenance, source IDs and non-destructive history. Preserve explicit Generate Tags and sequential low-memory inference.
+4. Verify genuine Windows EXE smoke + representative-image testing before changing the primary defaults or removing legacy packages. On errors retain old working model and rollback.
+5. Leave JoyTag untouched throughout. Do not report success merely because documentation, manifests or adapters have been edited.
+
+**State at recording:** Direction accepted; replacement **not yet implemented or validated**.
