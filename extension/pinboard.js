@@ -2,7 +2,7 @@ import {createImageEntries,IMAGE_ENTRIES,IMAGE_RECOVERY,entryKey,localImageOrigi
 import {createCardHold,heldMasonry} from './pinboard-card-hold.js';
 import {connectionWriter} from './pinboard-preview-connections.js';
 import {installPreviewSections} from './pinboard-preview-sections.js';
-import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun} from './pinboard-generation.js';
+import {generationImage,generateModels,imageReference,generatedTags,mergeGeneratedRun,tagKey,checkpointTags} from './pinboard-generation.js';
 import {installTagEditor,removeBookmarkTag,TAG_VOCABULARY} from './pinboard-tag-editor.js';
 import {installBlankBoard} from './pinboard-blank.js';
 import {installCoverFetch} from './fetch-covers.js';
@@ -34,7 +34,7 @@ function metadata(node){if(node?.entryId){const entry=storedEntry(node);return {
 function imageFor(node){const gallery=imageEntries.gallery(galleryOwner(node));if(node?.entryId || gallery){const entry=node?.entryId?storedEntry(node):gallery.entries.find(e=>e.id===gallery.defaultId);const source=entry?.image;return source && !failedImages.has(source)?(source.startsWith('data:')?source:publicImageURL(source)):null;}const value=authored(node)?metadata(node).image:(bookmarkCover(node,covers) || metadata(node).image);if(failedImages.has(value))return null;return value?.startsWith('data:')?value:publicImageURL(value);}
 function link(node,label){if(!node.url){const button=el('button',label);button.type='button';button.onclick=()=>openDetail(node);return button;}const a=el('a',label);a.href=node.url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 function pickImage(node){imageTarget=parentNode(node);selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
-function humanTagsFor(node){return [...new Set(metadata(node).tags.filter(tag=>typeof tag==='string').map(tag=>tag.trim()).filter(Boolean))];}
+function humanTagsFor(node){const tags=new Map();for(const tag of metadata(node).tags){if(typeof tag==='string' && tagKey(tag) && !tags.has(tagKey(tag)))tags.set(tagKey(tag),tag.trim());}return [...tags.values()];}
 // Cache only validated image projections; tagsFor stays synchronous during scrolling.
 const TAG_REMOVALS='atlas-card-tag-removals-v1';
 const removedTags=node=>node?.entryId?(storedEntry(node)?.suppressed || {}):(cardTagRemovals[itemKey(node)] || {});
@@ -145,14 +145,17 @@ async function saveTaggingChoices(){
 }
 for(const id of ['tag-image-choice','tag-people-choice','tag-face-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
 const TAGGING_RESULTS='atlas-image-tagging-runs-v1';
+const TAGGING_CHECKPOINTS='atlas-image-tagging-checkpoints-v1';
+let generatedRenderVersion=0;
 async function showGeneratedTags(node){
+  const version=++generatedRenderVersion;
   const host=$('detail-generated-tags');
   host.replaceChildren();
   try{
     const [stored,activation,reference]=await Promise.all([chrome.storage.local.get(TAGGING_RESULTS),chrome.storage.local.get(JOYTAG_ACTIVATED),imageReference(imageFor(node))]);
     const runs=stored[TAGGING_RESULTS]?.[itemKey(node)] || {},animeEnabled=activation[JOYTAG_ACTIVATED]===true;
-    if(itemKey(selected)!==itemKey(node))return;
-    const human=new Set(humanTagsFor(node).map(tag=>tag.normalize('NFKC').toLowerCase()));
+    if(version!==generatedRenderVersion || itemKey(selected)!==itemKey(node))return;
+    const human=new Set(humanTagsFor(node).map(tagKey));
     const grouped=new Map(generatedTags(runs,reference,animeEnabled).map(entry=>[entry.label.normalize('NFKC').toLowerCase(),entry]));
     if(!grouped.size)return;
     const tags=[];
@@ -165,14 +168,15 @@ async function showGeneratedTags(node){
       }).join(' · ');
       tags.push(chip);
     }
-    host.append(...tags);
-  }catch{host.append(el('p','Saved model results could not be loaded.'));}
+    host.replaceChildren(...tags);
+  }catch{if(version===generatedRenderVersion && itemKey(selected)===itemKey(node))host.replaceChildren(el('p','Saved model results could not be loaded.'));}
 }
 
 $('run-image-tagging').onclick=async()=>{
   updateTaggingAction();
   if($('run-image-tagging').disabled || !selected)return;
   const node=selected;
+  const batchId=crypto.randomUUID(),batchAt=new Date().toISOString();
   const choices={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,face:$('tag-face-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
   taggingBusy=true;updateTaggingAction();
   const report=message=>{if(itemKey(selected)===itemKey(node))setTaggingChoiceStatus(message);};
@@ -183,15 +187,16 @@ $('run-image-tagging').onclick=async()=>{
     const reference=await imageReference(sourceImage);
     await generateModels({node,image,choices,send:message=>chrome.runtime.sendMessage(message),status:report,
       save:async(source,result)=>{
-        result={...result,image_reference:reference};
+        result={...result,image_reference:reference,batch_id:batchId,batch_at:batchAt};
         await navigator.locks.request('atlas-pages-v1',async()=>{
-          const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAG_VOCABULARY,IMAGE_ENTRIES]),all=stored[TAGGING_RESULTS] || {};
+          const stored=await chrome.storage.local.get([TAGGING_RESULTS,TAGGING_CHECKPOINTS,TAG_VOCABULARY,IMAGE_ENTRIES]),all=stored[TAGGING_RESULTS] || {};
           if(node.entryId){if(!storedEntry(node))throw Error('The image was removed; results remain in companion evidence.');}
           const combined=mergeGeneratedRun(all[itemKey(node)],source,result);
+          const checkpoints=checkpointTags(stored[TAGGING_CHECKPOINTS]?.[itemKey(node)],combined,reference,{source,run_id:result.run_id,batch_id:batchId,batch_at:batchAt,at:new Date().toISOString()},choices.anime===true);
           const vocabulary=new Map((stored[TAG_VOCABULARY] || []).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
           for(const suggestion of result.suggestions || [])if(typeof suggestion.tag==='string' && suggestion.tag.trim()){const tag=suggestion.tag.trim(),key=tag.normalize('NFKC').toLowerCase();if(!vocabulary.has(key))vocabulary.set(key,tag);}
           const extra={};if(node.entryId){const galleries=structuredClone(stored[IMAGE_ENTRIES] || {}),entry=galleries[node.galleryOwner]?.entries.find(e=>e.id===node.entryId);if(!entry)throw Error('This image was removed.');entry.runs=combined;entry.history.push({id:crypto.randomUUID(),type:'model-run',actor:'model',source,runId:result.run_id || null,at:new Date().toISOString()});extra[IMAGE_ENTRIES]=galleries;}
-          await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[itemKey(node)]:combined},[TAG_VOCABULARY]:[...vocabulary.values()],...extra});
+          await chrome.storage.local.set({[TAGGING_RESULTS]:{...all,[itemKey(node)]:combined},[TAGGING_CHECKPOINTS]:{...(stored[TAGGING_CHECKPOINTS] || {}),[itemKey(node)]:checkpoints},[TAG_VOCABULARY]:[...vocabulary.values()],...extra});
         });
         await refreshGeneratedIndex();
         if(itemKey(selected)===itemKey(node))await showGeneratedTags(node);

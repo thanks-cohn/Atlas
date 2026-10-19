@@ -61,6 +61,45 @@ export async function generateModels({node,image,choices,send,save,status}) {
 // Accept older single-result storage without rewriting original evidence.
 export function modelRuns(value){return Array.isArray(value)?value:(value?[value]:[]);}
 
+export function tagKey(label){return label.normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase();}
+
+export function checkpointState(history,number){
+  const chain=[],seen=new Set();let checkpoint=history.checkpoints.find(c=>c.number===number);
+  while(checkpoint){
+    if(seen.has(checkpoint.number))throw Error('Cyclic tag checkpoint.');
+    seen.add(checkpoint.number);chain.push(checkpoint);
+    checkpoint=checkpoint.base?history.checkpoints.find(c=>c.number===checkpoint.base):null;
+  }
+  const tags=new Map();
+  for(const state of chain.reverse()){
+    for(const key of state.removed || [])tags.delete(key);
+    for(const tag of state.tags || state.added || [])tags.set(tag.key,tag);
+  }
+  return [...tags.values()];
+}
+
+// Compact presentation checkpoints are separate from untouched inference runs.
+// Identical states share a checkpoint, while every execution retains a reference.
+export function checkpointTags(current,runs,reference,execution,animeEnabled=false){
+  const tags=generatedTags(runs,reference,animeEnabled).map(t=>({key:tagKey(t.label),label:t.label})).sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
+  const signature=JSON.stringify(tags.map(t=>t.key));
+  const next=structuredClone(current || {schema:1,checkpoints:[],executions:[]});
+  if(next.executions.some(e=>e.source===execution.source && e.run_id && e.run_id===execution.run_id))return next;
+  const previous=next.checkpoints.find(c=>c.number===next.current && c.image_reference===reference);
+  let checkpoint=next.checkpoints.find(c=>c.image_reference===reference && c.signature===signature);
+  if(!checkpoint){
+    const before=new Map((previous?checkpointState(next,previous.number):[]).map(t=>[t.key,t]));
+    const after=new Set(tags.map(t=>t.key));
+    checkpoint={number:next.checkpoints.length+1,image_reference:reference,signature,created_at:execution.at,
+      ...(previous?{base:previous.number,added:tags.filter(t=>!before.has(t.key)),removed:[...before.keys()].filter(key=>!after.has(key))}:{tags})};
+    next.checkpoints.push(checkpoint);
+  }
+  next.executions.push({...execution,number:next.executions.length+1,checkpoint:checkpoint.number,
+    previous:previous?.number || null,change:previous?.number===checkpoint.number?'unchanged':previous?'changed':'initial'});
+  next.current=checkpoint.number;
+  return next;
+}
+
 // Runs are additive for one chosen cover. Encoded preview bytes may vary between
 // requests; the stable cover reference decides whether this is the same image.
 export function mergeGeneratedRun(current,source,result){
@@ -71,7 +110,13 @@ export function mergeGeneratedRun(current,source,result){
     if(matching.length)next[key]=matching;
   }
   const prior=next[source] || [];
-  next[source]=[...prior.filter(run=>!result.run_id || run.run_id!==result.run_id),result];
+  const signature=run=>JSON.stringify({model:run.model,choices:run.display_choices,
+    tags:[...new Set((run.suggestions || []).filter(s=>typeof s.tag==='string').map(s=>tagKey(s.tag)))].sort(),
+    people:run.people,aggregation:run.aggregation,person_count:run.person_count});
+  const identity=signature(result);
+  // Original per-execution scores/evidence remain in the companion journal.
+  // Browser current state stores one copy of equivalent output, newest last.
+  next[source]=[...prior.filter(run=>(!result.run_id || run.run_id!==result.run_id) && signature(run)!==identity),result];
   return next;
 }
 
@@ -81,11 +126,14 @@ export function generatedTags(runs,reference,animeEnabled=false) {
   const grouped=new Map();
   for(const source of ['objects','people','face','anime']){
     if(source==='anime' && !animeEnabled)continue;
-    for(const run of modelRuns(runs?.[source])){
+    const matching=modelRuns(runs?.[source]).filter(run=>reference && run.image_reference===reference);
+    for(const run of matching){
       if(!reference || run.image_reference!==reference)continue;
       for(const suggestion of run.suggestions || []){
         if(typeof suggestion.tag!=='string')continue;
-        const label=suggestion.tag.trim(),key=label.normalize('NFKC').toLowerCase();
+        // Count assertions describe one image in one run, never a sum of runs.
+        if(source==='people' && run!==matching.at(-1))continue;
+        const label=suggestion.tag.trim().replace(/\s+/g,' '),key=tagKey(label);
         if(source==='objects' && run.display_choices && !run.display_choices[suggestion.category || (key==='person' ? 'people' : 'objects')])continue;
         if(!key)continue;
         if(!grouped.has(key))grouped.set(key,{label,sources:[]});

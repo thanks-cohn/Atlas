@@ -1074,3 +1074,30 @@ This runner produced 76 qualified Things tags across six photos (source baseline
 74; legacy 13); quantized CPU differences and known false/contextual tags prevent
 an accuracy guarantee. Default remains legacy. Actual Chrome/owner hardware,
 broader labeled accuracy and compatible detector terms remain promotion gates.
+
+## 2026-10-19 — owner trial: repeated tags and compact checkpoints
+
+Owner observed repeated chips after rerunning tagging and requires one displayed
+label/current state, with deduplicated timestamped checkpoints and execution/batch
+references kept separately. Fixed an asynchronous detail-render race: latest
+render wins, replaces children atomically, and stale successes/errors cannot
+append. Normalize whitespace/case/Unicode for display; human labels also dedupe.
+Equivalent model outputs share one browser result (newest retained); original
+per-execution evidence stays in the companion. People projection uses only latest
+People run, never adds counts across runs. Other source choices remain additive.
+Separate `atlas-image-tagging-checkpoints-v1` stores unique sorted tag states per
+image plus timestamped numbered execution references and batch UUIDs. Existing
+run storage remains readable; checkpoints begin with the next generation. This
+is internal history, not a new visible history browser. Inference score changes
+alone do not duplicate a browser state; companion evidence retains exact scores.
+
+Executed: generation contracts including actual renderer out-of-order completion,
+equivalent-run compaction, state/checkpoint reuse, run retry idempotency and latest
+People count regression. Owner Chrome confirmation remains pending. No helper
+binary/model change; existing tested candidate installation remains usable.
+
+Owner refinement: history stores initial tags once, then base-checkpoint references
+and added/removed labels for changed states. Identical reruns reference the existing
+checkpoint with `change: unchanged`; returning to an earlier state reuses it too.
+`checkpointState` reconstructs snapshots iteratively. Tests cover delta reconstruction,
+unchanged reruns and return-to-prior state. Display remains the unique current tags.
