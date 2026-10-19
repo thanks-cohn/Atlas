@@ -32,3 +32,31 @@ phase timing separately. No fix shipped for recoverable jobs as of this entry.
 
 Starting points: extension/pinboard-generation.js, pinboard.js, background.js;
 src/atlas_companion/tagging.py, tag_process.py, tag_provenance.py, server.py.
+
+## Owner-specified background behavior — 2026-10-19
+
+Default: leaving the card must NOT cancel tagging. The helper continues the job
+and attaches successful results to that exact original image entry, even while
+another card is open. Returning/reopening retrieves current status/results and
+never requires another Generate click. Closing the page/browser must not discard
+an already accepted helper job; on the next connection the extension reconciles
+its pending request and appends results once. Preserve X removals, existing human
+tags, independent source results, deduplication and checkpoint references. Never
+attach delayed output to whichever card happens to be selected now. Removed or
+replaced images must not receive misattributed results; retain recoverable evidence.
+
+Settings: provide an explicit option to disable background continuation. When
+disabled, leaving the card requests cancellation of that card's in-flight job,
+using an authenticated job-specific operation. Define departure as closing the
+preview or switching to another image/card; handle page shutdown as a best-effort
+cancel plus durable cancellation intent for reconciliation. Do not kill unrelated
+jobs/processes. Distinguish cancelled from timed-out/failed/completed; preserve
+sources already completed and safely resolve completion-versus-cancel races.
+No automatic model restart on return. Default continuation must remain enabled
+unless the owner explicitly changes Settings.
+
+Acceptance adds: leave for five minutes, switch among cards, close/reopen browser,
+observe original job progress and eventual attachment without retry; repeat with
+continuation disabled and verify cancellation, retry availability, no late wrong-card
+attachment, and no removal of previously saved labels. This behavior is required,
+not yet implemented by merely recording this bug.
