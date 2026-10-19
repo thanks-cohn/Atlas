@@ -257,7 +257,9 @@ def main():
                         break
                 except (OSError, ValueError, http.client.HTTPException):
                     pass
-                assert time.monotonic() < deadline, 'Supervisor did not restore the failed helper'
+                if time.monotonic() >= deadline:
+                    from atlas_companion.diagnostics import snapshot
+                    raise AssertionError('Supervisor did not restore the failed helper: ' + json.dumps(snapshot(state)))
                 time.sleep(0.3)
             token = connect()
             # Reproduce the recovery race deterministically: a supervisor can
@@ -290,6 +292,13 @@ def main():
             assert not state.known_origin(origin)
             print('PASS owned uninstall removes registration, revokes enrollment and preserves user data.')
         finally:
+            from atlas_companion.diagnostics import snapshot
+            (binary.parent/'SUPERVISOR_DIAGNOSTICS.json').write_text(json.dumps(snapshot(state),indent=2)+'\n')
+            try:
+                from atlas_companion.windows_supervisor import startup as supervision
+                supervision(state, extension, 17892, 'disable', install_dir=app)
+            except Exception:
+                pass
             try:
                 stop_attested_service(state,17892)
             except Exception:

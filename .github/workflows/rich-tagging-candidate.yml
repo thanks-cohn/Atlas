@@ -46,6 +46,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/smoke_desktop.py
       - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rich-tagging-qualification-reports
+          path: |
+            dist/windows/PHOTO_BENCHMARK.json
+            dist/windows/SUPERVISOR_DIAGNOSTICS.json
+            dist/windows/BUILD_RECEIPT.json
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
         with:
           name: atlas-rich-tagging-CANDIDATE-windows-x86_64
           path: dist/windows/
