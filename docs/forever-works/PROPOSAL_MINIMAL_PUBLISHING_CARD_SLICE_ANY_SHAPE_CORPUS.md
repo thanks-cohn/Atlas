@@ -153,6 +153,21 @@ The aspiration is to empower people with familiar polished workflows, not to mar
 
 **Acceptance:** minimal need to rebuild does not mean zero engineering or zero edits; it means the user almost never has to re-enter or reconstruct content that Atlas already possesses.
 
+## Liquid Sections and Liquid Pages — first-class composition surfaces
+
+**Liquid Sections and Liquid Pages are equally important.** They are not an afterthought or a paid-only escape hatch from rigid templates. A **Liquid Section** is a bounded, freely composed area within an ordinary page; a **Liquid Page** is a complete page whose composition can be freely arranged. Both use the same reusable Atlas card, asset, slice, style, version and source-reference contracts as structured templates.
+
+- Provide direct manipulation: drag, place, resize, layer, align, snap and reorder content; retain accessible non-pointer editing and keyboard alternatives.
+- Compose with existing cards and slices by reference rather than copying or flattening their data. Custom images, text and media remain portable, inspectable objects.
+- Convert or incorporate ordinary template sections into Liquid compositions without re-entering content; extract a Liquid Section into its own Liquid Page or embed a Liquid Page as a suitably adapted slice.
+- Combine Liquid Pages with standard pages in one site; optionally apply shared typography, colors and design tokens so the combined project is cohesive, while retaining deliberate per-object overrides and recoverable originals.
+- Store structured placement and responsive intent in versioned JSON, not just desktop pixel coordinates or screenshots. Any-Shape adaptations must be deliberately designed at phone, tablet, desktop and embedded sizes, including overlap, focus order, interaction, clipping, transitions and reduced-motion behavior.
+- Keep original data, independent revisions, provenance, privacy, assets and links safe through merge, extraction, restyling and publication. Never discard creative placement when switching templates; provide preview and save-as-version where a mapping is imperfect.
+- Export accessible semantic HTML/CSS plus only the necessary JavaScript. Freeform editing does not justify shipping a large canvas framework to every visitor. Document the transformations and rationales in Forever Works, and include Liquid transformations in the aesthetic corpus.
+- Make the common structured workflow effortless; let Liquid freedom be immediately discoverable without making every beginner manipulate absolute positions.
+
+**Acceptance exercise:** build a three-entry story page, add a Liquid Section containing a freely arranged image/text composition, promote it to a standalone Liquid Page, merge it with a portfolio site, harmonize theme settings, adapt on mobile, publish, extract it again, and recover the original arrangements and content without rebuilding.
+
 ## Related existing docs
 
 - [Adaptive Publishing and Presentation](PROPOSAL_ADAPTIVE_PUBLISHING_AND_PRESENTATION_SYSTEM.md) — existing page/template/slice cascade and privacy contract.
