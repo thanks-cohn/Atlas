@@ -1118,3 +1118,12 @@ The reported owner Chrome disappearance is not reproduced here; do not claim its
 root cause established. Apply latest render-race fix and observe actual Chrome
 before escalating diagnostics. Generated labels must persist unless explicitly
 suppressed; deduplication is never permission to erase the remaining label.
+
+## 2026-10-19 — renamed pinboard title startup flash
+
+Owner observed old/default name before saved rename. Startup resolved names only
+after full bookmark/companion/card refresh. Load authoritative saved/default name
+first; initial heading is hidden until that read settles, with generic fallback
+on failure. Card loading no longer delays the title. Rename loader deferred-read
+regressions (named/default boards), pinboard suite and whitespace checks PASS;
+actual Chrome visual confirmation pending.

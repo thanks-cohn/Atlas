@@ -528,10 +528,20 @@ const coverFetch=installCoverFetch({
   },
   onSaved:node=>{updateCoverCard(node);refreshCoverUsage();}
 });
+async function loadBoardTitle(){
+  try{
+    const key=boardId?PINBOARDS_KEY:'atlas.pinboard.default-title.v1';
+    const saved=await chrome.storage.local.get(key);
+    const name=boardId?boardRecord(saved[key]?.[boardId]).title:saved[key];
+    const title=typeof name==='string' && name.trim()?name:'Your pinboard.';
+    $('title').textContent=title;document.title=title+' · Atlas Pinboard';
+  }catch{$('title').textContent='Pinboard';document.title='Pinboard · Atlas';}
+  finally{$('title').hidden=false;}
+}
 async function start(){
+  await loadBoardTitle();
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;$('tags-only').checked=saved?.tagsOnly===true;}catch{}
   await refresh();
-  if(!boardId){const saved=await chrome.storage.local.get('atlas.pinboard.default-title.v1');const name=saved['atlas.pinboard.default-title.v1'];if(typeof name==='string' && name.trim()){$('title').textContent=name;document.title=name+' · Atlas Pinboard';}}
   if(boardId){try{const board=boardRecord((await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY]?.[boardId]);$('title').textContent=board.title;document.title=board.title+' · Atlas Pinboard';const exists=[...$('folder').options].some(o=>o.value===board.folderId);$('folder').value=exists?board.folderId:'all';if(!exists){items=[];resetBlocks();status('PINBOARD_FOLDER_MISSING: Choose another folder to browse.');}else render();}catch{items=[];resetBlocks();status('PINBOARD_NOT_FOUND: This saved pinboard is unavailable.');}}
 
 }
