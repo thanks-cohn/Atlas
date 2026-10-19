@@ -37,3 +37,20 @@ attempts across rediscovery/filter changes/reload, explicit retry, saved opt-out
 and zero requests/prompts without permission. `test_pinboard.mjs` passes existing
 1,000-card, cover preservation, authored and additive-gallery regressions. Actual
 Chrome network/UI behavior remains owner acceptance, not proven by doubles.
+
+
+## Sticky retry clarification
+
+The sticky Fetch control in Visible mode explicitly retries previously unsuccessful
+cards currently in the viewport. Each bookmark-ID/URL has one initial attempt plus
+at most TWO retries, shared by sticky and individual Fetch actions. Version3 stores
+`retries` with the attempt map; v1/v2 maps migrate with zero known retries. Retry
+reservations are saved as pending before network work, so cancellation/reload
+cannot reset the budget. No scroll-driven retries. At the cap, show Retry limit
+reached and keep the card unchanged. A changed URL is a new identity. Full All mode
+continues to skip prior misses; it does not bulk-reset retry history.
+
+Focused tests PASS for sticky retry, reload persistence, second retry, cap enforcement
+through both controls and offscreen exclusion. Existing Fetch and pinboard suites
+remain PASS; no repeat native full-suite run for this queue-only follow-up (same
+runtime/environment and previous170-test result applies).

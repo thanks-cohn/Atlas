@@ -50,3 +50,15 @@ auto=installCoverFetch(autoOptions);await auto.ready;auto.discover();await tick(
 delete data['atlas.coverFetch.automatic.v1'];chrome.permissions.contains=async()=>false;
 auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,2);assert.equal(permissionPrompts,1);auto.stop();
 console.log('PASS: automatic viewport-only startup, no permission prompts, persistent misses across filters/reload, explicit retry, saved opt-out, no access means no requests.');
+
+// Sticky visible retry and individual retry share a durable two-retry ceiling.
+for(const key of Object.keys(data))delete data[key];chrome.permissions.contains=async()=>true;
+automaticReads=0;failAutomatic=true;autoSaved.clear();scope='retry-budget';
+auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,1,'Initial attempt');
+$('fetch-mode').value='visible';await $('fetch-start').onclick();await tick();assert.equal(automaticReads,2,'Sticky retries visible miss once');
+auto.stop();auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,2,'Reload does not retry');
+$('fetch-mode').value='visible';await $('fetch-start').onclick();await tick();assert.equal(automaticReads,3,'Second and last retry');
+await $('fetch-start').onclick();await tick();await auto.request(autoNodes[0]);await tick();assert.equal(automaticReads,3,'Neither sticky nor per-card action bypasses cap');
+assert.match($('fetch-progress').textContent,/Retry limit/);assert.equal(data['atlas.coverFetch.v1.default'].retries['auto|https://auto.example/story'],2);
+auto.stop();
+console.log('PASS: initial attempt plus two explicit visible/card retries maximum, durable budget across reload, no offscreen retries and no cap bypass.');

@@ -1287,3 +1287,12 @@ Focused fetch and full pinboard JS suites PASS; actual Chrome network/UI NOT_RUN
 
 Required project check:170 tests, failures3/errors3/skips33,22 model links valid.
 Same native startup/supervisor environment failures as earlier; not a full pass.
+
+
+## 2026-10-19 — Sticky cover retry budget
+
+Owner clarifies sticky Fetch should retrigger unsuccessful visible cards but never
+more than two retries. Implemented initial+two retry ceiling per bookmark ID/URL,
+shared by sticky Visible and per-card controls; version3 pending reservations/counts
+persist before retry network work. No automatic retry on scrolling/reload. Cap
+shows visible notice. Focused Fetch/pinboard regressions PASS; Chrome network NOT_RUN.

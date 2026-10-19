@@ -44,13 +44,13 @@ export function installCoverFetch({getScope,getNodes,getMounted,hasCover,saveCov
   const $=id=>document.getElementById(id),key='atlas.coverFetch.v1.'+(new URL(location.href).searchParams.get('id') || 'default');
   const autoKey='atlas.coverFetch.automatic.v1';
   let initialized=false,permissionGranted=false,autoEnabled=true,autoPaused=false,automatic=false;
-  let running=false,busy=false,mode='visible',scope='',done={},queue=[],pending=new Set(),controller=null,timer=null,notice='',generation=0;
+  let running=false,busy=false,mode='visible',scope='',done={},retries={},queue=[],pending=new Set(),controller=null,timer=null,notice='',generation=0;
   const identity=node=>node.id+'|'+node.url;
   const progress=()=>{const values=Object.values(done),saved=values.filter(x=>x==='saved').length,failed=values.filter(x=>x!=='saved' && x!=='skipped').length;$('fetch-progress').textContent=`${running?'Fetching covers': 'Cover fetch paused'} · ${saved} saved · ${failed} unavailable · ${queue.length} queued${notice?' · '+notice:''}`;$('fetch-cancel').hidden=!running;$('fetch-start').textContent=Object.keys(done).length || queue.length?'Resume fetching':'Fetch bookmark covers';};
-  const checkpoint=()=>chrome.storage.local.set({[key]:{version:2,scope,mode,done}});
+  const checkpoint=()=>chrome.storage.local.set({[key]:{version:3,scope,mode,done,retries}});
   function stop(){running=false;generation++;controller?.abort();clearTimeout(timer);timer=null;queue=[];pending.clear();progress();}
-  function add(nodes){for(const node of nodes){const id=identity(node);if(coverURL(node.url) && !hasCover(node) && !done[id] && !pending.has(id)){queue.push(node);pending.add(id);}}}
-  function discover(){if(!initialized)return;if(!running && autoEnabled && !autoPaused && permissionGranted){running=true;automatic=true;mode='visible';scope=getScope();generation++;}if(!running)return;if(scope!==getScope()){stop();if(autoEnabled && !autoPaused){discover();return;}notice='Collection changed; start a new fetch.';progress();return;}if(mode==='visible'){const visible=getMounted().filter(({element})=>{const rect=element.getBoundingClientRect();const buffer=automatic?200:0;return rect.bottom>-buffer && rect.top<window.innerHeight+buffer;}).map(x=>x.node);const ids=new Set(visible.map(identity));queue=queue.filter(node=>{if(ids.has(identity(node)))return true;pending.delete(identity(node));return false;});add(visible);}if(mode!=='visible' && !busy && !queue.length){running=false;notice='Finished this selection.';}progress();pump();}
+  function add(nodes,force=false){for(const node of nodes){const id=identity(node);if(coverURL(node.url) && !hasCover(node) && (!done[id] || force) && !pending.has(id)){queue.push(node);pending.add(id);}}}
+  function discover(){if(!initialized)return;if(!running && autoEnabled && !autoPaused && permissionGranted){running=true;automatic=true;mode='visible';scope=getScope();generation++;}if(!running)return;if(scope!==getScope()){stop();if(autoEnabled && !autoPaused){discover();return;}notice='Collection changed; start a new fetch.';progress();return;}if(mode==='visible'){const visible=getMounted().filter(({element})=>{const rect=element.getBoundingClientRect();const buffer=automatic?200:0;return rect.bottom>-buffer && rect.top<window.innerHeight+buffer;}).map(x=>x.node);const ids=new Set(visible.map(identity));queue=queue.filter(node=>{if(ids.has(identity(node)))return true;pending.delete(identity(node));return false;});add(visible);}if(mode!=='visible' && !busy && !queue.length){running=false;notice=notice || 'Finished this selection.';}progress();pump();}
   async function pump(){
     if(!running || busy || timer || !queue.length)return;
     busy=true;const node=queue.shift(),id=identity(node),epoch=generation;controller=new AbortController();const activeController=controller;const timeout=setTimeout(()=>activeController.abort(),12000);
@@ -67,7 +67,7 @@ export function installCoverFetch({getScope,getNodes,getMounted,hasCover,saveCov
     }finally{
       clearTimeout(timeout);pending.delete(id);busy=false;
       if(epoch===generation){try{await checkpoint();}catch{notice='COVER_CHECKPOINT_FAILED';autoPaused=true;stop();}progress();}
-      if(running && !queue.length && mode!=='visible'){running=false;notice='Finished this selection.';progress();}
+      if(running && !queue.length && mode!=='visible'){running=false;notice=notice || 'Finished this selection.';progress();}
       if(running && queue.length){timer=setTimeout(()=>{timer=null;discover();pump();},500);}
     }
   }
@@ -78,11 +78,25 @@ export function installCoverFetch({getScope,getNodes,getMounted,hasCover,saveCov
     permissionGranted=true;await ready;
     if(busy){notice='Cancel the active request and try again when it finishes.';progress();return;}
     stop();autoPaused=false;automatic=false;scope=getScope();mode=single?'single':$('fetch-mode').value;notice='';
-    if(single){delete done[identity(single)];add([single]);}else if(mode==='all')add(getNodes());
+    const retryTargets=single?[single]:mode==='visible'?getMounted().filter(({element})=>{const rect=element.getBoundingClientRect();return rect.bottom>0 && rect.top<window.innerHeight;}).map(item=>item.node):[];
+    let limited=0;const approvedRetries=[];
+    for(const node of retryTargets){
+      const id=identity(node),outcome=done[id];
+      if(hasCover(node) || !coverURL(node.url) || !outcome)continue;
+      if(outcome==='saved' || outcome==='skipped'){delete done[id];continue;}
+      if((retries[id] || 0)>=2){limited++;continue;}
+      retries[id]=(retries[id] || 0)+1;done[id]='COVER_RETRY_PENDING';approvedRetries.push(node);
+    }
+    // Reserve retry budgets durably before starting another network request.
+    try{await checkpoint();}catch{notice='COVER_CHECKPOINT_FAILED';autoPaused=true;progress();return;}
+    if(limited)notice='Retry limit reached for '+limited+' card(s): at most two retries per bookmark URL.';
+    add(approvedRetries,true);
+    if(single){add([single]);}else if(mode==='all')add(getNodes());
     running=true;generation++;progress();discover();
   }
   const ready=(async()=>{
-    try{const record=(await chrome.storage.local.get(key))[key];if([1,2].includes(record?.version) && record.done && typeof record.done==='object')done=record.done;
+    try{const record=(await chrome.storage.local.get(key))[key];if([1,2,3].includes(record?.version) && record.done && typeof record.done==='object')done=record.done;
+      if(record?.version===3 && record.retries && typeof record.retries==='object')retries=Object.fromEntries(Object.entries(record.retries).map(([id,count])=>[id,Number.isInteger(count)?Math.max(0,Math.min(2,count)):2]));
       autoEnabled=(await chrome.storage.local.get(autoKey))[autoKey]!==false;
       permissionGranted=Boolean(await chrome.permissions.contains?.({origins:['https://*/*','http://*/*']}));
     }catch{notice='Automatic fetch could not check settings or site access. Use Fetch to enable.';}
