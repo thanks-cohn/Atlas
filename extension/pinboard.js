@@ -279,11 +279,11 @@ function card(node){
   if(image){
     const button=el('button');button.className='pin-visual';button.setAttribute('aria-label','Preview '+(node.title || node.url));
     const geometry=imageGeometry.get(image);button.style.aspectRatio=geometry || '4 / 3';
-    const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{let changed=false;if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;changed=imageGeometry.get(image)!==ratio;imageGeometry.set(image,ratio);if(button.style.aspectRatio!==ratio)button.style.aspectRatio=ratio;}button.classList.add('is-ready');scheduleWindow(!changed);};img.src=image;button.onclick=()=>openDetail(node);
-    img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow();};
+    const img=el('img');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';img.alt=node.title || '';const loading=el('span');loading.className='pin-loading';loading.append(el('strong','A'),el('span','Loading image…'));button.append(img,loading);img.onload=()=>{let changed=false;if(img.naturalWidth && img.naturalHeight){const ratio=img.naturalWidth+' / '+img.naturalHeight;changed=imageGeometry.get(image)!==ratio;imageGeometry.set(image,ratio);if(button.style.aspectRatio!==ratio)button.style.aspectRatio=ratio;}button.classList.add('is-ready');window.atlasDebug?.performance.measure('image.loaded-pixels',(img.naturalWidth || 0)*(img.naturalHeight || 0));scheduleWindow(!changed,'image-load');};img.src=image;button.onclick=()=>openDetail(node);
+    img.onerror=()=>{failedImages.add(image);article.replaceChildren();emptyCard(article,node);scheduleWindow(false,'image-error');};
     const copy=el('div');copy.className='pin-copy';const strip=tagStrip(node),copyHeight=strip?138:78;copy.style.height=copyHeight+'px';button.style.height='calc(100% - '+copyHeight+'px)';const title=link(node,node.title || hostLabel(node));title.className='pin-title';const url=link(node,hostLabel(node));url.className='pin-url';copy.append(title,url);if(strip)copy.append(strip);article.append(button,copy);
     const tagEdit=el('button');tagEdit.className='image-tag-edit';tagEdit.type='button';tagEdit.style.bottom=(copyHeight+16)+'px';tagEdit.setAttribute('aria-label','Edit tags for '+(node.title || node.url));const icon=el('span');icon.className='image-tag-icon';icon.setAttribute('aria-hidden','true');tagEdit.append(icon);
-    let idle;const reveal=()=>{tagEdit.setAttribute('data-visible','');clearTimeout(idle);idle=setTimeout(()=>tagEdit.removeAttribute('data-visible'),1600);};
+    let idle;article.atlasRelease=()=>clearTimeout(idle);const reveal=()=>{tagEdit.setAttribute('data-visible','');clearTimeout(idle);idle=setTimeout(()=>tagEdit.removeAttribute('data-visible'),1600);};
     button.addEventListener('pointermove',reveal);button.addEventListener('pointerenter',reveal);tagEdit.addEventListener('pointermove',reveal);article.addEventListener('pointerleave',()=>{clearTimeout(idle);tagEdit.removeAttribute('data-visible');});
     tagEdit.onclick=event=>{event?.stopPropagation();tagsChangedURL=itemKey(node);editTags(defaultEntryNode(node));};article.append(tagEdit);
   }else emptyCard(article,node);
@@ -295,7 +295,7 @@ function columns(){
   const width=$('pins').clientWidth || 1100;
   return window.innerWidth<=540 ? 2 : Math.max(1,Math.min(7,Math.floor((width+20)/230)));
 }
-function scheduleWindow(reuseLayout=false){if(reuseLayout!==true)windowLayoutDirty=true;if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow(true,!windowLayoutDirty);});}
+function scheduleWindow(reuseLayout=false,reason='data'){window.atlasDebug?.performance.measure('schedule.'+(['data','scroll','resize','image-load','image-error'].includes(reason)?reason:'data'),1);if(reuseLayout!==true)windowLayoutDirty=true;if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow(true,!windowLayoutDirty);});}
 function positionCard(element,position){if(!position)return;const style={position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'};for(const [key,value] of Object.entries(style))if(element.style[key]!==value)element.style[key]=value;}
 function renderWindow(preserveAnchor=true,reuseLayout=false){if(boardLayoutBlocked()){deferredBoardWindow=true;return;}const end=window.atlasDebug?.performance.begin('render.window');try{return renderWindowWork(preserveAnchor,reuseLayout);}finally{end?.();}}
 function renderWindowWork(preserveAnchor=true,reuseLayout=false){
@@ -379,7 +379,7 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   coverFetch.discover();
   status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'}` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
-function releaseCardImage(element,clearSource=true){const image=element.querySelector('img');if(image){image.onload=null;image.onerror=null;if(clearSource)image.removeAttribute('src');}}
+function releaseCardImage(element,clearSource=true){element.atlasRelease?.();const image=element.querySelector('img');if(image){image.onload=null;image.onerror=null;if(clearSource)image.removeAttribute('src');}}
 function resetBlocks(){if(boardLayoutBlocked()){deferredBoardReset=true;deferredBoardWindow=true;return;}for(const block of blocks.values())for(const element of block.children)releaseCardImage(element);blocks.clear();$('pins').replaceChildren();renderWindow();}
 const selectionKey=tag=>tag.normalize('NFKC').trim().toLowerCase();
 function selectionTags(){return [...new Map([...highlightedTags,...tagQuery($('search').value).tags].map(tag=>[selectionKey(tag),tag])).values()];}
@@ -563,8 +563,8 @@ $('cancel-new-board').onclick=()=>$('new-board-dialog').close();
 $('new-board-form').onsubmit=async event=>{event.preventDefault();const title=$('new-board-title').value.trim();if(!title || title.length>200)return;try{if(renamingBoard){await navigator.locks.request('atlas-pages-v1',async()=>{if(boardId){const saved=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};const board=boardRecord(saved[boardId]);await chrome.storage.local.set({[PINBOARDS_KEY]:{...saved,[boardId]:{...board,title}}});for(const option of $('folder').options)if(option.value==='board:'+boardId)option.textContent=title;}else await chrome.storage.local.set({'atlas.pinboard.default-title.v1':title});});$('title').textContent=title;document.title=title+' · Atlas Pinboard';$('new-board-dialog').close();return;}const id=crypto.randomUUID();await navigator.locks.request('atlas-pages-v1',()=>createPinboard(chrome.storage.local,{id:'',url:''},title,id,'blank'));location.href='pinboard.html?id='+encodeURIComponent(id);}catch{$('new-board-status').textContent='Could not create this pinboard. Please try again.';}};
 $('images-only').onchange=()=>{render();$('pins').scrollIntoView({block:'start',behavior:'instant'});scheduleWindow();saveSettings();};
 $('card-limit').onchange=()=>{limit=cardLimit($('card-limit').value);renderWindow();saveSettings();};
-window.addEventListener('scroll',()=>scheduleWindow(true),{passive:true});
-window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
+window.addEventListener('scroll',()=>scheduleWindow(true,'scroll'),{passive:true});
+window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow(false,'resize');});
 $('edit-authored-card').onclick=()=>{const node=parentNode(selected);$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(parentNode(selected)) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(parentNode(selected));$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
 function resumeBoardAfterClose(){
@@ -671,7 +671,7 @@ async function start(){
 }
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
 window.atlasDebug?.performance.registerState('pinboard',()=>({
-  renderer_revision:3,overscan_rows:1,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
+  renderer_revision:4,overscan_rows:1,image_geometry_entries:imageGeometry.size,failed_image_entries:failedImages.size,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
   nearby_budget:limit,layout_dirty:windowLayoutDirty,window_update_pending:!!frame,layout_blocked:!!boardLayoutBlocked(),
   assets_ready:boardAssetsReady,held_cards:cardHolds.active().length,layout_positions:positions.length
 }));

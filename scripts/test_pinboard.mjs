@@ -50,8 +50,8 @@ const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>
 const flush=()=>{const work=frames.splice(0);for(const fn of work)fn();};
 const settleBoardClose=async()=>{flush();flush();await tick();flush();};
 flush();assert.ok(cards().length>0 && cards().length<=72);
-const originalCard=cards()[0];
-scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));assert.equal(originalCard.children[0].children[0].onload,null,'Evicted images must not keep scheduling layout');assert.equal(originalCard.children[0].children[0].onerror,null);
+const originalCard=cards()[0];let releasedOriginal=0;const originalRelease=originalCard.atlasRelease;originalCard.atlasRelease=()=>{releasedOriginal++;originalRelease?.();};
+scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));assert.equal(originalCard.children[0].children[0].onload,null,'Evicted images must not keep scheduling layout');assert.equal(originalCard.children[0].children[0].onerror,null);assert.equal(releasedOriginal,1,'Eviction releases card hover timer resources');
 assert.ok(parseFloat($('pins').children[0].style.height)>0);
 scroll=0;listeners.scroll();flush();assert.ok(cards().length>0 && cards().length<=72);assert.notEqual(cards()[0],originalCard);
 $('card-limit').value='24';$('card-limit').onchange();await tick();assert.ok(cards().length>0 && cards().length<=24);assert.equal(data[model.PINBOARD_SETTINGS].limit,24);
@@ -537,7 +537,7 @@ console.log('PASS: 1,000-event fast-scroll burst coalesces to latest viewport, i
 const scenarioStart=scroll;let paints=0;
 const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distance:1700},{isActive:()=>true,afterPaint:async()=>{listeners.scroll();flush();paints++;}});
 assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
-assert.equal(debugStates.get('pinboard')().renderer_revision,3);
+assert.equal(debugStates.get('pinboard')().renderer_revision,4);
 console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
 // Model availability must not blink while card-specific choices are read.
 vm.runInContext("applyJoyTagSetting(true);selected={id:'anime-test',url:'https://fixture.test/anime'};taggingChoiceKey=itemKey(selected);",context);

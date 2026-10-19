@@ -48,3 +48,20 @@ console.log('PASS: bounded numeric aggregates survive sample eviction, idle meas
 api.start();let release,scoped;api.register('waiting',async(_,probe)=>{scoped=probe;await new Promise(resolve=>release=resolve);return probe.isActive();});
 const running=api.run('waiting');await assert.rejects(()=>api.run('test'),/BUSY/);api.stop();api.start();assert.equal(scoped.isActive(),false);release();assert.equal(await running,false);api.stop();
 console.log('PASS: scenarios reject overlap and cannot continue measuring a replacement capture.');
+// Prolonged capture keeps baseline + bounded trend points and cleans all work.
+const beginSoak=now;assert.equal(api.soak({durationMs:999999}).duration_ms,600000);assert.equal(api.snapshot().mode,'soak');assert.equal(api.snapshot().timeline.length,1);
+env.performance.memory={usedJSHeapSize:12345};
+for(let index=0;index<75;index++){
+ now+=5000;const heartbeat=[...timers].find(([,timer])=>timer.at<=now && timer.at!==beginSoak+600000);if(heartbeat){timers.delete(heartbeat[0]);heartbeat[1].fn();}
+}
+const soakReport=api.snapshot();assert.equal(soakReport.timeline.length,60);assert.equal(soakReport.timeline[0].at_ms,0,'Initial baseline survives long use');assert.equal(soakReport.timeline.at(-1).js_heap_bytes,12345);assert(soakReport.timeline.at(-1).at_ms>=300000);assert(soakReport.samples.length<=240);
+api.stop();assert.equal(frames.size,0);assert.equal(timers.size,0);assert(!JSON.stringify(soakReport).includes('PRIVATE'));
+api.start({durationMs:999999});assert.equal(api.snapshot().mode,'capture');assert.equal(api.snapshot().timeline.length,0);api.stop();
+console.log('PASS: opt-in ten-minute soak retains baseline and bounded numeric trends, optional heap data and complete timer/listener cleanup.');
+// Actual Settings controls start only on request and copy a stopped capture.
+const controls=Object.fromEntries(['performance-record','performance-copy','performance-status','performance-report'].map(id=>[id,{hidden:true,value:'',focus(){},select(){}}]));
+env.document={...document,readyState:'complete',getElementById:id=>controls[id]};let copied='';env.navigator={clipboard:{writeText:async text=>copied=text}};
+vm.runInNewContext(readFileSync('extension/performance-debug.js','utf8'),{window:env,URL,Promise,Number,Math,Object,Map,Set});
+assert.equal(env.atlasDebug.performance.isActive(),false);controls['performance-record'].onclick();assert.equal(env.atlasDebug.performance.isActive(),true);now+=100;await controls['performance-copy'].onclick();assert.equal(env.atlasDebug.performance.isActive(),false);assert.equal(JSON.parse(copied).mode,'soak');assert.equal(frames.size,0);assert.equal(timers.size,0);
+env.navigator.clipboard.writeText=async()=>{throw Error('denied');};await controls['performance-copy'].onclick();assert.equal(controls['performance-report'].hidden,false);assert.equal(JSON.parse(controls['performance-report'].value).mode,'soak');
+console.log('PASS: Settings recording/copy controls stay opt-in, stop on copy and provide a selectable report if clipboard access fails.');

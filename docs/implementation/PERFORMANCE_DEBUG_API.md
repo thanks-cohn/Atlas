@@ -223,3 +223,38 @@ renderer_revision2 state reader, bounded capture-wide `measurements`,
 Measurements preserve phase maxima after raw sample eviction. This supplements
 the actual owner capture now stored in evidence; post-fix browser timing and
 Escape/missed-click proof remain pending, not a claimed performance pass.
+
+## Prolonged-use soak capture (renderer revision4)
+
+Owner continues to report severe lag after prolonged use. One-row DOM bounds do
+not prove the whole page is responsive. Root cause remains UNKNOWN without a
+current trace/reproduction; do not assume a memory leak from the symptom alone.
+
+Board Settings now has **Record lag** and **Copy lag report**. Record starts a
+five-minute opt-in capture; Copy stops it and copies JSON. If clipboard permission
+fails, a selectable report appears below the controls. Nothing is sent automatically.
+Closing/reloading the page loses the page-local report, so copy before reloading.
+
+Agents may use `atlasDebug.performance.soak({durationMs:300000})`, reproduce normally,
+then `atlasDebug.performance.stop()`. Explicit soak is capped at600000ms. Ordinary
+start remains capped at30000ms. The5-second timeline keeps the initial baseline
+plus the latest59 points: total/mounted/image/tag DOM counts, known image pixels,
+optional supported JS heap size, sanitized numeric renderer state, interval long
+ tasks and maximum input queue/timer drift. Full source spans/phase aggregates and
+bounded raw samples remain available. State and pixels are sampled only while
+visible (initial baseline excepted); hidden time is not classified as frame lag.
+
+Interpretation: growing full DOM with bounded mounted cards suggests investigating
+other interface sections; growing heap warrants a real allocation/retainer trace;
+repeated image-load invalidations or long render phases point to different work.
+Pixel totals estimate known image dimensions, not decoded bytes or browser cache
+memory. Optional JS heap data excludes many native/GPU allocations. A small JS heap
+cannot rule out expensive decoding/painting, and these counters do not prove leaks.
+Renderer revision4 adds image geometry/failure cache counts, per-source schedule
+counters and loaded image-pixel measurements. Hover reveal timers now cancel when
+cards are released; their prior1600ms lifetime alone does not explain prolonged lag.
+
+Deterministic tests verify ten-minute cap, baseline/trend bounds, optional heap data,
+normal-mode cap, cleanup, opt-in Settings controls and clipboard fallback. Browser
+soak/memory-timeline proof NOT_RUN here: Chromium still unavailable. Acceptance018
+remains open; next evidence should contain revision4 state and the slow interval.

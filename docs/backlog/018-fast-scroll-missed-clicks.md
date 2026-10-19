@@ -34,3 +34,28 @@ clicks open reliably; Escape closes promptly even after prolonged interaction;
 DOM/handlers/queued updates remain bounded. Preserve lazy loading, images/tags,
 held-card behavior, all-visible coverage and manual Fetch. Obtain real browser
 before/after evidence and keep016/017 open until their acceptance passes too.
+
+## Owner follow-up — prolonged use still lags
+
+Owner says prolonged use still causes severe lag after the one-row correction.
+This explicitly prevents treating reduced DOM scope as a completed performance fix.
+Exact running commit/latest trace UNKNOWN; no current capture establishes a leak.
+
+Audit found per-card hover reveal timers were not explicitly cancelled on eviction;
+added the release hook. Timers were1600ms-lived, so this is resource cleanup, NOT
+proof of an indefinitely growing queue or the reported lag's root cause.
+
+Added opt-in prolonged capture via Board Settings Record lag / Copy lag report.
+Five-minute UI deadline; explicit API soak allows at most ten minutes. Baseline plus
+latest59 five-second health points capture DOM/image/tag counts, live renderer state,
+optional JS heap size, known image pixels, long-task/input-queue/timer-drift maxima.
+Samples, metrics, listeners and paint jobs remain bounded; nothing records by default
+or uploads itself. Image pixel count is NOT a measured decoded-memory allocation,
+and JS heap is NOT whole-page or GPU memory. Missing heap support is null.
+
+Renderer revision4 exposes geometry/failure cache counts, render request source
+counters (scroll/data/resize/image load/error), image loaded-pixel measurements and
+one-row bounds. Settings copy stops recording, copies JSON or displays a selectable
+fallback. Future agent can compare baseline/end state and work sources without
+requiring the owner to narrate each stall, but needs a report from the actual slow
+browser or an executable-browser reproduction. Lag/root cause remains OPEN.

@@ -1558,3 +1558,27 @@ valid. Same pre-existing container native/bootstrap/supervisor READY limitation;
 full suite is not green. Actual Chromium benchmark still blocked by unavailable
 executable/download. Next: pull/reload and compare revision3 captures and feel;
 retain lag reports as open until browser evidence supports closing them.
+
+## 2026-10-19 — Prolonged-use lag remains OPEN; soak diagnostics
+
+Owner reports severe lag after prolonged use despite one-row changes. Do not call
+this fixed or infer a leak without evidence. Exact owner running build UNKNOWN.
+Source audit adds eviction cleanup for1600ms hover-reveal timers; not a proven root
+cause. No speculative redesign/automatic Fetch or data deletion introduced.
+
+Board Settings Record lag starts opt-in five-minute capture; Copy lag report stops
+and copies JSON or offers a selectable textarea fallback. API soak cap ten minutes,
+ordinary start cap30 seconds unchanged. Bounded five-second trend keeps baseline
+plus latest59 points; raw samples240, metrics32, pending paint jobs8 remain bounded.
+Timeline: whole/card/image/tag DOM counts, sanitized numeric renderer state,
+optional JS heap, known-image pixels and interval main-thread/input/drift maxima.
+Renderer revision4 adds geometry/failure cache counts, scheduling reasons and image
+pixel measurements. No background sampling until opt-in and no automatic uploads.
+JS heap/pixels are explicitly not whole-browser/decoded/GPU memory measurements.
+
+Node profiler/soak/UI tests and full pinboard regression PASS; timer-release hook
+verified on eviction. Required check_project:170 tests,3 failures,3 errors,33 skips;
+22 local model links valid. Same existing native/bootstrap/supervisor READY failures;
+full suite not green. Browser prolongation/latency/visual proof NOT_RUN, no executable.
+Next: owner Record lag during normal use, Copy when degraded, compare baseline/end
+and work counters. Keep018/016 open. Tiny startup batch plan remains unimplemented.

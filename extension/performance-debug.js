@@ -1,7 +1,8 @@
 // Opt-in, page-local measurements. Never exports URLs, titles, keys typed or content.
 (() => {
   const env=window,clock=()=>env.performance.now(),CAPACITY=240,MAX_MS=30000;
-  const samples=[],observers=[],listeners=[],paintJobs=new Set();
+  const samples=[],observers=[],listeners=[],paintJobs=new Set(),timeline=[];
+  let soakMode=false,lastHealthAt=0,intervalHealth={};
   const noop=()=>{};
   let scenarioRunning=false;
   let active=false,frame=0,loop=0,deadline=0,generation=0,lastFrame=0,due=0,dropped=0,started=null,stopped=0;
@@ -13,6 +14,11 @@
     if(!active || !Number.isFinite(duration))return;
     const sample={type,name:label(name),at_ms:round(clock()-started),duration_ms:round(Math.max(0,duration)),...extra};
     totals[type]=(totals[type] || 0)+1;
+    if(soakMode){
+      if(type==='longtask'){intervalHealth.long_tasks=(intervalHealth.long_tasks || 0)+1;intervalHealth.long_task_max_ms=Math.max(intervalHealth.long_task_max_ms || 0,duration);}
+      if(type==='input' && extra.trusted)intervalHealth.input_queue_max_ms=Math.max(intervalHealth.input_queue_max_ms || 0,duration);
+      if(type==='loop')intervalHealth.timer_drift_max_ms=Math.max(intervalHealth.timer_drift_max_ms || 0,duration);
+    }
     const sameType=samples.filter(item=>item.type===type);
     if(sameType.length>=60){samples.splice(samples.indexOf(sameType[0]),1);dropped++;}
     else if(samples.length===CAPACITY){const discard=samples.findIndex(item=>['frame','loop','resource'].includes(item.type));samples.splice(discard<0?0:discard,1);dropped++;}
@@ -50,6 +56,7 @@
   }
   function stop(){
     if(!active)return snapshot();
+    if(soakMode && visible() && clock()>lastHealthAt)sampleHealth();
     stopped=clock();active=false;generation++;
     env.cancelAnimationFrame(frame);env.clearTimeout(loop);env.clearTimeout(deadline);frame=loop=deadline=0;
     for(const observer of observers)observer.disconnect();observers.length=0;
@@ -57,11 +64,13 @@
     for(const job of [...paintJobs])job.finish('cancelled');
     return snapshot();
   }
-  function clear(){measurements.clear();samples.length=0;dropped=0;for(const key of Object.keys(totals))delete totals[key];}
-  function start({durationMs=10000}={}){
+  function clear(){timeline.length=0;intervalHealth={};measurements.clear();samples.length=0;dropped=0;for(const key of Object.keys(totals))delete totals[key];}
+  function start({durationMs=10000,soak=false}={}){
     stop();clear();for(const key of Object.keys(supported))delete supported[key];
     active=true;generation++;const epoch=generation;started=clock();startedUTC=new Date().toISOString();stopped=0;lastFrame=0;
-    const duration=Math.max(250,Math.min(MAX_MS,Number(durationMs) || 10000));
+    soakMode=soak===true;lastHealthAt=clock();
+    const duration=Math.max(250,Math.min(soakMode?600000:MAX_MS,Number(durationMs) || 10000));
+    if(soakMode)sampleHealth();
     observe('longtask',{},entry=>record('longtask','main-thread',entry.duration));
     observe('event',{durationThreshold:16},entry=>record('event','browser-input',entry.duration,{queue_ms:round(Math.max(0,entry.processingStart-entry.startTime)),handler_ms:round(Math.max(0,entry.processingEnd-entry.processingStart))}));
     observe('layout-shift',{},entry=>{if(!entry.hadRecentInput)record('layout','shift',0,{value:entry.value});});
@@ -73,7 +82,7 @@
     };
     frame=env.requestAnimationFrame(tick);
     due=clock()+50;
-    const heartbeat=()=>{if(!active || epoch!==generation)return;if(visible())record('loop','timer-drift',Math.max(0,clock()-due));due=clock()+50;loop=env.setTimeout(heartbeat,50);};
+    const heartbeat=()=>{if(!active || epoch!==generation)return;if(visible()){record('loop','timer-drift',Math.max(0,clock()-due));if(soakMode && clock()-lastHealthAt>=5000)sampleHealth();}due=clock()+50;loop=env.setTimeout(heartbeat,50);};
     loop=env.setTimeout(heartbeat,50);
     listen('visibilitychange',()=>{lastFrame=0;due=clock()+50;},true);
     for(const type of ['pointerdown','click','keydown','wheel'])listen(type,event=>{
@@ -105,9 +114,17 @@
   function applicationState(){
     const result={};for(const [name,read] of stateReaders){try{const value=read(),safe={};for(const [key,item] of Object.entries(value || {}).slice(0,32))if(/^[a-zA-Z0-9_.:-]{1,64}$/.test(key) && (typeof item==='boolean' || Number.isFinite(item)))safe[key]=item;result[name]=safe;}catch{result[name]={unavailable:true};}}return result;
   }
+  function sampleHealth(){
+    const doc=env.document,count=selector=>doc.querySelectorAll(selector).length;
+    const pixels=[...doc.querySelectorAll('img')].reduce((sum,img)=>sum+(img.naturalWidth || 0)*(img.naturalHeight || 0),0);
+    const heap=env.performance.memory?.usedJSHeapSize;
+    const entry={at_ms:round(clock()-started),mounted_cards:count('#pins .pin'),total_elements:count('*'),image_elements:count('img'),tag_buttons:count('#tag-field button'),known_image_pixels:pixels,js_heap_bytes:Number.isFinite(heap)?heap:null,application:applicationState(),...intervalHealth};
+    // Keep the initial baseline plus the latest59 points, never unlimited history.
+    if(timeline.length>=60)timeline.splice(1,1);timeline.push(entry);intervalHealth={};lastHealthAt=clock();
+  }
   function snapshot(){
     const doc=env.document,count=selector=>doc.querySelectorAll(selector).length;
-    return {schema:'atlas.performance.v1',active,started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),measurements:Object.fromEntries([...measurements].map(([key,value])=>[key,{...value,mean:round(value.sum/value.count)}])),application:applicationState(),dom:{total_elements:count('*'),image_elements:count('img'),tag_buttons:count('#tag-field button'),mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
+    return {schema:'atlas.performance.v1',active,mode:soakMode?'soak':'capture',timeline:timeline.map(item=>({...item,application:JSON.parse(JSON.stringify(item.application))})),started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),measurements:Object.fromEntries([...measurements].map(([key,value])=>[key,{...value,mean:round(value.sum/value.count)}])),application:applicationState(),dom:{total_elements:count('*'),image_elements:count('img'),tag_buttons:count('#tag-field button'),mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
   }
   function check({frameGapMs=50,inputMs=100,loopDriftMs=100,interactionMs=100}={}){
     const report=snapshot(),rules=[];
@@ -122,11 +139,23 @@
     const config=start({durationMs});await new Promise(resolve=>env.setTimeout(resolve,config.duration_ms));return stop();
   }
   const api={start,stop,clear,snapshot,check,probe,begin,afterPaint,measure,
+    soak:({durationMs=300000}={})=>start({durationMs,soak:true}),
     registerState(name,read){if(typeof read!=='function')throw Error('STATE_READER_REQUIRED');if(stateReaders.size>=8 && !stateReaders.has(label(name)))throw Error('STATE_READER_LIMIT');stateReaders.set(label(name),read);},
     isActive:()=>active,
     register(name,fn){if(typeof fn!=='function')throw Error('SCENARIO_HANDLER_REQUIRED');scenarios.set(label(name),fn);},
     async run(name,options={}){if(!active)throw Error('PERFORMANCE_CAPTURE_NOT_ACTIVE');if(scenarioRunning)throw Error('PERFORMANCE_SCENARIO_BUSY');const action=scenarios.get(name);if(!action)throw Error('PERFORMANCE_SCENARIO_UNAVAILABLE');const epoch=generation,end=begin('scenario.'+name);scenarioRunning=true;const scoped={...api,isActive:()=>active && epoch===generation,afterPaint:name=>epoch===generation?afterPaint(name):Promise.resolve({status:'cancelled'})};try{return await action(options,scoped);}finally{scenarioRunning=false;end();}}
   };
+  function installControls(){
+    const doc=env.document,recordButton=doc.getElementById?.('performance-record'),copyButton=doc.getElementById?.('performance-copy'),status=doc.getElementById?.('performance-status');
+    if(!recordButton || !copyButton || !status)return;
+    recordButton.onclick=()=>{const output=doc.getElementById?.('performance-report');if(output){output.value='';output.hidden=true;}api.soak();status.textContent='Recording for up to five minutes. Reproduce the lag, then click Copy lag report.';};
+    copyButton.onclick=async()=>{
+      const report=api.stop();
+      try{await env.navigator.clipboard.writeText(JSON.stringify(report,null,2));status.textContent='Lag report copied. Paste it into your bug report.';}
+      catch{const output=doc.getElementById?.('performance-report');if(output){output.value=JSON.stringify(report,null,2);output.hidden=false;output.focus?.();output.select?.();status.textContent='Clipboard unavailable. Copy the selected report below.';}else status.textContent='Clipboard unavailable. Use atlasDebug.performance.snapshot() in the console.';}
+    };
+  }
+  if(env.document.readyState==='loading')env.document.addEventListener('DOMContentLoaded',installControls,{once:true});else installControls();
   env.atlasDebug ||= {};
   env.atlasDebug.performance=api;
   if(new URL(env.location.href).searchParams.get('debugPerformance')==='1')start({durationMs:30000});
