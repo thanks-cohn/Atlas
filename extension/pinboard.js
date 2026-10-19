@@ -19,6 +19,8 @@ let boardAssetsReady=false,boardAssetsPromise=Promise.resolve();
 const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
 let blocks=new Map(),frame=0,limit=72;
+let deferredBoardWindow=false,deferredBoardReset=false,boardResumePending=false;
+const boardLayoutBlocked=()=>boardResumePending || $('detail').open || $('image-source').open;
 const topSpacer=el('div'),bottomSpacer=el('div');topSpacer.className=bottomSpacer.className='pin-spacer';
 const boardId=new URL(location.href).searchParams.get('id');
 const status=text=>$('status').textContent=text;
@@ -50,7 +52,8 @@ function tagsFor(node){
   const removed=removedTags(node);
   return [...result.values()].filter(tag=>!Object.hasOwn(removed,tag.normalize('NFKC').toLowerCase()));
 }
-async function refreshGeneratedIndex(){
+async function refreshGeneratedIndex(){const end=window.atlasDebug?.performance.begin('index.generated-tags');try{return await loadGeneratedIndex();}finally{end?.();}}
+async function loadGeneratedIndex(){
   const epoch=++generatedEpoch;
   const saved=await chrome.storage.local.get([TAGGING_RESULTS,JOYTAG_ACTIVATED,TAG_REMOVALS]);
   cardTagRemovals=saved[TAG_REMOVALS] || {};
@@ -229,20 +232,20 @@ function openDetailContent(node,{preserveConnections=false}={}){
   loadTaggingChoices(node);showGeneratedTags(node);
 }
 async function openDetail(node){
-  const request=++detailOpenVersion,parent=parentNode(node);
+  const request=++detailOpenVersion,parent=parentNode(node),endOpen=window.atlasDebug?.performance.begin('preview.open-handler');
   try{
     // Open synchronously from cached state: storage/native initialization is not
     // a prerequisite for reading already available connections.
     document.documentElement.setAttribute('data-pin-open','');
     if(!$('detail').open)$('detail').showModal();
-    openDetailContent(defaultEntryNode(node));$('detail-scroll').scrollTop=0;
+    openDetailContent(defaultEntryNode(node));$('detail-scroll').scrollTop=0;endOpen?.();window.atlasDebug?.performance.afterPaint('preview.open');
     if(imageEntries.gallery(galleryOwner(parent)))return;
     await ensureImages(parent);
     if(request!==detailOpenVersion || !$('detail').open || selected?.entryId || galleryOwner(selected)!==galleryOwner(parent))return;
     const gallery=imageEntries.gallery(galleryOwner(parent));
     const entry=gallery?.entries.find(e=>e.id===(node.entryId || gallery.defaultId)) || gallery?.entries[0];
     openDetailContent(entry?entryNode(parent,entry):parent,{preserveConnections:true});
-  }catch(error){if(request===detailOpenVersion && $('detail').open)setTaggingChoiceStatus(error.message || 'Image details could not be loaded. Cached connections remain available.');}
+  }catch(error){if(request===detailOpenVersion && $('detail').open)setTaggingChoiceStatus(error.message || 'Image details could not be loaded. Cached connections remain available.');}finally{endOpen?.();}
 }
 
 const editTags=installTagEditor({localAdapter:node=>{
@@ -289,7 +292,8 @@ function columns(){
 }
 function scheduleWindow(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderWindow();});}
 function positionCard(element,position){if(!position)return;Object.assign(element.style,{position:'absolute',left:position.x+'px',top:position.y+'px',width:position.width+'px',height:position.height+'px',margin:'0'});}
-function renderWindow(preserveAnchor=true){
+function renderWindow(preserveAnchor=true){if(boardLayoutBlocked()){deferredBoardWindow=true;return;}const end=window.atlasDebug?.performance.begin('render.window');try{return renderWindowWork(preserveAnchor);}finally{end?.();}}
+function renderWindowWork(preserveAnchor=true){
   const mounted=[...blocks.values()].flatMap(block=>[...block.children]);
   const mountedById=new Map(mounted.map(element=>[element.atlasNode.id,element]));
   const anchor=(preserveAnchor?mounted:[]).find(element=>{const r=element.getBoundingClientRect();return r.bottom>0 && r.top<(window.innerHeight || 768);});
@@ -331,7 +335,7 @@ function renderWindow(preserveAnchor=true){
   coverFetch.discover();
   status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'}` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
 }
-function resetBlocks(){blocks.clear();$('pins').replaceChildren();renderWindow();}
+function resetBlocks(){if(boardLayoutBlocked()){deferredBoardReset=true;deferredBoardWindow=true;return;}blocks.clear();$('pins').replaceChildren();renderWindow();}
 const selectionKey=tag=>tag.normalize('NFKC').trim().toLowerCase();
 function selectionTags(){return [...new Map([...highlightedTags,...tagQuery($('search').value).tags].map(tag=>[selectionKey(tag),tag])).values()];}
 function isSelectedTag(tag){return selectionTags().some(value=>selectionKey(value)===selectionKey(tag));}
@@ -432,10 +436,11 @@ function indexAssociations(data){
   return result;
 }
 async function refreshAssociations(){
+  const end=window.atlasDebug?.performance.begin('load.companion-metadata');
   // Tags belong to exact Atlas bookmark URLs; never infer tags from titles/domains.
-  try{const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.ok===false || !result?.data)throw Error('Unavailable');associations=indexAssociations(result.data);metadataState='ready';}catch{metadataState=associations.size?'cached':'unavailable';}
+  try{const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog'});if(result?.ok===false || !result?.data)throw Error('Unavailable');associations=indexAssociations(result.data);metadataState='ready';}catch{metadataState=associations.size?'cached':'unavailable';}finally{end?.();}
 }
-let refreshVersion=0,initialBoardCollection=true;
+let refreshVersion=0,initialBoardCollection=true,firstCardsMeasured=false;
 async function refresh(){
   const request=++refreshVersion;
   try{
@@ -459,13 +464,14 @@ async function refresh(){
     // Bookmark structure is sufficient for the first usable cards. Do not make
     // companion availability, tag hashing or image storage gate that first paint.
     render();
+    if(!firstCardsMeasured){firstCardsMeasured=true;window.atlasDebug?.performance.afterPaint('startup.cards');}
     boardAssetsPromise=Promise.all([
       chrome.storage.local.get(COVER_KEY).then(saved=>{if(request===refreshVersion)covers=saved[COVER_KEY] || {};}),
       blankBoard.load(),imageEntries.load()
     ]);
     await boardAssetsPromise;
     if(request!==refreshVersion)return;
-    boardAssetsReady=true;render();
+    boardAssetsReady=true;render();window.atlasDebug?.performance.afterPaint('startup.saved-covers');
     await refreshAssociations();if(request!==refreshVersion)return;
     await refreshGeneratedIndex();if(request!==refreshVersion)return;
     renderWindow();
@@ -516,14 +522,23 @@ window.addEventListener('scroll',scheduleWindow,{passive:true});
 window.addEventListener('resize',()=>{cardHolds.clear();scheduleWindow();});
 $('edit-authored-card').onclick=()=>{const node=parentNode(selected);$('detail').close();blankBoard.edit(node);};
 $('delete-authored-card').onclick=async()=>{if(!authored(parentNode(selected)) || !window.confirm('Remove this card from the board?'))return;try{await blankBoard.remove(parentNode(selected));$('detail').close();}catch(error){setTaggingChoiceStatus(error.message || 'Card could not be removed.');}};
+function resumeBoardAfterClose(){
+  if(boardResumePending)return;boardResumePending=true;
+  // Let closing the top-layer dialog paint before deferred masonry work resumes.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{
+    boardResumePending=false;if(boardLayoutBlocked())return;
+    const reset=deferredBoardReset,redraw=deferredBoardWindow;deferredBoardReset=deferredBoardWindow=false;
+    if(reset)resetBlocks();else if(redraw)renderWindow();
+  },0)));
+}
 function clearDetailMedia(){detailOpenVersion++;detailImageVersion++;$('detail-image').onload=null;$('detail-image').onerror=null;$('detail-image').removeAttribute('src');if(!$('image-source').open)document.documentElement.removeAttribute('data-pin-open');}
-function closeDetail(){clearDetailMedia();$('detail').close();}
+function closeDetail(){const end=window.atlasDebug?.performance.begin('preview.close-handler');try{clearDetailMedia();$('detail').close();resumeBoardAfterClose();}finally{end?.();window.atlasDebug?.performance.afterPaint('preview.close');}}
 $('close').onclick=closeDetail;
 $('detail').addEventListener('cancel',event=>{event.preventDefault();closeDetail();});
-$('detail').addEventListener('close',()=>{if(!$('detail').open)clearDetailMedia();});
+$('detail').addEventListener('close',()=>{if(!$('detail').open){clearDetailMedia();resumeBoardAfterClose();}});
 $('replace-image').onclick=()=>pickImage(selected);
 $('cancel-image').onclick=()=>$('image-source').close();
-$('image-source').addEventListener('close',()=>{if(!$('detail').open)document.documentElement.removeAttribute('data-pin-open');});
+$('image-source').addEventListener('close',()=>{if(!$('detail').open){document.documentElement.removeAttribute('data-pin-open');resumeBoardAfterClose();}});
 $('upload-image').onclick=()=>{$('image-file').value='';$('image-file').click();};
 async function ensureImages(parent){
   if(!boardAssetsReady)await boardAssetsPromise;
@@ -610,4 +625,16 @@ async function start(){
 
 }
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
+window.atlasDebug?.performance.register('pinboard.preview-cycle',async(options,probe)=>{
+  if((document.querySelectorAll?.('dialog[open]') || []).length)throw Error('CLOSE_EXISTING_DIALOGS_FIRST');
+  const cycles=Math.max(1,Math.min(10,Math.floor(Number(options.cycles) || 3)));let completed=0;
+  for(let index=0;index<cycles && probe.isActive();index++){
+    const card=[...blocks.values()].flatMap(block=>[...block.children]).find(card=>{const rect=card.getBoundingClientRect();return rect.bottom>0 && rect.top<window.innerHeight;});
+    if(!card)throw Error('NO_VISIBLE_CARD');
+    openDetail(card.atlasNode);await probe.afterPaint('scenario.open');
+    if(!$('detail').open)break;
+    closeDetail();await probe.afterPaint('scenario.close');completed++;
+  }
+  return {completed_cycles:completed};
+});
 start();

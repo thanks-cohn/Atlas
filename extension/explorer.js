@@ -456,7 +456,8 @@ async function loadGrants() {
   }
   render();
 }
-async function navigate(grant, path = "", record = true) {
+async function navigate(grant,path="",record=true){const end=window.atlasDebug?.performance.begin("explorer.navigate");try{return await navigateMeasured(grant,path,record);}finally{end?.();window.atlasDebug?.performance.afterPaint("explorer.folder");}}
+async function navigateMeasured(grant, path = "", record = true) {
   if (state.busy) return;
   const load = ++state.load;
   state.previewRequest++;

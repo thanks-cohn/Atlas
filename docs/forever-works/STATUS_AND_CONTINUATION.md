@@ -1353,3 +1353,26 @@ INSTANT_PIN_PREVIEW.md record limits and continuation.
 
 Required project check:170 tests, failures3/errors3/skips33;22 links valid.
 Same native startup/supervisor environment failures persist; full suite not passed.
+
+
+## 2026-10-19 — Fetch rollback and opt-in performance debug API
+
+Owner reports stutter since automatic Fetch and continuing Escape lag at~90MB.
+Reverted fetch module/test to2cb4694 and original manual dock, removing automatic
+checkbox and new retry policy while retaining saved data and later preview/startup
+fixes. No trace establishes fetch as sole cause. Added performance-debug.js in
+Pinboard/Explorer: atlasDebug.performance explicit start/stop/probe/snapshot/check,
+bounded30s/240samples, longtask/EventTiming/frame/drift/layout/resource support,
+source spans, safe DOM counts and explicit preview-cycle scenario. No capture
+observers/listeners/timers by default, no uploads/content/URL collection. Shelf
+existing diagnostics includes a snapshot. Board layout/reset is deferred behind
+modals and resumes after close paint opportunity. Actual Chrome lag NOT proven fixed.
+Tests: profiler deterministic contract, manual Fetch, full pinboard, bookmarks,
+entry-point, recovery, preview sections/connections/title pass. No local Chrome.
+Backlog016 reopened continuedlag;017 records rollback and acceptance. Detailed
+API examples/limits in implementation/PERFORMANCE_DEBUG_API.md. Historical Fetch
+record clearly marked REVERTED. Required Python suite result follows when complete.
+
+Required project check:170 tests, failures3/errors3/skips33;22 model links valid.
+Same existing native bootstrap/supervisor environment failures; not a full pass.
+Manual-fetch source/test are byte-for-byte baseline2cb4694. No user data deleted.

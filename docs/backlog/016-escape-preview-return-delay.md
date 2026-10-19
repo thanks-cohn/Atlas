@@ -1,6 +1,6 @@
 # 016 — Escape sometimes delays return to board
 
-**Status:** Close path adjusted; owner Chrome latency acceptance pending.
+**Status:** Unresolved — owner reports continued Escape lag after close-path changes.
 **Reported:** 2026-10-19 America/Chicago.
 
 Owner requests Escape immediately return from preview to mounted pinboard. No
@@ -20,3 +20,9 @@ mounted board-card objects unchanged before resolving setup, then confirms it do
 not reopen. Actual keyboard-to-paint latency, long tasks and nested Chrome modal
 behavior remain owner/browser acceptance. Do not promise to preempt arbitrary
 synchronous JavaScript or claim all underlying lag causes diagnosed.
+
+
+Owner follow-up: Escape still lags, browser page memory around90MB. This supersedes
+any inference that the earlier change fixed perceived latency. Added opt-in timing
+surface and deferred board layout/reset behind modals, resuming after a close-paint
+opportunity. Root cause and real Chrome improvement remain unproven. Keep open.

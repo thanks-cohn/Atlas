@@ -27,6 +27,7 @@
         ]);
         lastReport = response?.ok ? {ui:{code:bootCode},...response} : {ui:{code:bootCode},code:'DEBUG_API_UNAVAILABLE'};
       } catch { lastReport = {ui:{code:bootCode},code:'WORKER_UNAVAILABLE_OR_TIMEOUT'}; }
+      if(window.atlasDebug?.performance)lastReport.performance=window.atlasDebug.performance.snapshot();
       output.textContent = JSON.stringify(lastReport,null,2);
     }
     const show = () => {byId('debug-dialog').showModal(); refresh();};

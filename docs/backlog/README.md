@@ -24,7 +24,9 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 | 014 | [Container outline overlaps card edges](014-pinboard-container-focus-outline-overlap.md) | Styling adjusted — Chrome verification pending |
 
 | 015 | [Pinboard first render waits for metadata](015-pinboard-startup-waits-for-metadata.md) | Implemented — Chrome timing confirmation pending |
-| 016 | [Escape delays return from preview](016-escape-preview-return-delay.md) | Close path adjusted — Chrome latency confirmation pending |
+| 016 | [Escape delays return from preview](016-escape-preview-return-delay.md) | Unresolved — continued Escape lag; profiling required |
+
+| 017 | [Stutter after automatic Fetch rework](017-automatic-fetch-performance-regression.md) | Reverted — latency root cause unresolved |
 
 ## Adding an item
 

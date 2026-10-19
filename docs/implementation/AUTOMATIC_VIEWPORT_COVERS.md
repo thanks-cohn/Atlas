@@ -1,7 +1,12 @@
+> **REVERTED on owner request, 2026-10-19.** This is a historical specification,
+> not current default behavior. Automatic viewport fetching and the new two-retry
+> policy are removed; manual Fetch is restored. Existing covers/data are retained.
+> See [performance/debug and rollback record](PERFORMANCE_DEBUG_API.md).
+
 # Implemented: automatic viewport covers and bounded sticky retries
 
 **Recorded:** 2026-10-19, America/Chicago.
-**Status:** Implemented and pushed to `implement/rich-photo-tagging`.
+**Status:** Historical implementation, subsequently reverted on owner performance report.
 **Implementation commits:** `6b9d881ff7200a8510e3d295742247e32c16686d`
 (automatic viewport behavior), `9996b5bff38eab0e9caf6d5e4c60ff5c36079622`
 (sticky retries and durable ceiling).

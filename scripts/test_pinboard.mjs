@@ -46,6 +46,7 @@ vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
 const flush=()=>{const work=frames.splice(0);for(const fn of work)fn();};
+const settleBoardClose=async()=>{flush();flush();await tick();flush();};
 flush();assert.equal(cards().length,72);
 const originalCard=cards()[0];
 scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));
@@ -56,13 +57,13 @@ const pin=cards()[0];assert.equal(pin.children[0].children[0].loading,'lazy');
 assert.equal(pin.children[0].children[1].className,'pin-loading');
 pin.children[0].children[0].onload();assert.equal(pin.children[0].ready,'is-ready');
 vm.runInContext("metadataState='ready'",context);await pin.children[0].onclick();assert.equal($('detail').open,true);assert.equal($('detail-link').href,node.url);
-$('close').onclick();assert.equal($('detail').open,false);delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
+$('close').onclick();await settleBoardClose();assert.equal($('detail').open,false);await settleBoardClose();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 assert.equal(pin.children[1].children[0].href,node.url);
 roots[0].children[0].children[0].url='https://example.com/plain';await $('refresh').onclick();
 const narrow=cards()[0].children[0];assert.equal(narrow.className,'pin-empty');assert.equal(narrow.children[1].textContent,'+');
 narrow.children[1].onclick();assert.equal($('image-source').open,true);
 $('cover-url').value='javascript:alert(1)';await $('save-image-url').onclick();assert.match($('image-status').textContent,/HTTP/);
-$('cover-url').value='https://example.com/cover.webp';await $('save-image-url').onclick();assert.equal($('image-source').open,false);
+$('cover-url').value='https://example.com/cover.webp';await $('save-image-url').onclick();assert.equal($('image-source').open,false);await settleBoardClose();
 assert.equal(data[coversModule.COVER_KEY]['10'].image,'https://example.com/cover.webp');
 assert.equal(coversModule.bookmarkCover(roots[0].children[0].children[0],data[coversModule.COVER_KEY]),'https://example.com/cover.webp');
 $('images-only').checked=true;$('images-only').onchange();await tick();assert.ok(!cards().some(card=>card.children[0].className==='pin-empty'));assert.match($('status').textContent,/1,000 bookmarks/);
@@ -108,7 +109,7 @@ context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired
 await $('refresh').onclick();flush();
 let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].children[0].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
 assert.equal(tagged.children[1].style.height,'138px');
-await strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.parentNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
+await strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.parentNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();await settleBoardClose();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
 // Refresh retrieves edits to the existing catalog rather than requiring a new tab.
 tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].children[0].textContent,'Updated');
@@ -205,7 +206,7 @@ await $('run-image-tagging').onclick();assert.equal(generationRequests,1);assert
 $('joytag-enabled').checked=true;await $('joytag-enabled').onchange();assert.equal(data['atlas-joytag-enabled-v1'],true);assert.equal($('tag-anime-wrap').hidden,false);
 $('tag-anime-choice').checked=true;await $('tag-anime-choice').handlers.change();
 assert.equal(data['atlas-tagging-studio-layout-v1'][vm.runInContext('itemKey(selected)',context)].anime,true);
-$('close').onclick();vm.runInContext('openDetail(items[0])',context);await tick();await tick();assert.equal($('tag-anime-choice').checked,true);
+$('close').onclick();await settleBoardClose();vm.runInContext('openDetail(items[0])',context);await tick();await tick();assert.equal($('tag-anime-choice').checked,true);
 $('joytag-enabled').checked=false;await $('joytag-enabled').onchange();assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false);
 for(const id of ['tag-image-choice'])$(id).checked=false;
 await $('tag-image-choice').handlers.change();assert.equal($('run-image-tagging').disabled,true);
@@ -270,7 +271,7 @@ console.log('PASS: cumulative generated attachments survive reloading storage wi
 
 // Alt+Q restores ordinary order without deleting attachments. Open preview and
 // editor controls retain key ownership; typed search words are kept.
-$('close').onclick();vm.runInContext("highlightedTags=new Set(['smile']);$('search').value='';updatePriorities()",context);
+$('close').onclick();await settleBoardClose();vm.runInContext("highlightedTags=new Set(['smile']);$('search').value='';updatePriorities()",context);
 let clearPrevented=false;
 listeners.keydown({key:'Escape',target:document.body,preventDefault(){throw Error('Escape must not clear tags');}});
 assert.equal(vm.runInContext('highlightedTags.size',context),1);
@@ -281,7 +282,7 @@ vm.runInContext("highlightedTags.add('smile');$('search').value='Bookmark tag:sm
 vm.runInContext("$('detail').showModal()",context);
 listeners.keydown({key:'q',altKey:true,target:document.body,preventDefault(){throw Error('Preview must not clear underlying tags');}});
 assert.equal(vm.runInContext('highlightedTags.size',context),1);
-$('close').onclick();listeners.keydown({key:'q',altKey:true,target:{matches:()=>true},preventDefault(){throw Error('Editor must keep input handling');}});
+$('close').onclick();await settleBoardClose();listeners.keydown({key:'q',altKey:true,target:{matches:()=>true},preventDefault(){throw Error('Editor must keep input handling');}});
 assert.equal(vm.runInContext('highlightedTags.size',context),1);
 listeners.keydown({key:'q',altKey:true,target:$('search'),preventDefault(){}});
 assert.equal(vm.runInContext('highlightedTags.size',context),0);assert.equal($('search').value,'Bookmark');
@@ -352,7 +353,7 @@ blankImpl=context.authoredInstall(blankOptions);await blankImpl.load();$('folder
 assert.equal(cards().length,3);assert.ok(cards().every(card=>card.className.startsWith('pin')));assert.equal($('tag-browser').hidden,false);assert.equal($('pins').hidden,false);
 const authoredA=cards().find(card=>card.atlasNode.cardId==='auth-a'),authoredB=cards().find(card=>card.atlasNode.cardId==='auth-b');
 assert.equal(authoredA.children[0].className,'pin-visual');await authoredA.children[0].onclick();await tick();await tick();assert.equal($('detail').open,true);assert.equal($('detail-title').textContent,'Authored A');assert.equal(previewContent.notes.map(note=>note.text).join('\n\n'),'A note');assert.equal($('detail-link').hidden,true);assert.equal($('edit-authored-card').hidden,false);
-$('close').onclick();$('search').value='tag:Alpha,Beta';vm.runInContext('updatePriorities()',context);assert.equal(vm.runInContext('items[0].cardId',context),'auth-b');assert.equal(vm.runInContext('items.length',context),3);
+$('close').onclick();await settleBoardClose();$('search').value='tag:Alpha,Beta';vm.runInContext('updatePriorities()',context);assert.equal(vm.runInContext('items[0].cardId',context),'auth-b');assert.equal(vm.runInContext('items.length',context),3);
 $('search').value='';const isolated=blankImpl.nodes();assert.notEqual(isolated[1].itemKey,isolated[2].itemKey);assert.notEqual(isolated[1].itemKey,taggedImage.url);
 const pair=authoredB.children[1].children.find(child=>child.className==='pin-tags').children.find(pair=>pair.children[0].textContent==='Beta');await pair.children[1].onclick({stopPropagation(){}});assert.ok(!blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(blankImpl.metadata(isolated[2]).tags.includes('Beta'));
 const localTagEditor=tagEditorOptions.localAdapter(isolated[1]);await localTagEditor.mutate('tag','Beta');assert.ok(blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Beta'));
@@ -360,8 +361,8 @@ vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await 
 context.chrome.runtime.sendMessage=async message=>{assert.equal(message.path,'/v1/tag-image');assert.equal(message.body.item_id,vm.runInContext('itemKey(selected)',context));return {ok:true,source:'objects',run_id:'auth-run',image_payload_sha256:'auth-payload',suggestions:[{tag:'Authored Machine',score:.9}]};};
 $('tag-image-choice').checked=true;await $('run-image-tagging').onclick();
 assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)]);assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Authored Machine'));
-await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'),'Editing parent card must preserve independently owned image evidence');
-$('close').onclick();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
+await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.notEqual(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled','Board rebuild stays deferred behind the modal');$('close').onclick();await settleBoardClose();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'),'Editing parent card must preserve independently owned image evidence');
+$('close').onclick();await settleBoardClose();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
 $('folder').value='all';vm.runInContext('render()',context);$('folder').value='blank';vm.runInContext('render()',context);assert.equal(blankImpl.region().hidden,false);assert.equal($('preview-board').textContent,'Preview');
 console.log('PASS: legacy authored cards use common card/preview/ranking/tag/X/generation/masonry functions, unique identities, local mutation, stale-cover isolation, editing refresh and preview exit reset.');
 
@@ -427,7 +428,7 @@ const persistentKey=vm.runInContext('itemKey(selected)',context);
 context.chrome.runtime.sendMessage=async message=>({ok:true,source:'objects',run_id:'persist-reopen',suggestions:[{tag:'Persistent Result',score:.9}]});
 $('tag-image-choice').checked=true;await $('run-image-tagging').onclick();
 assert(data['atlas-image-tagging-runs-v1'][persistentKey]);
-$('close').onclick();await vm.runInContext('openDetail(blankBoard.nodes()[1])',context);await tick();await tick();$('close').onclick();
+$('close').onclick();await settleBoardClose();await vm.runInContext('openDetail(blankBoard.nodes()[1])',context);await tick();await tick();$('close').onclick();await settleBoardClose();
 await vm.runInContext('imageEntries.load();generatedIndex=new Map();refreshGeneratedIndex()',context);
 await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
 assert.equal(vm.runInContext('itemKey(selected)',context),persistentKey);
@@ -475,7 +476,7 @@ vm.runInContext("showDetailImage('https://images.example/broken.jpg','Broken')",
 console.log('PASS: preview and cached connections open synchronously during delayed setup, close invalidates pending work, placeholder load/error states and stale-image protection.');
 
 // Render bookmark cards before slow saved covers and companion metadata finish.
-$('detail').close();$('folder').value='1';$('images-only').checked=false;$('tags-only').checked=false;$('search').value='';
+$('detail').close();$('image-source').close();await settleBoardClose();$('folder').value='1';$('images-only').checked=false;$('tags-only').checked=false;$('search').value='';
 let releaseSavedCovers,releaseStartupMetadata;const coversGate=new Promise(resolve=>releaseSavedCovers=resolve),metadataGate=new Promise(resolve=>releaseStartupMetadata=resolve);
 const originalGet=storage.get,originalMessage=context.chrome.runtime.sendMessage;
 storage.get=async key=>{if(key===coversModule.COVER_KEY)await coversGate;return originalGet(key);};
