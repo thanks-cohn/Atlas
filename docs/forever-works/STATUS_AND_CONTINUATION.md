@@ -1127,3 +1127,13 @@ first; initial heading is hidden until that read settles, with generic fallback
 on failure. Card loading no longer delays the title. Rename loader deferred-read
 regressions (named/default boards), pinboard suite and whitespace checks PASS;
 actual Chrome visual confirmation pending.
+
+## 2026-10-19 — compact saved Notes rows
+
+Owner screenshot showed long note content consuming the entire preview. Saved
+note buttons now match Add Note's 72px row, with single-line title and two-line
+clamped excerpt. Existing click-to-edit expansion reveals full text in the
+resizable textarea; saving/reopening returns to compact rows. Expanded state is
+not persisted. Save validates nonblank text without trimming original whitespace.
+Preview section contracts and whitespace checks PASS; actual Chrome visual QA
+pending. No original note content is shortened by the presentation clamp.

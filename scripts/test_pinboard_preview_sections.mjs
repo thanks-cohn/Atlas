@@ -15,3 +15,9 @@ get('notes-panel').children.find(node=>node.className==='preview-note').onclick(
 view.setContent('second',{available:false});assert.equal(get('notes-panel').hidden,true);assert.equal(get('notes-panel').children[1].textContent,'Notes are unavailable right now.');
 const html=readFileSync('extension/pinboard.html','utf8'),css=readFileSync('extension/pinboard.css','utf8');assert.match(html,/▶<\/span>Notes/);assert.match(html,/▶<\/span>Bookmarks/);assert.match(css,/bottom:calc\(100% \+ 8px\)/);
 console.log('PASS: exclusive panels, note draft/error/save, existing-bookmark chooser, safe links, focused bookmark image swap and reset.');
+
+const noteCSS=readFileSync('extension/pinboard.css','utf8');
+assert.match(noteCSS,/#detail button\.preview-note\{[^}]*height:72px/);
+assert.match(noteCSS,/-webkit-line-clamp:2/);
+assert(!readFileSync('extension/pinboard-preview-sections.js','utf8').includes('text:draft.text.trim()'));
+console.log('PASS: saved notes use compact 72px rows with two-line excerpts; expanded editor preserves original whitespace.');

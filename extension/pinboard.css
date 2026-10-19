@@ -343,3 +343,9 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 [data-board-appearance=dark] .image-entry-controls{border-color:var(--pin-line)}
 [data-board-appearance=dark] #default-image[aria-pressed=true]{color:#ffe19a;background:#443923;border-color:#8e7844}
 @media(max-width:480px){.image-entry-controls{gap:6px}.image-entry-navigation{gap:5px}.image-entry-controls button{padding:7px}#image-position{font-size:10px}}
+
+/* Saved notes start as the same compact row as Add Note. Expansion belongs to
+   the transient editor; original text/spacing stays in storage. */
+#detail button.preview-note{height:72px;min-height:72px;max-height:72px;padding:10px 20px;overflow:hidden}
+#detail .preview-note h3{margin:0 0 3px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#detail .preview-note p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;white-space:normal;line-height:16px;max-height:32px}
