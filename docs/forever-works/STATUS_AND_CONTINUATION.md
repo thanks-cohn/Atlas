@@ -1272,3 +1272,18 @@ returns null for removed ID, asserting actual markup absence. This tests full
 Bookmarks initialization, unlike previous permissive test DOM. Focused Bookmarks,
 Recovery and entry-point tests PASS. Owner Chrome reload confirmation pending.
 No helper reinstall or data cleanup is needed.
+
+
+## 2026-10-19 — Default viewport cover fetching with durable misses
+
+Owner accepts automatic fetching for visible cards and explicitly requires no
+endless retry of unsuccessful attempts. Implemented in fetch-covers.js with
+Board Settings opt-out, already-granted permission checks (no startup prompt),
+serial requests and nearby200px discovery. Version2 attempt map retains misses
+across filters/reloads; explicit per-card Fetch retries. Existing selected covers
+and manual All mode preserved. See implementation/AUTOMATIC_VIEWPORT_COVERS.md
+for obligations, permission/queue behavior and checkpoint migration.
+Focused fetch and full pinboard JS suites PASS; actual Chrome network/UI NOT_RUN.
+
+Required project check:170 tests, failures3/errors3/skips33,22 model links valid.
+Same native startup/supervisor environment failures as earlier; not a full pass.

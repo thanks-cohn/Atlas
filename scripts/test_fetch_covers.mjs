@@ -28,3 +28,25 @@ queue=installCoverFetch(options);$('fetch-mode').value='all';await $('fetch-star
 scope='folder-b';saved.delete('2');block=true;await queue.request(nodes[1]);await tick();queue.stop();await tick();assert.equal(abortCount,1);assert.equal(saved.has('2'),false);
 block=false;await queue.request(nodes[1]);await tick();assert.ok(saved.has('2'));queue.stop();
 console.log('PASS: metadata selection, unsafe URLs, response bounds, cookie-free requests, permission denial, collection queue, serial work, visible-only discovery, checkpoint resume and abort/retry (API doubles; Chrome network NOT_RUN).');
+
+// Automatic startup uses existing permission, persists misses, and never prompts.
+for(const key of Object.keys(data))delete data[key];
+let permissionPrompts=0,automaticReads=0,failAutomatic=true,nearTop=20;
+chrome.permissions.contains=async()=>true;
+chrome.permissions.request=async()=>{permissionPrompts++;return true;};
+globalThis.fetch=async()=>{automaticReads++;return failAutomatic?new Response('missing',{status:404}):new Response('pixels',{headers:{'content-type':'image/png'}});};
+const autoNodes=[{id:'auto',url:'https://auto.example/story'},{id:'far',url:'https://far.example/story'},{id:'blank',url:''}];
+const autoSaved=new Set();
+const autoOptions={...options,getScope:()=>scope,getNodes:()=>autoNodes,getMounted:()=>autoNodes.map((node,i)=>({node,element:{getBoundingClientRect:()=>({top:i===1?2000:nearTop,bottom:i===1?2050:nearTop+40})}})),hasCover:node=>autoSaved.has(node.id),saveCover:async node=>{autoSaved.add(node.id);return true;}};
+let auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,1);assert.equal(permissionPrompts,0);assert.equal(autoSaved.size,0);
+for(let i=0;i<4;i++){auto.discover();await tick();}assert.equal(automaticReads,1,'No retry on repeated viewport discovery');
+scope='different-filter';auto.discover();await tick();assert.equal(automaticReads,1,'No retry after collection/filter change');auto.stop();
+auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,1,'A failed attempt survives page reload');
+failAutomatic=false;await auto.request(autoNodes[0]);await tick();assert.equal(automaticReads,2);assert(autoSaved.has('auto'));assert.equal(permissionPrompts,1,'Manual retry is explicit');auto.stop();
+await $('auto-fetch-covers').onchange({target:{checked:false}});assert.equal(data['atlas.coverFetch.automatic.v1'],false);
+autoSaved.clear();delete data['atlas.coverFetch.v1.default'];
+auto=installCoverFetch(autoOptions);await auto.ready;auto.discover();await tick();assert.equal(automaticReads,2,'Saved opt-out prevents automatic requests');auto.stop();
+// No permission: no fetch and no unsolicited Chrome prompt.
+delete data['atlas.coverFetch.automatic.v1'];chrome.permissions.contains=async()=>false;
+auto=installCoverFetch(autoOptions);await auto.ready;await tick();assert.equal(automaticReads,2);assert.equal(permissionPrompts,1);auto.stop();
+console.log('PASS: automatic viewport-only startup, no permission prompts, persistent misses across filters/reload, explicit retry, saved opt-out, no access means no requests.');
