@@ -20,6 +20,7 @@ const imageGeometry=new Map(),failedImages=new Set();
 let positions=[],positionById=new Map();
 let blocks=new Map(),frame=0,limit=72;
 let windowLayoutDirty=true,windowLayoutCache=null;
+let viewportWindowState={visible_cards:0,buffer_cards:0,viewport_top:0,viewport_bottom:0};
 let deferredBoardWindow=false,deferredBoardReset=false,boardResumePending=false;
 const boardLayoutBlocked=()=>boardResumePending || $('detail').open || $('image-source').open;
 const topSpacer=el('div'),bottomSpacer=el('div');topSpacer.className=bottomSpacer.className='pin-spacer';
@@ -318,6 +319,8 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
     positionById=new Map(positions.map(position=>[position.node.id,position]));
     const byY=[...positions].sort((a,b)=>a.y-b.y || a.index-b.index);let edge=-Infinity;
     windowLayoutCache.byY=byY;windowLayoutCache.bottoms=byY.map(position=>edge=Math.max(edge,position.y+position.height));
+    windowLayoutCache.columns=Array.from({length:cols},()=>[]);
+    for(const position of byY){const column=Math.max(0,Math.min(cols-1,Math.round(position.x/(width+gap))));windowLayoutCache.columns[column].push(position);}
   }
   window.atlasDebug?.performance.measure('render.layout-reused',Number(canReuse));
   const composerRegion=blankBoard.region?.();
@@ -337,14 +340,23 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   for(let index=lowerBound(bottoms,top);index<byY.length && byY[index].y<=bottom;index++){
     const position=byY[index];inspected++;if(position.y+position.height>=top)chosen.add(position.index);
   }
-  let right=lowerBound(byY,top,position=>position.y),left=right-1;
-  while(chosen.size<limit && (left>=0 || right<byY.length)){
-    const takeLeft=left>=0 && (right>=byY.length || top-byY[left].y<byY[right].y-top);
-    const position=takeLeft?byY[left--]:byY[right++];inspected++;chosen.add(position.index);
+  const visibleCount=chosen.size,neighbors=[];
+  // One masonry row means at most one card per column on each side.
+  // A legacy count preference may reduce this buffer, never extend it farther.
+  for(const column of windowLayoutCache.columns){
+    let above=lowerBound(column,top,position=>position.y)-1;
+    while(above>=0){const position=column[above--];inspected++;if(position.y+position.height<top){neighbors.push({position,distance:top-position.y-position.height});break;}}
+    let below=lowerBound(column,bottom,position=>position.y);
+    while(below<column.length && column[below].y<=bottom){below++;inspected++;}
+    if(below<column.length){inspected++;neighbors.push({position:column[below],distance:column[below].y-bottom});}
   }
+  neighbors.sort((a,b)=>a.distance-b.distance || a.position.index-b.position.index);
+  for(const {position} of neighbors){if(chosen.size>=Math.max(visibleCount,limit))break;chosen.add(position.index);}
+  window.atlasDebug?.performance.measure('render.visible-cards',visibleCount);
+  window.atlasDebug?.performance.measure('render.buffer-cards',chosen.size-visibleCount);
   const selected=[...chosen].sort((a,b)=>a-b).map(index=>positions[index]),grouped=new Map();
   for(const position of selected){const batch=Math.floor(position.index/BATCH);if(!grouped.has(batch))grouped.set(batch,[]);grouped.get(batch).push(position);}
-  const wantedBatches=new Set(grouped.keys());endSelect?.();
+  const wantedBatches=new Set(grouped.keys());viewportWindowState={visible_cards:visibleCount,buffer_cards:chosen.size-visibleCount,viewport_top:top,viewport_bottom:bottom};endSelect?.();
   window.atlasDebug?.performance.measure('render.positions-inspected',inspected);
   const endMount=window.atlasDebug?.performance.begin('render.mount');let created=0,reused=0;
   for(const [index,block] of blocks)if(!wantedBatches.has(index)){if(block.contains(document.activeElement)){$('pins').tabIndex=-1;$('pins').focus({preventScroll:true});}block.remove();blocks.delete(index);}
@@ -361,7 +373,8 @@ function renderWindowWork(preserveAnchor=true,reuseLayout=false){
   const wanted=[topSpacer,...[...blocks].sort((a,b)=>a[0]-b[0]).map(([,block])=>block),...(composerRegion?[composerRegion]:[]),bottomSpacer];
   const current=[...$('pins').children];if(current.length!==wanted.length || current.some((node,i)=>node!==wanted[i]))$('pins').replaceChildren(...wanted);
   // Evicted image elements must not keep requesting work after leaving the window.
-  for(const element of mounted)if(!element.isConnected)releaseCardImage(element,canReuse);
+  let evicted=0;for(const element of mounted)if(!element.isConnected){evicted++;releaseCardImage(element,canReuse);}
+  window.atlasDebug?.performance.measure('render.cards-evicted',evicted);
   endMount?.();window.atlasDebug?.performance.measure('render.cards-created',created);window.atlasDebug?.performance.measure('render.cards-reused',reused);
   coverFetch.discover();
   status(items.length ? `${items.length.toLocaleString()} ${$('folder').value==='blank'?'card':'bookmark'}${items.length===1?'':'s'}` : ($('folder').value!=='blank' && (selectionTags().length || $('tags-only').checked) && metadataState==='unavailable'?'Connect your companion to load saved tags, then Refresh.':'No matches. Try different tags or search words, or turn off a filter.'));
@@ -658,7 +671,7 @@ async function start(){
 }
 chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_ENTRIES]){imageEntries.load().then(async()=>{await refreshGeneratedIndex();if(selected?.entryId && storedEntry(selected))openDetailContent(selected);scheduleWindow();}).catch(()=>status('Image entries could not be refreshed.'));}});
 window.atlasDebug?.performance.registerState('pinboard',()=>({
-  renderer_revision:2,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
+  renderer_revision:3,overscan_rows:1,...viewportWindowState,total_items:items.length,mounted_cards:[...blocks.values()].reduce((count,block)=>count+block.children.length,0),
   nearby_budget:limit,layout_dirty:windowLayoutDirty,window_update_pending:!!frame,layout_blocked:!!boardLayoutBlocked(),
   assets_ready:boardAssetsReady,held_cards:cardHolds.active().length,layout_positions:positions.length
 }));

@@ -1,6 +1,8 @@
 # Progressive card population with a tight viewport window
 
-Status: owner-directed requirement/proposal; NOT IMPLEMENTED in this update.
+Status: PARTIAL — later owner direction tightens the window to ONE row; that
+source change is implemented with behavior tests. Tiny-batch startup remains
+NOT IMPLEMENTED. Real Chrome timing/visual acceptance remains OPEN.
 Owner explicitly asks to write this down and preserve Pinterest presentation.
 
 Owner reports continued severe lag despite earlier source optimizations. Do not
@@ -63,4 +65,28 @@ not optional polish to discard for a lower DOM count.
 - Obtain real Chrome timing/visual evidence; existing fixture/Node tests alone are
   insufficient proof. Keep018/016 open until their acceptance is demonstrated.
 
-No runtime or stylesheet changes were made for this documentation request.
+The initial documentation-only commit made no runtime/style changes; the later
+one-row correction is described below and changes window selection, not styling.
+
+## Later owner direction and one-row source correction
+
+Owner reports continued lag during prolonged fast scrolling and asks to focus on
+the viewport plus maybe ONE row above/below. This supersedes the earlier two-row
+allowance. Renderer revision3 now uses per-column sorted position indices and
+mounts every intersecting card plus at most one preceding and one following card
+per masonry column. Legacy numeric buffer preferences may reduce that allowance,
+never expand it. The complete data/layout index remains for scroll geometry;
+offscreen DOM is evicted, with old image handlers/source released on scroll.
+
+Pinterest styles, proportions, spacing and image lazy loading are unchanged. This
+is a spatial mounting change, separate from the still-planned tiny startup batches.
+Diagnostics expose overscan_rows1, visible/buffer counts, viewport top/bottom and
+card evictions; total element/image/tag-button counts now help distinguish card
+DOM bounds from unrelated growing interface content.
+
+Behavior proof: desktop/mobile heights, far jumps and rapid reversals include all
+visible cards and no other cards except the immediately adjacent per-column row,
+even with a saved144-card cap. Updated old tests which demanded mounting a ranked
+card30 places away: that expectation conflicts with the new owner window limit.
+All records/ranking remain; off-window nodes may now be evicted. Actual Chrome
+smoothness, missed clicks and Escape are still not proven by these Node tests.

@@ -107,7 +107,7 @@
   }
   function snapshot(){
     const doc=env.document,count=selector=>doc.querySelectorAll(selector).length;
-    return {schema:'atlas.performance.v1',active,started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),measurements:Object.fromEntries([...measurements].map(([key,value])=>[key,{...value,mean:round(value.sum/value.count)}])),application:applicationState(),dom:{mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
+    return {schema:'atlas.performance.v1',active,started_at_utc:startedUTC,elapsed_ms:started===null?0:round((active?clock():stopped || clock())-started),visibility:doc.hidden?'hidden':'visible',support:{...supported},sample_limit:CAPACITY,dropped_samples:dropped,totals:{...totals},summary:summary(),samples:samples.map(item=>({...item})),measurements:Object.fromEntries([...measurements].map(([key,value])=>[key,{...value,mean:round(value.sum/value.count)}])),application:applicationState(),dom:{total_elements:count('*'),image_elements:count('img'),tag_buttons:count('#tag-field button'),mounted_cards:count('#pins .pin'),open_dialogs:count('dialog[open]'),loading_images:[...doc.querySelectorAll('img')].filter(img=>!img.complete).length,scroll_locked:doc.documentElement.hasAttribute('data-pin-open')}};
   }
   function check({frameGapMs=50,inputMs=100,loopDriftMs=100,interactionMs=100}={}){
     const report=snapshot(),rules=[];

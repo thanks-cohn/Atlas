@@ -49,12 +49,12 @@ const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await ti
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
 const flush=()=>{const work=frames.splice(0);for(const fn of work)fn();};
 const settleBoardClose=async()=>{flush();flush();await tick();flush();};
-flush();assert.equal(cards().length,72);
+flush();assert.ok(cards().length>0 && cards().length<=72);
 const originalCard=cards()[0];
 scroll=12000;listeners.scroll();flush();assert.ok(cards().length<=72);assert.ok(!cards().includes(originalCard));assert.equal(originalCard.children[0].children[0].onload,null,'Evicted images must not keep scheduling layout');assert.equal(originalCard.children[0].children[0].onerror,null);
 assert.ok(parseFloat($('pins').children[0].style.height)>0);
-scroll=0;listeners.scroll();flush();assert.equal(cards().length,72);assert.notEqual(cards()[0],originalCard);
-$('card-limit').value='24';$('card-limit').onchange();await tick();assert.equal(cards().length,24);assert.equal(data[model.PINBOARD_SETTINGS].limit,24);
+scroll=0;listeners.scroll();flush();assert.ok(cards().length>0 && cards().length<=72);assert.notEqual(cards()[0],originalCard);
+$('card-limit').value='24';$('card-limit').onchange();await tick();assert.ok(cards().length>0 && cards().length<=24);assert.equal(data[model.PINBOARD_SETTINGS].limit,24);
 const pin=cards()[0];assert.equal(pin.children[0].children[0].loading,'lazy');
 assert.equal(pin.children[0].children[1].className,'pin-loading');
 pin.children[0].children[0].onload();assert.equal(pin.children[0].ready,'is-ready');
@@ -134,15 +134,15 @@ tagCatalog.tags.r=['Art','Design'];tagCatalog.tags.q=['Art'];await $('refresh').
 const imageTags=cards()[0].children[1].children[2];imageTags.children[0].children[0].onclick();
 assert.equal(vm.runInContext('highlightedTags.size',context),1);
 const otherTag=cards()[0].children[1].children[2].children[1];otherTag.children[0].onclick();
-flush();assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards().length,144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
+flush();assert.equal(vm.runInContext('items.length',context),1000);assert.ok(cards().length>0 && cards().length<=144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
 assert.equal($('active-tags').children.length,3);
 // A normal text query is intersected with ALL selected tags.
 $('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
-$('search').value='';vm.runInContext('render()',context);assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
+$('search').value='';vm.runInContext('render()',context);assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 // Clicking active Design broadens automatically to both Art bookmarks.
-cards()[0].children[1].children[2].children[1].children[0].onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
+cards()[0].children[1].children[2].children[1].children[0].onclick();assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='tag:Design';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
-$('active-tags').children.at(-1).onclick();assert.equal(cards().length,144);assert.equal(vm.runInContext('items.length',context),1000);
+$('active-tags').children.at(-1).onclick();assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
 assert.equal(fetchOptions.getNodes().length,2);
 console.log('PASS: highlighted tags prioritize without hiding, typed tag ranking, chip removal, tag clauses, ordinary text filtering and tagged-only persistence.');
@@ -304,11 +304,11 @@ const retained=cards().find(card=>card.atlasNode.id===rankedNodes[0].id);
 context.rankingFixtures=roots[0].children[0].children.slice(1,31).map(node=>[node.url,{note:'',tags:['Alpha'],image:null}]);
 vm.runInContext("associations=new Map(rankingFixtures);highlightedTags.add('Alpha');updatePriorities()",context);
 assert.equal(vm.runInContext('items[30].id',context),rankedNodes[0].id);
-assert.equal(cards().find(card=>card.atlasNode.id===rankedNodes[0].id),retained,'Moving across virtual batches must retain the card and its image');
+assert.equal(cards().find(card=>card.atlasNode.id===rankedNodes[0].id),undefined,'Ranking beyond the one-row window must evict the card');assert.equal(retained.children[0].children[0].onload,null);
 assert.ok(animations.length>0);assert.equal(animations.at(-1).options.duration,260);
 const animationCount=animations.length;context.window.matchMedia=()=>({matches:true});
 vm.runInContext('highlightedTags.clear();updatePriorities()',context);assert.equal(animations.length,animationCount);
-console.log('PASS: graded 3/2/1/0 matching priority, stable ties, unique tag scoring, all cards retained, cross-batch image reuse, bounded transform motion and reduced-motion support.');
+console.log('PASS: graded 3/2/1/0 matching priority, stable ties, unique tag scoring, all records retained, distant ranked cards evicted, bounded transform motion and reduced-motion support.');
 
 // Departing cards use their own DOM for a bounded, noninteractive exit; arriving
 // cards fade in, and interrupted searches never leave retired nodes behind.
@@ -537,7 +537,7 @@ console.log('PASS: 1,000-event fast-scroll burst coalesces to latest viewport, i
 const scenarioStart=scroll;let paints=0;
 const stress=await debugScenarios.get('pinboard.scroll-stress')({steps:12,distance:1700},{isActive:()=>true,afterPaint:async()=>{listeners.scroll();flush();paints++;}});
 assert.equal(stress.completed_steps,12);assert.equal(stress.trusted_input,false);assert.equal(scroll,scenarioStart);assert.equal(paints,12);
-assert.equal(debugStates.get('pinboard')().renderer_revision,2);
+assert.equal(debugStates.get('pinboard')().renderer_revision,3);
 console.log('PASS: registered scroll-stress runs bounded steps, restores scroll and reports synthetic input and numeric renderer state.');
 // Model availability must not blink while card-specific choices are read.
 vm.runInContext("applyJoyTagSetting(true);selected={id:'anime-test',url:'https://fixture.test/anime'};taggingChoiceKey=itemKey(selected);",context);
@@ -556,3 +556,19 @@ resolveChoice({'atlas-tagging-studio-layout-v1':{}});await editedChoice;
 assert.equal($('tag-anime-choice').checked,true,'A late read cannot undo the user choice');
 storage.get=oldChoiceGet;
 console.log('PASS: Anime availability stays stable during card refresh; settings remain authoritative and stale choice reads cannot undo a user selection.');
+// Hard spatial bound: a large saved budget cannot mount distant extra rows.
+$('folder').value='all';$('search').value='';$('tags-only').checked=false;$('images-only').checked=false;
+vm.runInContext('highlightedTags.clear();limit=144;render()',context);flush();
+for(const [width,height] of [[1100,768],[340,640],[1100,480]]){
+ $('pins').clientWidth=width;context.window.innerWidth=width===340?380:1200;context.window.innerHeight=height;listeners.resize();flush();
+ for(const top of [0,18000,2000,45000,400,0,12000]){
+  scroll=top;listeners.scroll();flush();
+  const sets=vm.runInContext(`(()=>{const top=localScroll(),bottom=top+window.innerHeight;return windowLayoutCache.columns.map(column=>({visible:column.filter(p=>p.y+p.height>=top && p.y<=bottom).map(p=>p.node.id),above:column.filter(p=>p.y+p.height<top).at(-1)?.node.id,below:column.find(p=>p.y>bottom)?.node.id}));})()`,context);
+  const allAllowed=new Set(sets.flatMap(set=>[...set.visible,set.above,set.below]).filter(Boolean)),mounted=new Set(cards().map(card=>card.atlasNode.id));
+  for(const set of sets)for(const id of set.visible)assert(mounted.has(id),'Visible card omitted after viewport reversal');
+  for(const id of mounted)assert(allAllowed.has(id),'Distant card mounted beyond one row');
+  const count=sets.reduce((sum,set)=>sum+set.visible.length,0);assert.ok(mounted.size<=count+sets.length*2,'Legacy144 cap cannot expand one-row buffer');
+ }
+}
+assert.equal(debugStates.get('pinboard')().overscan_rows,1);
+console.log('PASS: desktop/mobile and rapid reversal retain every visible card and at most one adjacent card per column on either side, even with legacy144 budget.');

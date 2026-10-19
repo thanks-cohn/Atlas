@@ -1,3 +1,7 @@
+> Current follow-up: renderer revision3 limits mounted cards to the viewport plus
+> ONE preceding/following card per column; see backlog020. Older count-driven
+> buffer descriptions below are historical. Startup tiny batches remain planned.
+
 # Pinboard scrolling performance and autonomous reproduction
 
 Owner reports: rapid up/down scrolling stutters, jumps and seems to catch up;
@@ -114,3 +118,13 @@ if they still dominate. Owner Escape/missed-click acceptance remains open in018/
 - https://developer.chrome.com/docs/devtools/performance/reference — separate scripting, rendering and interaction timing.
 
 No framework dependency is needed for this plain-JavaScript position index.
+
+## One-row follow-up
+
+Per-column sorted lists replace nearest-neighbor count filling. Every visible card
+is retained; up to one offscreen card per column above and below is allowed. A
+large old buffer setting cannot enlarge the spatial bound. Debug renderer revision3
+adds overscan_rows1, visible/buffer counts, viewport bounds and evicted-card counts.
+Performance DOM snapshots also report total elements, image elements and tag buttons
+so future traces need not infer whole-page size from mounted cards alone.
+Node fast-reversal/desktop/mobile tests pass; real Chromium timing remains pending.

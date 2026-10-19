@@ -45,4 +45,4 @@ in conversation or testing a nearby path is not a fix. Keep this index current.
 
 - [019 — Anime choice flicker](019-anime-choice-flicker.md): per-card refresh hide/show removed and stale reads guarded; browser acceptance pending.
 
-- [020 — Progressive Pinterest cards and two-row viewport window](020-progressive-cards-and-two-row-window.md): owner requests tiny batches (e.g.1,+2,+2), aesthetic progressive masonry population, and no ongoing distant-card work; documented, not implemented.
+- [020 — Progressive Pinterest cards and two-row viewport window](020-progressive-cards-and-two-row-window.md): owner requests tiny batches (e.g.1,+2,+2), aesthetic progressive masonry population, and no ongoing distant-card work; later one-row source bound implemented, tiny startup batches pending.

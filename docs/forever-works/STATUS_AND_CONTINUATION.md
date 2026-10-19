@@ -1530,3 +1530,31 @@ Validation: git diff --check; no runtime tests needed for documentation-only cha
 Owner refines pacing: perhaps one card, then two, then two more; in-card image
 loading remains visible as the Pinterest composition fills. Counts are illustrative,
 not a rigid mandate. Updated020; small batches/viewport bounds remain future work.
+
+## 2026-10-19 — Strict ONE-row active card window
+
+Owner reports continued fast-scroll lag and narrows desired buffer to maybe ONE
+row above/below viewport. This supersedes020's two-row allowance, while Pinterest
+masonry aesthetics remain fixed. Implemented spatial selection: cached per-column
+Y lists; every viewport-intersecting card plus at most one preceding/following card
+per column. Legacy24..144 budgets can only reduce this allowance, never fill with
+distant cards. Scroll eviction releases detached image callbacks and sources.
+Records, data indices/geometry and permission boundaries unchanged. Tiny progressive
+startup batches are STILL PLANNED, not included or claimed done by this correction.
+
+Updated Settings copy to explain the hard one-row bound without changing styling.
+Debug renderer_revision3 reports overscan_rows1, visible/buffer counts and viewport
+bounds; card eviction count plus full DOM/image/tag-button counts improve diagnosis
+beyond a card-only count. One-row checks exercise desktop/mobile, different viewport
+heights, far jumps and rapid reversals under legacy144 cap. All visible cards present;
+no extra distant rows mounted. Existing obsolete test which demanded keeping a
+ranked card30 positions away now checks eviction with old handlers cleared; records
+and ranking are retained. Node pinboard, profiler and Fetch suites PASS; diff check
+PASS. Actual Chrome speed, missed-click and Escape acceptance remain UNKNOWN/open.
+Required project-check result follows. No unsolicited automatic network Fetch added.
+
+Required check:170 tests,3 failures,3 errors,33 skipped;22 local model records
+valid. Same pre-existing container native/bootstrap/supervisor READY limitation;
+full suite is not green. Actual Chromium benchmark still blocked by unavailable
+executable/download. Next: pull/reload and compare revision3 captures and feel;
+retain lag reports as open until browser evidence supports closing them.
