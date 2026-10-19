@@ -1101,3 +1101,20 @@ and added/removed labels for changed states. Identical reruns reference the exis
 checkpoint with `change: unchanged`; returning to an earlier state reuses it too.
 `checkpointState` reconstructs snapshots iteratively. Tests cover delta reconstruction,
 unchanged reruns and return-to-prior state. Display remains the unique current tags.
+
+## 2026-10-19 — remove redundant Faces option; recommendation research
+
+Owner requested Faces removal, preserving Things, People and Settings-activated
+Anime/JoyTag. Removed the Faces checkbox and its preference/read/run handlers;
+legacy saved face evidence remains readable. Pinboard and generation regression
+suites passed. Added `docs/implementation/CARD_TAG_RECOMMENDATION_RESEARCH.md`:
+proposed local association/co-occurrence baseline and optional MiniLM ONNX semantic
+ranking; neither recommendation engine nor UI is claimed implemented.
+
+Owner additionally reports generated tags disappearing on card exit. A new actual
+pinboard-handler regression generates a gallery result, closes, visits a different
+card, rebuilds the index from stored data and reopens: PASS in DOM/API doubles.
+The reported owner Chrome disappearance is not reproduced here; do not claim its
+root cause established. Apply latest render-race fix and observe actual Chrome
+before escalating diagnostics. Generated labels must persist unless explicitly
+suppressed; deduplication is never permission to erase the remaining label.

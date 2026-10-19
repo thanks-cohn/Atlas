@@ -196,7 +196,7 @@ const previousGet=context.chrome.storage.local.get;
 context.chrome.storage.local.get=async keys=>Array.isArray(keys)?Object.assign({},...await Promise.all(keys.map(key=>previousGet(key)))):previousGet(keys);
 vm.runInContext('openDetail(items[0])',context);await tick();await tick();
 assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false);
-assert.equal($('tag-image-choice').checked,true);assert.equal($('tag-people-choice').checked,true);assert.equal($('tag-face-choice').checked,false);
+assert.equal($('tag-image-choice').checked,true);assert.equal($('tag-people-choice').checked,true);
 let generationRequests=0;const send=context.chrome.runtime.sendMessage;context.chrome.runtime.sendMessage=async message=>{generationRequests++;return send(message);};
 assert.equal(generationRequests,0);
 context.chrome.runtime.sendMessage=async message=>{generationRequests++;assert.equal(message.path,'/v1/tag-image');return {data:{source:message.body.model,model:'test',suggestions:[]}};};
@@ -206,8 +206,8 @@ $('tag-anime-choice').checked=true;await $('tag-anime-choice').handlers.change()
 assert.equal(data['atlas-tagging-studio-layout-v1'][vm.runInContext('itemKey(selected)',context)].anime,true);
 $('close').onclick();vm.runInContext('openDetail(items[0])',context);await tick();await tick();assert.equal($('tag-anime-choice').checked,true);
 $('joytag-enabled').checked=false;await $('joytag-enabled').onchange();assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false);
-for(const id of ['tag-image-choice','tag-people-choice','tag-face-choice'])$(id).checked=false;
-await $('tag-face-choice').handlers.change();assert.equal($('run-image-tagging').disabled,true);
+for(const id of ['tag-image-choice','tag-people-choice'])$(id).checked=false;
+await $('tag-people-choice').handlers.change();assert.equal($('run-image-tagging').disabled,true);
 const previewMarkup=read('pinboard.html').split('<dialog id="detail"')[1].split('<dialog id="image-source"')[0];
 assert.ok(previewMarkup.includes('> Anime</label>'));assert.ok(!previewMarkup.includes('JoyTag'));assert.ok(!previewMarkup.includes('detail-preview-tags'));
 console.log('PASS: compact preview model choices, Settings-only JoyTag gate, preference restore, empty selection and explicit generation and no automatic model requests.');
@@ -219,7 +219,7 @@ const machineCard=cards()[0],machineImage=machineCard.children[0].children[0];
 vm.runInContext('openDetail(items[0])',context);await tick();await tick();
 const humanBefore=JSON.stringify(tagCatalog);
 context.chrome.runtime.sendMessage=async()=>({ok:true,source:'objects',model:'test',image_payload_sha256:'payload',suggestions:[{tag:'Machine Cat',score:.9},{tag:'Art',score:.8}]});
-$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;
 await $('run-image-tagging').onclick();flush();
 assert.equal(cards()[0],machineCard);assert.equal(cards()[0].children[0].children[0],machineImage);
 const derived=vm.runInContext('tagsFor(items[0])',context);
@@ -249,14 +249,14 @@ console.log('PASS: trailing × removes only this card, persists after reload, re
 $('search').value='';context.chrome.runtime.sendMessage=async()=>({data:tagCatalog});await $('refresh').onclick();flush();
 vm.runInContext('openDetail(items[0])',context);await tick();await tick();
 let runNumber=0;
-context.chrome.runtime.sendMessage=async message=>{runNumber++;return {ok:true,source:message.body.model,model:message.body.model,run_id:'accumulate-'+runNumber,image_payload_sha256:'payload-'+runNumber,suggestions:message.body.model==='face'?[{tag:'smile',score:.9}]:[{tag:'Generated Object',score:.9},{tag:'person',score:.8},{tag:'Machine Cat',score:.8}]};};
-$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;await $('run-image-tagging').onclick();
+context.chrome.runtime.sendMessage=async message=>{runNumber++;return {ok:true,source:message.body.model,model:message.body.model,run_id:'accumulate-'+runNumber,image_payload_sha256:'payload-'+runNumber,suggestions:runNumber===3?[{tag:'smile',score:.9}]:[{tag:'Generated Object',score:.9},{tag:'person',score:.8},{tag:'Machine Cat',score:.8}]};};
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;await $('run-image-tagging').onclick();
 $('tag-image-choice').checked=false;$('tag-people-choice').checked=true;await $('run-image-tagging').onclick();
-$('tag-people-choice').checked=false;$('tag-face-choice').checked=true;await $('run-image-tagging').onclick();flush();
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=true;await $('run-image-tagging').onclick();flush();
 const cumulative=vm.runInContext('tagsFor(selected)',context);
 assert.ok(cumulative.includes('Generated Object'));assert.ok(cumulative.includes('person'));assert.ok(cumulative.includes('smile'));
 assert.ok(!cumulative.includes('Machine Cat'),'Explicit removal must survive all later runs');
-assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)].objects.length>=3);
+assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)].objects.length>=2);
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
 console.log('PASS: three separate UI generations accumulate different payloads and shared-detector choices; explicit × removal and human metadata survive.');
 vm.runInContext('highlightedTags.clear();generatedIndex=new Map()',context);
@@ -357,7 +357,7 @@ const pair=authoredB.children[1].children.find(child=>child.className==='pin-tag
 const localTagEditor=tagEditorOptions.localAdapter(isolated[1]);await localTagEditor.mutate('tag','Beta');assert.ok(blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Beta'));
 vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
 context.chrome.runtime.sendMessage=async message=>{assert.equal(message.path,'/v1/tag-image');assert.equal(message.body.item_id,vm.runInContext('itemKey(selected)',context));return {ok:true,source:'objects',run_id:'auth-run',image_payload_sha256:'auth-payload',suggestions:[{tag:'Authored Machine',score:.9}]};};
-$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;await $('run-image-tagging').onclick();
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;await $('run-image-tagging').onclick();
 assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)]);assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Authored Machine'));
 await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'),'Editing parent card must preserve independently owned image evidence');
 $('close').onclick();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
@@ -417,3 +417,19 @@ await vm.runInContext('imageEntries.restore('+JSON.stringify(record.id)+')',cont
 const keyboard=$('detail').handlers.keydown;let intercepted=false;keyboard({key:'ArrowLeft',target:{closest:()=>true},preventDefault(){intercepted=true;}});assert.equal(intercepted,false);
 assert.match(read('pinboard.html'),/>Add Image<\/button>/);assert.ok(read('pinboard.html').indexOf('id="default-image"')<read('pinboard.html').indexOf('id="detail-image"'));assert.match(read('explorer.html'),/id="image-recovery-open"/);
 console.log('PASS: additive gallery UI preserves A, starts B empty, stores B tags/notes, stars default, navigates contexts, atomically recovers/remounts section and leaves editor arrow keys alone.');
+
+// Owner regression: generated results survive leaving a gallery card, opening
+// another card, and rebuilding indexes from durable browser storage.
+$('folder').value='blank';$('search').value='';
+await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
+const persistentKey=vm.runInContext('itemKey(selected)',context);
+context.chrome.runtime.sendMessage=async message=>({ok:true,source:'objects',run_id:'persist-reopen',suggestions:[{tag:'Persistent Result',score:.9}]});
+$('tag-image-choice').checked=true;$('tag-people-choice').checked=false;await $('run-image-tagging').onclick();
+assert(data['atlas-image-tagging-runs-v1'][persistentKey]);
+$('close').onclick();await vm.runInContext('openDetail(blankBoard.nodes()[1])',context);await tick();await tick();$('close').onclick();
+await vm.runInContext('imageEntries.load();generatedIndex=new Map();refreshGeneratedIndex()',context);
+await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
+assert.equal(vm.runInContext('itemKey(selected)',context),persistentKey);
+assert($('detail-generated-tags').children.some(chip=>chip.children[0].textContent==='Persistent Result'));
+assert(vm.runInContext('tagsFor(selected)',context).includes('Persistent Result'));
+console.log('PASS: generated gallery tags survive close, other-card visit, cache reload and reopening without another inference.');
