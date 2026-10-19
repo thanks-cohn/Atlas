@@ -1170,3 +1170,12 @@ Source navigation and pinboard suites, packaging and whitespace checks PASS;
 source regression added to verify.yml. No local Chrome executable: actual Chrome
 155 shelf+pinboard+source layout NOT_RUN. Proposal now records implementation,
 API-derived scenario and precise remaining owner visual gates. No helper update.
+
+## 2026-10-19 — detailed PNG rejected by overly small preview budget
+
+Bug011 owner PNG is3,910,879 bytes,1024x1536 RGBA, within import/decode limits.
+60K-character card/composer preview budget plus480px resize floor caused rejection.
+Raise those bounded previews to175K characters and add384/320/256/192 fallback
+sizes. Original asset unchanged; inference payload budgets unchanged. Pillow
+measurement supports smaller fallback; Chrome encoder itself NOT_RUN here.
+Image-file boundary regression, pinboard/blank suites, packaging/whitespace PASS.

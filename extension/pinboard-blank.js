@@ -31,7 +31,7 @@ export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getB
     const imageButton=make('button','','composer-image');imageButton.type='button';imageButton.setAttribute('aria-label','Choose card image');
     const paintImage=()=>{imageButton.replaceChildren();if(image){const img=make('img');img.src=image;img.alt='Selected cover';imageButton.append(img);}else imageButton.append(make('span','+'),make('small','Add an image'));};paintImage();
     const file=make('input');file.type='file';file.accept='image/png,image/jpeg,image/webp,image/gif';file.hidden=true;imageButton.onclick=()=>file.click();
-    file.onchange=async()=>{if(!file.files?.[0])return;imageButton.disabled=true;try{image=await rasterImage(file.files[0],60000);paintImage();message.textContent='';}catch(error){message.textContent=error.message || 'Could not prepare that image.';}finally{imageButton.disabled=false;}};
+    file.onchange=async()=>{if(!file.files?.[0])return;imageButton.disabled=true;try{image=await rasterImage(file.files[0],175000);paintImage();message.textContent='';}catch(error){message.textContent=error.message || 'Could not prepare that image.';}finally{imageButton.disabled=false;}};
     function field(label,tag,max,placeholder){const wrap=make('label',label),input=make(tag);input.maxLength=max;input.placeholder=placeholder;wrap.append(input);form.append(wrap);return input;}
     form.append(imageButton,file);
     const imageURL=field('Image URL · optional','input',8192,'https://…');imageURL.type='url';

@@ -510,7 +510,7 @@ $('image-file').onchange=async()=>{
   $('upload-image').disabled=$('save-image-url').disabled=true;
   $('image-status').textContent='Preparing image…';
   try{
-    const image=await rasterImage(file,60000),origin=await localImageOrigin(file);
+    const image=await rasterImage(file,175000),origin=await localImageOrigin(file);
     $('image-status').textContent='Saving image…';
     await saveImage(node,image,origin);
     $('image-source').close();

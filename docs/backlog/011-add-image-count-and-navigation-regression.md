@@ -46,3 +46,15 @@ new-entry selection, both arrows, unchanged default, retained original filename,
 and visible decode failure with gallery preserved. Image entry/file/pinboard suites,
 packaging and whitespace checks pass. Browser primitives are doubled; owner Chrome
 file-picker/navigation/reload confirmation remains pending. Do not mark Done yet.
+
+### Owner file reproducer: bounded-preview rejection
+
+Owner supplied b8f0b831-e806-4835-8e8d-d8de1b4e5435.png (3,910,879 bytes,
+1024x1536 RGBA) with IMAGE_PREVIEW_TOO_LARGE. This is below file/pixel limits.
+Card import requested only 60,000 data-URL characters and encoder stopped at 480px.
+Pillow WebP quality42 inspection of the original measured ~69,467 characters at
+480px and ~48,187 at384px; this is independent encoder evidence, not Chrome proof.
+Card and authored composer preview budgets now175,000 characters; encoder continues
+384/320/256/192 fallback edges. Original file remains untouched. Model-input limits
+unchanged. Image-file test simulates this exact too-large-at480/fits-at384 boundary;
+image-file, pinboard, blank suites and packaging PASS. Actual Chrome retry pending.
