@@ -1,3 +1,4 @@
+import {createImageEntries,localImageOrigin,IMAGE_ENTRIES} from './image-entries.js';
 import {indexBookmarks, findBookmarks, editableBookmark, folderTargets, bookmarkTrail, openableBookmark} from './bookmark-model.js';
 import {COVER_BUDGET_KEY,coverBudgetMiB,coverStorageBytes,COVER_KEY, bookmarkCover, setBookmarkCover, bookmarkAssociations} from './bookmark-covers.js';
 import {withPageLock} from './pages-store.js';
@@ -13,6 +14,7 @@ function alignRevealBottom(){
 for(const event of ['wheel','touchstart','pointerdown','keydown'])$('bookmarks-workspace').addEventListener(event,()=>{bottomReveal=null;},{passive:true});
 const active = () => document.body.classList.contains('bookmarks-mode');
 const element = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
+let imageGalleryCache={};
 let lastReportCode='';
 function report(code, message) {
   // Technical status stays out of the shelf; export only secret-free event codes.
@@ -30,7 +32,8 @@ async function refresh() {
   const request = ++epoch;
   try {
     const roots = await chrome.bookmarks.getTree();
-    const stored = await chrome.storage.local.get(COVER_KEY);
+    const stored = await chrome.storage.local.get([COVER_KEY,IMAGE_ENTRIES]);
+    imageGalleryCache=stored[IMAGE_ENTRIES] || {};
     if (request !== epoch) return;
     covers = stored[COVER_KEY] && typeof stored[COVER_KEY] === 'object' && !Array.isArray(stored[COVER_KEY]) ? stored[COVER_KEY] : {};
     const priorURL = nodes.get(focused)?.url;
@@ -75,7 +78,18 @@ function returnFromPreview() {
   render(); $('bookmarks-workspace').scrollTop = state?.scroll || 0;
   [...$('bookmarks-list').querySelectorAll('.bookmark-disclosure')].find(el => el.dataset.bookmarkId === selected)?.focus();
 }
-async function saveCover(node, image) {
+async function saveCover(node, image, origin) {
+  const galleries=createImageEntries({storage:chrome.storage.local});await galleries.load();
+  if(image || galleries.gallery(node.url)){
+    if(!galleries.gallery(node.url)){
+      const prior=bookmarkCover(node,covers);let info={tags:[],notes:[],bookmarks:[]};
+      if(prior){const snapshot=await catalogRequest();const data=bookmarkAssociations(node,snapshot.data);info={tags:data.tags,notes:[...data.matches.filter(r=>r.note).map(r=>({id:r.id,title:r.title,text:r.note})),...data.related.filter(r=>r.resource.kind==='note').map(r=>({id:r.resource.id,title:r.resource.title,text:r.resource.note}))],bookmarks:data.related.filter(r=>r.resource.kind==='bookmark').map(r=>({id:r.resource.id,title:r.resource.title,url:r.resource.locators?.find(l=>l.provider==='web')?.reference})).filter(r=>r.url)};}
+      await galleries.ensure(node.url,{id:node.id,url:node.url,title:node.title,kind:'bookmark',aliases:[...nodes.values()].filter(n=>n.url===node.url).map(n=>n.id)},prior,info);
+    }
+    if(image){const entry=await galleries.add(node.url,image,origin || {provider:'legacy-preview',sha256:null,hashStatus:'unavailable'});await galleries.setDefault(node.url,entry.id);}
+    else {const id=galleries.gallery(node.url).defaultId;if(id)await galleries.remove(node.url,id);}
+    covers=(await chrome.storage.local.get(COVER_KEY))[COVER_KEY] || {};render();return;
+  }
   // Merge the current stored map, rather than overwrite a stale copy from another shelf.
   await withPageLock(async()=>{
     const stored = await chrome.storage.local.get(COVER_KEY);
@@ -96,7 +110,7 @@ function chooseCover(node) {
       const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
       const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      await saveCover(node, canvas.toDataURL('image/webp', 0.82));
+      await saveCover(node, canvas.toDataURL('image/webp', 0.82),await localImageOrigin(file));
     } catch (error) { report('BOOKMARK_IMAGE_SAVE_FAILED', 'Use a smaller PNG, JPEG, WebP or GIF (up to 10 MB). Image storage may be full. Existing covers are unchanged.'); }
     finally { bitmap?.close(); input.remove(); }
   };
@@ -114,7 +128,8 @@ function addMetadata(node){
   form.append(element('p','BOOKMARK DETAILS'),element('h2','Add Tags'));
   const label=element('label','Tags, separated by commas'),input=document.createElement('input');
   input.required=true;input.maxLength=8000;input.placeholder='Design, Travel, Architecture';label.append(input);
-  const message=element('p','Saved in your Atlas companion, linked to this bookmark URL.');message.setAttribute('role','status');
+  const gallery=imageGalleryCache[node.url],entry=gallery?.entries.find(e=>e.id===gallery.defaultId);
+  const message=element('p',entry?'Saved with this image in Atlas.':'Saved in your Atlas companion, linked to this bookmark URL.');message.setAttribute('role','status');
   const actions=element('div','');actions.className='metadata-actions';const cancel=element('button','Cancel');cancel.type='button';cancel.onclick=()=>dialog.close();const save=element('button','Add Tags');save.type='submit';actions.append(cancel,save);form.append(label);
   const existing=document.createElement('select'),existingLabel=element('label','Or choose an existing tag'),savedTags=element('div','');savedTags.className='bookmark-tag-pills';
   let displayedRevision=-1;
@@ -126,7 +141,8 @@ function addMetadata(node){
     const attached=Object.values(data?.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url)).flatMap(resource=>data.tags?.[resource.id] || []);
     savedTags.replaceChildren(...[...new Set(attached)].map(tag=>{const pill=element('span',tag);pill.className='bookmark-tag-pill';return pill;}));
   }
-  {existing.setAttribute('aria-label','Existing Atlas tags');existingLabel.append(existing);form.append(existingLabel,savedTags);existing.onchange=()=>{if(!existing.value)return;const values=input.value.split(',').map(value=>value.trim()).filter(Boolean);if(!values.includes(existing.value))values.push(existing.value);input.value=values.join(', ');existing.value='';input.focus();};const waiting=element('option','Loading existing tags…');waiting.value='';existing.append(waiting);catalogRequest().then(snapshot=>populateTags(snapshot.data,snapshot.revision)).catch(()=>{if(displayedRevision<0){const unavailable=element('option','Connect companion to load tags');unavailable.value='';existing.replaceChildren(unavailable);}});}
+  async function tagSnapshot(){if(!entry)return catalogRequest();const saved=await chrome.storage.local.get([IMAGE_ENTRIES,'atlas-tag-vocabulary-v1']);const current=saved[IMAGE_ENTRIES]?.[node.url]?.entries.find(e=>e.id===entry.id);if(!current)throw Error('Image removed');return {revision:current.revision,data:{resources:{image:{kind:'bookmark',locators:[{provider:'web',reference:node.url}]}},tags:{image:current.tags,vocabulary:saved['atlas-tag-vocabulary-v1'] || []}}};}
+  {existing.setAttribute('aria-label','Existing Atlas tags');existingLabel.append(existing);form.append(existingLabel,savedTags);existing.onchange=()=>{if(!existing.value)return;const values=input.value.split(',').map(value=>value.trim()).filter(Boolean);if(!values.includes(existing.value))values.push(existing.value);input.value=values.join(', ');existing.value='';input.focus();};const waiting=element('option','Loading existing tags…');waiting.value='';existing.append(waiting);tagSnapshot().then(snapshot=>populateTags(snapshot.data,snapshot.revision)).catch(()=>{if(displayedRevision<0){const unavailable=element('option','Connect companion to load tags');unavailable.value='';existing.replaceChildren(unavailable);}});}
   form.append(message,actions);dialog.append(form);
   const close=element('button','×');close.type='button';close.className='metadata-close';close.setAttribute('aria-label','Close bookmark details');close.onclick=()=>dialog.close();dialog.append(close);
   form.onsubmit=async event=>{
@@ -134,6 +150,7 @@ function addMetadata(node){
     save.disabled=true;
     try{
       await withPageLock(async()=>{
+        if(entry){const saved=await chrome.storage.local.get([IMAGE_ENTRIES,'atlas-tag-vocabulary-v1']),all=structuredClone(saved[IMAGE_ENTRIES] || {}),current=all[node.url]?.entries.find(e=>e.id===entry.id);if(!current)throw Error('Image removed');const before=[...current.tags];current.tags=[...new Set([...current.tags,...value])];current.revision++;current.history.push({type:'human-tags-added',at:new Date().toISOString(),actor:'human',before,after:[...current.tags]});await chrome.storage.local.set({[IMAGE_ENTRIES]:all,'atlas-tag-vocabulary-v1':[...new Set([...(saved['atlas-tag-vocabulary-v1'] || []),...value])]});imageGalleryCache=all;confirmed=value.length;populateTags((await tagSnapshot()).data,current.revision);return;}
         const state=await chrome.runtime.sendMessage({type:'state'});if(!state?.paired)throw Error('COMPANION_OFFLINE');
         const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('BOOKMARK_CHANGED');
         let snapshot=await catalogRequest();const matches=Object.values(snapshot.data.resources || {}).filter(resource=>resource.kind==='bookmark' && resource.locators?.some(locator=>locator.provider==='web' && locator.reference===node.url));let resource=matches[0];
@@ -151,7 +168,8 @@ function metadataSection(node){
   const section=element('section','');section.className='bookmark-add-section';
   const actions=element('div','');actions.className='bookmark-add-actions';
   const control=element('button','Add Tags');control.type='button';control.onclick=()=>addMetadata(node);actions.append(control);section.append(actions);
-  if(associated?.tags.length){const tags=element('div','');tags.className='bookmark-tag-pills';for(const tag of associated.tags){const pill=element('span',tag);pill.className='bookmark-tag-pill';tags.append(pill);}section.append(tags);}
+  const gallery=imageGalleryCache[node.url],entry=gallery?.entries.find(e=>e.id===gallery.defaultId),shownTags=gallery?(entry?.tags || []):(associated?.tags || []);
+  if(shownTags.length){const tags=element('div','');tags.className='bookmark-tag-pills';for(const tag of shownTags){const pill=element('span',tag);pill.className='bookmark-tag-pill';tags.append(pill);}section.append(tags);}
   return section;
 }
 function renderPreview() {
@@ -342,5 +360,6 @@ $('bookmarks-workspace').addEventListener('keydown', event => {
   if (event.key === 'Escape' && focused && !event.target.closest('dialog')) { event.preventDefault(); event.stopPropagation(); returnFromPreview(); }
 });
 chrome.storage.onChanged.addListener((changes, area) => {
+  if(area==='local' && changes[IMAGE_ENTRIES]){imageGalleryCache=changes[IMAGE_ENTRIES].newValue || {};if(active())render();}
   if (area === 'local' && changes[COVER_KEY]) { covers = changes[COVER_KEY].newValue || {}; if (active()) render(); }
 });

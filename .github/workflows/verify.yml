@@ -27,6 +27,8 @@ jobs:
           node scripts/test_pinboard_menu.mjs
           node scripts/test_pinboard_appearance.mjs
           node scripts/test_pinboard_blank.mjs
+          node scripts/test_image_entries.mjs
+          node scripts/test_pinboard_rename.mjs
           node scripts/test_pinboard.mjs
           node scripts/test_pinboard_generation.mjs
           node scripts/test_pinboard_tag_editor.mjs

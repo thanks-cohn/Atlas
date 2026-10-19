@@ -59,3 +59,7 @@ The ambition is long-lived inexpensive relationship history, not an unlimited-st
 Acceptance must cover equal-hash independent entries; URL and filename/path origins; unreadable-source recovery with missing hash; exact-byte digest; default selection/reload/removal; note/bookmark/tag provenance round trips; repeated restore; failed/interrupted recovery writes; concurrent edits; late inference; no source deletion or unsolicited uploads; verified backup hash mismatch rejection; private exports; bounded memory and long-log pagination. Test Chrome and constrained hardware separately from mock/unit checks.
 
 A successor can replace storage, UI or implementation language while preserving stable identities, origin evidence, independent contexts, user-controlled backup, recoverable relationship history and honest availability claims.
+
+## Implementation follow-up · 0.1.89
+
+A first extension-local vertical slice now implements additive independent image entries, cover stars and reference-only shelf Recovery. See [Image-entry Gallery and Recovery v1](IMAGE_ENTRY_GALLERY_AND_RECOVERY_V1.md) for actual code/storage, migration and proof. This does not mark the entire proposal implemented: R2 backup, durable external history/API, scalable indexing and recommendations remain future work. Chrome visual/runtime acceptance remains separate.

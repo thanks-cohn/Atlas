@@ -102,3 +102,5 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Object Grammar and Portable Atlas Expressions](PROPOSAL_OBJECT_GRAMMAR_AND_PORTABLE_EXPRESSIONS.md) — owner vision of beautiful cards/slices across the internet; Project/Page/Section/Pinboard rules, conditional containment vs embedding, contextual Add Item and independent export contracts. Design proposal, not shipped enforcement.
 
 - [Image Recover, Asset References and Optional R2 Backup](PROPOSAL_IMAGE_RECOVERY_REFERENCES_AND_R2_BACKUP.md) — proposed star/default covers, metadata-only recovery history with source locations and SHA-256 states, independent provenance, and opt-in verified R2 asset copies. Not implemented.
+
+- [Image-entry Gallery and Recovery v1](IMAGE_ENTRY_GALLERY_AND_RECOVERY_V1.md) — extension 0.1.89 implementation: additive popup images, independent entry data, default-cover star and shelf Recovery, with exact local-storage/hash/restore limitations and proof. R2 backup remains proposed.

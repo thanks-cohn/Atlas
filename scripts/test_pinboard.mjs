@@ -9,14 +9,14 @@ const roots=[{id:'0',children:[{id:'1',parentId:'0',title:'Work',children:Array.
 assert.equal(model.pinItems(roots).length,1000);assert.equal(model.pinItems(roots,'missing').length,0);
 assert.equal(model.pinItems([{id:'x',url:'javascript:alert(1)'}]).length,0);
 assert.equal(model.pinItems([{id:'x',url:'https://u:p@example.com/'}]).length,0);
-const data={},storage={get:async key=>({[key]:data[key]}),set:async v=>Object.assign(data,v)};
+const data={},storage={get:async keys=>Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(key=>[key,data[key]])),set:async v=>Object.assign(data,v)};
 const node={id:'10',url:'https://example.com/0.jpg'},id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 await model.createPinboard(storage,node,'Research',id,'1');assert.equal((await model.linkedPinboards(storage,node))[0].folderId,'1');
 assert.equal((await model.linkedPinboards(storage,{...node,url:'https://changed.example/'})).length,0);
 await model.removePinboard(storage,id);assert.equal((await model.linkedPinboards(storage,node)).length,0);
 
 const animations=[],motionFinishes=[];
-let previewContent,tagEditorNode;
+let previewContent,tagEditorNode,previewOptions;
 let holdImpl={hold(){},touch(){},active:()=>[],clear(){}};
 let blankOptions,blankImpl={show(){},load:async()=>{},nodes:()=>[]};
 let scroll=0,fetchOptions,tagEditorOptions;const frames=[];const listeners={};
@@ -40,7 +40,8 @@ class El{
 const elements=new Map();const document={querySelector:()=>new El(),getElementById:id=>{if(!elements.has(id))elements.set(id,new El());return elements.get(id);},createElement:tag=>new El(tag),createDocumentFragment:()=>new El('fragment'),documentElement:new El()};
 const {publicImageURL}=await moduleOf('pages-store.js');
 const {generateModels,generatedTags,mergeGeneratedRun}=await moduleOf('pinboard-generation.js');
-const context={heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:()=>({setContent:(key,value)=>previewContent={key,...value}}),TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return node=>{tagEditorNode=node;};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
+const galleryModule=await import('../extension/image-entries.js');
+const context={...galleryModule,structuredClone,crypto,createImageEntries:options=>galleryModule.createImageEntries({...options,lock:fn=>fn()}),heldMasonry:holdsModule.heldMasonry,createCardHold:()=>new Proxy({},{get:(_,key)=>holdImpl[key]}),connectionWriter:()=>async()=>{},installPreviewSections:options=>{previewOptions=options;return {setContent:(key,value)=>previewContent={key,...value}};},TAG_VOCABULARY:'atlas-tag-vocabulary-v1',removeBookmarkTag:async()=>{throw Error('Unexpected human mutation');},generateModels,generatedTags,mergeGeneratedRun,imageReference:async source=>source,generationImage:async()=> 'data:image/png;base64,AA==',installTagEditor:options=>{tagEditorOptions=options;return node=>{tagEditorNode=node;};},installBlankBoard:options=>{blankOptions=options;return new Proxy({},{get:(_,key)=>blankImpl[key]});},installCoverFetch:options=>{fetchOptions=options;return {discover(){},stop(){},request(){}};},publicImageURL,...model,...coversModule,document,URL,location:{href:'chrome-extension://atlas/pinboard.html'},window:{get scrollY(){return scroll;},innerWidth:1200,addEventListener:(name,fn)=>{const previous=listeners[name];listeners[name]=previous?event=>{previous(event);fn(event);}:fn;},scrollBy:({top})=>scroll+=top},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout,clearTimeout,navigator:{locks:{request:async(_,fn)=>fn()}},rasterImage:async()=>'',chrome:{bookmarks:{getTree:async()=>roots,get:async id=>roots[0].children[0].children.filter(node=>node.id===id)},storage:{local:storage},runtime:{sendMessage:async()=>({paired:false})}}};
 vm.runInNewContext(read('pinboard.js').replace(/^import .*\n/gm,''),context);
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));await tick();await tick();
 const $=id=>document.getElementById(id),cards=()=>$('pins').children.filter(el=>el.className==='pin-block').flatMap(el=>el.children);
@@ -54,8 +55,8 @@ $('card-limit').value='24';$('card-limit').onchange();await tick();assert.equal(
 const pin=cards()[0];assert.equal(pin.children[0].children[0].loading,'lazy');
 assert.equal(pin.children[0].children[1].className,'pin-loading');
 pin.children[0].children[0].onload();assert.equal(pin.children[0].ready,'is-ready');
-pin.children[0].onclick();assert.equal($('detail').open,true);assert.equal($('detail-link').href,node.url);
-$('close').onclick();assert.equal($('detail').open,false);
+vm.runInContext("metadataState='ready'",context);await pin.children[0].onclick();assert.equal($('detail').open,true);assert.equal($('detail-link').href,node.url);
+$('close').onclick();assert.equal($('detail').open,false);delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 assert.equal(pin.children[1].children[0].href,node.url);
 roots[0].children[0].children[0].url='https://example.com/plain';await $('refresh').onclick();
 const narrow=cards()[0].children[0];assert.equal(narrow.className,'pin-empty');assert.equal(narrow.children[1].textContent,'+');
@@ -107,7 +108,7 @@ context.chrome.runtime.sendMessage=async message=>message.type==='state'?{paired
 await $('refresh').onclick();flush();
 let tagged=cards()[0],strip=tagged.children[1].children[2];assert.equal(strip.className,'pin-tags');assert.equal(strip.children.length,6);assert.equal(strip.children[3].children[0].textContent,'<img src=x onerror=alert(1)>');assert.equal(strip.children[5].textContent,'+2');
 assert.equal(tagged.children[1].style.height,'138px');
-strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();
+await strip.children[5].onclick();assert.equal($('detail').open,true);assert.equal($('detail-tags').children.length,7);assert.ok($('detail-tags').children.every(chip=>chip.className.includes('human-tag')));$('preview-add-tag').onclick();assert.equal(tagEditorNode.parentNode.id,taggedImage.id,'Preview Add Tag reuses the existing picker for the current card');$('close').onclick();delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 const urlTags=cards()[1].children.at(-1);assert.equal(urlTags.className,'pin-tags');assert.equal(urlTags.children.length,2);
 // Refresh retrieves edits to the existing catalog rather than requiring a new tab.
 tagCatalog.tags.r=['Updated'];await $('refresh').onclick();flush();assert.equal(cards()[0].children[1].children[2].children[0].children[0].textContent,'Updated');
@@ -202,7 +203,7 @@ context.chrome.runtime.sendMessage=async message=>{generationRequests++;assert.e
 await $('run-image-tagging').onclick();assert.equal(generationRequests,1);assert.equal($('tagging-selection-status').textContent,'Tags generated.');
 $('joytag-enabled').checked=true;await $('joytag-enabled').onchange();assert.equal(data['atlas-joytag-enabled-v1'],true);assert.equal($('tag-anime-wrap').hidden,false);
 $('tag-anime-choice').checked=true;await $('tag-anime-choice').handlers.change();
-assert.equal(data['atlas-tagging-studio-layout-v1'][cards()[0].atlasNode.url].anime,true);
+assert.equal(data['atlas-tagging-studio-layout-v1'][vm.runInContext('itemKey(selected)',context)].anime,true);
 $('close').onclick();vm.runInContext('openDetail(items[0])',context);await tick();await tick();assert.equal($('tag-anime-choice').checked,true);
 $('joytag-enabled').checked=false;await $('joytag-enabled').onchange();assert.equal($('tag-anime-wrap').hidden,true);assert.equal($('tag-anime-choice').checked,false);
 for(const id of ['tag-image-choice','tag-people-choice','tag-face-choice'])$(id).checked=false;
@@ -255,7 +256,7 @@ $('tag-people-choice').checked=false;$('tag-face-choice').checked=true;await $('
 const cumulative=vm.runInContext('tagsFor(selected)',context);
 assert.ok(cumulative.includes('Generated Object'));assert.ok(cumulative.includes('person'));assert.ok(cumulative.includes('smile'));
 assert.ok(!cumulative.includes('Machine Cat'),'Explicit removal must survive all later runs');
-assert.ok(data['atlas-image-tagging-runs-v1'][machineCard.atlasNode.url].objects.length>=3);
+assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)].objects.length>=3);
 assert.equal(JSON.stringify(tagCatalog),humanBefore);
 console.log('PASS: three separate UI generations accumulate different payloads and shared-detector choices; explicit × removal and human metadata survive.');
 vm.runInContext('highlightedTags.clear();generatedIndex=new Map()',context);
@@ -285,6 +286,8 @@ listeners.keydown({key:'q',altKey:true,target:$('search'),preventDefault(){}});
 assert.equal(vm.runInContext('highlightedTags.size',context),0);assert.equal($('search').value,'Bookmark');
 console.log('PASS: Alt+Q clears highlighted tags/clauses and restores order; attachments/search words persist; Escape never clears selection and dialogs/editors retain handling.');
 
+// Independent legacy ranking fixture (no migrated image contexts).
+delete data[galleryModule.IMAGE_ENTRIES];await vm.runInContext('imageEntries.load()',context);
 // Graded priority: 3 matches, 2, 1, zero, with stable ties and no double-counting.
 $('search').value='';vm.runInContext("highlightedTags.clear();render()",context);
 const rankedNodes=roots[0].children[0].children.slice(0,6);
@@ -347,16 +350,16 @@ data[localStorageKey]={default:[{id:'auth-a',title:'Authored A',text:'A note',im
 blankImpl=context.authoredInstall(blankOptions);await blankImpl.load();$('folder').value='blank';$('search').value='';vm.runInContext('highlightedTags.clear();render()',context);flush();
 assert.equal(cards().length,3);assert.ok(cards().every(card=>card.className.startsWith('pin')));assert.equal($('tag-browser').hidden,false);assert.equal($('pins').hidden,false);
 const authoredA=cards().find(card=>card.atlasNode.cardId==='auth-a'),authoredB=cards().find(card=>card.atlasNode.cardId==='auth-b');
-assert.equal(authoredA.children[0].className,'pin-visual');authoredA.children[0].onclick();await tick();await tick();assert.equal($('detail').open,true);assert.equal($('detail-title').textContent,'Authored A');assert.equal(previewContent.notes.map(note=>note.text).join('\n\n'),'A note');assert.equal($('detail-link').hidden,true);assert.equal($('edit-authored-card').hidden,false);
+assert.equal(authoredA.children[0].className,'pin-visual');await authoredA.children[0].onclick();await tick();await tick();assert.equal($('detail').open,true);assert.equal($('detail-title').textContent,'Authored A');assert.equal(previewContent.notes.map(note=>note.text).join('\n\n'),'A note');assert.equal($('detail-link').hidden,true);assert.equal($('edit-authored-card').hidden,false);
 $('close').onclick();$('search').value='tag:Alpha,Beta';vm.runInContext('updatePriorities()',context);assert.equal(vm.runInContext('items[0].cardId',context),'auth-b');assert.equal(vm.runInContext('items.length',context),3);
 $('search').value='';const isolated=blankImpl.nodes();assert.notEqual(isolated[1].itemKey,isolated[2].itemKey);assert.notEqual(isolated[1].itemKey,taggedImage.url);
 const pair=authoredB.children[1].children.find(child=>child.className==='pin-tags').children.find(pair=>pair.children[0].textContent==='Beta');await pair.children[1].onclick({stopPropagation(){}});assert.ok(!blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(blankImpl.metadata(isolated[2]).tags.includes('Beta'));
 const localTagEditor=tagEditorOptions.localAdapter(isolated[1]);await localTagEditor.mutate('tag','Beta');assert.ok(blankImpl.metadata(isolated[1]).tags.includes('Beta'));assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Beta'));
 vm.runInContext('openDetail(blankBoard.nodes()[0])',context);await tick();await tick();
-context.chrome.runtime.sendMessage=async message=>{assert.equal(message.path,'/v1/tag-image');assert.equal(message.body.item_id,isolated[0].itemKey);return {ok:true,source:'objects',run_id:'auth-run',image_payload_sha256:'auth-payload',suggestions:[{tag:'Authored Machine',score:.9}]};};
+context.chrome.runtime.sendMessage=async message=>{assert.equal(message.path,'/v1/tag-image');assert.equal(message.body.item_id,vm.runInContext('itemKey(selected)',context));return {ok:true,source:'objects',run_id:'auth-run',image_payload_sha256:'auth-payload',suggestions:[{tag:'Authored Machine',score:.9}]};};
 $('tag-image-choice').checked=true;$('tag-people-choice').checked=false;$('tag-face-choice').checked=false;await $('run-image-tagging').onclick();
-assert.ok(data['atlas-image-tagging-runs-v1'][isolated[0].itemKey]);assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Authored Machine'));
-await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));
+assert.ok(data['atlas-image-tagging-runs-v1'][vm.runInContext('itemKey(selected)',context)]);assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'));assert.ok(!vm.runInContext('tagsFor(blankBoard.nodes()[1])',context).includes('Authored Machine'));
+await blankImpl.patch(isolated[0],{title:'Retitled',image:'https://images.example/new.jpg'});flush();assert.equal(cards().find(card=>card.atlasNode.cardId==='auth-a').children[1].children[0].textContent,'Retitled');assert.ok(vm.runInContext('tagsFor(blankBoard.nodes()[0])',context).includes('Authored Machine'),'Editing parent card must preserve independently owned image evidence');
 $('close').onclick();$('preview-board').onclick();assert.equal(blankImpl.region().hidden,true);assert.equal($('pins').hidden,false);assert.equal(cards().length,3);
 $('folder').value='all';vm.runInContext('render()',context);$('folder').value='blank';vm.runInContext('render()',context);assert.equal(blankImpl.region().hidden,false);assert.equal($('preview-board').textContent,'Preview');
 console.log('PASS: legacy authored cards use common card/preview/ranking/tag/X/generation/masonry functions, unique identities, local mutation, stale-cover isolation, editing refresh and preview exit reset.');
@@ -395,3 +398,22 @@ arrow('ArrowDown',{matches:()=>true});assert.equal($('tag-field').scrollTop,0);
 tagHover=false;arrow('ArrowDown');assert.equal($('tag-field').scrollTop,0);
 assert.equal(arrowPrevented,3);
 console.log('PASS: hovered tag arrows scroll only the tag viewport, clamp at boundaries and leave editors/unhovered board keys alone.');
+
+// Real gallery/store/preview wiring: image-scoped content, star, removal and restore.
+await vm.runInContext('openDetail(blankBoard.nodes()[0])',context);
+const firstEntry=vm.runInContext('selected.entryId',context),firstOwner=vm.runInContext('selected.galleryOwner',context);
+const firstImage=$('detail-image').src;
+await vm.runInContext("saveImage(selected,'https://images.example/gallery-b.jpg',{provider:'web',url:'https://images.example/gallery-b.jpg',sha256:'b-hash'})",context);
+assert.notEqual(vm.runInContext('selected.entryId',context),firstEntry);assert.equal($('detail-image').src,'https://images.example/gallery-b.jpg');assert.equal($('detail-tags').children.length,0);assert.equal(previewContent.notes.length,0);assert.equal(previewContent.bookmarks.length,0);
+const secondEntry=vm.runInContext('selected.entryId',context);assert.equal(data[galleryModule.IMAGE_ENTRIES][firstOwner].defaultId,firstEntry);
+const entryTagAdapter=tagEditorOptions.localAdapter(vm.runInContext('selected',context));await entryTagAdapter.mutate('tag','Only B');
+await previewOptions.save(vm.runInContext('itemKey(selected)',context),'note',{id:'b-note',title:'B title',text:'B body'});
+assert.equal(previewContent.notes[0].text,'B body');
+await $('default-image').onclick();assert.equal(data[galleryModule.IMAGE_ENTRIES][firstOwner].defaultId,secondEntry);assert.equal($('default-image').attrs['aria-pressed'],'true');
+$('previous-image').onclick();assert.equal(vm.runInContext('selected.entryId',context),firstEntry);assert.equal($('detail-image').src,firstImage);assert.ok(!$('detail-tags').children.some(tag=>tag.children[0]?.textContent==='Only B'));
+$('next-image').onclick();assert.equal(previewContent.notes[0].title,'B title');
+context.window.confirm=()=>true;await $('remove-image').onclick();const record=data[galleryModule.IMAGE_RECOVERY].at(-1);assert.equal(record.entry.id,secondEntry);assert.equal(record.entry.notes[0].text,'B body');assert.equal(record.entry.tags[0],'Only B');assert.equal(record.imageReference,'https://images.example/gallery-b.jpg');assert.equal(vm.runInContext('selected.entryId',context),firstEntry);
+await vm.runInContext('imageEntries.restore('+JSON.stringify(record.id)+')',context);$('next-image').onclick();assert.equal(previewContent.notes[0].text,'B body');
+const keyboard=$('detail').handlers.keydown;let intercepted=false;keyboard({key:'ArrowLeft',target:{closest:()=>true},preventDefault(){intercepted=true;}});assert.equal(intercepted,false);
+assert.match(read('pinboard.html'),/>Add Image<\/button>/);assert.ok(read('pinboard.html').indexOf('id="default-image"')<read('pinboard.html').indexOf('id="detail-image"'));assert.match(read('explorer.html'),/id="image-recovery-open"/);
+console.log('PASS: additive gallery UI preserves A, starts B empty, stores B tags/notes, stars default, navigates contexts, atomically recovers/remounts section and leaves editor arrow keys alone.');

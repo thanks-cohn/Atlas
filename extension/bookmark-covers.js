@@ -24,7 +24,8 @@ export function directImage(url) {
   } catch { return null; }
 }
 export function bookmarkCover(node, covers) {
-  const saved = Object.hasOwn(covers, node.id) ? covers[node.id] : null;
+  const saved = Object.hasOwn(covers, node.id) ? covers[node.id] : Object.values(covers).find(cover=>cover?.url===(node.url || '')) || null;
+  if(saved?.url===(node.url || '') && saved.image===null)return null;
   return saved?.url === (node.url || '') && safeCoverReference(saved.image) ? saved.image : directImage(node.url);
 }
 export function setBookmarkCover(covers, node, image, budgetMiB=64) {

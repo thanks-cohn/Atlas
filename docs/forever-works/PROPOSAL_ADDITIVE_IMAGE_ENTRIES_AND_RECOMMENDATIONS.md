@@ -127,3 +127,7 @@ A successor implementation may change language, storage mechanism, UI framework 
 Owner clarification supersedes any implication that Remove Image automatically archives image bytes: **Recover initially preserves references, SHA-256 when readable, and relationship/history metadata. It does not create a backup copy by default.** Preserve the original URL or last known authorized local location (filename-only if the browser withholds the full path). Optional Backup to R2 stores a separately verified copy in a standardized asset namespace used by the framework/API.
 
 The top-right star selects the default entry and highlights it. Removal saves a durable recovery record before detaching the entry; restoring associations is distinct from retrieving unavailable image bytes. See [Recover, Asset References and Optional R2 Backup](PROPOSAL_IMAGE_RECOVERY_REFERENCES_AND_R2_BACKUP.md) for effects, failure semantics and acceptance gates. Everything in this addendum remains proposed, not implemented by this documentation change.
+
+## Implementation follow-up · 0.1.89
+
+A first extension-local vertical slice now implements additive independent image entries, cover stars and reference-only shelf Recovery. See [Image-entry Gallery and Recovery v1](IMAGE_ENTRY_GALLERY_AND_RECOVERY_V1.md) for actual code/storage, migration and proof. This does not mark the entire proposal implemented: R2 backup, durable external history/API, scalable indexing and recommendations remain future work. Chrome visual/runtime acceptance remains separate.
