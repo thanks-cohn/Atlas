@@ -1179,3 +1179,20 @@ Raise those bounded previews to175K characters and add384/320/256/192 fallback
 sizes. Original asset unchanged; inference payload budgets unchanged. Pillow
 measurement supports smaller fallback; Chrome encoder itself NOT_RUN here.
 Image-file boundary regression, pinboard/blank suites, packaging/whitespace PASS.
+
+## 2026-10-19 — owner retires People; reduced candidate build
+
+Owner directs removing slow People pipeline and weights, retaining general RAM++
+and Settings-activated JoyTag, simplifying to Generate tags? + initially unchecked
+general box and optional Anime box. No recommendation model is bundled yet.
+Removed MiVOLO/detector from active rich manifest/export/runtime dispatch. Reduced
+Windows model manifest includes RAM++ assets and unchanged JoyTag assets only;
+legacy normal build remains separate. Exclude retired People module from reduced
+frozen build; prune unused generated distribution models. Model bytes drop from
+1,642,827,985 to1,239,072,821 (403,755,164 bytes saved); archive size needs actual
+Windows artifact measurement. Old saved People evidence remains readable; no user
+state/cache deletions. Installed old models require separately verified cleanup
+AFTER reduced install, not git pull. Source-only removed-model tests and JoyTag
+fingerprint plus UI/generation/source navigation checks pass. Windows rebuild
+qualification pending at publication; do not present historical artifact as reduced.
+Background job recovery007 remains unresolved, including general/Anime jobs.

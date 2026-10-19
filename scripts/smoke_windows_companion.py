@@ -140,7 +140,7 @@ def main():
                         image='data:image/jpeg;base64,'+base64.b64encode(buffer.getvalue()).decode()
                         sample={'id':fixture['id'],'url':fixture['url'],'sha256':fixture['sha256'],'runs':[]}
                         photo_report['fixtures'].append(sample)
-                        for model in ('objects','people','anime'):
+                        for model in ('objects','anime'):
                             started=time.perf_counter()
                             code,result=request('/v1/tag-image',{'model':model,'item_id':'windows-photo:'+fixture['id'],'image':image})
                             assert code==200 and result['run_id'],(code,result)
@@ -148,8 +148,6 @@ def main():
                             report_path.write_text(json.dumps(photo_report,indent=2)+'\n')
                             if model=='objects':
                                 assert len(result['predictions'])==4585 and len(result['suggestions'])>=5
-                            if model=='people' and fixture.get('expected_people') is not None:
-                                assert result['person_count']==fixture['expected_people'],(fixture['id'],result['person_count'])
                             if model=='anime':
                                 baseline=next(x for x in fixture['runs'] if x['profile']=='legacy' and x['requested_model']=='anime')
                                 expected={x['tag']:x['score'] for x in baseline['suggestions']}

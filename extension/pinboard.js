@@ -105,7 +105,7 @@ const TAGGING_UI_PREFS='atlas-tagging-studio-layout-v1';
 const JOYTAG_ACTIVATED='atlas-joytag-enabled-v1';
 function setTaggingChoiceStatus(message){$('tagging-selection-status').textContent=message;}
 let taggingChoiceEpoch=0,taggingBusy=false;
-function updateTaggingAction(){const chosen=['tag-image-choice','tag-people-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || previewingLinkedImage || !chosen;}
+function updateTaggingAction(){const chosen=['tag-image-choice'].some(id=>$(id).checked) || (!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked);$('run-image-tagging').disabled=taggingBusy || previewingLinkedImage || !chosen;}
 function applyJoyTagSetting(enabled){$('joytag-enabled').checked=enabled;$('tag-anime-wrap').hidden=!enabled;if(!enabled)$('tag-anime-choice').checked=false;updateTaggingAction();}
 async function loadModelChoiceSetting(){try{const saved=await chrome.storage.local.get(JOYTAG_ACTIVATED);applyJoyTagSetting(saved[JOYTAG_ACTIVATED]===true);}catch{$('model-choice-status').textContent='Could not load model preference.';applyJoyTagSetting(false);}}
 $('joytag-enabled').onchange=async()=>{
@@ -118,15 +118,13 @@ async function loadTaggingChoices(node){
   const key=itemKey(node),request=++taggingChoiceEpoch;
   $('tag-anime-wrap').hidden=true;
   $('tag-anime-choice').checked=false;
-  $('tag-image-choice').checked=true;
-  $('tag-people-choice').checked=true;
+  $('tag-image-choice').checked=false;
   setTaggingChoiceStatus('');updateTaggingAction();
   try{
     const saved=await chrome.storage.local.get([TAGGING_UI_PREFS,JOYTAG_ACTIVATED]);
     if(itemKey(selected)!==key || request!==taggingChoiceEpoch)return;
     const prefs=saved[TAGGING_UI_PREFS]?.[key] || {};
-    $('tag-image-choice').checked=prefs.objects!==false;
-    $('tag-people-choice').checked=prefs.people!==false;
+    $('tag-image-choice').checked=prefs.objects===true;
     const joytagEnabled=saved[JOYTAG_ACTIVATED]===true;
     applyJoyTagSetting(joytagEnabled);
     $('tag-anime-choice').checked=joytagEnabled && prefs.anime===true;
@@ -136,14 +134,14 @@ async function loadTaggingChoices(node){
 async function saveTaggingChoices(){
   if(!selected)return;
   const key=itemKey(selected);
-  const choice={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
+  const choice={objects:$('tag-image-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
   updateTaggingAction();setTaggingChoiceStatus('');
   try{
     const saved=(await chrome.storage.local.get(TAGGING_UI_PREFS))[TAGGING_UI_PREFS] || {};
     await chrome.storage.local.set({[TAGGING_UI_PREFS]:{...saved,[key]:choice}});
   }catch{setTaggingChoiceStatus('Selections could not be saved; please retry.');}
 }
-for(const id of ['tag-image-choice','tag-people-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
+for(const id of ['tag-image-choice','tag-anime-choice'])$(id).addEventListener('change',saveTaggingChoices);
 const TAGGING_RESULTS='atlas-image-tagging-runs-v1';
 const TAGGING_CHECKPOINTS='atlas-image-tagging-checkpoints-v1';
 let generatedRenderVersion=0;
@@ -177,7 +175,7 @@ $('run-image-tagging').onclick=async()=>{
   if($('run-image-tagging').disabled || !selected)return;
   const node=selected;
   const batchId=crypto.randomUUID(),batchAt=new Date().toISOString();
-  const choices={objects:$('tag-image-choice').checked,people:$('tag-people-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
+  const choices={objects:$('tag-image-choice').checked,anime:!$('tag-anime-wrap').hidden && $('tag-anime-choice').checked};
   taggingBusy=true;updateTaggingAction();
   const report=message=>{if(itemKey(selected)===itemKey(node))setTaggingChoiceStatus(message);};
   try{

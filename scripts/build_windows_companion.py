@@ -20,21 +20,26 @@ def main():
     if importlib.metadata.version('pyinstaller')!='6.16.0':raise SystemExit('Use pinned PyInstaller==6.16.0')
     from prepare_tagging_models import prepare
     output=ROOT/'dist/windows';output.mkdir(parents=True,exist_ok=True)
-    prepare(output/'tagging-models')
     rich = '--rich-tagging' in sys.argv[1:]
+    prepare(output/'tagging-models', keys=('anime','anime_labels') if rich else None)
     model_manifest = ROOT/'src/atlas_companion/tagging-models.json'
     profile_manifest = ROOT/'src/atlas_companion/tagging-profile.json'
     if rich:
         from prepare_rich_tagging_models import prepare as prepare_rich
         prepare_rich(output/'tagging-models')
         generated = ROOT/'build/windows/rich'; generated.mkdir(parents=True, exist_ok=True)
-        combined = {**json.loads(model_manifest.read_text()), **json.loads((ROOT/'src/atlas_companion/tagging-models-rich.json').read_text())}
+        legacy = json.loads(model_manifest.read_text())
+        combined = {**{key:legacy[key] for key in ('anime','anime_labels')}, **json.loads((ROOT/'src/atlas_companion/tagging-models-rich.json').read_text())}
+        allowed={spec['file'] for spec in combined.values()}
+        for stale in (output/'tagging-models').iterdir():
+            if stale.is_file() and stale.name not in allowed: stale.unlink()
         model_manifest = generated/'tagging-models.json'
         model_manifest.write_text(json.dumps(combined, indent=2), encoding='utf-8')
         profile_manifest = generated/'tagging-profile.json'
         profile_manifest.write_text(json.dumps({'profile':'rich','status':'candidate; representative-image and owner acceptance required'}), encoding='utf-8')
     common=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--noupx','--paths',str(ROOT/'src'),
             '--distpath',str(output),'--workpath',str(ROOT/'build/windows'),'--specpath',str(ROOT/'build/windows')]
+    if rich: common += ['--exclude-module','atlas_companion.people_tags']
     model_data=['--add-data',str(model_manifest)+';atlas_companion',
                 '--add-data',str(profile_manifest)+';atlas_companion',
                 '--add-data',str(ROOT/'src/atlas_companion/tagging-models-rich.json')+';atlas_companion']

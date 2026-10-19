@@ -1,3 +1,10 @@
+> Owner revision, 2026-10-19: People has been retired. The reduced candidate
+> retains RAM++ plus Settings-activated JoyTag and starts general selection empty.
+> The artifact link below is the historical three-model candidate, NOT the new
+> reduced package. New Windows qualification/build must complete before providing
+> its replacement download. Source/extension changes alone do not shrink an
+> already installed helper/model cache. Do not delete private Atlas state.
+
 # Rich photo tagging Windows trial
 
 Use the **atlas-rich-tagging-CANDIDATE-windows-x86_64** artifact from a successful

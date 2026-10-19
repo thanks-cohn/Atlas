@@ -1,3 +1,8 @@
+> 2026-10-19 reduced rich candidate: distribution includes RAM++ and unchanged
+> JoyTag only. MiVOLO, YOLO Face/Person, legacy detector/expression weights are
+> excluded. Their descriptions below document historical/legacy profiles, not
+> models shipped in the reduced candidate.
+
 # Model provenance and redistribution
 
 Weights are downloaded at build time, never committed as opaque binaries. See

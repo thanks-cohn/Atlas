@@ -36,7 +36,7 @@ export async function generateModels({node,image,choices,send,save,status}) {
   if (choices.anime) models.push('anime');
   const results = {};
   for (const model of models) {
-    status('Generating '+({objects:'Things / People',face:'Faces',people:'People',anime:'Anime'}[model])+'…');
+    status('Generating '+({objects:'Image tags',face:'Faces',people:'People',anime:'Anime'}[model])+'…');
     const response = await send({type:'api',path:'/v1/tag-image',body:{model,image,item_id:node.itemKey || node.url,display_choices:choices}});
     const result=response?.data || response;
     if (response?.ok===false || !Array.isArray(result?.suggestions)) {
@@ -138,7 +138,7 @@ export function generatedTags(runs,reference,animeEnabled=false) {
         // Count assertions describe one image in one run, never a sum of runs.
         if(source==='people' && run!==matching.at(-1))continue;
         const label=suggestion.tag.trim().replace(/\s+/g,' '),key=tagKey(label);
-        if(source==='objects' && run.display_choices && !run.display_choices[suggestion.category || (key==='person' ? 'people' : 'objects')])continue;
+        if(source==='objects' && run.display_choices && !run.display_choices[suggestion.category || (Object.hasOwn(run.display_choices,'people') && key==='person' ? 'people' : 'objects')])continue;
         if(!key)continue;
         if(!grouped.has(key))grouped.set(key,{label,sources:[]});
         grouped.get(key).sources.push({source,model:run.model,run_id:run.run_id,score:suggestion.score});

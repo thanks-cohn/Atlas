@@ -89,9 +89,23 @@ class PeopleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             state=SimpleNamespace(directory=folder)
             with self.assertRaises(APIError) as caught:
-                asset(state,'mivolo')
+                asset(state,'rampp')
             self.assertEqual(caught.exception.code,'TAG_MODEL_NOT_INSTALLED')
-            models=Path(folder)/'tagging-models';models.mkdir();(models/'mivolo-v2.onnx').write_bytes(b'wrong')
+            models=Path(folder)/'tagging-models';models.mkdir();(models/'ram-plus-matmul-int8.onnx').write_bytes(b'wrong')
             with self.assertRaises(APIError) as caught:
-                asset(state,'mivolo')
+                asset(state,'rampp')
             self.assertEqual(caught.exception.code,'TAG_MODEL_CHECKSUM')
+
+class RetiredPeopleContract(unittest.TestCase):
+    def test_distribution_has_only_photo_assets(self):
+        specs=json.loads((ROOT/'src/atlas_companion/tagging-models-rich.json').read_text())
+        self.assertEqual(set(specs),{'rampp','rampp_labels','rampp_thresholds'})
+        self.assertEqual(sum(s['bytes'] for s in specs.values()),872879915)
+
+    def test_people_and_faces_are_rejected_without_loading_models(self):
+        from atlas_companion.rich_tags import predict
+        for model in ('people','face'):
+            with patch('atlas_companion.onnx_tags.decode',return_value=object()):
+                with self.assertRaises(APIError) as caught:
+                    predict(SimpleNamespace(directory='unused'),{'model':model})
+                self.assertEqual(caught.exception.code,'TAG_MODEL_INVALID')

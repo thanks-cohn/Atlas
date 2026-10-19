@@ -15,15 +15,13 @@ def main():
     buffer.write(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',320,240,8,2,0,0,0))+chunk(b'IDAT',zlib.compress((b'\0'+b'\xff'*960)*240))+chunk(b'IEND',b''))
     image = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode()
     from .rich_tags import enabled
-    models = ('objects', 'people', 'anime') if enabled() else ('objects', 'face', 'anime')
+    models = ('objects', 'anime') if enabled() else ('objects', 'face', 'anime')
     with tempfile.TemporaryDirectory(prefix='atlas-model-smoke-') as folder:
         for model in models:
             result = run(SimpleNamespace(directory=folder), {'model':model, 'image':image, 'item_id':'synthetic-smoke'})
             assert result['run_id'] and result['model_version'] != 'unknown'
             if enabled() and model == 'objects':
-                assert len(result['predictions']) == 4585 and result['people_source'] == 'people'
-            if model == 'people':
-                assert result['person_count'] == len(result['people'])
+                assert len(result['predictions']) == 4585
             print(json.dumps({'model':model,'success':True,'tag_count':len(result['suggestions']),'resources':result.get('resources')}),flush=True)
     assert not any(name in __import__('sys').modules for name in ('numpy','cv2','onnxruntime','PIL')), 'AI libraries leaked into the helper process'
     print('PASS: main helper never imported AI dependencies; every model ran in an exited child.')

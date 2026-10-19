@@ -7,9 +7,10 @@ import sys
 import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 
-def prepare(directory):
+def prepare(directory, keys=None):
     directory.mkdir(parents=True, exist_ok=True)
     manifest = json.loads((ROOT/'src/atlas_companion/tagging-models.json').read_text())
+    if keys is not None: manifest={key:manifest[key] for key in keys}
     for spec in manifest.values():
         path = directory/spec['file']
         def valid(target):

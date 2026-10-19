@@ -70,7 +70,7 @@ def photo(state, image):
                    for p in sorted(predictions, key=lambda p: (-p['score'], p['index'])) if p['qualified']]
     return {'schema': 'atlas.tag-suggestions.v1', 'source': 'objects',
             'model': spec['model'], 'model_version': spec['revision'], 'model_sha256': spec['sha256'],
-            'recipe': 'atlas-rampp-onnx-v1', 'people_source': 'people',
+            'recipe': 'atlas-rampp-onnx-v1',
             'suggestions': suggestions, 'predictions': predictions,
             'image_size': list(image.size),
             'components': [component(k, s) for k, s in [('rampp', spec), ('labels', label_spec), ('thresholds', threshold_spec)]]}
@@ -82,10 +82,7 @@ def predict(state, body):
         image = decode(body)
         if body.get('model') == 'objects':
             return photo(state, image)
-        if body.get('model') in ('people', 'face'):
-            from .people_tags import predict as people
-            return people(state, body, image)
-        raise APIError('TAG_MODEL_INVALID', 'Choose Things, People or Anime.', 400)
+        raise APIError('TAG_MODEL_INVALID', 'Choose general image tags or Anime. People tagging has been retired.', 400)
     except ImportError as exc:
         raise APIError('TAG_RUNTIME_MISSING', 'Repair the companion ONNX runtime.', 409) from exc
     except APIError:
