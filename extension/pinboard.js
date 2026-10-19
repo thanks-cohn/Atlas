@@ -474,8 +474,7 @@ function renderTags(){
   const tags=[...new Set(collectionNodes().flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b,undefined,{sensitivity:'base',numeric:true}));
   $('tag-browser').hidden=false;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable' && $('folder').value!=='blank'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
-  const required=selectionTags();$('active-tags').hidden=!required.length;
-  const label=el('span','Prioritizing');$('active-tags').replaceChildren(label,...required.map(tag=>{const b=el('button',tag+' ×');b.setAttribute('aria-label','Unselect '+tag);b.onclick=()=>{removeTag(tag);coverFetch.stop();updatePriorities();};return b;}));syncSelection();
+  syncSelection();
 }
 function render(){cardHolds.clear();const blank=$('folder').value==='blank';blankBoard.show(blank);$('pins').hidden=false;$('fetch-dock').hidden=blank;$('status').hidden=false;document.querySelector('.board-options').hidden=false;renderTags();items=filteredNodes().filter(node=>!$('images-only').checked || imageFor(node));resetBlocks();}
 

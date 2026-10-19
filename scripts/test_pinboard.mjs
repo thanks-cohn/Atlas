@@ -135,17 +135,17 @@ const imageTags=cards()[0].children[1].children[2];imageTags.children[0].childre
 assert.equal(vm.runInContext('highlightedTags.size',context),1);
 const otherTag=cards()[0].children[1].children[2].children[1];otherTag.children[0].onclick();
 flush();assert.equal(vm.runInContext('items.length',context),1000);assert.ok(cards().length>0 && cards().length<=144);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
-assert.equal($('active-tags').children.length,3);
+assert.equal(vm.runInContext('selectionTags().length',context),2);
 // A normal text query is intersected with ALL selected tags.
 $('search').value='not-found';vm.runInContext('render()',context);assert.equal(cards().length,0);
 $('search').value='';vm.runInContext('render()',context);assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 // Clicking active Design broadens automatically to both Art bookmarks.
 cards()[0].children[1].children[2].children[1].children[0].onclick();assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='tag:Design';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);assert.equal(cards()[0].atlasNode.id,taggedImage.id);
-$('active-tags').children.at(-1).onclick();assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
+$('tag-field').children.find(button=>button.textContent==='Art').onclick();assert.ok(cards().length>0 && cards().length<=144);assert.equal(vm.runInContext('items.length',context),1000);
 $('tags-only').checked=true;$('tags-only').onchange();await tick();assert.equal(cards().length,2);assert.equal(data[model.PINBOARD_SETTINGS].tagsOnly,true);
 assert.equal(fetchOptions.getNodes().length,2);
-console.log('PASS: highlighted tags prioritize without hiding, typed tag ranking, chip removal, tag clauses, ordinary text filtering and tagged-only persistence.');
+console.log('PASS: highlighted tags prioritize without hiding, typed tag ranking, highlight toggling, tag clauses, ordinary text filtering and tagged-only persistence.');
 
 // Highlighting is immediately additive ranking, not an implicit search or save.
 $('tags-only').checked=false;vm.runInContext("highlightedTags.clear();$('search').value='';render()",context);
@@ -155,12 +155,12 @@ const secondPair=cards().find(card=>card.atlasNode.id===taggedURL.id).children.a
 secondPair.children[0].onclick();flush();
 assert.equal(vm.runInContext('items[0].id',context),taggedURL.id);
 assert.equal(vm.runInContext('items.length',context),1000);
-assert.equal($('active-tags').children[0].textContent,'Prioritizing');
+assert.equal($('tag-field').children.find(button=>button.textContent==='Second Only').attrs['aria-pressed'],'true');
 assert.deepEqual(Array.from(vm.runInContext('items.slice(1).map(node=>node.id)',context)),Array.from(priorNodes).filter(id=>id!==taggedURL.id));
 $('search').value='tag:Second';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='Bookmark';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
 $('search').value='';vm.runInContext('render()',context);assert.equal(vm.runInContext('items.length',context),1000);
-$('active-tags').children.at(-1).onclick();assert.deepEqual(Array.from(vm.runInContext('items.map(node=>node.id)',context)),Array.from(priorNodes));
+$('tag-field').children.find(button=>button.textContent==='Second Only').onclick();assert.deepEqual(Array.from(vm.runInContext('items.map(node=>node.id)',context)),Array.from(priorNodes));
 tagCatalog.tags.q=['Art'];
 console.log('PASS: selecting a tag on a later card moves all matches first, preserves all other cards in stable order, ordinary text search filters without making tag clauses restrictive and clearing selection restores order.');
 

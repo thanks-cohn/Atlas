@@ -1650,3 +1650,12 @@ Node pinboard tests pass, including50 legacy preview open/close cycles with zero
 Explicit gallery mutations still copy/budget/write shared gallery storage and may remain slow. Background tagging after leaving a card remains tracked separately in007. Tiny-batch aesthetic startup remains a proposal, not implemented here. Keep022 and018 open until a sustained owner capture validates responsiveness.
 
 Revert boundary: parent commit eef42ed0853255049a39e82e7c4879e79c1f9574; this change is isolated in the following commit titled `Make pinboard preview browsing read-only`.
+
+
+## 2026-10-19 — Responsive milestone accepted; redundant priority row removed
+
+Owner confirmed the old lag/latency symptoms stopped after renderer6. Owner merged the implementation into main at8c231a4ddc2884aac436462d8437d2eaebda014a and pushed annotated tag atlas-pinboard-responsive-v1. This is the latest owner-accepted performance success checkpoint: instrumentation exposed repeated generated-index work and automatic whole-gallery migration on preview opening; bounded/coalesced index work and read-only previews addressed the observed causes. The acceptance is owner-reported, not a new controlled benchmark; unrelated background-worker recovery remains separate.
+
+At explicit owner request, removed the redundant “Prioritizing” row and its duplicate selected-tag buttons from pinboard HTML, rendering and theme CSS. Existing tag highlights, click-to-select/deselect, Alt+Q clearing, search clauses and matching-card ordering remain unchanged. Pinboard behavior regression now toggles the original Explore tags buttons rather than duplicate chips. No storage migration or helper change.
+
+Validation: full Node pinboard behavior suite passed after removing the row.
