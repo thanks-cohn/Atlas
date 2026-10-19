@@ -40,3 +40,25 @@ Open: whether Images lists this card's gallery entries, explicitly connected ima
 objects, or both; thumbnail layout, add/link actions and larger-image navigation.
 The requested section/vertical scrolling is accepted intent; these details remain
 unresolved and should preserve existing data and gallery behavior when implemented.
+
+## Owner purpose — connecting things, then arranging them
+
+Owner clarification (2026-10-19): the Images addition should help users understand
+that Atlas is CONNECTING and PAIRING things inside the main extension window.
+Notes, bookmarks and images are related pieces of a connected composition. The
+section controls must communicate these relationships rather than feel like
+unrelated upload fields or isolated content silos.
+
+The longer-term direction is to arrange those connected pieces into hierarchies
+and other deliberate arrangements, linking images, notes and bookmarks. Later,
+users can link Objects: creations produced within this framework, including cards
+and slides. These are examples of framework-created reusable objects, not a claim
+that a general Objects feature or slide editor is implemented today.
+
+Preserve the distinction between an underlying item and the relationship/context
+through which it appears in a card or composition. This is accepted product intent;
+exact ownership, embedding/reference, movement, hierarchy and deletion semantics
+remain to be specified before implementation. Adding Images must not silently
+invent copies, move originals or equate removing a connection with deleting its
+source. Future implementations should demonstrate the connecting/pairing purpose
+in the main extension experience, not only describe it in export documentation.

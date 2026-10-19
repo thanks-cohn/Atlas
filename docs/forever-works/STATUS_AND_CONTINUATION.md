@@ -1502,3 +1502,14 @@ Owner further clarifies: Images plus opens the same-looking Add Image/upload
 prompt as the current pop-out. Underlying wiring may differ; visual/interaction
 presentation must match. Proposal records shared chooser UI as preferred approach
 without assuming gallery/storage/default-cover behavior.
+
+## 2026-10-19 — Owner clarifies connecting/pairing purpose
+
+The Images section is meant to teach the user that Atlas connects and pairs things
+inside the main extension window. Future hierarchies/arrangements link images,
+notes, bookmarks and eventually Objects created in this framework, such as cards
+and slides. Added this explicit owner intent to PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md.
+Objects/hierarchy semantics remain future work, not an implementation claim.
+Distinguish source items from their contextual relationships; do not assume copying,
+source movement or deletion semantics merely from adding a connection UI.
+Documentation-only; no runtime changes or additional tests required.
