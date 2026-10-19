@@ -1262,3 +1262,13 @@ shortcut only; no new page or data migration. Graph binding tolerates absent
 shortcut; recovery navigation and operation-inspection handler updated. Contextual
 Organize remains. Bug012 updated with superseding direction. Recovery regression,
 JS syntax and absent-shortcut assertion PASS; owner Chrome confirmation pending.
+
+
+## 2026-10-19 — Repair Bookmarks startup after diamond removal
+
+Owner screenshot UI failure with helper Ready traced to bookmarks.js listener on
+removed library button. Removed stale binding. test_bookmarks now deliberately
+returns null for removed ID, asserting actual markup absence. This tests full
+Bookmarks initialization, unlike previous permissive test DOM. Focused Bookmarks,
+Recovery and entry-point tests PASS. Owner Chrome reload confirmation pending.
+No helper reinstall or data cleanup is needed.

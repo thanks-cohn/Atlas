@@ -44,3 +44,13 @@ to it. Existing contextual Organize and operation-inspection access remain intac
 as do stored resources and the dedicated page. This closes the shortcut portion;
 owner Chrome confirmation pending. Earlier separate-page construction criteria
 above are superseded by this clarification, not an additional implementation task.
+
+
+## Startup regression after shortcut removal — fixed in source
+
+Owner screenshot after pull shows UI startup failure even though native state is
+Ready. Cause: bookmarks.js still registered a navigation listener on removed
+`library`, throwing on null. Removed this final obsolete listener; bookmarks
+regression now returns null for that removed element (previous test created all
+requested IDs automatically and masked the error). Full Bookmarks behavioral
+suite passes with no diamond element. Real owner Chrome reload confirmation pending.

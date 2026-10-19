@@ -31,7 +31,7 @@ class El {
   showModal(){this.open=true;} close(){this.open=false;this.handlers.close?.();} focus(){document.activeElement=this;this.onfocus?.();} remove(){this.removed=true;} closest(){return null;}
 }
 const created=[];const els=new Map();const classes=new Set();const events={};const calls=[];
-const document={getElementById:id=>{if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>{const el=new El(tag);created.push(el);if(tag==='canvas'){el.getContext=()=>({drawImage(){}});el.toDataURL=()=> 'data:image/webp;base64,BBBB';}el.click=()=>{};return el;},body:{append(...items){created.push(...items);},classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}}};
+const document={getElementById:id=>{if(id==='library')return null;if(!els.has(id))els.set(id,new El());return els.get(id);},createElement:tag=>{const el=new El(tag);created.push(el);if(tag==='canvas'){el.getContext=()=>({drawImage(){}});el.toDataURL=()=> 'data:image/webp;base64,BBBB';}el.click=()=>{};return el;},body:{append(...items){created.push(...items);},classList:{contains:x=>classes.has(x),add:x=>classes.add(x),remove:x=>classes.delete(x)}}};
 let failRead=false;
 const bookmarks={get:async id=>[nodes.get(id)],getTree:async()=>{if(failRead)throw Error('denied');return tree;},update:async(id,changes)=>{calls.push(['update',id,changes]);Object.assign(nodes.get(id),changes);}};
 for(const name of ['onCreated','onRemoved','onChanged','onMoved','onChildrenReordered','onImportEnded'])bookmarks[name]={addListener:fn=>events[name]=fn};
@@ -162,3 +162,7 @@ vm.runInContext("selected='3'",context);els.get('bookmarks-new').onclick();copyF
 assert.equal(calls.filter(c=>c[0]==='create').length,beforeCopies,'Same folder must not gain a duplicate');
 vm.runInContext("selected='3'",context);els.get('bookmarks-new').onclick();copyForm=created.filter(e=>e.tagName==='dialog').at(-1).children[0];copyForm.children[2].children[0].value='1';copyForm.children[3].children[0].value='New destination';await copyForm.onsubmit({preventDefault(){}});
 const newFolder=[...nodes.values()].find(n=>n.title==='New destination');assert.ok(newFolder.children.some(n=>n.url===nodes.get('3').url));
+
+assert.equal(document.getElementById('library'),null);
+assert(!read('explorer.html').includes('id="library"'));
+console.log('PASS: Bookmarks initializes with the removed diamond shortcut absent from the real shelf markup.');

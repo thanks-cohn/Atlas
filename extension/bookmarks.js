@@ -334,7 +334,7 @@ function leave() {
   $('bookmarks-open').removeAttribute('aria-current');
 }
 // Existing file navigation keeps ownership of its own controls and state.
-for (const id of ['home','library','add-location']) $(id).addEventListener('click',leave);
+for (const id of ['home','add-location']) $(id).addEventListener('click',leave);
 $('roots').addEventListener('click', leave);
 $('bookmarks-refresh').onclick = refresh;
 $('bookmarks-up').onclick = () => { if (focused) { returnFromPreview(); return; } const id = nodes.get(folder)?.parentId; if (id !== undefined) navigate(id); };
