@@ -36,5 +36,5 @@ function expand(record){
 }
 $('image-recovery-open').onclick=()=>{document.body.classList.remove('bookmarks-mode');$('bookmarks-workspace').hidden=true;$('bookmarks-open').removeAttribute('aria-current');document.body.classList.add('image-recovery-mode');$('image-recovery-workspace').hidden=false;$('image-recovery-open').setAttribute('aria-current','page');render();};
 function leave(){if(dialog.open)dialog.close();document.body.classList.remove('image-recovery-mode');$('image-recovery-workspace').hidden=true;$('image-recovery-open').removeAttribute('aria-current');}
-for(const id of ['home','library','add-location','bookmarks-open','activity'])$(id).addEventListener('click',leave);$('roots').addEventListener('click',leave);
+for(const id of ['home','add-location','bookmarks-open','activity'])$(id).addEventListener('click',leave);$('roots').addEventListener('click',leave);
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local' && changes[IMAGE_RECOVERY] && document.body.classList.contains('image-recovery-mode'))render();});

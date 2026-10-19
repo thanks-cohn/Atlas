@@ -1,6 +1,6 @@
 # 012 — Catalog and relationship management crowds the shelf
 
-**Status:** Backlog — explicit owner UI report; relocation not implemented.
+**Status:** Implemented — shelf shortcut removed; owner Chrome confirmation pending.
 **Reported:** 2026-10-19 America/Chicago.
 
 ## Observed problem
@@ -33,3 +33,14 @@ entry path from the shelf. The large management dialog must no longer open insid
 the shelf. Verify existing data before/after and actual Chrome layouts at narrow
 and wide sizes, keyboard navigation, errors and companion reconnection. Until
 implemented and verified, leave this issue open.
+
+
+## Owner clarification and scoped change
+
+Owner confirms the dedicated page already exists: no new page is requested.
+Removed the diamond Catalogs & links sidebar shortcut from `explorer.html`.
+Graph module tolerates the absent shortcut; recovery navigation no longer binds
+to it. Existing contextual Organize and operation-inspection access remain intact,
+as do stored resources and the dedicated page. This closes the shortcut portion;
+owner Chrome confirmation pending. Earlier separate-page construction criteria
+above are superseded by this clarification, not an additional implementation task.

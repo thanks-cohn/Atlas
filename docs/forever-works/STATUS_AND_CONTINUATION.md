@@ -1253,3 +1253,12 @@ requests catalog/relationship management on a separate page. Recorded backlog012
 and indexed it. Existing data/identity, linking, notes/tags, export and authenticated
 companion contracts must survive relocation. No UI removal/relocation implemented
 in this documentation-only change; choice of retained diamond link is unresolved.
+
+
+## 2026-10-19 — Remove redundant diamond shelf shortcut
+
+Owner clarifies dedicated page already exists. Removed diamond Catalogs & links
+shortcut only; no new page or data migration. Graph binding tolerates absent
+shortcut; recovery navigation and operation-inspection handler updated. Contextual
+Organize remains. Bug012 updated with superseding direction. Recovery regression,
+JS syntax and absent-shortcut assertion PASS; owner Chrome confirmation pending.

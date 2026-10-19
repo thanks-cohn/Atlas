@@ -18,7 +18,7 @@ Problems and investigations we intend to tackle but have not reached yet. This i
 
 | 011 | [Add Image does not update count or navigation](011-add-image-count-and-navigation-regression.md) | Backlog — unresolved |
 
-| 012 | [Catalog and relationship management crowds the shelf](012-catalog-relationships-crowd-shelf.md) | Backlog — move management to a dedicated page |
+| 012 | [Catalog and relationship management crowds the shelf](012-catalog-relationships-crowd-shelf.md) | Implemented — shelf shortcut removed; Chrome confirmation pending |
 
 ## Adding an item
 

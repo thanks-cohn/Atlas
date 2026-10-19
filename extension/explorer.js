@@ -1428,7 +1428,7 @@ $("unknown-activity").onclick = () => {
 };
 $("unknown-catalogs").onclick = () => {
   $("unknown-dialog").close();
-  $("library").click();
+  graphUI.open();
 };
 $("unknown-dismiss").onclick = async () => {
   await send({ type: "acknowledge-unknown" });
