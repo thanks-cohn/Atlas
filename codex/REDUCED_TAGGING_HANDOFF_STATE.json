@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "updated_utc": "2026-10-19T08:20:00Z",
+  "branch": "implement/rich-photo-tagging",
+  "runtime_commit": "c4dfe16417a20161620423a7b511a2b4bfdb8374",
+  "handoff": "codex/HANDOFF_REDUCED_TAGGING_2026-10-19.md",
+  "models": [
+    "RAM++ matmul INT8",
+    "JoyTag unchanged, Settings opt-in"
+  ],
+  "retired": [
+    "MiVOLO v2",
+    "YOLO Face/Person",
+    "People UI",
+    "Faces UI"
+  ],
+  "model_bytes": 1239072821,
+  "model_bytes_saved": 403755164,
+  "windows_run": 39221439574,
+  "windows_job": 117957421229,
+  "windows_status": "tests/build/frozen/installed/recovery/GUI passed; full archive upload in_progress at checkpoint",
+  "reports_artifact": 12172066602,
+  "next": [
+    "Confirm run completion and full artifact ID/size/hash",
+    "Inspect tiny qualification reports and executable hash",
+    "Update trial download docs",
+    "Guide owner reduced install; only then inspect exact retired-cache cleanup",
+    "Implement persistent background tagging job recovery (bug007)"
+  ],
+  "unresolved": [
+    "007",
+    "009",
+    "010",
+    "011 owner Chrome confirmation",
+    "Any-Shape narrow split polish"
+  ],
+  "local_full_suite": "170 tests: failures3 errors3 skips33; baseline native startup environment limitation",
+  "hosted_development_checks": [
+    39221439639,
+    39221446591
+  ],
+  "owner_old_helper": "atlas-c662f7c2c5338d3b6135.exe",
+  "preserve": [
+    "JoyTag",
+    "human tags/notes",
+    "all saved evidence",
+    "private state/grants",
+    "image entry identity"
+  ],
+  "do_not_claim": [
+    "background tagging recovery fixed",
+    "old artifact is reduced",
+    "current_tags always live",
+    "full local suite passed"
+  ]
+}
