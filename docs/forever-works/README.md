@@ -6,6 +6,8 @@ Our guiding contract: **preserve the purpose and indispensable behavior; permit 
 
 Read:
 
+**Guiding product doctrine:** [Build Now. Use Forever.](BUILT_NOW_USE_FOREVER.md) — collect, curate, compose, export, transpose and publish from reusable Atlas entries and Pieces; proposed interoperability and preservation contract (not shipped universal portability).
+
 1. [MISSION_AND_SCOPE.md](MISSION_AND_SCOPE.md) — purpose, standalone value, business and boundaries.
 2. [RESOURCE_GRAPH_AND_CATALOGS.md](RESOURCE_GRAPH_AND_CATALOGS.md) — resource identities, tags, free text, catalog membership, cluster pairings and provider neutrality.
 3. [ARCHITECTURE_AND_INTERFACES.md](ARCHITECTURE_AND_INTERFACES.md) — MV3 interface, authenticated networking, PyInstaller companion, cross-platform adapters.
@@ -104,3 +106,8 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Image Recover, Asset References and Optional R2 Backup](PROPOSAL_IMAGE_RECOVERY_REFERENCES_AND_R2_BACKUP.md) — proposed star/default covers, metadata-only recovery history with source locations and SHA-256 states, independent provenance, and opt-in verified R2 asset copies. Not implemented.
 
 - [Image-entry Gallery and Recovery v1](IMAGE_ENTRY_GALLERY_AND_RECOVERY_V1.md) — extension 0.1.89 implementation: additive popup images, independent entry data, default-cover star and shelf Recovery, with exact local-storage/hash/restore limitations and proof. R2 backup remains proposed.
+
+
+## Directory pinboards and saved reusable Objects
+
+- [Directory Pinboards, Reusable Objects and Saved Composition States](PROPOSAL_DIRECTORY_PINBOARDS_REUSABLE_OBJECTS_AND_SAVED_STATES.md) — owner-directed local/R2 directory pinboards, distinct object marking and Objects selector, grouped content, saved arrangements, whole-object Recovery and portable project reuse. Proposal only; implementation and compatibility proofs remain pending.

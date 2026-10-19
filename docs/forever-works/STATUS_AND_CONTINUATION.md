@@ -1002,6 +1002,13 @@ Storage is versioned Chrome-local combined JSON; legacy first-image import prese
 
 Passed image-entry transaction/hash/isolation tests, actual pinboard/store/gallery DOM regression path, bookmark shelf, preview sections/connections, generation/tag editor, blank-board, menu/appearance, image-file and rename suites; package and diff checks pass. Full check: 160 tests, 3 native readiness failures, 3 native-bootstrap/supervisor errors, 33 skips; 22 linkage records valid. No full-suite or Chrome visual/runtime pass claimed. Next gate: real Chrome/profile acceptance, missing-original relink repair, and durable/indexed history storage before any scale/longevity guarantee or optional R2 backup.
 
+
+## 2026-10-18 · Proposal: directory pinboards, reusable Objects and saved states
+
+Added `PROPOSAL_DIRECTORY_PINBOARDS_REUSABLE_OBJECTS_AND_SAVED_STATES.md`, indexed in the inheritance README. Preserves owner direction: apply the shared pinboard to authorized local/R2 directories; persist per-item tags/notes; mark whole cards/popups as reusable Objects with a distinct non-star control; select them beside Notes/Bookmarks; save composition arrangements as states; retain connected data for framework access/export; delete/recover the object and its arrangement together. Proposed contracts distinguish content/internal arrangement/host placement, link/snapshot/duplicate/move, reference removal/object deletion and metadata recovery/asset backup. Existing containment, provenance, privacy and consent boundaries remain authoritative.
+
+Validation: documentation reviewed against object grammar and image Recovery contracts; runtime tests NOT_RUN (documentation only). No runtime or migrations changed. Next: inventory current adapters, object identities and Recovery transactions, choose an additive versioned schema, then prove one adapter/Object/state vertical slice before claiming portability.
+
 ## 2026-10-19 UTC — executable rich tagging candidate
 
 Owner-authorized implementation replaces non-JoyTag adapters in an isolated rich

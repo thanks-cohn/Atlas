@@ -22,6 +22,8 @@ The [full minimal publishing, card/slice and design-corpus proposal](PROPOSAL_MI
 
 **Minimal Need to Rebuild:** Finished single-page projects remain independently publishable and can later be merged, extracted, restyled under a shared template and reused as cards/slices without rebuilding their content. Preserve source data, identities, styles, and version history. See [the detailed composition contract](PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md).
 
+**Liquid Sections and Liquid Pages:** Freeform, responsive composition is as important as structured templates. Treat freely arranged page regions and complete freeform pages as portable, mergeable and extractable first-class objects; maintain source data and recoverable design intent across templates and screens. See [the composition proposal](PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md).
+
 ## Essential user experience
 
 A bookmark can be associated with images on R2 and a local PDF; all become members of a user-selected research catalog, with tags, names, typed links, cluster pairing and searches. The underlying files need not move or be duplicated. A resource may appear in several catalogs. Offline/unavailable entries retain their metadata and relationships rather than vanishing.
