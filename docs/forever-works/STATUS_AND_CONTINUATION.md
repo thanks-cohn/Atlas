@@ -1513,3 +1513,20 @@ Objects/hierarchy semantics remain future work, not an implementation claim.
 Distinguish source items from their contextual relationships; do not assume copying,
 source movement or deletion semantics merely from adding a connection UI.
 Documentation-only; no runtime changes or additional tests required.
+
+## 2026-10-19 — Progressive Pinterest population / tight viewport requirement
+
+Owner reports continued severe lag and requests3–4 initial cards to visibly show
+progress, then progressive population. Distant cards beyond roughly two rows above
+and below the viewport should not stay mounted or consume ongoing image/render
+work. Owner explicitly adds: preserve aesthetic Pinterest population/style, and
+write this down. Added backlog020 with intent, row-equivalent ambiguity for masonry,
+proposed acceptance/diagnostics and real-browser proof requirements. This update
+is documentation only; rendering/CSS unchanged and no completion claimed. Existing
+016/018 lag and missed-click acceptance remains OPEN. Full collection must stay
+scroll-reachable; progressive availability must not turn into mounting every card.
+Validation: git diff --check; no runtime tests needed for documentation-only change.
+
+Owner refines pacing: perhaps one card, then two, then two more; in-card image
+loading remains visible as the Pinterest composition fills. Counts are illustrative,
+not a rigid mandate. Updated020; small batches/viewport bounds remain future work.
