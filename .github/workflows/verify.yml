@@ -28,6 +28,7 @@ jobs:
           node scripts/test_pinboard_appearance.mjs
           node scripts/test_pinboard_blank.mjs
           node scripts/test_image_entries.mjs
+          node scripts/test_image_recovery.mjs
           node scripts/test_pinboard_rename.mjs
           node scripts/test_source_navigation.mjs
           node scripts/test_pinboard.mjs

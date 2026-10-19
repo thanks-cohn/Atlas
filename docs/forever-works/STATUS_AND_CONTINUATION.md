@@ -1196,3 +1196,31 @@ AFTER reduced install, not git pull. Source-only removed-model tests and JoyTag
 fingerprint plus UI/generation/source navigation checks pass. Windows rebuild
 qualification pending at publication; do not present historical artifact as reduced.
 Background job recovery007 remains unresolved, including general/Anime jobs.
+
+
+## 2026-10-19 — Compact recovery and bounded scrolling
+
+Explicit owner direction: Recovery follows compact note presentation, rectangular
+rows expanding on double-click, infinite lazy scrolling now and pagination later.
+Fixed: recovery record identity, provenance, restore/export and saved data.
+Constrained: DOM grows with viewport height, not total recovery count. Fluid:
+row presentation, detail dialog and later navigation/pagination mechanism.
+
+Implemented `extension/image-recovery.js`, `explorer.html`, `explorer.css`:
+72px collapsed rows on an 80px stride, newest first, viewport window with six
+overscan rows per side and spacer heights. Double-click opens one full responsive
+detail dialog; Enter/Space provide keyboard access. Closing discards expanded DOM,
+not data; expansion is transient. Restore/export remain in detail view. This
+replaces existing 20-entry pagination per current owner direction; future user
+pagination remains planned. Full records still load from the existing single
+Chrome storage document: DOM is bounded, storage reads are not yet paged.
+
+Verification: `node scripts/test_image_recovery.mjs` PASS with 5,000 records,
+at most18 rows at480px, forward/back scroll, double-click/keyboard expansion,
+close cleanup and no storage writes on expansion. `test_image_entries.mjs` PASS.
+Actual Chrome visual/scroll acceptance NOT_RUN in this container. Future work:
+paginated storage/index reads and real Chrome cross-size/focus/scroll validation.
+
+Required `python scripts/check_project.py`: 170 tests, failures3/errors3/skips33;
+22 local model links valid. Same native bootstrap/supervisor startup failures as
+prior container run; full suite is not a pass. Focused recovery/entry tests pass.
