@@ -1,0 +1,39 @@
+{
+  "schema": "atlas.cold-agent-handoff.v1",
+  "repository": "thanks-cohn/Atlas",
+  "branch": "implement/rich-photo-tagging",
+  "implementation_commit": "36182d76570b3b9efb1ea360a478e5606e9827db",
+  "baseline_commit": "e9eb6fdccbd300aeb08577789b55c2023939641c",
+  "default_profile": "legacy",
+  "candidate_profile": "rich",
+  "replacement_promoted": false,
+  "joytag_changed": false,
+  "measured_photos": 6,
+  "things_tag_counts": {
+    "legacy": 13,
+    "rich": 74
+  },
+  "targeted_python_tests": 23,
+  "hosted_ubuntu": {
+    "run_id": 39181393688,
+    "status": "success",
+    "tests": 168,
+    "skipped": 33
+  },
+  "windows_original_run": {
+    "run_id": 39181393607,
+    "last_observed": "in_progress: export environment/model preparation",
+    "success_claimed": false
+  },
+  "followup_windows_photo_test": "added; syntax checked; inspect newest workflow run after this handoff commit",
+  "next_action": "Inspect latest rich-tagging Windows workflow on this branch; preserve logs and fix failures without weakening hashes/parity. Then complete annotated-data, Chrome, hardware and detector-license gates.",
+  "handoff": "codex/HANDOFF_RICH_TAGGING_2026-10-19.md",
+  "implementation_record": "docs/forever-works/RICH_TAGGING_IMPLEMENTATION.md",
+  "benchmark": "docs/evidence/rich-tagging-benchmark-2026-10-19.json",
+  "must_preserve": [
+    "JoyTag code/weights/thresholds/settings/provenance",
+    "all historical and human data",
+    "pairing/grants/native capabilities",
+    "working-AI rollback tag"
+  ]
+}

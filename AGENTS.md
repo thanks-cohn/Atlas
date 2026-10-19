@@ -2,6 +2,10 @@
 
 Any human or software agent can work here. This file communicates repository contracts, not requirements for a particular provider or coding assistant.
 
+## Active task checkpoint — 2026-10-19 UTC
+
+For rich tagging continuation, start at `codex/HANDOFF_RICH_TAGGING_2026-10-19.md` and `codex/RICH_TAGGING_HANDOFF_STATE.json` on branch `implement/rich-photo-tagging`. The candidate is implemented and source-tested; default legacy and JoyTag are preserved. Check the latest Windows CI before claiming a finished replacement.
+
 ## Read this order
 
 1. `README.md`

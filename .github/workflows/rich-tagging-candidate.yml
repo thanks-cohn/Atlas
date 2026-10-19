@@ -40,8 +40,10 @@ jobs:
         run: dist/windows/atlas-companion.exe --tagging-smoke
       - name: Verify existing native, HTTP and desktop behavior
         run: |
-          python scripts/smoke_windows_companion.py dist/windows/atlas-companion.exe
+          python scripts/smoke_windows_companion.py dist/windows/atlas-companion.exe --tagging-fixtures docs/evidence/rich-tagging-benchmark-2026-10-19.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/smoke_windows_launch.py dist/windows/atlas-companion.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/smoke_desktop.py
       - uses: actions/upload-artifact@v4
         with:

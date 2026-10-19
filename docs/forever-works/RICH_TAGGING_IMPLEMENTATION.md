@@ -152,3 +152,7 @@ not promote this candidate by editing the profile flag alone. On any failed
 qualification keep default legacy behavior and `working-AI` available. Promotion
 requires reproducible Windows output, paired extension Generate Tags acceptance,
 representative annotated photos, resource acceptance and detector licensing.
+
+## Cold-agent checkpoint
+
+See `codex/HANDOFF_RICH_TAGGING_2026-10-19.md` and the companion JSON state. Hosted Ubuntu run 39181393688 passed 168 tests (33 skipped), 22 linkage records and all workflow steps. Local six native startup failures were independently reproduced on the unchanged baseline. Original Windows candidate run 39181393607 was still preparing exports at handoff. Follow-up Windows smoke adds all six real photos through installed authenticated HTTP and JoyTag parity, but its Windows execution remains unverified until the latest branch run completes.
