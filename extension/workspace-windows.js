@@ -1,3 +1,4 @@
+import {rearrange} from './workspace-arrangement.js';
 import {
   windowState,
   maximizeWindow,
@@ -183,6 +184,13 @@ export function createWorkspaceWindows({
     });
     save();
   }
+  function arrange(action,index=0){
+    const memory=capture();
+    rearrange(getPreferences(),action,index);
+    if(focusMemory)rearrange(focusMemory.preferences,action,index);
+    redraw(memory);
+    save(focusMemory?.preferences);
+  }
   let controls = [];
   function titleControls(index, region) {
     const group = document.createElement("div");
@@ -202,18 +210,11 @@ export function createWorkspaceWindows({
       group.append(b);
       return b;
     };
-    make("rearrange", "⇅", () => {
-      if(state.snapshot)restoreAll();
-      const pref=getPreferences();pref.reversed ||= [false,false];const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;pref.reversed[target]=!pref.reversed[target];
-      redraw(capture());save();
-    }).setAttribute('aria-label',`Swap Explorer and Preview vertically in ${label(index)} pane`);
-    const side=make('move-side','⇄',()=>{
-      if(state.snapshot)restoreAll();const pref=getPreferences();
-      pref.viewerSwapped=!pref.viewerSwapped;
-      if(region==='hierarchy'){pref.swapped=!pref.swapped;pref.ratio=100-pref.ratio;}
-      redraw(capture());save();
-    });side.title=region==='viewer'?'Swap previews between panes':'Swap explorers between panes';side.setAttribute('aria-label',side.title);
     const position=()=>{const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;return target<0?index:target;};
+    make("rearrange", "⇅", () => arrange('vertical',position())).setAttribute('aria-label',`Swap Explorer and Preview vertically in ${label(index)} pane`);
+    const side=make('move-side','⇄',()=>arrange(region==='viewer'?'viewers':'explorers',position()));
+    side.title=region==='viewer'?'Swap previews between panes':'Swap explorers between panes';side.setAttribute('aria-label',side.title);
+
     const minus = make("minimize", "−", () => minimize(position(), region));
     const max = make("maximize", "□", () => {
       state.maximized[position()] === region ? restoreOne(position()) : focus(position(), region);
@@ -356,7 +357,7 @@ export function createWorkspaceWindows({
       run: () => focus(1, "pane"),
       enabled: () => !state.closed[1],
     },
-    swap: {label:"Swap left and right panes",run:()=>{if(state.snapshot)restoreAll();getPreferences().swapped=!getPreferences().swapped;getPreferences().ratio=100-getPreferences().ratio;redraw(capture());save();}},
+    swap: {label:"Swap left and right panes",run:()=>arrange("columns")},
     viewers: {
       label: "Reopen closed sections",
       run: () => {

@@ -33,9 +33,9 @@ const button = (label, fn) => {
 };
 let saveQueue = Promise.resolve();
 const splitters = [];
-function save() {
-  if (windows.isFocused()) return Promise.resolve();
-  const snapshot = structuredClone(preferences);
+function save(baseline) {
+  if (windows.isFocused() && !baseline) return Promise.resolve();
+  const snapshot = structuredClone(baseline || preferences);
   saveQueue = saveQueue
     .catch(() => {})
     .then(() => chrome.storage.local.set({ [WORKSPACE_KEY]: snapshot }));
