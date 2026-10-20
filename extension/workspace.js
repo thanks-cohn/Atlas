@@ -1,23 +1,334 @@
-import {WORKSPACE_KEY,paneState,visit,ordered,select,layoutPreferences} from './workspace-model.js';
-import {PROVIDERS,listing,safeURL} from './workspace-providers.js';
-const $=id=>document.getElementById(id),panes=[paneState(),paneState('projects')];
-let preferences=layoutPreferences(),active=0;
-const el=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
-const button=(label,fn)=>{const n=el('button',label);n.type='button';n.onclick=()=>Promise.resolve().then(fn).catch(error=>{$('notice').textContent=error.message;});return n;};
-async function save(){await chrome.storage.local.set({[WORKSPACE_KEY]:preferences});}
-function layout(){const root=$('panes');root.classList.toggle('dual',preferences.dual);root.style.setProperty('--width',preferences.ratio+'fr');root.style.setProperty('--rest',(100-preferences.ratio)+'fr');root.style.setProperty('--height',preferences.height+'%');panes[1].dom.hidden=!preferences.dual;$('dual').setAttribute('aria-pressed',String(preferences.dual));$('dual').textContent=preferences.dual?'Single Pane':'Dual Pane';$('width').value=preferences.ratio;$('height').value=preferences.height;}
-async function navigate(p,location,record=true){const epoch=visit(p,location,record);p.dom.querySelector('.items').replaceChildren(el('p','Loading…'));p.dom.setAttribute('aria-busy','true');if(!p.pinned)renderPreview(p);try{const data=await listing(location);if(p.epoch!==epoch)return;p.entries=data.entries;p.title=data.title;p.parent=data.parent;render(p);}catch(error){if(p.epoch!==epoch)return;p.entries=[];p.title=PROVIDERS[location.provider];p.parent=null;render(p);const message=el('p',error.message);message.className='empty';p.dom.querySelector('.items').replaceChildren(message);}finally{if(p.epoch===epoch)p.dom.removeAttribute('aria-busy');}}
-function render(p){const root=p.dom;root.querySelector('.provider').value=p.location.provider;root.querySelector('.search').value=p.query;root.querySelector('.back').disabled=p.index<=0;root.querySelector('.forward').disabled=p.index>=p.history.length-1;root.querySelector('.up').disabled=!p.parent;const crumbs=root.querySelector('.breadcrumb');crumbs.replaceChildren(button(PROVIDERS[p.location.provider],()=>navigate(p,{provider:p.location.provider,id:''})));crumbs.append(el('span',' / '+(p.title||'')));renderItems(p);}
-function renderItems(p){const items=p.dom.querySelector('.items'),scroll=items.scrollTop;items.replaceChildren();items.classList.toggle('grid',p.view==='grid');const entries=ordered(p);for(const [index,item]of entries.entries()){const row=el('button');row.type='button';row.className='item';row.setAttribute('role','option');row.setAttribute('aria-selected',String(p.selected.has(item.id)));row.append(el('span',(item.folder?'▰  ':'▤  ')+item.name),el('small',item.kind));row.onclick=event=>{select(p,entries,index,event);if(!p.pinned){p.preview=item;renderPreview(p);}for(const [i,n]of [...items.children].entries())n.setAttribute('aria-selected',String(p.selected.has(entries[i]?.id)));};row.ondblclick=()=>open(p,item);row.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();open(p,item);}if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();items.children[Math.max(0,Math.min(entries.length-1,index+(event.key==='ArrowDown'?1:-1)))]?.focus();}if((event.ctrlKey||event.metaKey)&&event.key==='a'){event.preventDefault();p.selected=new Set(entries.map(e=>e.id));for(const n of items.children)n.setAttribute('aria-selected','true');}};items.append(row);}if(!entries.length){const empty=el('p',p.query?'No matching items.':'Nothing here yet.');empty.className='empty';items.append(empty);}items.scrollTop=scroll;}
-function open(p,item){if(item.folder)return navigate(p,item.location);const url=safeURL(item.url);if(url)return chrome.tabs.create({url});p.preview=item;p.pinned=false;renderPreview(p);}
-function renderPreview(p){const root=p.dom.querySelector('.viewer');root.replaceChildren();const head=el('div');head.className='viewer-head';head.append(el('h2',p.preview?.name||'Preview & details'));const pin=button(p.pinned?'Unpin Preview':'Pin Preview',()=>{p.pinned=!p.pinned;renderPreview(p);});pin.disabled=!p.preview;pin.setAttribute('aria-pressed',String(p.pinned));head.append(pin);root.append(head);const item=p.preview;if(!item){root.append(el('p','Select an item above to inspect it. Pin a preview to keep it while browsing.'));return;}root.append(el('small',item.kind));if(item.note)root.append(el('p',item.note));for(const locator of item.locators||[])root.append(el('p',locator.provider+': '+locator.reference));if(item.size!==undefined)root.append(el('p',item.size+' bytes'));const url=safeURL(item.url);if(url){const a=el('a','Open '+(item.kind==='Project'?'project':'source')+' ↗');a.href=url;a.target='_blank';a.rel='noopener';root.append(a);}if(item.location?.provider==='local'&&!item.folder)root.append(el('p','Media viewing and file operations remain available in Explorer. This workspace currently shows file details only.'));}
-function buildPane(p,index){const root=el('article');root.className='pane';root.setAttribute('aria-label',index?'Right explorer':'Left explorer');root.onfocusin=()=>{active=index;};p.dom=root;const head=el('div');head.className='pane-head';const provider=el('select');provider.className='provider';provider.setAttribute('aria-label','Location provider');for(const [id,label]of Object.entries(PROVIDERS)){const option=el('option',label);option.value=id;provider.append(option);}provider.onchange=()=>navigate(p,{provider:provider.value,id:''});head.append(provider);for(const [label,cls,delta]of [['←','back',-1],['→','forward',1]]){const b=button(label,()=>{p.index+=delta;return navigate(p,p.history[p.index],false);});b.className=cls;b.setAttribute('aria-label',cls==='back'?'Back':'Forward');head.append(b);}const up=button('↑',()=>navigate(p,p.parent));up.className='up';up.setAttribute('aria-label','Parent folder');head.append(up,button('↻',()=>navigate(p,p.location,false)),button('Maximize',()=>{$('panes').dataset.expand=index?'right':'left';}));const hierarchy=el('div');hierarchy.className='hierarchy';const crumbs=el('nav');crumbs.className='breadcrumb';crumbs.setAttribute('aria-label','Location breadcrumbs');const tools=el('div');tools.className='tools';const search=el('input');search.type='search';search.placeholder='Search this location';search.className='search';search.setAttribute('aria-label','Search this location');search.oninput=()=>{p.query=search.value;renderItems(p);};const sort=el('select');sort.setAttribute('aria-label','Sort items');for(const [value,label]of [['name','Name A–Z'],['descending','Name Z–A']]){const option=el('option',label);option.value=value;sort.append(option);}sort.onchange=()=>{p.sort=sort.value;renderItems(p);};const view=button('Grid view',()=>{p.view=p.view==='list'?'grid':'list';view.textContent=p.view==='list'?'Grid view':'List view';renderItems(p);});tools.append(search,sort,view);const items=el('div');items.className='items';items.setAttribute('role','listbox');items.setAttribute('aria-label','Resources');items.setAttribute('aria-multiselectable','true');hierarchy.append(crumbs,tools,items);const viewer=el('section');viewer.className='viewer';viewer.setAttribute('aria-label','Selected item preview');root.append(head,hierarchy,viewer);return root;}
-for(const [provider,label]of Object.entries(PROVIDERS)){$('navigation').append(button(label,()=>navigate(panes[active],{provider,id:''})));}
-for(const [index,p]of panes.entries())$('panes').append(buildPane(p,index));
-$('dual').onclick=()=>{preferences.dual=!preferences.dual;delete $('panes').dataset.expand;layout();save().catch(error=>{$('notice').textContent=error.message;});};
-$('restore').onclick=()=>{delete $('panes').dataset.expand;layout();};
-for(const id of ['width','height']){$(id).oninput=()=>{preferences[id==='width'?'ratio':'height']=Number($(id).value);layout();};$(id).onchange=()=>save().catch(error=>{$('notice').textContent=error.message;});}
-for(const b of document.querySelectorAll('[data-expand]'))b.onclick=()=>{$('panes').dataset.expand=b.dataset.expand;};
-document.addEventListener('keydown',event=>{if(event.key==='Escape')delete $('panes').dataset.expand;});
-try{preferences=layoutPreferences((await chrome.storage.local.get(WORKSPACE_KEY))[WORKSPACE_KEY]);}catch(error){$('notice').textContent='Layout preferences unavailable: '+error.message;}
-layout();await Promise.all(panes.map(p=>navigate(p,p.location)));
+import {
+  WORKSPACE_KEY,
+  paneState,
+  visit,
+  ordered,
+  select,
+  layoutPreferences,
+} from "./workspace-model.js";
+import { PROVIDERS, listing, safeURL } from "./workspace-providers.js";
+const $ = (id) => document.getElementById(id),
+  panes = [paneState(), paneState("projects")];
+let preferences = layoutPreferences(),
+  active = 0;
+const el = (tag, text) => {
+  const n = document.createElement(tag);
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const button = (label, fn) => {
+  const n = el("button", label);
+  n.type = "button";
+  n.onclick = () =>
+    Promise.resolve()
+      .then(fn)
+      .catch((error) => {
+        $("notice").textContent = error.message;
+      });
+  return n;
+};
+async function save() {
+  await chrome.storage.local.set({ [WORKSPACE_KEY]: preferences });
+}
+function layout() {
+  const root = $("panes");
+  root.classList.toggle("dual", preferences.dual);
+  root.style.setProperty("--width", preferences.ratio + "fr");
+  root.style.setProperty("--rest", 100 - preferences.ratio + "fr");
+  root.style.setProperty("--height", preferences.height + "%");
+  panes[1].dom.hidden = !preferences.dual;
+  $("dual").setAttribute("aria-pressed", String(preferences.dual));
+  $("dual").textContent = preferences.dual ? "Single Pane" : "Dual Pane";
+  $("width").value = preferences.ratio;
+  $("height").value = preferences.height;
+}
+async function navigate(p, location, record = true) {
+  const epoch = visit(p, location, record);
+  p.dom.querySelector(".items").replaceChildren(el("p", "Loading…"));
+  p.dom.setAttribute("aria-busy", "true");
+  if (!p.pinned) renderPreview(p);
+  try {
+    const data = await listing(location);
+    if (p.epoch !== epoch) return;
+    p.entries = data.entries;
+    p.title = data.title;
+    p.parent = data.parent;
+    render(p);
+  } catch (error) {
+    if (p.epoch !== epoch) return;
+    p.entries = [];
+    p.title = PROVIDERS[location.provider];
+    p.parent = null;
+    render(p);
+    const message = el("p", error.message);
+    message.className = "empty";
+    p.dom.querySelector(".items").replaceChildren(message);
+  } finally {
+    if (p.epoch === epoch) p.dom.removeAttribute("aria-busy");
+  }
+}
+function render(p) {
+  const root = p.dom;
+  root.querySelector(".provider").value = p.location.provider;
+  root.querySelector(".search").value = p.query;
+  root.querySelector(".back").disabled = p.index <= 0;
+  root.querySelector(".forward").disabled = p.index >= p.history.length - 1;
+  root.querySelector(".up").disabled = !p.parent;
+  const crumbs = root.querySelector(".breadcrumb");
+  crumbs.replaceChildren(
+    button(PROVIDERS[p.location.provider], () =>
+      navigate(p, { provider: p.location.provider, id: "" }),
+    ),
+  );
+  crumbs.append(el("span", " / " + (p.title || "")));
+  renderItems(p);
+}
+function renderItems(p) {
+  const items = p.dom.querySelector(".items"),
+    scroll = items.scrollTop;
+  items.replaceChildren();
+  items.classList.toggle("grid", p.view === "grid");
+  const entries = ordered(p);
+  for (const [index, item] of entries.entries()) {
+    const row = el("button");
+    row.type = "button";
+    row.className = "item";
+    row.setAttribute("role", "option");
+    row.setAttribute("aria-selected", String(p.selected.has(item.id)));
+    row.append(
+      el("span", (item.folder ? "▰  " : "▤  ") + item.name),
+      el("small", item.kind),
+    );
+    row.onclick = (event) => {
+      select(p, entries, index, event);
+      if (!p.pinned) {
+        p.preview = item;
+        renderPreview(p);
+      }
+      for (const [i, n] of [...items.children].entries())
+        n.setAttribute("aria-selected", String(p.selected.has(entries[i]?.id)));
+    };
+    row.ondblclick = () => open(p, item);
+    row.onkeydown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        open(p, item);
+      }
+      if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+        event.preventDefault();
+        items.children[
+          Math.max(
+            0,
+            Math.min(
+              entries.length - 1,
+              index + (event.key === "ArrowDown" ? 1 : -1),
+            ),
+          )
+        ]?.focus();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === "a") {
+        event.preventDefault();
+        p.selected = new Set(entries.map((e) => e.id));
+        for (const n of items.children) n.setAttribute("aria-selected", "true");
+      }
+    };
+    items.append(row);
+  }
+  if (!entries.length) {
+    const empty = el("p", p.query ? "No matching items." : "Nothing here yet.");
+    empty.className = "empty";
+    items.append(empty);
+  }
+  items.scrollTop = scroll;
+}
+function open(p, item) {
+  if (item.folder) return navigate(p, item.location);
+  const url = safeURL(item.url);
+  if (url) return chrome.tabs.create({ url });
+  p.preview = item;
+  p.pinned = false;
+  renderPreview(p);
+}
+function renderPreview(p) {
+  const root = p.dom.querySelector(".viewer");
+  root.replaceChildren();
+  const head = el("div");
+  head.className = "viewer-head";
+  head.append(el("h2", p.preview?.name || "Preview & details"));
+  const pin = button(p.pinned ? "Unpin Preview" : "Pin Preview", () => {
+    p.pinned = !p.pinned;
+    renderPreview(p);
+  });
+  pin.disabled = !p.preview;
+  pin.setAttribute("aria-pressed", String(p.pinned));
+  head.append(pin);
+  root.append(head);
+  const item = p.preview;
+  if (!item) {
+    root.append(
+      el(
+        "p",
+        "Select an item above to inspect it. Pin a preview to keep it while browsing.",
+      ),
+    );
+    return;
+  }
+  root.append(el("small", item.kind));
+  if (item.note) root.append(el("p", item.note));
+  for (const locator of item.locators || [])
+    root.append(el("p", locator.provider + ": " + locator.reference));
+  if (item.size !== undefined) root.append(el("p", item.size + " bytes"));
+  const url = safeURL(item.url);
+  if (url) {
+    const a = el(
+      "a",
+      "Open " + (item.kind === "Project" ? "project" : "source") + " ↗",
+    );
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    root.append(a);
+  }
+  if (item.location?.provider === "local" && !item.folder)
+    root.append(
+      el(
+        "p",
+        "Media viewing and file operations remain available in Explorer. This workspace currently shows file details only.",
+      ),
+    );
+}
+function buildPane(p, index) {
+  const root = el("article");
+  root.className = "pane";
+  root.setAttribute("aria-label", index ? "Right explorer" : "Left explorer");
+  root.onfocusin = () => {
+    active = index;
+  };
+  p.dom = root;
+  const head = el("div");
+  head.className = "pane-head";
+  const provider = el("select");
+  provider.className = "provider";
+  provider.setAttribute("aria-label", "Location provider");
+  for (const [id, label] of Object.entries(PROVIDERS)) {
+    const option = el("option", label);
+    option.value = id;
+    provider.append(option);
+  }
+  provider.onchange = () => navigate(p, { provider: provider.value, id: "" });
+  head.append(provider);
+  for (const [label, cls, delta] of [
+    ["←", "back", -1],
+    ["→", "forward", 1],
+  ]) {
+    const b = button(label, () => {
+      p.index += delta;
+      return navigate(p, p.history[p.index], false);
+    });
+    b.className = cls;
+    b.setAttribute("aria-label", cls === "back" ? "Back" : "Forward");
+    head.append(b);
+  }
+  const up = button("↑", () => navigate(p, p.parent));
+  up.className = "up";
+  up.setAttribute("aria-label", "Parent folder");
+  head.append(
+    up,
+    button("↻", () => navigate(p, p.location, false)),
+    button("Maximize", () => {
+      $("panes").dataset.expand = index ? "right" : "left";
+    }),
+  );
+  const hierarchy = el("div");
+  hierarchy.className = "hierarchy";
+  const crumbs = el("nav");
+  crumbs.className = "breadcrumb";
+  crumbs.setAttribute("aria-label", "Location breadcrumbs");
+  const tools = el("div");
+  tools.className = "tools";
+  const search = el("input");
+  search.type = "search";
+  search.placeholder = "Search this location";
+  search.className = "search";
+  search.setAttribute("aria-label", "Search this location");
+  search.oninput = () => {
+    p.query = search.value;
+    renderItems(p);
+  };
+  const sort = el("select");
+  sort.setAttribute("aria-label", "Sort items");
+  for (const [value, label] of [
+    ["name", "Name A–Z"],
+    ["descending", "Name Z–A"],
+  ]) {
+    const option = el("option", label);
+    option.value = value;
+    sort.append(option);
+  }
+  sort.onchange = () => {
+    p.sort = sort.value;
+    renderItems(p);
+  };
+  const view = button("Grid view", () => {
+    p.view = p.view === "list" ? "grid" : "list";
+    view.textContent = p.view === "list" ? "Grid view" : "List view";
+    renderItems(p);
+  });
+  tools.append(search, sort, view);
+  const items = el("div");
+  items.className = "items";
+  items.setAttribute("role", "listbox");
+  items.setAttribute("aria-label", "Resources");
+  items.setAttribute("aria-multiselectable", "true");
+  hierarchy.append(crumbs, tools, items);
+  const viewer = el("section");
+  viewer.className = "viewer";
+  viewer.setAttribute("aria-label", "Selected item preview");
+  root.append(head, hierarchy, viewer);
+  return root;
+}
+for (const [provider, label] of Object.entries(PROVIDERS)) {
+  $("navigation").append(
+    button(label, () => navigate(panes[active], { provider, id: "" })),
+  );
+}
+for (const [index, p] of panes.entries())
+  $("panes").append(buildPane(p, index));
+$("dual").onclick = () => {
+  preferences.dual = !preferences.dual;
+  delete $("panes").dataset.expand;
+  layout();
+  save().catch((error) => {
+    $("notice").textContent = error.message;
+  });
+};
+$("restore").onclick = () => {
+  delete $("panes").dataset.expand;
+  layout();
+};
+for (const id of ["width", "height"]) {
+  $(id).oninput = () => {
+    preferences[id === "width" ? "ratio" : "height"] = Number($(id).value);
+    layout();
+  };
+  $(id).onchange = () =>
+    save().catch((error) => {
+      $("notice").textContent = error.message;
+    });
+}
+for (const b of document.querySelectorAll("[data-expand]"))
+  b.onclick = () => {
+    $("panes").dataset.expand = b.dataset.expand;
+  };
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") delete $("panes").dataset.expand;
+});
+try {
+  preferences = layoutPreferences(
+    (await chrome.storage.local.get(WORKSPACE_KEY))[WORKSPACE_KEY],
+  );
+} catch (error) {
+  $("notice").textContent = "Layout preferences unavailable: " + error.message;
+}
+layout();
+await Promise.all(panes.map((p) => navigate(p, p.location)));
