@@ -34,9 +34,9 @@
   "installed_mv3": {
     "local": "NOT_RUN",
     "attempt": "Fresh isolated persistent profile; load-extension and disable-extensions-except flags; no extension serviceworker observed within 8 seconds in supplied headless-shell build. test_workspace_mv3.mjs reports explicit SKIP.",
-    "hosted_full_chromium": "Pending CI workspace-browser job; ATLAS_REQUIRE_MV3=1 makes missing worker a failure"
+    "hosted_full_chromium": "PASS run39404574911 job118567278391, Chromium151.0.7922.34, fresh isolated profile with actual extension worker/bookmarks/Shelf launcher/edge drag/Chrome storage"
   },
-  "native_windows_screenreader_4gb": "NOT_RUN",
+  "native_windows_screenreader_4gb": "Real desktop helper image preview/Windows GUI, screen-reader and4GB benchmarks remain NOT_RUN; hosted core/native recovery and Windows boundary tests PASS as separately scoped above",
   "node_sweep": {
     "total": 28,
     "pass": 25,
@@ -75,5 +75,22 @@
     "docs/evidence/workspace-stage2/narrow-390.png": "abb42606e190a8d781b6ec63eab59d1f831902cb714ccb29b66803917d48a49e",
     "docs/evidence/workspace-stage2/narrow-900.png": "4769888d33e4c02e10e3b265e8c5247d81986d1db04409a3ca682d2a191955ac"
   },
-  "implementation_tree": "d57db2375539df4cd67c25da96133a1e4c44c69c"
+  "implementation_tree": "d57db2375539df4cd67c25da96133a1e4c44c69c",
+  "hosted": {
+    "tested_commit": "e3629a4d7321195e77d00cfee4c46ba251810b1f",
+    "source_unchanged_by_this_receipt_update": true,
+    "development_run": 39404574911,
+    "development_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39404574911",
+    "conclusion": "success",
+    "browser_job": 118567278391,
+    "foundation_job": 118567278765,
+    "python": "170 tests, OK skipped33;22 records linked",
+    "extension_and_native_recovery_steps": "PASS",
+    "actual_rendered_pointer_and_content_interactions": "PASS Chromium151.0.7922.34",
+    "installed_mv3_worker_bookmarks_launcher_edge_storage": "PASS",
+    "windows_boundary_run": 39404575033,
+    "windows_boundary_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39404575033",
+    "windows_boundary_conclusion": "success",
+    "windows_boundary_scope": "Actual kernel/NT-handle authorization tests; not Windows GUI or installed helper preview acceptance"
+  }
 }
