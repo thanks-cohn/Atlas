@@ -1086,7 +1086,7 @@ for (const view of ["list", "grid"])
     render();
   };
 $("fullpage").onclick = () =>
-  chrome.tabs.create({ url: chrome.runtime.getURL("explorer.html") });
+  chrome.tabs.create({ url: chrome.runtime.getURL("workspace.html") });
 $("close-details").onclick = () => {
   previewEntry = null;
 
