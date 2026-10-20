@@ -22,7 +22,7 @@ export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getB
   async function patch(node,changes){
     await write(list=>{if(!list.some(card=>card.id===node.cardId && !card.deleted))throw Error('This card no longer exists. Refresh the board.');return list.map(card=>card.id===node.cardId?cleanCard({...card,...changes,id:card.id}):card);});
   }
-  function nodes(){return cards.filter(card=>!card.deleted).map(card=>({id:key(card.id),itemKey:key(card.id),kind:'authored',cardId:card.id,title:card.title,url:card.url || null}));}
+  function nodes(){return cards.filter(card=>!card.deleted).map(card=>({id:key(card.id),itemKey:key(card.id),kind:'authored',folderSourceBookmarkId:card.folderSourceBookmarkId,cardId:card.id,title:card.title,url:card.url || null}));}
   function setPreview(value){preview=value;region.hidden=!active || preview;$('preview-board').textContent=preview?'Exit Preview':'Preview';onLayout();}
   $('preview-board').hidden=true;$('preview-board').onclick=()=>setPreview(!preview);
   document.addEventListener('keydown',event=>{if(active && preview && event.key==='Escape' && !(document.querySelectorAll?.('dialog[open]') || []).length){event.preventDefault();setPreview(false);}});
@@ -51,7 +51,7 @@ export function installBlankBoard({scope,storage,publicImageURL,rasterImage,getB
         const remote=imageURL.value.trim(),target=link.value.trim();
         if(remote && !publicImageURL(remote))throw Error('Use a public image URL without credentials or signed tokens.');
         if(target){let valid=false;try{const parsed=new URL(target);valid=target.length<=8192 && ['http:','https:'].includes(parsed.protocol) && !parsed.username && !parsed.password;}catch{}if(!valid)throw Error('Use an HTTP(S) link without embedded credentials.');}
-        const card=cleanCard({id:editing?.id || crypto.randomUUID(),url:target || null,title:title.value,text:text.value,tags:tags.value,image:remote?publicImageURL(remote):image});
+        const card=cleanCard({folderSourceBookmarkId:bookmark?.id || editing?.folderSourceBookmarkId || null,id:editing?.id || crypto.randomUUID(),url:target || null,title:title.value,text:text.value,tags:tags.value,image:remote?publicImageURL(remote):image});
         if(editing)await patch({cardId:editing.id},card);else await write(list=>[...list,card]);
         editing=null;image=null;message.textContent='';composer();
       }catch(error){message.textContent=error.message || 'Could not save. Your draft remains here.';}

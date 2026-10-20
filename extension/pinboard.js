@@ -1,3 +1,4 @@
+import {createFolderTags,FOLDER_TAGS,FOLDER_TAG_SETTINGS} from './pinboard-folder-tags.js';
 import {installSourceNavigation} from './source-navigation.js';
 import {createImageEntries,IMAGE_ENTRIES,IMAGE_RECOVERY,entryKey,localImageOrigin,urlImageOrigin} from './image-entries.js';
 import {createCardHold,heldMasonry} from './pinboard-card-hold.js';
@@ -25,6 +26,7 @@ let deferredBoardWindow=false,deferredBoardReset=false,boardResumePending=false;
 const boardLayoutBlocked=()=>boardResumePending || $('detail').open || $('image-source').open;
 const topSpacer=el('div'),bottomSpacer=el('div');topSpacer.className=bottomSpacer.className='pin-spacer';
 const boardId=new URL(location.href).searchParams.get('id');
+const folderTags=createFolderTags({storage:chrome.storage.local,scope:boardId || 'default'});
 const status=text=>$('status').textContent=text;
 installSourceNavigation({chrome,choice:$('source-behavior'),feedback:$('source-behavior-status'),anchor:$('detail-link'),status:message=>setTaggingChoiceStatus(message)});
 const itemKey=node=>node?.itemKey || node?.url || '';
@@ -44,6 +46,10 @@ function imageFor(node){const gallery=imageEntries.gallery(galleryOwner(node));i
 function link(node,label){if(!node.url){const button=el('button',label);button.type='button';button.onclick=()=>openDetail(node);return button;}const a=el('a',label);a.href=node.url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 function pickImage(node){imageTarget=parentNode(node);selected=node;$('cover-url').value='';$('image-status').textContent='';document.documentElement.setAttribute('data-pin-open','');$('image-source').showModal();}
 function humanTagsFor(node){const tags=new Map();for(const tag of metadata(node).tags){if(typeof tag==='string' && tagKey(tag) && !tags.has(tagKey(tag)))tags.set(tagKey(tag),tag.trim());}return [...tags.values()];}
+function previewTagChips(node){
+  const human=humanTagsFor(node),keys=new Set(human.map(tagKey));
+  return [...human.map(tag=>removableTag(node,tag,true)),...folderTags.tags(node).filter(tag=>!keys.has(tagKey(tag)) && !Object.hasOwn(removedTags(node),tagKey(tag))).map(tag=>{const chip=removableTag(node,tag,true);chip.title='Folder tag';return chip;})];
+}
 // Cache only validated image projections; tagsFor stays synchronous during scrolling.
 const TAG_REMOVALS='atlas-card-tag-removals-v1';
 const removedTags=node=>node?.entryId?(storedEntry(node)?.suppressed || {}):(cardTagRemovals[itemKey(node)] || {});
@@ -60,6 +66,7 @@ async function readGenerationSnapshot(reuse=true){
 function tagsFor(node){
   node=defaultEntryNode(node);
   const result=new Map(humanTagsFor(node).map(tag=>[tag.normalize('NFKC').toLowerCase(),tag]));
+  for(const tag of folderTags.tags(node))if(!result.has(tagKey(tag)))result.set(tagKey(tag),tag);
   const entry=generatedIndex.get(itemKey(node));
   if(entry?.image===imageFor(node))for(const tag of entry.tags){const key=tag.label.normalize('NFKC').toLowerCase();if(!result.has(key))result.set(key,tag.label);}
   const removed=removedTags(node);
@@ -109,7 +116,7 @@ async function removeCardTag(node,tag){
     await chrome.storage.local.set({[TAG_REMOVALS]:cardTagRemovals,[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});
   });
   await refreshGeneratedIndex();
-  if(itemKey(selected)===itemKey(node)){$('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));await showGeneratedTags(node);}
+  if(itemKey(selected)===itemKey(node)){$('detail-tags').replaceChildren(...previewTagChips(node));await showGeneratedTags(node);}
 }
 function removableTag(node,tag,preview=false){
   node=defaultEntryNode(node);
@@ -180,7 +187,7 @@ async function showGeneratedTags(node){
     const image=imageFor(node),prior=generatedIndex.get(itemKey(node));
     const reference=prior?.image===image && prior.reference?prior.reference:await imageReference(image);
     if(version!==generatedRenderVersion || itemKey(selected)!==itemKey(node))return;
-    const human=new Set(humanTagsFor(node).map(tagKey));
+    const human=new Set([...humanTagsFor(node),...folderTags.tags(node)].map(tagKey));
     const grouped=new Map(generatedTags(runs,reference,animeEnabled).map(entry=>[entry.label.normalize('NFKC').toLowerCase(),entry]));
     if(!grouped.size)return;
     const tags=[];
@@ -249,7 +256,7 @@ function openDetailContent(node,{preserveConnections=false}={}){
   if(!preserveConnections || !previewingLinkedImage)showDetailImage(image,node.title);
   const details=metadata(node);previewSections.setContent(itemKey(node),{sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))},{preserve:preserveConnections});
   $('detail-link').hidden=!node.url;if(node.url)$('detail-link').href=node.url;else $('detail-link').removeAttribute('href');
-  $('detail-tags').replaceChildren(...humanTagsFor(node).map(tag=>removableTag(node,tag,true)));
+  $('detail-tags').replaceChildren(...previewTagChips(node));
   $('edit-authored-card').hidden=$('delete-authored-card').hidden=!authored(parentNode(node));
   paintImageNavigation(node);
   loadTaggingChoices(node);showGeneratedTags(node);
@@ -272,7 +279,7 @@ async function openDetail(node){
   }catch(error){if(request===detailOpenVersion && $('detail').open)setTaggingChoiceStatus(error.message || 'Image details could not be loaded. Cached connections remain available.');}finally{endOpen?.();}
 }
 
-const editTags=installTagEditor({localAdapter:node=>{
+const editTags=installTagEditor({suggestions:()=>folderTags.vocabulary(collectionNodes()),localAdapter:node=>{
   node=defaultEntryNode(node);
   if(node.entryId)return {read:async()=>{await imageEntries.load();if(!storedEntry(node))throw Error('This image was removed.');return {tags:humanTagsFor(node),data:null};},mutate:async(action,tag)=>{await imageEntries.mutate(node.galleryOwner,node.entryId,entry=>{const key=selectionKey(tag);entry.tags=entry.tags.filter(value=>selectionKey(value)!==key);if(action==='tag')entry.tags.push(tag);delete entry.suppressed[key];},'human-tag-'+action);await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_REMOVALS),all=saved[TAG_REMOVALS] || {};const own={...all[itemKey(node)]};if(action==='tag')delete own[selectionKey(tag)];await chrome.storage.local.set({[TAG_REMOVALS]:{...all,[itemKey(node)]:own}});});return {tags:humanTagsFor(node),data:null};}};
   if(!authored(node))return null;const adapter=blankBoard.tagAdapter(node);
@@ -471,7 +478,7 @@ function updatePriorities(){
 
 function renderTags(){
   $('tag-browser').hidden=false;
-  const tags=[...new Set(collectionNodes().flatMap(tagsFor))].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b,undefined,{sensitivity:'base',numeric:true}));
+  const tags=[...new Map([...collectionNodes().flatMap(tagsFor),...folderTags.vocabulary(collectionNodes())].map(tag=>[tagKey(tag),tag])).values()].sort((a,b)=>Number(isSelectedTag(b))-Number(isSelectedTag(a)) || a.localeCompare(b,undefined,{sensitivity:'base',numeric:true}));
   $('tag-browser').hidden=false;
   $('tag-field').replaceChildren(...tags.map(tag=>tagButton(tag,'browse-tag')));if(!tags.length)$('tag-field').append(el('p',metadataState==='loading'?'Loading tags…':metadataState==='unavailable' && $('folder').value!=='blank'?'Tags could not load. Connect your companion and Refresh.':'No saved tags in this collection.'));
   syncSelection();
@@ -512,6 +519,7 @@ async function refresh(){
   try{
     let chosen=$('folder').value || 'all';
     const tree=await chrome.bookmarks.getTree();if(request!==refreshVersion)return;roots=tree;
+    try{await folderTags.sync(roots);}catch{$('folder-tags-status').textContent='Folder tags could not be saved. Refresh to retry; existing data is retained.';}if(request!==refreshVersion)return;
     const savedBoards=(await chrome.storage.local.get(PINBOARDS_KEY))[PINBOARDS_KEY] || {};
     if(request!==refreshVersion)return;
     if(boardId && initialBoardCollection){
@@ -543,6 +551,9 @@ async function refresh(){
     renderWindow();
   }catch{if(request===refreshVersion)status('PINBOARD_READ_FAILED: Could not finish loading saved data. Already displayed cards remain available. Reload the extension if bookmark permission is missing.');}
 }
+$('folder-tags').onchange=async()=>{const control=$('folder-tags');control.disabled=true;try{await folderTags.setEnabled(control.checked);render();if(selected && $('detail').open)openDetailContent(selected);$('folder-tags-status').textContent='Saved. Folder tag data is retained.';}catch{control.checked=folderTags.enabled();$('folder-tags-status').textContent='Could not save. Please retry.';}finally{control.disabled=false;}};
+chrome.storage.onChanged?.addListener((changes,area)=>{if(area==='local' && (changes[FOLDER_TAGS] || changes[FOLDER_TAG_SETTINGS]))folderTags.load().then(()=>{$('folder-tags').checked=folderTags.enabled();render();if(selected && $('detail').open)openDetailContent(selected);}).catch(()=>status('Folder tags could not be refreshed.'));});
+let folderRefreshTimer;for(const event of ['onCreated','onChanged','onMoved','onRemoved','onImportEnded'])chrome.bookmarks[event]?.addListener(()=>{clearTimeout(folderRefreshTimer);folderRefreshTimer=setTimeout(()=>refresh(),150);});
 const blankBoard=installBlankBoard({scope:boardId || 'default',storage:chrome.storage.local,publicImageURL,rasterImage,getBookmarks:()=>pinItems(roots),describeBookmark:node=>({image:imageFor(node),note:metadata(node).note,tags:humanTagsFor(node)}),onChanged:async()=>{await refreshGeneratedIndex();updatePriorities();},onLayout:scheduleWindow});
 // Alt+Q clears browsing selection only. Escape remains exclusively available
 // to previews/dialogs. Ordinary search words and attached tags are preserved.
@@ -695,6 +706,7 @@ async function loadBoardTitle(){
 }
 async function start(){
   await loadBoardTitle();
+  try{await folderTags.load();}catch{$('folder-tags-status').textContent='Folder tag settings could not be loaded. Refresh to retry.';}$('folder-tags').checked=folderTags.enabled();
   try{const saved=(await chrome.storage.local.get(PINBOARD_SETTINGS))[PINBOARD_SETTINGS];limit=cardLimit(saved?.limit);$('card-limit').value=String(limit);$('images-only').checked=saved?.imagesOnly===true;$('tags-only').checked=saved?.tagsOnly===true;}catch{}
   await refresh();
 
