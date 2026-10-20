@@ -87,19 +87,39 @@ The existing workspace's grid regions currently feel **fixed-size**. This is a u
 
 **Acceptance:** A user can place the pointer directly on a visible pane edge, drag it, and immediately see the two adjacent panels change size. No panel is locked to a hard-coded height or width in standard split mode.
 
-## 5A — Standard window controls and adaptive floating commands (owner clarification, 2026-10-20)
+## 5A — Familiar window controls, predictable toolbar, and elegant adaptive overflow (owner refinement, 2026-10-20)
 
-**Window-control convention.** Each independently managed hierarchy/viewer region should offer recognizable **− minimize**, **□ maximize/restore**, and **× close** controls with tooltip and accessible labels. Minimize retracts the region but preserves its state; maximize promotes it into the full usable dashboard area (including space ordinarily occupied by the large introductory Workspace heading); restore returns to the precise previous layout; close hides the *view only*, never deletes a source or cancels a job. Closing the second main pane makes the remaining pane fill width; **Dual Pane** reopens the hidden pane retaining its prior location, selection, pinned preview and split preferences. Provide a predictable path to restore even when maximized and guard against hiding the last available navigation/control affordance.
+**Priority order: intuitiveness and established conventions first; aesthetic refinement second, without sacrificing either.** Users must not need to learn a new layout-control language. Keep the interface visually restrained and beautifully composed, but test discoverability against ordinary desktop file explorers and IDEs.
 
-**Adaptive command positioning.** When **one pane/region is maximized or promoted to the top**, don't leave global action buttons behind it or let them become inaccessible. **Reflow the relevant existing toolbar controls into the newly available, visible unoccupied space** alongside/adjacent to the promoted pane, with stable grouping and keyboard focus order. Do not let controls overlap content, jump randomly, or obscure the pane's own −/□/× controls. The maximized content should consume the reclaimed header area as intended.
+### Window controls must mean what they conventionally mean
+- **− Minimize:** retract a hierarchy/viewer region to a small recognizable title bar/tab; do not delete its contents or forget its state.
+- **□ Maximize / Restore:** expand the selected region to the available dashboard viewport, reclaiming the oversized introductory Workspace header/unused space. Keep **Restore visible directly on the maximized region**, never only in an overflow menu. Restore its exact previous split sizes, location, scroll, selection and pinned preview.
+- **× Close:** remove the *view* from the layout, not the object, files, data or active background job. Closing the right main pane lets the remaining pane occupy the width. **Dual Pane** reopens the hidden pane at its previous location/state.
+- Place controls consistently in the relevant pane title bar, with standard order, familiar icons, tooltips, keyboard semantics and useful click targets. Prevent closing the last usable way to restore navigation.
+- Retain draggable splitters and the user's custom dimensions. Closing, minimizing and maximizing are distinct operations.
 
-**When both upper regions or both panes occupy the top/full available area**, consolidate displaced global controls into an **expandable three-horizontal-lines (hamburger) menu**, implemented as a tasteful small **floating/sticky bottom-right launcher** above workspace content. Clicking/tapping it reveals the existing commands (e.g. Dual Pane, Restore Layout, Activity & Recovery, Expand Hierarchies/Viewers) grouped with readable labels; do **not** duplicate separate command implementations or bury the Restore action without discovery. Closing the menu returns focus safely to the launcher.
+### Predictable toolbar reflow, not wandering buttons
+- Keep essential controls in a consistent location, in a compact visible toolbar or the active pane's title bar. Do not relocate them arbitrarily to whichever empty space exists.
+- When a pane expands upward into the header area, **reflow the surrounding actions to a predetermined toolbar position** alongside the expanded area, provided adequate space; otherwise put **secondary** commands in a conventional overflow menu.
+- When both regions occupy the available upper area, minimize surrounding chrome and collect displaced secondary commands in a **small bottom-right floating menu** with a recognizable three-line icon. Keep a **visible Restore control on the active maximized region** regardless of menu state.
+- The overflow menu should expose clearly labeled existing commands such as Dual Pane, Activity & Recovery and other layout choices, using the same actual actions (not independent duplicate implementations). Keep commonly used essential actions visible where room permits.
+- No obscured content, layout jumps, overlapping controls or random command order.
 
-**Auto-hide behavior:** The *expanded floating menu* retracts after the user moves pointer/focus away, following a short forgiving delay, and the resting bottom-right launcher fades/retracts unobtrusively after pointer inactivity. The launcher must remain readily recoverable on hover near the corner, keyboard focus/shortcut or tap. **Never make essential controls hover-only**: support touch, keyboard/screen-reader, reduced-motion, visible focus, sufficient target sizes and discovery on first use. Do not hide it while the menu is open, focused, hovered, being interacted with, or while a confirmation dialog is open. Respect safe-area/taskbar boundaries and avoid covering active image controls/scrollbars; provide a minimal persistent or discoverable affordance if otherwise inaccessible.
+### The floating menu should be discreet, never undiscoverable
+- The bottom-right launcher remains **visibly discoverable** at rest. A small icon/dock may subtly dim or become translucent after inactivity, but **must not fully disappear** or require users to guess an invisible hover zone.
+- Open by **click/tap**; hover may optionally preview/open, but never as the sole access method. Expanded flyout may close after pointer and keyboard focus leave it following a forgiving delay; do not dismiss while hovered, focused, being used, or while a dialog is open.
+- Support Escape to close, appropriate focus return, keyboard/screen-reader labels, touch targets, reduced motion and sufficient contrast. Avoid blocking underlying scrollbar, images or other interactive content; respect safe areas and narrow viewports.
+- A visually appealing compact translucent dock, subtle shadow, refined motion and clean spacing are encouraged **only when functionality and accessibility remain obvious**.
 
-**Aesthetic treatment:** subtle motion, consistent spacing and iconography, refined translucency/contrast where appropriate, no jitter or content occlusion, and no unnecessary fixed decorative header. Prefer conventional responsive overflow-menu patterns over surprising custom animation.
+### Acceptance and evidence
+1. A first-time user can identify −, □/Restore, ×, Dual Pane and the overflow menu without instruction.
+2. Maximize actually recovers height consumed by the dashboard header; Restore is always directly reachable and recovers prior state and ratios.
+3. One maximized region keeps essential controls predictable; both expanded regions put displaced secondary commands in the bottom-right menu without losing access.
+4. The menu is visibly discoverable after inactivity, clickable and tappable, keyboard accessible, and does not obscure active content.
+5. Closing a pane preserves data and other pane state; reopening Dual Pane restores navigation, selection and preferences.
+6. Actual Chrome testing where available, plus regression tests for maximize/minimize/close/restore, reflow, flyout dismissal and focus, 1366×768 and narrow widths; report browser verification limitations honestly.
 
-**Verification:** Real Chrome/manual and automated layout-state tests must cover single maximized pane and relocated controls; both regions promoted and hamburger visibility; command operation from the floating menu; hover-away inactivity, mouse reentry, keyboard/touch recovery, resize, scroll, navigation and restored layout with exact retained pane state. Include at least 1366×768 and a narrow viewport. Do not represent this behavior as shipped without verification.
+**Design rule:** *Content may expand freely; essential controls must stay recognizable, discoverable and predictable.*
 
 ## 6 — Collections and consistent actions
 
