@@ -275,3 +275,81 @@ A conforming editor should create, select, move, nest, group, ungroup and rearra
 ### A.6. Addendum charter
 
 > **Atlas's primitive is the addressable object and its relationships; groupings can themselves be objects. Cards, pop-outs, slices and complete sites are contextual presentations of those structures. A Semantic Presentation Resolver makes the structure intelligible to a template engine, allowing compatible projects to reuse it without manually reconstructing their visual arrangements.**
+
+
+---
+
+## Addendum B — Website Conversion, Slice Expansion, and Shared Template Conventions (2026-10-19)
+
+**Status:** Owner's intended direction, including a deliberately limited early-stage interaction model. Proposed only; not shipped.
+
+### B.1. Goal: a common language for website conversion
+
+Atlas should investigate and define its own **Atlas Composition Transformation Protocol (ACTP)**: an interoperable conversion process for whole websites, arbitrary website regions, and structured resource/object graphs. The goal is to preserve the highest practical **semantic and functional fidelity** even when aesthetic presentation, screen size, or container context changes.
+
+The central question is not how to shrink a website's pixels, but which stable conventions make its *identity, meaning, groupings, relative emphasis, layout intent, assets, and behaviors* recoverable and translatable. Given sufficiently conforming structure, compatible projects can repeatedly reinterpret the same website content as cards, slices, expanded views, or entire sites rather than reconstructing each layout manually.
+
+A useful preliminary decomposition is:
+
+- **A — Object identity and content:** Named, independently addressable resources, groups, sections and entire websites.
+- **B — Semantic relationships:** Membership, hierarchy, sequence, association, citations, featured objects, links and purposeful adjacency.
+- **C — Composition intent:** Importance, content selection, reading order, required affordances, responsive priorities and preservation constraints.
+- **D — Presentation interpretation:** Host styling, font roles, design tokens, geometry, CSS realization, theme and interaction presentation.
+
+These are candidate conventions for discovery and testing, not a frozen ontology. Atlas should experiment to find which schemas retain the best meaning, editability, behavior and perceptual quality under transformation.
+
+### B.2. The intended early-stage distinction: Card / Pop-out vs Slice / expansion
+
+**Do not flatten the early Atlas product into one generic 'preview'.** The owner's starting concept has two different interaction families:
+
+**Card → Card Pop-out.** The Atlas Pinboard is the canonical example. The card is a compact representation of an object or grouping. Opening it reveals a richer, interactive, contextual **pop-out card** with its contained objects, metadata, notes and related material. The Pinboard is simultaneously an object and grouping; its pop-out remains part of the *card family*, not a slice.
+
+**Slice → Expanded website section.** A slice is closer to a **representative row or section of a website** inserted into another composition. It is intentionally curated or transformed to retain the original website's aesthetic character and purpose while fitting its host context. Activating it may **drop down / expand in place** into a richer, miniature website section or page-like region, preserving recognizable typography, spatial identity, content relationships and functional intent as far as feasible. This is a *slice expansion*, not the Pinboard's card pop-out, even if both are casually called 'pop-outs'.
+
+| Initial family | Collapsed form | Expansion | Principal goal |
+| --- | --- | --- | --- |
+| Card | Object/group preview | Contextual card pop-out | Inspect the object and its connected contents |
+| Slice | Website-representative row or section | Drop-down expanded miniature site/page section | Experience a faithful, aesthetically coherent part of the source website |
+
+This distinction describes **initial UX conventions**, not immutable ontology. Over time, cards, slices, and their expansion variants may become more specialized or acquire overlapping capabilities as long as their roles and transformation contracts remain clear.
+
+### B.3. One shared style and template language
+
+Despite their different initial purposes and interactions, **Cards, Card Pop-outs, Slices, expanded Slices, and Sites must draw from the same Atlas-compatible composition and styling conventions**.
+
+Shared contracts should cover typography roles, colors/palettes, spacing and proportion systems, responsive transformations, object references, semantic roles, nested structure, interactions, theme inheritance and preservation priorities. Each presentation family can impose its own layout policy and expansion behavior without requiring separate canonical data stores.
+
+For slices especially, **source aesthetic fidelity and destination integration are separate, negotiable goals**. A slice may preserve its originating site's typography, visual hierarchy, palette and distinctive composition within an embedded region while still fitting its receiving site's dimensions and accessibility requirements. Specify source-style preservation vs destination-style adoption explicitly rather than silently flattening one into the other.
+
+### B.4. Transformation stages and trainable examples
+
+Conceptual transformation pipeline:
+
+```text
+Source website / region / Atlas object graph / external structured JSON
+      -> Extract structure, content, resources, CSS clues, interactions
+      -> Normalize into Atlas identities + relationships + composition intent
+      -> Select projection and semantic reduction strategy
+      -> Apply shared template conventions + family-specific rules
+      -> Render Card / Card Pop-out / Slice / Expanded Slice / Site
+      -> Validate semantic, functional, aesthetic and responsive fidelity
+      -> Optional human Artistic Refinement
+```
+
+Treat extraction from arbitrary websites as potentially **lossy and uncertain**. Atlas-native and structured imports should be the initial high-fidelity path; arbitrary HTML/CSS/JavaScript imports may require heuristics, permissions, snapshots or user guidance. No source design, complex script, or behavior is guaranteed to transfer perfectly.
+
+Record optional, permissioned transformation examples for future evaluation and AI generalization: original site or structured input, semantic graph, selected content, projection family, template/viewport, generated output, user refinements, accepted result and measured failure modes. Start with deterministic rules and explicit semantics; later learning systems can attempt to predict useful reductions, layout decisions and refinements. Never imply an AI model or large dataset is already built.
+
+### B.5. Proof scenarios for the first prototype
+
+1. Take the Atlas Pinboard grouping and generate a compact **Card** that opens a contextual **Card Pop-out**, while retaining notes, members, relationships and independent identity.
+2. Take an Atlas-compatible publishing page and generate a **Slice** resembling a purposeful website row/section. Expand it **in place, downward**, into a recognizable miniature portion of its original website, retaining its aesthetic identity and purpose.
+3. Render both families through shared design tokens and composition contracts while retaining distinct expansion behaviors.
+4. Transplant a Slice between receiving websites with different fonts, widths and palettes; record when source-style preservation wins and when destination adaptation is used.
+5. Save editor-authored grouped/ungrouped sections into versioned structured Atlas JSON; re-import without losing identities, grouping semantics or presentation intent.
+6. Demonstrate different projections from the same normalized data without copying or destructively altering its canonical source.
+7. Capture output examples and human refinements to support future testing and model training.
+
+### B.6. Governing clarification
+
+> **Initially, Atlas Cards and Slices are different presentation families. A Pinboard Card opens into a richer Card Pop-out; a website-representative Slice can drop down into a miniature page section that maintains the originating site's aesthetic and purpose. Both share Atlas's composition, style, and transformation conventions so they can later be specialized, adapted, and transposed across compatible projects.**
