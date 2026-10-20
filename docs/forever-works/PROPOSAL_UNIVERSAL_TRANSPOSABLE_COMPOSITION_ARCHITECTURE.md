@@ -188,3 +188,90 @@ Each phase is a proposal until independently implemented and tested. Do not disp
 ## 15. One-sentence charter
 
 > **Atlas is a universal transposable composition system: any structured piece of content or webpage, from an individual datum to a complete nested site, can be addressed, grouped or ungrouped, exported and reinterpreted through compatible templates—automatically producing responsive compositions that people may artistically refine rather than rebuild.**
+
+
+---
+
+## Addendum A — Objects, Groupings, and Semantic Presentation (2026-10-19)
+
+**Status:** Owner-directed clarification and extension of this proposal; not an implemented capability.
+
+### A.1. The decisive distinction
+
+Atlas's template system depends on the meanings of **objects** and **groupings**, not just visual boxes or HTML fragments. A renderer can only make output human-legible, comprehensible, aesthetically appropriate, and useful when it has enough information about *what* is being presented and *why* its pieces are associated.
+
+- **Object:** An independently addressable entity with stable identity, metadata and, when appropriate, an internal composition. It can be referenced, exported, reused or transformed.
+- **Grouping:** A declared relationship or organized collection of one or more objects, with optional ordering, purpose, annotations, membership rules and presentation intent. A grouping may itself be an object with identity and reusable structure.
+- **Card:** A compact, self-contained presentation of an object or grouping; not a canonical data type.
+- **Pop-out:** An expanded contextual presentation of an object, potentially exposing its groupings, attachments and interactions. A pop-out can be a **kind of expanded card**, not a slice.
+- **Slice:** An intentionally selected, portable presentation of content or a composition fragment for insertion into another page, site or context. A slice is not interchangeable with an ordinary card or pop-out simply because all may render some of the same data.
+- **Site/page:** A complete composition containing any arrangement of addressable nodes; it can itself be exported or reinterpreted.
+
+An object's ontology, grouping membership and projection type are **orthogonal**: one grouping can be a reusable object, rendered as a card or pop-out, and optionally represented by a separate editorial slice if the author asks for one. **Do not automatically classify all grouped objects as slices, or assume all presentations must be generated.**
+
+### A.2. Canonical example: the Atlas Pinboard Pop-out
+
+The existing Pinboard Pop-out card is simultaneously:
+
+1. A durable **object** capable of independent referencing and export.
+2. A **grouping** that organizes photos, notes, bookmarks, and other associated data.
+3. A **card-family presentation**, expanded to expose details and relationships.
+4. **Not automatically a slice**: its purpose is contextual inspection and interaction, rather than transplanting an editorial region into a separate webpage.
+
+This example should be used as a canonical modeling test for all future template and import/export work.
+
+### A.3. Semantic Presentation Resolver
+
+An existing visual editor or ordinary template renderer is insufficient on its own. Atlas needs a **Semantic Presentation Resolver** between the object/group model and the aesthetic template renderer. It determines:
+
+- Which objects and groupings are being presented, their roles, relationships and intended hierarchy.
+- Which projection is requested or contextually appropriate (Card, Pop-out, Slice, Page/Site), respecting explicit user choice.
+- Which content to prioritize and reveal given audience, viewport, available space and user intent.
+- Which layout constraints, accessibility semantics and interactions the output requires.
+- Which template ideal and graceful fallback are compatible with the object and the destination.
+
+The resolver should initially use **explicit metadata and deterministic rules**; AI inference can be optional rather than necessary for basic composition. Where semantic roles or group purposes are unknown, use transparent defaults or ask for targeted input rather than inventing associations.
+
+Illustrative pipeline:
+
+```text
+Ungrouped resources + reusable object/group graph
+                |
+                v
+        Semantic Presentation Resolver
+          role / projection / priority
+                |
+                v
+    Template ideal: Pristine Publishing | Wiki
+          + host style / viewport / tokens
+                |
+                v
+       Card | Pop-out | Slice | Page/Site
+                |
+                v
+      Optional Artistic Refinement
+```
+
+**Pristine Publishing** is a presentation-first family emphasizing refined visual rhythm, editorial hierarchy, typography, whitespace and media. **Wiki** is an information-first family emphasizing navigation, metadata, cross-references, histories and readable structure. These are *presentation families over the same object schema*, not competing data models.
+
+### A.4. Reuse rather than reinventing a complete website editor
+
+Investigate existing editors such as **GrapesJS**, **Puck** and compatible rich-text/block editors as possible editing surfaces or adapters. Existing content and template ecosystems including **Storyblok** and **WordPress** demonstrate nested blocks, reusable structures and template-driven presentation, but do not thereby prove complete Atlas cross-project transposability.
+
+Atlas should **own its versioned JSON composition contract**, stable resource/group identities, resolver and template rules—not the implementation details or native project format of any particular editor. The editing surface must round-trip Atlas-compatible object and composition semantics; exporting arbitrary DOM/HTML/CSS or an editor-specific JSON blob alone does not satisfy the contract.
+
+A conforming editor should create, select, move, nest, group, ungroup and rearrange addressable pieces, update structured Atlas data bidirectionally, and preserve user intentions in a separate refinement layer. Website-to-Atlas importing must distinguish clean structured JSON imports from lossy attempts to infer semantics from arbitrary HTML.
+
+### A.5. Concrete verification cases
+
+1. Serialize a Pinboard Pop-out as an independently addressable grouping/object with card-family presentation; confirm it is **not misclassified as a slice**.
+2. Insert a single ungrouped resource into another project without importing the original parent composition.
+3. Transfer a mixed grouping of images, bookmarks and notes, preserving membership, notes, identity and link relationships.
+4. Render the **same canonical grouping** under Pristine Publishing and Wiki without changing its underlying object data.
+5. Explicitly request a slice from selected group members; verify it is a distinct projection with purpose and host-context adaptation, not an automatic synonym for the original pop-out.
+6. Move and rearrange nested regions in a compatible editor; serialize, reopen, and transpose them without losing relationships or responsive constraints.
+7. Record what could not be rendered faithfully instead of silently dropping information or behavior.
+
+### A.6. Addendum charter
+
+> **Atlas's primitive is the addressable object and its relationships; groupings can themselves be objects. Cards, pop-outs, slices and complete sites are contextual presentations of those structures. A Semantic Presentation Resolver makes the structure intelligible to a template engine, allowing compatible projects to reuse it without manually reconstructing their visual arrangements.**
