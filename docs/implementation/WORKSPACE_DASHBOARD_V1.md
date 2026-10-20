@@ -1,5 +1,7 @@
 # Atlas Workspace — first read-only vertical slice
 
+Stage 2 source and browser evidence now supersede the split-edge, preview, breadcrumb and context-menu limitations below: [WORKSPACE_DASHBOARD_STAGE_2.md](WORKSPACE_DASHBOARD_STAGE_2.md). The original record remains as historical evidence.
+
 2026-10-20. Owner direction: `docs/requests/ATLAS_STANDARD_WORKSPACE_DASHBOARD_IMPLEMENTATION_BRIEF.md`.
 Status: implementation source and automated contract/DOM-double proof; not a completed dashboard or browser-qualified release.
 
