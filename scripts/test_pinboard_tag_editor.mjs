@@ -9,7 +9,7 @@ let revision=1,fail=false,changed=0;let data={resources:{r:{id:'r',kind:'bookmar
 const mutations=[];const context={modelRuns,document,navigator:{locks:{request:async(_,fn)=>fn()}},chrome:{bookmarks:{get:async()=>[{url:'https://example.com'}]},runtime:{sendMessage:async message=>{if(fail)return {ok:false};const body=message.body;if(body){assert.equal(body.expected_revision,revision);mutations.push(body);const tags=data.tags[body.args.resource] || [];data.tags[body.args.resource]=body.action==='tag'?[...new Set([...tags,body.args.tag])]:tags.filter(t=>t!==body.args.tag);revision++;}return {data:structuredClone(data),revision};}}}};
 vm.createContext(context);vm.runInContext(readFileSync('extension/pinboard-tag-editor.js','utf8').replace(/^import .*\n/gm,'').replace(/export /g,'')+';globalThis.install=installTagEditor;globalThis.removeBookmarkTag=removeBookmarkTag',context);
 const open=context.install({onChanged:()=>changed++});await open({id:'1',url:'https://example.com',title:'Bookmark'});
-const dialog=body.children.at(-1),attached=dialog.children[2],select=dialog.children[3].children[0],add=dialog.children[4];
+const dialog=body.children.at(-1),attached=dialog.children[2],select=dialog.children[4].children[0],add=dialog.children[5];
 assert.equal(attached.children[0].textContent,'Art ×');assert.equal(add.disabled,true);
 select.value='Design';select.onchange();assert.equal(add.disabled,false);add.onclick();await new Promise(r=>setTimeout(r,0));
 assert.equal(changed,1);assert.deepEqual(data.tags.r,['Art','Design']);assert.equal(dialog.open,true);
@@ -17,7 +17,7 @@ attached.children[0].onclick();await new Promise(r=>setTimeout(r,0));assert.deep
 select.scrollTop=120;select.onpointermove({target:{tagName:'OPTION',value:'Art'}});let prevented=false;
 select.onkeydown({key:'Enter',preventDefault(){prevented=true;},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));
 assert.equal(prevented,true);assert.ok(data.tags.r.includes('Art'));assert.equal(select.value,'Art');assert.equal(select.scrollTop,120);assert.equal(dialog.open,true);
-fail=true;await open({id:'1',url:'https://example.com'});assert.match(body.children.at(-1).children[5].textContent,/Connect/);assert.equal(body.children.at(-1).children[6].hidden,false);
+fail=true;await open({id:'1',url:'https://example.com'});assert.match(body.children.at(-1).children[6].textContent,/Connect/);assert.equal(body.children.at(-1).children[7].hidden,false);
 console.log('PASS: existing-tag picker, revision-checked add/remove, retained dialog and visible unavailable/retry state. DOM/API doubles; real Chrome NOT_RUN.');
 fail=false;const createForm=dialog.children.at(-1),newTags=createForm.children[0].children[0];newTags.value='New idea, New idea, Research';await createForm.onsubmit({preventDefault(){}});assert.ok(data.tags.r.includes('New idea'));assert.ok(data.tags.r.includes('Research'));assert.equal(data.tags.r.filter(t=>t==='New idea').length,1);assert.equal(newTags.value,'');assert.equal(dialog.open,true);
 fail=true;newTags.value='Keep my draft';await createForm.onsubmit({preventDefault(){}});assert.equal(newTags.value,'Keep my draft');assert.equal(dialog.open,true);
@@ -30,11 +30,11 @@ select.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new
 const savedTags={'atlas-tag-vocabulary-v1':['Generated Choice'],'atlas-image-tagging-runs-v1':{'https://source.example':{anime:[{suggestions:[{tag:'Earlier Model Tag'}]}]}}};
 context.chrome.storage={local:{get:async keys=>Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(key=>[key,savedTags[key]])),set:async values=>Object.assign(savedTags,values)}};
 fail=false;await open({id:'1',url:'https://example.com'});
-const newDialog=body.children.at(-1),picker=newDialog.children[3].children[0];
+const newDialog=body.children.at(-1),picker=newDialog.children[4].children[0];
 assert.ok(picker.children.some(option=>option.value==='Generated Choice'));
 assert.ok(picker.children.some(option=>option.value==='Earlier Model Tag'));
 assert.ok(!data.tags.r.includes('Generated Choice'));
-picker.value='Generated Choice';newDialog.children[4].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Generated Choice'));
+picker.value='Generated Choice';newDialog.children[5].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(data.tags.r.includes('Generated Choice'));
 data.tags.other.push('Art');
 await context.removeBookmarkTag({id:'1',url:'https://example.com'},'Art');
 assert.ok(!data.tags.r.includes('Art'));assert.ok(data.tags.other.includes('Art'));
@@ -47,12 +47,14 @@ const bookmarkGet=context.chrome.bookmarks.get;
 context.chrome.bookmarks.get=async()=>{throw Error('Authored cards must not request native bookmarks');};
 const openLocal=context.installTagEditor({localAdapter:()=>({read:async()=>({tags:localTags,data:null}),mutate:async(action,tag)=>{localTags=action==='untag'?localTags.filter(value=>value!==tag):[...new Set([...localTags,tag])];return {tags:localTags,data:null};}}),onChanged:async(_data,node)=>{assert.equal(node.itemKey,'atlas-card:board:one');localChanges++;}});
 await openLocal({id:'one',itemKey:'atlas-card:board:one',title:'Authored'});
-const localDialog=body.children.at(-1),localPicker=localDialog.children[3].children[0];
-localPicker.value='Generated Choice';localDialog.children[4].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(localTags.includes('Generated Choice'));
+const localDialog=body.children.at(-1),localPicker=localDialog.children[4].children[0];
+localPicker.value='Generated Choice';localDialog.children[5].onclick();await new Promise(r=>setTimeout(r,0));assert.ok(localTags.includes('Generated Choice'));
 localPicker.value='Local';localPicker.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!localTags.includes('Local'));assert.equal(localChanges,2);assert.equal(localDialog.open,true);
 context.chrome.bookmarks.get=bookmarkGet;
 console.log('PASS: authored cards share retained tag dialog, vocabulary and Enter toggling without native bookmark mutation.');
 
 const folderOpen=context.install({suggestions:()=>['architecture','ＡＲＣＨＩＴＥＣＴＵＲＥ','unrelated folder'],localAdapter:()=>({read:async()=>({tags:['Manual'],data:null}),mutate:async(action,tag)=>({tags:['Manual',tag],data:null})}),onChanged:()=>{}});
-fail=false;await folderOpen({id:'own',title:'Independent'});const folderSelect=body.children.at(-1).children[3].children[0];assert.equal(folderSelect.children.filter(o=>o.value?.normalize('NFKC').toLowerCase()==='architecture').length,1);assert.ok(folderSelect.children.some(o=>o.value==='unrelated folder'));
+fail=false;await folderOpen({id:'own',title:'Independent'});const folderSelect=body.children.at(-1).children[4].children[0];assert.equal(folderSelect.children.filter(o=>o.value?.normalize('NFKC').toLowerCase()==='architecture').length,1);assert.ok(folderSelect.children.some(o=>o.value==='unrelated folder'));
 console.log('PASS shared folder suggestions available to unrelated authored cards and Unicode-normalized duplicates collapse in the existing picker.');
+
+const search=body.children.at(-1).children[3].children[0];search.value='ARCH';search.oninput();assert.equal(folderSelect.children.filter(o=>o.value).length,1);assert.ok(folderSelect.children.some(o=>o.value?.normalize('NFKC').toLowerCase()==='architecture'));search.value='no such tag';search.oninput();assert.equal(folderSelect.children.length,1);assert.equal(folderSelect.children[0].textContent,'No matching tags');console.log('PASS: immediate normalized tag search and explicit empty results retain the existing picker.');

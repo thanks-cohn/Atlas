@@ -24,6 +24,7 @@ jobs:
           node scripts/test_pinboard_card_hold.mjs
           node scripts/test_pinboard_preview_connections.mjs
           node scripts/test_pinboard_preview_sections.mjs
+          node scripts/test_card_sections.mjs
           node scripts/test_pinboard_menu.mjs
           node scripts/test_pinboard_appearance.mjs
           node scripts/test_pinboard_blank.mjs
@@ -67,6 +68,7 @@ jobs:
           node scripts/test_workspace_window_browser.mjs
           node scripts/test_workspace_swaps_browser.mjs
           node scripts/test_pinboard_folder_tags_browser.mjs
+          node scripts/test_pinboard_popout_browser.mjs
       - name: Verify actual MV3 Shelf launcher, bookmarks and storage
         run: |
           export ATLAS_PLAYWRIGHT_MODULE="$RUNNER_TEMP/atlas-browser/node_modules/playwright/index.mjs"
