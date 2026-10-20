@@ -53,3 +53,17 @@ Atlas begins as a pinboard and bookmark organizer because people already possess
 ---
 
 **Status:** Owner-directed product philosophy and forward-looking architectural rationale, not a claim that every editor, transposition, or publishing capability is implemented. Read alongside the existing Shelf-first, adaptive publishing, and universal composition proposals.
+
+## Addendum — Familiarity, Standardization, and Aesthetic Ease
+
+**Atlas should feel immediately recognizable, not like another system users must learn.** The desired first reaction is *“Hey, I know this. It works the way I expect.”* Never *“Oh, no—now I have to figure out a whole new interface.”*
+
+Intuitive interaction, established conventions, and aesthetic quality are foundational requirements, not decorative extras. Atlas should minimize cognitive load by borrowing proven patterns for navigation, drag-and-drop, selection, editing, saving, organizing, searching, undo/redo, and contextual actions. Use consistent labels, predictable placement, immediate feedback, sensible defaults, and progressive disclosure. Avoid novel controls and terminology where familiar equivalents already work.
+
+The interface should be visually polished and pleasurable to explore without sacrificing legibility, responsiveness, accessibility, or speed. A beautiful interface that is confusing has failed; an intuitive interface that feels neglected also falls short of the intended experience.
+
+The powerful, unusual parts of Atlas—object graphs, transposable compositions, template preparation, agent APIs, local/R2 reference handling—should be implemented beneath the ordinary actions people already recognize. A user should be able to arrive, understand the pinboard, collect and arrange bookmarks, open the editor, and create something worthwhile without first studying Atlas's architecture.
+
+**Design acceptance test:** Can a first-time user predict what a control does, perform a familiar task without instruction, recover from mistakes, and feel that the result is coherent and aesthetically considered? If not, simplify or align with established conventions before adding features.
+
+**Guiding principle: Familiar on the surface. Consistent throughout. Powerful underneath. Beautiful by design.**
