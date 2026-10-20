@@ -274,7 +274,7 @@ function open(p, item) {
 }
 function renderPreview(p) {
   releasePreview(p);
-  const root = p.dom.querySelector(".viewer");
+  const root = p.viewerDom || p.dom.querySelector(".viewer");
   root.replaceChildren();
   const head = el("div");
   head.className = "viewer-head";
@@ -318,7 +318,7 @@ function renderPreview(p) {
     const b = button(label, () => {
       p.previewTab = id;
       renderPreview(p);
-      p.dom.querySelector(`[data-tab="${id}"]`)?.focus();
+      p.viewerDom.querySelector(`[data-tab="${id}"]`)?.focus();
     });
     b.id = content.id + "-" + id;
     b.dataset.tab = id;
@@ -340,7 +340,7 @@ function renderPreview(p) {
                 : (ids.indexOf(id) + (e.key === "ArrowRight" ? 1 : 3)) % 4
           ];
         renderPreview(p);
-        p.dom.querySelector(`[data-tab="${p.previewTab}"]`)?.focus();
+        p.viewerDom.querySelector(`[data-tab="${p.previewTab}"]`)?.focus();
       }
     };
     tabs.append(b);
@@ -454,6 +454,7 @@ function buildPane(p, index) {
   hierarchy.append(navigation, crumbs, tools, items, status);
   const viewer = el("section");
   viewer.className = "viewer";
+  p.viewerDom=viewer;
   viewer.setAttribute("aria-label", "Selected item preview");
   const edge = el("div");
   edge.className = "splitter row-splitter";
@@ -465,15 +466,16 @@ function buildPane(p, index) {
   splitters.push(
     bindSplitter(edge, {
       axis: "y",
-      value: () => preferences.heights[index],
+      value: () => preferences.reversed?.[index]?100-preferences.heights[index]:preferences.heights[index],
       bounds: () => [25, 75],
       geometry: () => {
         const upper = hierarchy.getBoundingClientRect(),
           lower = viewer.getBoundingClientRect();
-        return { start: upper.top, size: upper.height + lower.height };
+        return { start: preferences.reversed?.[index]?lower.top:upper.top, size: upper.height + lower.height };
       },
       change: (value) => {
-        preferences.heights[index] = value;
+        preferences.heights[index] = preferences.reversed?.[index]?100-value:value;
+        windows.resize(index,preferences.heights[index]);
         layout();
       },
       commit: save,

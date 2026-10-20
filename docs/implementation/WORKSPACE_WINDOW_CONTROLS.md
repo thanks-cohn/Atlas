@@ -1,5 +1,7 @@
 # Workspace window controls and adaptive commands — Section 5A
 
+**Historical expansion contract:** Superseded by the owner’s 2026-10-20 [non-destructive header reclamation clarification](WORKSPACE_HEADER_RECLAMATION.md). The full-region hiding and exclusive pane focus below describe the earlier implementation, not the current contract.
+
 Owner direction: latest Section5A of [Stage 2 request](../requests/ATLAS_WORKSPACE_STAGE_2_VISUAL_AND_INTERACTION_COMPLETION.md), baseline main `5226a15`. Extends the shared explorer from merged PRs4/5; no replacement of providers or source models.
 
 ## Implemented contract

@@ -47,6 +47,7 @@ assert.deepEqual(layoutPreferences({ dual: true, ratio: 99, height: -1 }), {
   dual: true,
   ratio: 80,
   heights: [25, 25],
+  reversed:[false,false],swapped:false,viewerSwapped:false,
 });
 assert.equal(safeURL("javascript:alert(1)"), null);
 assert.equal(safeURL("file:///etc/passwd"), null);

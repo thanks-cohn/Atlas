@@ -46,7 +46,7 @@ assert.equal(
   "Focus restore preserves closed regions",
 );
 maximizeWindow(state, 0, "pane");
-assert.deepEqual(visiblePanes(state), [0]);
+assert.deepEqual(visiblePanes(state), [0,1], "Expansion never hides another column");
 restoreWindows(state);
 assert.deepEqual(visiblePanes(state), [0, 1]);
 assert.equal("resources" in state, false);
