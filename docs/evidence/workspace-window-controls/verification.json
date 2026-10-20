@@ -37,7 +37,7 @@
   },
   "installed_mv3": {
     "local": "NOT_RUN: local headless-shell does not support the extension worker",
-    "hosted": "Pending CI requiring full Chromium: updated smoke covers real worker, Chrome bookmarks/storage, Shelf launcher, edge drag, window controls and viewport maximize/restore/dock/close/reopen"
+    "hosted": "PASS run39416663760 job118607234345, full Chromium151.0.7922.34; real worker/bookmarks/storage, Shelf launcher, edge drag, controls, viewport maximize/restore, command dock, close/reopen"
   },
   "desktop_helper_windows_gui_screenreader_physical_touch_4gb": "NOT_RUN",
   "package": {
@@ -65,5 +65,23 @@
     "docs/evidence/workspace-window-controls/maximized-390.png": "4c89e248140e978e4ae319d1373edafcb34a4c18cc028fecef9a015dcdced57e",
     "docs/evidence/workspace-window-controls/normal-1366.png": "f4dcf9562f2a6f68f0fc3c8a3f558dd106bea9eee3a3c6da2a587fe261eee5de",
     "docs/evidence/workspace-window-controls/one-maximized-1366.png": "3a646ca3d12ece6ad50817f015ee7ecf227e132d77a11f81aeb081408ac30732"
+  },
+  "hosted": {
+    "tested_commit": "10c8c047e4a5df5e53893110438d8d4e580c49a4",
+    "source_unchanged_by_later_receipt_update": true,
+    "development_run": 39416663760,
+    "development_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39416663760",
+    "conclusion": "success",
+    "browser_job": 118607234345,
+    "foundation_job": 118607234783,
+    "rendered_existing_and_window_suites": "PASS Chromium151.0.7922.34, synthetic provider APIs",
+    "real_mv3_window_controls_dock_close_reopen": "PASS",
+    "python": "170 tests OK skipped33;22 model links",
+    "extension_cli_native_recovery": "PASS",
+    "windows_boundary_run": 39416663763,
+    "windows_boundary_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39416663763",
+    "windows_boundary_job": 118607234387,
+    "windows_boundary_conclusion": "success",
+    "windows_boundary_scope": "Actual NT handle/identity/junction/private-alias tests; not Windows GUI or desktop helper preview qualification"
   }
 }
