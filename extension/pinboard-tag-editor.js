@@ -31,7 +31,10 @@ export function installTagEditor({onChanged,localAdapter=()=>null,suggestions=()
     const local=localAdapter(node);
     const dialog=make('dialog');dialog.className='pin-tag-editor';dialog.setAttribute('aria-label','Edit card tags');
     const head=make('div');head.className='tag-editor-head';const close=make('button','×');close.setAttribute('aria-label','Close tag editor');close.onclick=()=>dialog.close();head.append(make('h2','Card tags'),close);
-    const title=make('p',node.title || node.url),attached=make('div'),label=make('label','Add an Existing Tag'),select=make('select'),add=make('button','Add Tag'),message=make('p','Loading tags…'),retry=make('button','Retry');retry.hidden=true;message.setAttribute('role','status');label.append(select);dialog.append(head,title,attached,label,add,message,retry);
+    const title=make('p',node.title || node.url),attached=make('div'),label=make('label','Add an Existing Tag'),select=make('select'),add=make('button','Add Tag'),message=make('p','Loading tags…'),retry=make('button','Retry');retry.hidden=true;message.setAttribute('role','status');label.append(select);
+    const searchLabel=make('label','Search existing tags'),search=make('input');search.type='search';search.placeholder='Find a tag…';search.setAttribute('aria-label','Search existing tags');searchLabel.append(search);dialog.append(head,title,attached,searchLabel,label,add,message,retry);
+    const keyOf=tag=>String(tag).normalize('NFKC').trim().toLowerCase();
+    const vocabulary=()=>{const values=new Map();for(const tag of [...ownedTags(),...knownTags,...suggestions()])if(!values.has(keyOf(tag)))values.set(keyOf(tag),tag);return [...values.values()];};
     const ownedTags=()=>local?(snapshot?.tags || []):[...new Set(resources(snapshot.data).flatMap(resource=>snapshot.data.tags?.[resource.id] || []))];
     let snapshot=null,busy=false;const knownTags=new Set();select.size=6;select.setAttribute('aria-label','Existing tags. Single click highlights; double-click or Enter toggles the tag.');
     const resources=data=>Object.values(data.resources || {}).filter(r=>r.kind==='bookmark' && r.locators?.some(l=>l.provider==='web' && l.reference===node.url));
@@ -40,14 +43,15 @@ export function installTagEditor({onChanged,localAdapter=()=>null,suggestions=()
       const data=snapshot.data || {},owned=ownedTags();for(const tag of owned)knownTags.add(tag);
       attached.replaceChildren(...owned.map(tag=>{const b=make('button',tag+' ×');b.setAttribute('aria-label','Remove tag '+tag);b.onclick=()=>mutate('untag',tag);return b;}));
       if(!owned.length)attached.append(make('p','No tags attached.'));
-      const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const known=[...new Map([...knownTags,...suggestions()].map(tag=>[tag.normalize('NFKC').trim().toLowerCase(),tag])).values()].sort((a,b)=>a.localeCompare(b));
-      const placeholder=make('option',known.length?'Double-click or Enter to toggle':'No saved tags');placeholder.value='';select.replaceChildren(placeholder,...known.map(tag=>{const option=make('option',tag+(owned.includes(tag)?' ✓':''));option.value=tag;return option;}));select.value=known.includes(prior)?prior:'';select.scrollTop=scroll;controls();
+      const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const query=keyOf(search.value),known=vocabulary().filter(tag=>keyOf(tag).includes(query)).sort((a,b)=>Number(keyOf(b)===query)-Number(keyOf(a)===query) || a.localeCompare(b,undefined,{sensitivity:'base',numeric:true}));
+      const placeholder=make('option',known.length?'Double-click or Enter to toggle':search.value?'No matching tags':'No saved tags');placeholder.value='';select.replaceChildren(placeholder,...known.map(tag=>{const option=make('option',tag+(owned.includes(tag)?' ✓':''));option.value=tag;return option;}));select.value=known.includes(prior)?prior:'';select.scrollTop=scroll;controls();
     }
+    search.oninput=()=>{if(snapshot)paint();};search.onkeydown=event=>{if(event.key==='ArrowDown' || event.key==='Enter'){event.preventDefault();event.stopPropagation();const option=[...select.children].find(option=>option.value);if(option){select.value=option.value;controls();if(event.key==='Enter')mutate('tag',option.value);else select.focus?.();}}};
     async function load(){busy=true;retry.hidden=true;controls();try{const saved=await chrome.storage?.local.get([TAG_VOCABULARY,'atlas-image-tagging-runs-v1']);for(const tag of saved?.[TAG_VOCABULARY] || [])knownTags.add(tag);
       // Include earlier successful runs too; this reads predictions without inference.
       for(const sources of Object.values(saved?.['atlas-image-tagging-runs-v1'] || {}))for(const value of Object.values(sources))for(const run of modelRuns(value))for(const prediction of run.suggestions || [])if(typeof prediction.tag==='string' && prediction.tag.trim())knownTags.add(prediction.tag.trim());snapshot=local?await local.read():await request();paint();message.textContent='';}catch(error){message.textContent=error.message;retry.hidden=false;}finally{busy=false;controls();}}
     async function mutate(action,tag,allowNew=false){
-      if(busy)return;busy=true;controls();retry.hidden=true;
+      if(busy)return;if(action==='tag' && ownedTags().some(value=>keyOf(value)===keyOf(tag))){message.textContent='Already attached.';return true;}busy=true;controls();retry.hidden=true;
       try{
         if(local){snapshot=await local.mutate(action,tag);await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_VOCABULARY);await chrome.storage.local.set({[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});});}else await navigator.locks.request('atlas-pages-v1',async()=>{
           const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Close and select it again.');
@@ -55,7 +59,7 @@ export function installTagEditor({onChanged,localAdapter=()=>null,suggestions=()
           if(action==='tag' && !allowNew && ![...knownTags,...suggestions()].includes(tag))throw Error('That tag is no longer available. Retry to reload.');
           if(action==='tag' && !matches.length){snapshot=await request({action:'add_resource',args:{kind:'bookmark',title:node.title || node.url,locators:[{provider:'web',reference:node.url}]},expected_revision:snapshot.revision});matches=resources(snapshot.data);if(!matches.length)throw Error('Could not confirm bookmark registration. Retry.');}
           for(const resource of (action==='tag'?matches.slice(0,1):matches)){
-            if(action==='tag' && (snapshot.data.tags?.[resource.id] || []).includes(tag))continue;
+            if(action==='tag' && (snapshot.data.tags?.[resource.id] || []).some(value=>keyOf(value)===keyOf(tag)))continue;
             if(action==='untag' && !(snapshot.data.tags?.[resource.id] || []).includes(tag))continue;
             snapshot=await request({action,args:{resource:resource.id,tag},expected_revision:snapshot.revision});
           }
@@ -69,7 +73,7 @@ export function installTagEditor({onChanged,localAdapter=()=>null,suggestions=()
     select.onpointermove=event=>{const option=event.target;if(option?.tagName?.toLowerCase()==='option' && option.value && !busy){select.value=option.value;controls();}};select.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();toggleSelected();}};
     select.onchange=controls;add.onclick=()=>{if(select.value)mutate('tag',select.value);};retry.onclick=load;
     const createForm=make('form'),createLabel=make('label','Create New Tags'),createInput=make('input'),createButton=make('button','Create & Add');createInput.placeholder='Design, Travel, Ideas';createInput.maxLength=8000;createInput.setAttribute('aria-label','New tags, separated by commas');createButton.type='submit';createLabel.append(createInput);createForm.append(createLabel,createButton);dialog.append(createForm);
-    createForm.onsubmit=async event=>{event.preventDefault();if(busy)return;const tags=[...new Set(createInput.value.split(',').map(t=>t.trim()).filter(Boolean))];if(!tags.length || tags.length>100 || tags.some(t=>t.length>80)){message.textContent='Enter up to 100 tags, each no longer than 80 characters.';return;}createButton.disabled=true;try{for(const tag of tags)if(!await mutate('tag',tag,true))return;createInput.value='';}finally{createButton.disabled=false;createInput.focus?.({preventScroll:true});}};
+    createForm.onsubmit=async event=>{event.preventDefault();if(busy)return;const tags=[...new Map(createInput.value.split(',').map(t=>t.trim()).filter(Boolean).map(tag=>{const existing=vocabulary().find(value=>keyOf(value)===keyOf(tag));return [keyOf(tag),existing || tag];})).values()];if(!tags.length || tags.length>100 || tags.some(t=>t.length>80)){message.textContent='Enter up to 100 tags, each no longer than 80 characters.';return;}createButton.disabled=true;try{for(const tag of tags)if(!await mutate('tag',tag,true))return;createInput.value='';}finally{createButton.disabled=false;createInput.focus?.({preventScroll:true});}};
     dialog.addEventListener('cancel' ,event=>{if(busy)event.preventDefault();});dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();await load();
   };
 }

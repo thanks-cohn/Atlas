@@ -370,3 +370,26 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 .pin-initial-cover{background:#f8f3f4;color:#a47b85}
 :root[data-board-appearance=dark] :is(.pin-initial-cover,.pin-loading){background:#171c34;color:var(--night-muted)}
 :root[data-board-appearance=dark] :is(.pin-initial-cover>strong,.pin-loading strong,.detail-placeholder-logo){background:var(--board-accent);color:#092333}
+
+/* Local organizational Sections reuse the preview's surfaces and controls. */
+.preview-area-header{display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap}
+.preview-area-header>strong,.preview-area-header>h4{margin:0 auto 0 0;font-size:inherit;font-weight:600}
+.preview-local-section{border:1px solid var(--border,#d8dce3);border-radius:8px;padding:10px;margin:10px 0}
+.preview-section-items{display:grid;gap:8px}
+.preview-section-item{min-width:0;display:grid;gap:4px}
+.preview-section-item>.preview-note,.preview-section-item>.preview-bookmark{width:100%}
+.preview-section-item>select{justify-self:end;max-width:100%;font:inherit;font-size:12px}
+.pin-section-editor{width:min(420px,calc(100vw - 32px));border:1px solid #cbd1db;border-radius:12px;padding:20px;box-shadow:0 18px 70px #0003;color:inherit;background:var(--surface,#fff)}
+.pin-section-editor::backdrop{background:#0005}
+.pin-section-editor h2{margin-top:0;font-size:18px}
+.pin-section-editor p{font-size:13px;line-height:1.5}
+.preview-section-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pin-section-editor form{display:grid;gap:10px;margin-bottom:12px}
+.pin-section-editor input,.pin-section-editor select{box-sizing:border-box;width:100%;padding:8px;font:inherit}
+.pin-tag-editor input[type=search]{box-sizing:border-box;width:100%;padding:8px;font:inherit}
+.preview-area-header button,.preview-section-actions button{padding:6px 10px;border-radius:8px;font-size:12px}
+.preview-local-section{border-color:var(--pin-line,#e7dfe5)}
+.preview-section-item>select{padding:5px 8px;border:1px solid var(--pin-line,#e7dfe5);border-radius:7px;background:inherit;color:inherit}
+.pin-section-editor{background:var(--pin-surface,#fff);border-color:var(--pin-line,#e7dfe5)}
+[data-board-appearance=dark] .pin-section-editor{background:#182238;color:#ecedfa}
+[data-board-appearance=dark] .pin-section-editor :is(input,select){background:#202c42;color:inherit;border:1px solid var(--pin-line)}

@@ -62,6 +62,29 @@ try{
   await page.locator('#folder').selectOption('blank');
   await page.locator('#board-menu > summary').focus();await page.keyboard.press('Enter');
   await page.locator('.pin-visual').filter({has:page.locator('img[alt="Independent"]')}).click();
+  // Integration: the same authored Card uses its existing content adapter,
+  // while the organization adapter stores only local references.
+  await page.locator('#preview-notes').click();
+  const notes=page.locator('#preview-notes-panel');
+  await notes.getByRole('button',{name:'+ Section',exact:true}).click();
+  await page.getByRole('button',{name:'Create New Section',exact:true}).click();
+  await page.getByRole('textbox',{name:'Section name',exact:true}).fill('Integration');
+  await page.locator('.pin-section-editor').getByRole('button',{name:'Add Section',exact:true}).click();
+  await page.waitForSelector('.pin-section-editor',{state:'detached'});
+  await notes.getByRole('button',{name:'Add Note',exact:true}).click();
+  await notes.getByLabel('Title',{exact:true}).fill('Integration note');
+  await notes.getByLabel('Note',{exact:true}).fill('Local authored content');
+  await notes.getByRole('button',{name:'Save',exact:true}).click();
+  await notes.getByRole('combobox',{name:'Section for Integration note'}).selectOption({label:'Integration'});
+  await page.waitForFunction(()=>document.querySelector('#preview-notes-panel .preview-local-section .preview-note'));
+  await notes.locator('.preview-local-section .preview-note').waitFor({state:'visible'});
+  await page.keyboard.press('Escape');
+  await page.locator('.pin-visual').filter({has:page.locator('img[alt="Independent"]')}).click();
+  if(await page.locator('#preview-notes').getAttribute('aria-expanded')!=='true')await page.locator('#preview-notes').click();
+  await page.waitForFunction(()=>document.querySelector('#preview-notes-panel .preview-local-section .preview-note')?.textContent.includes('Local authored content'));
+  await notes.locator('.preview-local-section .preview-note').scrollIntoViewIfNeeded();
+  await notes.locator('.preview-local-section .preview-note').waitFor({state:'visible'});
+  if(process.env.ATLAS_POPOUT_SCREENSHOT)await page.screenshot({path:process.env.ATLAS_POPOUT_SCREENSHOT});
   await page.locator('#preview-add-tag').click();
   await page.waitForSelector('.pin-tag-editor[open]');
   const picker=page.locator('.pin-tag-editor select');
@@ -75,11 +98,26 @@ try{
   assert.ok((await page.locator('#tag-field').textContent()).includes('fixture'));
   assert.ok((await page.locator('#tag-field').textContent()).includes('architecture'));
   assert.equal(await evidence(),initial);
+  // Explicit gallery materialization preserves existing membership references;
+  // the newly added image starts with no copied notes.
+  await page.locator('#board-menu > summary').focus();await page.keyboard.press('Enter');
+  await page.locator('.pin-visual').filter({has:page.locator('img[alt="Independent"]')}).click();
+  await page.locator('#replace-image').click();
+  await page.locator('#cover-url').fill(origin+'/fixture/new-image.jpg');
+  await page.locator('#save-image-url').click();
+  await page.waitForFunction(()=>document.querySelector('#image-position').textContent.includes('2 / 2'));
+  if(await page.locator('#preview-notes').getAttribute('aria-expanded')!=='true')await page.locator('#preview-notes').click();
+  assert.equal(await notes.locator('.preview-note').count(),0);
+  await page.locator('#previous-image').click();
+  if(await page.locator('#preview-notes').getAttribute('aria-expanded')!=='true')await page.locator('#preview-notes').click();
+  await notes.locator('.preview-local-section .preview-note').waitFor({state:'visible'});
+  assert.ok((await notes.locator('.preview-local-section .preview-note').textContent()).includes('Local authored content'));
+  await page.keyboard.press('Escape');
   await page.goto(origin+'/pinboard.html?id=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
   await page.waitForFunction(()=>document.querySelectorAll('#pins .pin').length>0);
   assert.equal(await page.locator('#folder-tags').isChecked(),true);
   assert.ok((await page.locator('#tag-field').textContent()).includes('architecture'));
   assert.equal(await evidence(),initial);
   assert.equal(errors.length,0);
-  console.log('PASS Chromium '+browser.version()+': actual settings controls, persisted OFF after reload, ON restoration with byte-identical folder evidence, existing tag dropdown, unrelated-card manual assignment, matching manual labels retained OFF, independent second board ON. Synthetic Chrome APIs; installed MV3/native NOT_RUN.');
+  console.log('PASS Chromium '+browser.version()+': actual settings controls, persisted OFF after reload, ON restoration with byte-identical folder evidence, existing tag dropdown, unrelated-card manual assignment, matching manual labels retained OFF, independent second board ON, authored Section/content reopen and explicit image migration without content copying. Synthetic Chrome APIs; installed MV3/native NOT_RUN.');
 }finally{await browser?.close();await new Promise(done=>server.close(done));}
