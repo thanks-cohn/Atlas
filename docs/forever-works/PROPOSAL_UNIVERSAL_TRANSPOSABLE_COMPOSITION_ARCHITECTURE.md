@@ -353,3 +353,97 @@ Record optional, permissioned transformation examples for future evaluation and 
 ### B.6. Governing clarification
 
 > **Initially, Atlas Cards and Slices are different presentation families. A Pinboard Card opens into a richer Card Pop-out; a website-representative Slice can drop down into a miniature page section that maintains the originating site's aesthetic and purpose. Both share Atlas's composition, style, and transformation conventions so they can later be specialized, adapted, and transposed across compatible projects.**
+
+
+---
+
+## Addendum C — Presentation-Independent Composition and Artistic Refinement (2026-10-19)
+
+**Status:** Owner-directed long-term product and architectural proposal. A future developer or coding agent may draw upon it, but **this is not a Codex request, implementation order, fixed technical specification, or claim that the capabilities already exist**. Architectural choices are intentionally open for investigation.
+
+### C.1. The central proposition
+
+A website structured in accordance with Atlas's shared conventions should be capable of producing an **aesthetically coherent, meaningful Slice regardless of the source website's original styling**, provided the receiving composition engine can interpret its data, relationships, semantic roles, and presentation intent.
+
+The originating page might be a polished magazine, a bare wiki, or a visually unconventional portfolio. The resulting Atlas Slice should not need to inherit that page's CSS or arrangement to be clear and attractive. It should carry the **information, purpose, organization, and important relationships** into an independently composed presentation. The same principle may apply to Cards, their Pop-outs, expanded Slices, and eventually whole websites.
+
+The proposed name for this principle is **Presentation-Independent Compositional Fidelity (PICF)**:
+
+> Preserve a composition's meaning, relationships, hierarchy, and intended function independently of its original appearance, so compatible templates can reinterpret it appropriately in different contexts.
+
+This is a *design objective*, not an automatic guarantee of beauty or lossless conversion. It depends on the expressiveness of the conventions and the quality of the receiving templates.
+
+### C.2. What Atlas conventions must make intelligible
+
+The system's promise depends upon clear distinctions between:
+
+- **Objects:** Anything independently identifiable and addressable, from an image or note to a grouped Pinboard or an entire page.
+- **Groupings:** Explicitly meaningful memberships, collections, sequences, and associations. A grouping can itself be an object and can also contain or reference other groups.
+- **Semantic relationships:** Why items belong together; which caption describes which image; what is featured, supplemental, chronological, navigational, or otherwise related.
+- **Composition intent:** What the reader should notice first; which relationships should remain visible; how a region is meant to be consumed or interacted with.
+- **Presentation rules:** Fonts, palette, header conventions, spacing, geometry, responsive behavior, and other choices that can be supplied or changed by a destination template.
+
+These layers should be separable so that the same structured objects can produce many presentations without creating and maintaining separate copies of their canonical data. Both grouped and ungrouped objects must remain transposable.
+
+### C.3. One framework, distinct initial experiences
+
+Atlas should initially distinguish **two presentation families**:
+
+**Card → Card Pop-out:** The existing Pinboard is the exemplary case. It is simultaneously a grouped object and a Card. The Card gives a concise identity and the Pop-out exposes richer content, attachments, notes, and relationships. Its purpose is object inspection and interaction. **It is not inherently a Slice.**
+
+**Slice → Expanded Slice:** A Slice is closer to a curated, representative *row or section of a website*, intended to appear within another website or composition. It conveys something of the source's purpose and structure in limited space. On interaction, it may **drop down into an expanded, miniature page-like section**, giving a fuller experience of the originating website or selected section. In contexts that call for it, the expanded view can preserve selected elements of the source's aesthetic identity without being forced to replicate its exact CSS.
+
+These distinctions describe the initial conceptual UX, not eternal boundaries. The two families and their expansions should still share a **common Atlas composition, style, and template language**. Later they may be specialized and differentiated further.
+
+### C.4. Template ideals: convention, interpretation, and variation
+
+Atlas's template engine would interpret structured objects and composition intent instead of simply copying source HTML. Two useful initial aesthetic families remain **Pristine Publishing** (editorial, spacious, image- and typography-led) and **Wiki** (structured, navigable, information- and relationship-led). These are different ways of presenting the **same underlying data**, not incompatible object formats.
+
+An appropriate template may choose typography, header treatment, spacing, palette, layout rhythm, image crops, information density, and responsive reflow. Changing a small number of these parameters may yield substantial visual variety without reconstructing the data or original groupings.
+
+Rather than asserting one geometric rule will work in every situation, Atlas should accumulate testable composition conventions and examples showing which transformations succeed, where they fail, and what information needs to remain visible.
+
+### C.5. Artistic Refinement: a human finishing stage
+
+Automatic composition should produce an attractive, structurally sound *starting point*. The creator must then be able to make the small, intentional adjustments that finish the work: moving a block, changing prominence, resizing an image, adjusting spacing or typography, choosing a different header treatment, refining a crop, or changing a palette.
+
+Call this stage **Artistic Refinement**.
+
+Ideally the experience uses an **established, extensible visual website editor or standardized editing model** rather than requiring Atlas to invent every authoring interaction. Such an editor might offer intuitive creation, selection, dragging, grouping/ungrouping, nesting, resizing, and movement of sections, rows, Cards, Slices, or other addressable elements. Existing editor technologies (for example GrapesJS or Puck) are candidates for exploration, not selected dependencies or predetermined solutions.
+
+The important design boundary: **the visual editor is an authoring surface, not the ultimate owner of the data**. Its edits should correspond to portable Atlas structures and, where possible, be represented as a separate user-authored refinement layer rather than destructive mutations of the original resources, groupings, or template ideal. The design should permit re-editing and future translation into another compatible project.
+
+Some artistic decisions are legitimately specific to a format or viewport. Such decisions should be preserved where applicable, transformed when feasible, and otherwise surfaced as explicit incompatibilities—not blindly imposed everywhere.
+
+### C.6. A potential transformation journey
+
+An illustrative conceptual flow, without prescribing software implementation:
+
+1. Someone brings an Atlas-compatible website, a portion of a website, a Pinboard grouping, or structured external JSON.
+2. Atlas recognizes meaningful objects, groupings, hierarchy, and source intent through agreed conventions; less-structured external sites may require interpretation or annotation.
+3. A presentation process determines what to show and how to express it as a Card, Card Pop-out, Slice, expanded Slice, or site.
+4. A suitable template ideal generates a legible and aesthetically coherent arrangement for its container and context.
+5. The creator optionally enters Artistic Refinement using a capable visual editing environment.
+6. The result and its intent can be saved in portable structured form, published, reopened, or transposed to another compatible project.
+
+In principle, a conforming website or composition could be reused across very many future projects **without manually rebuilding it for each destination**. This depends on shared conventions and receiving-template support; unusual layouts, unsupported interactions, and arbitrary third-party code may need adapters, fallbacks, or human correction.
+
+### C.7. Learning from composition and refinement
+
+The long-term goal is to gather sufficiently rich, appropriately authorized examples of **source structure → generated composition → human Artistic Refinement → accepted result**. Such examples could help Atlas test its conventions, compare design strategies, and eventually train or guide AI systems to generalize the compositional principles.
+
+Importantly, the data corpus should include semantic structures and relationships, template settings, viewport conditions, user changes, and preservation failures—not just screenshots. There is no requirement to introduce a heavy model in the initial product; deterministic, explainable rules and hand-designed examples can establish the foundation.
+
+### C.8. Open questions to guide future exploration
+
+- What minimum amount of semantic and grouping information allows reliable conversion into a human-readable, aesthetically satisfying Slice?
+- How can a receiving template preserve source **purpose** while changing virtually all source **styling**?
+- Which kinds of page sections are naturally representable as Slices, and when should Atlas instead recommend a Card or another representation?
+- What distinguishes a small user refinement from an intentional change in composition meaning?
+- Which existing editor can best manipulate Atlas-compatible structures and round-trip them without becoming a lock-in?
+- How can Atlas measure semantic, relational, functional, responsive, and aesthetic fidelity separately?
+- What conventions encourage third-party adoption without forcing sites to use a single visual identity?
+
+### C.9. Guiding statement
+
+> **The website provides structured meaning; Atlas interprets its composition; the template supplies an appropriate aesthetic; and the artist refines the result.** Through shared conventions, objects, groupings, Cards, Pop-outs, Slices, and ultimately whole websites become portable, reusable expressions of the same underlying information.
