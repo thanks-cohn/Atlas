@@ -7,6 +7,14 @@ Atlas begins with the humble bookmark deliberately. A bookmark is an accessible,
 
 This beginning is not a disposable onboarding gimmick. **The bookmark card is the first native example of the Atlas object model**, and the pinboard is its first composition interface. Atlas should make the user's existing bookmarks accessible as reusable objects from the moment they enter the editor, without requiring new uploads, paid compute, or a Cloudflare account.
 
+## The pinboard is an invitation, not a new mental model
+
+A pinboard is deliberately familiar and inviting. People already know how to collect, look around, group, sort, and rearrange things on a board. Atlas should let them **feel their way around** before requiring them to understand a new system. The goal is not to impose a novel mental model on ordinary users, but to allow familiar actions to acquire greater power naturally.
+
+The deeper object and relationship architecture should generally stay behind the interface: users see bookmarks and pinboards, not schemas and object graphs; they drag items into sections, not construct semantic compositions by hand. As their needs grow, they can open notes, attachments, relationships, the visual editor, templates, and agent workflows without abandoning the same intuitive language of collecting and arranging.
+
+**Design principle — Familiar first, powerful underneath:** preserve familiar interaction conventions, reveal complexity progressively, and never make understanding the architecture a prerequisite for creating something worthwhile.
+
 ## Why start here?
 
 People have already done meaningful work by discovering and collecting sources. A collection of relevant bookmarks and preview imagery might account for a meaningful portion of the material for a research project, article, catalog, or personal webpage—perhaps **20% in an illustrative case**, not a measured or promised universal figure. The rest may consist of the user's own notes, captions, analysis, attachments, relationships, and additional sources. Atlas should preserve and compound that earlier work rather than ask them to start with a blank page.
