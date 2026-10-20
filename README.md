@@ -32,6 +32,10 @@ ATLAS is intended as a **top-tier Chrome Web Store-compatible file explorer** wi
 
 [The Shelf-First Bookmarks, Composable Groupings, and Portable Publishing proposal](docs/forever-works/PROPOSAL_SHELF_FIRST_BOOKMARKS_COMPOSITIONS_AND_PORTABLE_PUBLISHING.md) records owner direction for a native Chrome bookmarks explorer in the Atlas shelf; group membership as resource access (not automatic association or display); individually annotated bookmarks, images, notes and documents; user-directed composition of grouped resources into pinboards, structured pages and Liquid canvases; Portfolio-inspired seven-visible-image gallery navigation; local-first editing; complete static-site/project export; and optional Cloudflare or GitHub Pages deployment. This is a **future-facing proposal**, not proof that these workflows exist yet.
 
+## Universal transposable composition architecture — proposal
+
+[Universal Transposable Composition Architecture](docs/forever-works/PROPOSAL_UNIVERSAL_TRANSPOSABLE_COMPOSITION_ARCHITECTURE.md) extends portable cards and slices to **every addressable part of an Atlas-organized website**, from ungrouped resources and reusable groups to arbitrary nested sections and whole pages. It proposes shared composition contracts, aesthetic template ideals, responsive reinterpretation, and an Artistic Refinement stage so structures can be carried between compatible projects rather than rebuilt manually. This is owner-directed future architecture, **not implemented functionality**.
+
 ## Adaptive publishing and presentation — proposal
 
 [Adaptive Publishing and Presentation System](docs/forever-works/PROPOSAL_ADAPTIVE_PUBLISHING_AND_PRESENTATION_SYSTEM.md) proposes composable Pages, independently templated Gallery/Pinboard/Article objects, reusable referenced object Slices, coordinated Page-to-Slice template families with instance overrides, and premium publishing experiences. This is future product direction, **not implemented functionality**.
