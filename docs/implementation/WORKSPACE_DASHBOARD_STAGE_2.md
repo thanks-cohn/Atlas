@@ -1,5 +1,7 @@
 # Workspace Stage 2 — resizable comparison workspace
 
+The later [Section5A window-control implementation](WORKSPACE_WINDOW_CONTROLS.md) extends maximize/restore, title bars and adaptive commands. This record preserves the prior Stage2 baseline.
+
 Owner request: [complete Stage 2 brief](../requests/ATLAS_WORKSPACE_STAGE_2_VISUAL_AND_INTERACTION_COMPLETION.md). Baseline main: `76070f0` (includes merged PR #4). This supersedes the layout/preview limitations in WORKSPACE_DASHBOARD_V1.md; it does not complete the full original dashboard brief.
 
 ## Preserved contract and architecture

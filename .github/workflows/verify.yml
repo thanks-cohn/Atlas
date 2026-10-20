@@ -32,6 +32,7 @@ jobs:
           node scripts/test_workspace.mjs
           node scripts/test_workspace_ui.mjs
           node scripts/test_workspace_preview.mjs
+          node scripts/test_workspace_windows.mjs
           node scripts/test_explorer_entry_point.mjs
           node scripts/test_pinboard_rename.mjs
           node scripts/test_source_navigation.mjs
@@ -60,7 +61,9 @@ jobs:
         run: |
           export ATLAS_PLAYWRIGHT_MODULE="$RUNNER_TEMP/atlas-browser/node_modules/playwright/index.mjs"
           export ATLAS_WORKSPACE_EVIDENCE="$RUNNER_TEMP/workspace-evidence"
+          export ATLAS_WINDOW_EVIDENCE="$RUNNER_TEMP/workspace-evidence/windows"
           node scripts/test_workspace_browser.mjs
+          node scripts/test_workspace_window_browser.mjs
       - name: Verify actual MV3 Shelf launcher, bookmarks and storage
         run: |
           export ATLAS_PLAYWRIGHT_MODULE="$RUNNER_TEMP/atlas-browser/node_modules/playwright/index.mjs"

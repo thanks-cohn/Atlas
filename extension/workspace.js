@@ -10,6 +10,7 @@ import { PROVIDERS, listing, safeURL } from "./workspace-providers.js";
 import { bindSplitter } from "./workspace-splitter.js";
 import { fillPreview, releasePreview } from "./workspace-preview.js";
 import { showContextMenu } from "./workspace-menu.js";
+import { createWorkspaceWindows } from "./workspace-windows.js";
 const $ = (id) => document.getElementById(id),
   panes = [paneState(), paneState("projects")];
 let preferences = layoutPreferences(),
@@ -33,6 +34,7 @@ const button = (label, fn) => {
 let saveQueue = Promise.resolve();
 const splitters = [];
 function save() {
+  if (windows.isFocused()) return Promise.resolve();
   const snapshot = structuredClone(preferences);
   saveQueue = saveQueue
     .catch(() => {})
@@ -42,10 +44,7 @@ function save() {
   });
 }
 function expand(mode = "") {
-  $("panes").dataset.expand = mode;
-  $("restore").disabled = !mode;
-  for (const n of document.querySelectorAll("[data-expand]"))
-    n.setAttribute("aria-pressed", String(n.dataset.expand === mode));
+  windows.expand(mode);
 }
 function layout() {
   const root = $("panes");
@@ -69,6 +68,7 @@ function layout() {
   $("dual").setAttribute("aria-pressed", String(preferences.dual));
   $("dual").textContent = preferences.dual ? "Single Pane" : "Dual Pane";
   for (const splitter of splitters) splitter.sync();
+  windows.apply();
 }
 function syncNavigation() {
   for (const n of $("navigation").children)
@@ -288,10 +288,10 @@ function renderPreview(p) {
   });
   pin.disabled = !p.preview;
   pin.setAttribute("aria-pressed", String(p.pinned));
-  const maximize = button("Expand viewers", () => expand("bottom"));
-  controls.append(pin, maximize);
+  controls.append(pin, windows.titleControls(panes.indexOf(p), "viewer"));
   head.append(controls);
   root.append(head);
+  windows.apply();
   if (!p.preview) {
     const empty = el(
       "p",
@@ -357,10 +357,10 @@ function buildPane(p, index) {
   const root = el("article");
   root.className = "pane";
   root.setAttribute("aria-label", index ? "Right explorer" : "Left explorer");
-  root.onfocusin = () => {
+  root.addEventListener("focusin", () => {
     active = index;
     syncNavigation();
-  };
+  });
   root.onpointerdown = () => {
     active = index;
     syncNavigation();
@@ -397,10 +397,11 @@ function buildPane(p, index) {
   head.append(
     up,
     button("↻", () => navigate(p, p.location, false)),
-    button("Maximize", () => {
-      expand(index ? "right" : "left");
-    }),
   );
+  const navigation = el("div");
+  navigation.className = "explorer-navigation";
+  for (const child of [...head.children].slice(1)) navigation.append(child);
+  head.append(windows.titleControls(index, "hierarchy"));
   const hierarchy = el("div");
   hierarchy.className = "hierarchy";
   const crumbs = el("nav");
@@ -450,7 +451,7 @@ function buildPane(p, index) {
   items.setAttribute("aria-multiselectable", "true");
   const status = el("div");
   status.className = "list-status";
-  hierarchy.append(crumbs, tools, items, status);
+  hierarchy.append(navigation, crumbs, tools, items, status);
   const viewer = el("section");
   viewer.className = "viewer";
   viewer.setAttribute("aria-label", "Selected item preview");
@@ -481,6 +482,20 @@ function buildPane(p, index) {
   );
   return root;
 }
+const windows = createWorkspaceWindows({
+  panes,
+  getPreferences: () => preferences,
+  setPreferences: (value) => {
+    preferences = value;
+  },
+  layout,
+  save,
+  getActive: () => active,
+  setActive: (index) => {
+    active = index;
+    syncNavigation();
+  },
+});
 for (const [provider, label] of Object.entries(PROVIDERS)) {
   const b = button(label, () => navigate(panes[active], { provider, id: "" }));
   b.dataset.provider = provider;
@@ -512,23 +527,14 @@ splitters.push(
     commit: save,
   }),
 );
-$("dual").onclick = () => {
-  preferences.dual = !preferences.dual;
-  if (!preferences.dual) active = 0;
-  expand();
-  layout();
-  syncNavigation();
-  save();
-};
-$("restore").onclick = () => {
-  expand();
-  layout();
-};
+$("dual").onclick = () => windows.dual();
+$("restore").onclick = () => windows.restore();
 for (const b of document.querySelectorAll("[data-expand]"))
   b.onclick = () => expand(b.dataset.expand);
 document.addEventListener("keydown", (event) => {
+  if (event.defaultPrevented) return;
   if (event.key === "Escape") {
-    expand();
+    windows.key(event);
     return;
   }
   const p = panes[active];
@@ -564,8 +570,7 @@ try {
 } catch (error) {
   $("notice").textContent = "Layout preferences unavailable: " + error.message;
 }
-layout();
-expand();
+windows.initialize();
 await Promise.all(panes.map((p) => navigate(p, p.location)));
 
 // Recompute effective minimum widths after viewport/sidebar geometry changes.

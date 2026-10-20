@@ -10,7 +10,18 @@ class Node {
     this.className = "";
     this.value = "";
     this.scrollTop = 0;
+    this.scrollLeft = 0;
+    this.isConnected = true;
     this.classList = {
+      add: (name) => {
+        this.className += " " + name;
+      },
+      remove: (name) => {
+        this.className = this.className
+          .split(" ")
+          .filter((c) => c !== name)
+          .join(" ");
+      },
       toggle: (name, on) => {
         const set = new Set(this.className.split(" "));
         on ? set.add(name) : set.delete(name);
@@ -33,24 +44,39 @@ class Node {
   removeAttribute(k) {
     delete this.attributes[k];
   }
+  matches(selector) {
+    return selector
+      .split(",")
+      .some((s) =>
+        s.startsWith(".")
+          ? this.className.split(" ").includes(s.slice(1))
+          : this.tagName === s,
+      );
+  }
+  querySelectorAll(selector) {
+    return this.children
+      .filter((n) => n instanceof Node)
+      .flatMap((n) => [
+        ...(n.matches(selector) ? [n] : []),
+        ...n.querySelectorAll(selector),
+      ]);
+  }
   querySelector(selector) {
+    return this.querySelectorAll(selector)[0];
+  }
+  contains(node) {
     return (
-      this.children.find(
-        (n) =>
-          typeof n === "object" &&
-          n.className?.split(" ").includes(selector.slice(1)),
-      ) ||
-      this.children
-        .filter((n) => n instanceof Node)
-        .map((n) => n.querySelector(selector))
-        .find(Boolean)
+      this === node ||
+      this.children.some((n) => n instanceof Node && n.contains(node))
     );
   }
+  addEventListener() {}
   getBoundingClientRect() {
     return { top: 0, left: 0, width: 1000, height: 500 };
   }
   focus() {
     this.focused = true;
+    document.activeElement = this;
   }
 }
 const ids = Object.fromEntries(
@@ -63,6 +89,7 @@ const ids = Object.fromEntries(
     "height",
     "notice",
     "activity",
+    "workspace-chrome",
   ].map((id) => [id, new Node()]),
 );
 const expansions = ["top", "bottom"].map((name) => {
@@ -70,7 +97,19 @@ const expansions = ["top", "bottom"].map((name) => {
   n.dataset.expand = name;
   return n;
 });
+const body = new Node("body"),
+  main = new Node("main"),
+  actions = new Node();
+actions.className = "actions";
+main.append(actions, ...Object.values(ids));
+body.append(main);
+globalThis.window = { addEventListener() {} };
+globalThis.requestAnimationFrame = (fn) => fn();
 globalThis.document = {
+  body,
+  scrollingElement: body,
+  activeElement: body,
+  querySelector: (selector) => body.querySelector(selector),
   createElement: (tag) => new Node(tag),
   getElementById: (id) => ids[id],
   querySelectorAll: () => expansions,
@@ -115,9 +154,10 @@ assert.equal(
   "Pinned content survives navigation",
 );
 expansions[1].onclick();
-assert.equal(ids.panes.dataset.expand, "bottom");
+assert.equal(left.dataset.windowMax, "viewer");
+assert.equal(right.dataset.windowMax, "viewer");
 ids.restore.onclick();
-assert.equal(ids.panes.dataset.expand, "");
+assert.equal(left.dataset.windowMax, "");
 assert.equal(
   right.querySelector(".items").children[0].textContent,
   "Nothing here yet.",

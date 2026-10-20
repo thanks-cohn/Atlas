@@ -754,3 +754,435 @@ main {
     flex-wrap: wrap;
   }
 }
+
+/* Familiar title bars and stateful region windows. No reparenting of content. */
+.workspace-chrome {
+  flex-shrink: 0;
+}
+.explorer-navigation {
+  display: flex;
+  gap: 3px;
+  padding: 4px 8px 0;
+  flex-shrink: 0;
+}
+.explorer-navigation button {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+}
+.pane-head {
+  min-height: 40px;
+  padding: 0 0 0 10px;
+  align-items: center;
+  background: #f8fafd;
+}
+.pane-head .provider {
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 2px;
+}
+.window-controls {
+  display: flex;
+  flex-shrink: 0;
+  align-self: stretch;
+  margin-left: auto;
+}
+.window-control {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  min-height: 34px;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font:
+    19px/1 system-ui,
+    sans-serif;
+}
+.window-control:hover {
+  background: #e2e9f2;
+}
+.window-control.close:hover:enabled {
+  background: #c42b33;
+  color: white;
+}
+.window-control.restore {
+  font-size: 17px;
+}
+.window-control:disabled {
+  opacity: 0.28;
+}
+.viewer-head {
+  padding: 0 0 0 12px;
+  min-height: 38px;
+  gap: 4px;
+  background: #f5f8fc;
+}
+.viewer-head h2 {
+  font-weight: 600;
+}
+.viewer-actions {
+  align-self: stretch;
+  align-items: center;
+  gap: 3px;
+}
+.viewer-actions > .window-controls {
+  height: 100%;
+}
+.viewer-actions > .window-controls .window-control {
+  font-size: 19px;
+}
+.viewer-actions > button {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pane.only-pane {
+  grid-column: 1;
+  grid-row: 1;
+}
+.pane[data-hierarchy-state="minimized"] {
+  grid-template-rows: auto 0 0 minmax(0, 1fr);
+}
+.pane[data-hierarchy-state="minimized"] .hierarchy,
+.pane[data-hierarchy-state="minimized"] .row-splitter {
+  visibility: hidden;
+}
+.pane[data-viewer-state="minimized"] {
+  grid-template-rows: auto minmax(0, 1fr) 0 38px;
+}
+.pane[data-viewer-state="minimized"] .viewer-tabs,
+.pane[data-viewer-state="minimized"] .viewer-content,
+.pane[data-viewer-state="minimized"] .viewer > .empty {
+  display: none;
+}
+.pane[data-viewer-state="minimized"] .row-splitter {
+  visibility: hidden;
+}
+.pane[data-hierarchy-state="minimized"][data-viewer-state="minimized"] {
+  grid-template-rows: auto 0 minmax(0, 1fr) 38px;
+}
+.pane[data-viewer-state="closed"] {
+  grid-template-rows: auto minmax(0, 1fr) 0 0;
+}
+.pane[data-viewer-state="closed"] .viewer,
+.pane[data-viewer-state="closed"] .row-splitter {
+  display: none;
+}
+.pane[data-hierarchy-state="minimized"][data-viewer-state="closed"] {
+  grid-template-rows: auto 0 0 minmax(0, 1fr);
+  align-content: start;
+}
+
+/* Maximize consumes the dashboard height, including the former intro area. */
+body.workspace-focused main {
+  position: relative;
+  padding: 12px;
+  height: 100dvh;
+}
+body.workspace-focused #panes {
+  height: 100%;
+  flex: 1;
+}
+body.workspace-focused .workspace-chrome {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: var(--chrome-left, 12px);
+  width: var(--chrome-width, auto);
+  padding: 9px 10px 0;
+}
+body.workspace-focused .workspace-chrome header > div:first-child {
+  display: none;
+}
+body.workspace-focused .workspace-chrome header {
+  display: block;
+}
+body.workspace-focused .workspace-chrome .actions {
+  gap: 5px;
+  flex-wrap: wrap;
+}
+body.workspace-focused .workspace-chrome .actions > button {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+body.workspace-focused .workspace-chrome #notice {
+  font-size: 12px;
+  margin: 9px 0;
+}
+body.workspace-focused .workspace-chrome .layout-controls {
+  margin-bottom: 10px;
+  gap: 5px;
+  font-size: 11px;
+}
+body.workspace-focused .resize-hint {
+  display: none;
+}
+body.workspace-focused .workspace-chrome .layout-controls button {
+  padding: 5px 7px;
+  font-size: 11px;
+}
+body.workspace-focused .pane[data-window-max=""] {
+  margin-top: var(--chrome-space, 0px);
+}
+.pane[data-window-max="viewer"] {
+  grid-template-rows: 0 0 0 minmax(0, 1fr);
+  margin-top: 0;
+}
+.pane[data-window-max="viewer"] .pane-head,
+.pane[data-window-max="viewer"] .hierarchy,
+.pane[data-window-max="viewer"] .row-splitter {
+  display: none;
+}
+.pane[data-window-max="viewer"] .viewer {
+  display: flex;
+}
+.pane[data-window-max="viewer"] .viewer-tabs {
+  display: flex;
+}
+.pane[data-window-max="viewer"] .viewer-content {
+  display: block;
+}
+.pane[data-window-max="hierarchy"] {
+  grid-template-rows: auto minmax(0, 1fr) 0 0;
+  margin-top: 0;
+}
+.pane[data-window-max="hierarchy"] .hierarchy {
+  visibility: visible;
+}
+.pane[data-window-max="hierarchy"] .viewer,
+.pane[data-window-max="hierarchy"] .row-splitter {
+  display: none;
+}
+.pane[data-window-max="pane"] {
+  margin-top: 0;
+}
+body.commands-corner main {
+  padding-bottom: 64px;
+}
+body.commands-corner .workspace-chrome {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+body.commands-corner .workspace-chrome > * {
+  visibility: hidden;
+}
+body.commands-corner .command-dock {
+  visibility: visible;
+  position: fixed;
+  z-index: 20;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  pointer-events: auto;
+}
+body.commands-corner .workspace-chrome #notice {
+  visibility: visible;
+  position: fixed;
+  bottom: 16px;
+  left: 230px;
+  max-width: calc(100vw - 310px);
+  margin: 0;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* Discreet at rest, always visible. The launcher has a reserved footer slot. */
+.command-dock {
+  position: relative;
+  flex-shrink: 0;
+}
+.command-launcher {
+  min-width: 38px;
+  min-height: 34px;
+  padding: 5px 9px;
+  font-size: 18px;
+  line-height: 1;
+}
+.commands-corner .command-launcher {
+  width: 42px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fffefcf2;
+  border: 1px solid #b8c6d8;
+  box-shadow: 0 3px 16px #24374f1c;
+  color: #293f5e;
+  backdrop-filter: blur(10px);
+}
+.command-dock.quiet .command-launcher {
+  opacity: 0.8;
+}
+.command-dock:hover .command-launcher,
+.command-dock:focus-within .command-launcher {
+  opacity: 1;
+}
+.command-flyout {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  top: calc(100% + 7px);
+  width: 245px;
+  max-width: calc(100vw - 24px);
+  max-height: min(70dvh, 480px);
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid #cbd5e3;
+  border-radius: 10px;
+  background: #fffffff7;
+  box-shadow: 0 10px 32px #21354f24;
+  backdrop-filter: blur(14px);
+  display: grid;
+  gap: 2px;
+}
+.commands-corner .command-flyout {
+  top: auto;
+  bottom: calc(100% + 9px);
+}
+.command-flyout button {
+  border: 0;
+  background: transparent;
+  border-radius: 5px;
+  text-align: left;
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 13px;
+}
+.command-flyout button:hover,
+.command-flyout button:focus {
+  background: #eaf0f9;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .command-launcher {
+    transition:
+      opacity 0.18s ease,
+      background 0.12s ease;
+  }
+}
+@media (max-width: 1050px) {
+  body.workspace-focused #panes.dual {
+    grid-auto-rows: calc(100dvh - 24px);
+  }
+  body.commands-corner #panes.dual {
+    grid-auto-rows: calc(100dvh - 76px);
+  }
+  body.workspace-focused .workspace-chrome {
+    position: relative;
+    left: auto;
+    width: auto;
+    top: auto;
+    padding: 0;
+  }
+  body.workspace-focused .pane[data-window-max=""] {
+    margin-top: 0;
+  }
+  body.workspace-focused:not(.commands-corner) #panes {
+    flex-basis: 0;
+  }
+  body.commands-corner .workspace-chrome {
+    position: absolute;
+  }
+  body.commands-corner .workspace-chrome #notice {
+    left: 170px;
+    max-width: calc(100vw - 250px);
+  }
+}
+@media (max-width: 640px) {
+  body.workspace-focused {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  body.workspace-focused > aside {
+    display: none;
+  }
+  body.workspace-focused main {
+    padding: 8px;
+    height: 100dvh;
+  }
+  body.commands-corner main {
+    padding-bottom: 60px;
+  }
+  body.workspace-focused #panes.dual {
+    grid-auto-rows: calc(100dvh - 16px);
+  }
+  body.commands-corner #panes.dual {
+    grid-auto-rows: calc(100dvh - 68px);
+  }
+  .window-control {
+    min-width: 36px;
+    min-height: 38px;
+  }
+  .viewer-actions {
+    gap: 0;
+  }
+  .viewer-head {
+    flex-wrap: nowrap;
+  }
+  .viewer-head h2 {
+    min-width: 0;
+    font-size: 12px;
+  }
+  .viewer-actions > button {
+    padding: 4px;
+    font-size: 10px;
+  }
+  body.commands-corner .workspace-chrome #notice {
+    left: 12px;
+    max-width: calc(100vw - 85px);
+  }
+  .command-flyout button {
+    min-height: 40px;
+  }
+}
+/* Explicit tracks prevent hidden title bars from auto-placing the viewer into a zero-height row. */
+.pane > .pane-head {
+  grid-row: 1;
+}
+.pane > .hierarchy {
+  grid-row: 2;
+}
+.pane > .row-splitter {
+  grid-row: 3;
+}
+.pane > .viewer {
+  grid-row: 4;
+}
+/* Draw standard maximize/overlapping-restore boxes rather than relying on font glyphs. */
+.window-control.maximize {
+  position: relative;
+  font-size: 0 !important;
+}
+.window-control.maximize::before {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 9px;
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  left: calc(50% - 5px);
+  top: calc(50% - 5px);
+}
+.window-control.maximize.restore::before {
+  width: 9px;
+  height: 8px;
+  left: calc(50% - 5px);
+  top: calc(50% - 2px);
+  background: #f5f8fc;
+  z-index: 1;
+}
+.window-control.maximize.restore::after {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  width: 9px;
+  height: 8px;
+  border: 1px solid currentColor;
+  left: calc(50% - 2px);
+  top: calc(50% - 5px);
+}

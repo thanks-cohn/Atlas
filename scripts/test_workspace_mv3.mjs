@@ -102,10 +102,44 @@ try {
         ],
     );
     assert(saved.ratio > 50);
+    await left
+      .getByRole("button", { name: "Maximize left hierarchy", exact: true })
+      .click();
+    assert((await left.boundingBox()).y < 20);
+    const right = workspace.locator(".pane").nth(1);
+    await right
+      .getByRole("button", { name: "Maximize right hierarchy", exact: true })
+      .click();
+    const launcher = workspace.getByRole("button", {
+      name: "Workspace commands",
+      exact: true,
+    });
+    assert(await launcher.isVisible());
+    await launcher.click();
+    await workspace.keyboard.press("Escape");
+    assert(
+      await left
+        .getByRole("button", { name: "Restore left hierarchy", exact: true })
+        .isVisible(),
+    );
+    await left
+      .getByRole("button", { name: "Restore left hierarchy", exact: true })
+      .click();
+    await right
+      .getByRole("button", { name: "Restore right hierarchy", exact: true })
+      .click();
+    await right
+      .getByRole("button", { name: "Close right pane", exact: true })
+      .click();
+    assert.equal(await right.isVisible(), false);
+    await workspace
+      .getByRole("button", { name: "Dual Pane", exact: true })
+      .click();
+    assert(await right.isVisible());
     for (const href of ["pinboard.html", "page.html", "explorer.html"])
       assert(await workspace.locator(`a[href="${href}"]`).count());
     console.log(
-      "PASS real Chromium MV3: installed worker, native bookmarks, actual Shelf launcher, workspace render, edge drag and Chrome storage persistence. No native helper is installed in this isolated profile.",
+      "PASS real Chromium MV3: installed worker, native bookmarks, actual Shelf launcher, workspace render, edge drag, window controls, viewport maximize/restore, command dock, close/reopen and Chrome storage persistence. No native helper is installed in this isolated profile.",
     );
   }
 } finally {

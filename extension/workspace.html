@@ -20,22 +20,26 @@
       <small>Local first. Yours always.</small>
     </aside>
     <main>
-      <header>
-        <div>
-          <small>EVERYTHING IN ITS PLACE</small>
-          <h1>Workspace</h1>
+      <div id="workspace-chrome" class="workspace-chrome">
+        <header>
+          <div>
+            <small>EVERYTHING IN ITS PLACE</small>
+            <h1>Workspace</h1>
+          </div>
+          <div class="actions">
+            <button id="dual" aria-pressed="false">Dual Pane</button
+            ><button id="restore">Restore layout</button
+            ><button id="activity">Activity & recovery</button>
+          </div>
+        </header>
+        <p id="notice" role="status">
+          Browse and compare your Atlas resources.
+        </p>
+        <div class="layout-controls">
+          <span class="resize-hint">Drag panel edges to resize</span>
+          <button data-expand="top">Expand hierarchies</button
+          ><button data-expand="bottom">Expand viewers</button>
         </div>
-        <div class="actions">
-          <button id="dual" aria-pressed="false">Dual Pane</button
-          ><button id="restore">Restore layout</button
-          ><button id="activity">Activity & recovery</button>
-        </div>
-      </header>
-      <p id="notice" role="status">Browse and compare your Atlas resources.</p>
-      <div class="layout-controls">
-        <span class="resize-hint">Drag panel edges to resize</span>
-        <button data-expand="top">Expand hierarchies</button
-        ><button data-expand="bottom">Expand viewers</button>
       </div>
       <section id="panes" aria-label="Resource explorers"></section>
     </main>

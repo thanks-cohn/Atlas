@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-20",
+  "request": "docs/requests/ATLAS_WORKSPACE_STAGE_2_VISUAL_AND_INTERACTION_COMPLETION.md Section5A as of main5226a15",
+  "baseline_commit": "5226a15",
+  "implementation_commit": "50f8348343827ff08a9a20a098f4794ecbb81bfb",
+  "implementation_tree": "55dfdf68c971ad111d95e103f87e38152fba0799",
+  "local_browser": {
+    "version": "Chromium153.0.8010.0",
+    "platform": "Linux headless-shell",
+    "transport": "Explicit synthetic Chrome/provider APIs over localhost HTTP",
+    "window_controls_viewport_geometry_toolbar_reflow": "PASS",
+    "mouse_touch_keyboard_dock": "PASS",
+    "hover_focus_delay_modal_escape": "PASS",
+    "exact_size_scroll_selection_pin_restore": "PASS",
+    "temporary_resize_does_not_overwrite_normal_preferences": "PASS",
+    "non_destructive_close_reopen_last_pane_protection": "PASS",
+    "narrow_390_reduced_motion": "PASS",
+    "existing_edge_preview_provider_renderer_regression": "PASS",
+    "command": "ATLAS_PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs ATLAS_CHROMIUM_PATH=/path/to/chromium node scripts/test_workspace_window_browser.mjs"
+  },
+  "unit_model_renderer_preview": "PASS",
+  "node_sweep": {
+    "total": 30,
+    "pass": 26,
+    "optional_browser_skips_without_configuration": 3,
+    "fail": 1,
+    "failure": "Existing scripts/test_recovery_broker_native.mjs:42, container native-startup baseline"
+  },
+  "python": {
+    "linked_records": 22,
+    "tests": 170,
+    "failures": 3,
+    "errors": 3,
+    "skips": 33,
+    "scope": "Existing native bootstrap/supervisor startup/READY failure baseline"
+  },
+  "installed_mv3": {
+    "local": "NOT_RUN: local headless-shell does not support the extension worker",
+    "hosted": "PASS run39416663760 job118607234345, full Chromium151.0.7922.34; real worker/bookmarks/storage, Shelf launcher, edge drag, controls, viewport maximize/restore, command dock, close/reopen"
+  },
+  "desktop_helper_windows_gui_screenreader_physical_touch_4gb": "NOT_RUN",
+  "package": {
+    "file": "dist/atlas-extension-0.1.89.zip",
+    "files": 57,
+    "sha256": "4d7053d3872f479f6b13816c71653e386e079eb3af8be2a8b1ff239d74396f6e",
+    "status": "unsigned development ZIP; browser runtime and Store approval are separate"
+  },
+  "source_sha256": {
+    "extension/workspace-command-dock.js": "c4b31b23903653b5b0942348365e133cb0a5bbd9371a3681f5845824434160c0",
+    "extension/workspace-menu.js": "e1b73d569d5845da3a44c0a3719d5ac6d9d2164a98cc92df10d8cd76c78b182c",
+    "extension/workspace-model.js": "97b92212e03a55e713820f39a4ce9c04d9468572181c56f600dba2f82d43e59b",
+    "extension/workspace-preview.js": "1fd22751621d7e15142eeb0d9e45727a22c11d7ba430f94b9e70da906741aff5",
+    "extension/workspace-providers.js": "d4789af8603d17b4c5a4131f776949ed7a259ba4ee75d531aa8c01948d9edcc9",
+    "extension/workspace-splitter.js": "4257913adfd3ebafe7b3fb01cd3798c27cc7b169f184c7ec3049c41c68d30d33",
+    "extension/workspace-window-state.js": "1518f11adaba4e6fa6419cc50f07222ba26f46d735f33d4f030041849b7c5270",
+    "extension/workspace-windows.js": "288fd692e43b67fd321a3f8c2c430164b9a9f9fee8646dad086c1bcd0cc96269",
+    "extension/workspace.css": "e4428222a4f46a84cb73439a4647896eb01d61a500ff06ec8a9d70acabdf1ec1",
+    "extension/workspace.html": "0ec00ad4683458719feab0aaf32de066b88aaf205504347700fff3e5f4c746d5",
+    "extension/workspace.js": "ff5a24b935b1158c207bdbcbe8e2c2433278cabf962d5f01769e8279a7e8e7f0"
+  },
+  "screenshots": {
+    "docs/evidence/workspace-window-controls/before-1366.png": "13474a75ac8ab9329b890c185dccc308ecc7d2ddbd0c47a82840759d812d9905",
+    "docs/evidence/workspace-window-controls/comparison-maximized-1366.png": "74d187cdd7fefa4d38612c64276addb6138528beefdd18ed49b4ebf96acad16f",
+    "docs/evidence/workspace-window-controls/maximized-390.png": "4c89e248140e978e4ae319d1373edafcb34a4c18cc028fecef9a015dcdced57e",
+    "docs/evidence/workspace-window-controls/normal-1366.png": "f4dcf9562f2a6f68f0fc3c8a3f558dd106bea9eee3a3c6da2a587fe261eee5de",
+    "docs/evidence/workspace-window-controls/one-maximized-1366.png": "3a646ca3d12ece6ad50817f015ee7ecf227e132d77a11f81aeb081408ac30732"
+  },
+  "hosted": {
+    "tested_commit": "10c8c047e4a5df5e53893110438d8d4e580c49a4",
+    "source_unchanged_by_later_receipt_update": true,
+    "development_run": 39416663760,
+    "development_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39416663760",
+    "conclusion": "success",
+    "browser_job": 118607234345,
+    "foundation_job": 118607234783,
+    "rendered_existing_and_window_suites": "PASS Chromium151.0.7922.34, synthetic provider APIs",
+    "real_mv3_window_controls_dock_close_reopen": "PASS",
+    "python": "170 tests OK skipped33;22 model links",
+    "extension_cli_native_recovery": "PASS",
+    "windows_boundary_run": 39416663763,
+    "windows_boundary_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39416663763",
+    "windows_boundary_job": 118607234387,
+    "windows_boundary_conclusion": "success",
+    "windows_boundary_scope": "Actual NT handle/identity/junction/private-alias tests; not Windows GUI or desktop helper preview qualification"
+  }
+}
