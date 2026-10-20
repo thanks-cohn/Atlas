@@ -65,6 +65,7 @@ jobs:
           export ATLAS_WINDOW_EVIDENCE="$RUNNER_TEMP/workspace-evidence/windows"
           node scripts/test_workspace_browser.mjs
           node scripts/test_workspace_window_browser.mjs
+          node scripts/test_workspace_swaps_browser.mjs
           node scripts/test_pinboard_folder_tags_browser.mjs
       - name: Verify actual MV3 Shelf launcher, bookmarks and storage
         run: |

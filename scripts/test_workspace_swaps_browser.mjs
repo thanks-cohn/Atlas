@@ -105,55 +105,303 @@ async function openCommands() {
 }
 try {
   await page.goto(url);
-  await left.getByLabel('Location provider').selectOption('local');
-  await left.locator('.items .item').first().dblclick();
-  await left.getByRole('option',{name:'Alpine study.png'}).click();await left.locator('.viewer img').waitFor();
-  await left.getByRole('button',{name:'Pin Preview',exact:true}).click();
-  await right.getByLabel('Location provider').selectOption('objects');
-  await right.getByRole('option',{name:'Composition notes'}).click();
-  await right.getByRole('tab',{name:'Notes',exact:true}).click();
-  await right.getByRole('button',{name:'Pin Preview',exact:true}).click();
-  await right.locator('.viewer-content').evaluate(n=>{n.firstChild.textContent+='\n'+Array.from({length:70},(_,i)=>'Research '+i).join('\n');n.scrollTop=180;});
-  const media=await left.locator('.viewer img').elementHandle();
-  await left.locator('.row-splitter').focus();await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
-  await right.locator('.row-splitter').focus();await page.keyboard.press('ArrowDown');
-  await page.locator('.column-splitter').focus();await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowRight');
+  await left.getByLabel("Location provider").selectOption("local");
+  await left.locator(".items .item").first().dblclick();
+  await left.getByRole("option", { name: "Alpine study.png" }).click();
+  await left.locator(".viewer img").waitFor();
+  await left.getByRole("button", { name: "Pin Preview", exact: true }).click();
+  await right.getByLabel("Location provider").selectOption("objects");
+  await right.getByRole("option", { name: "Composition notes" }).click();
+  await right.getByRole("tab", { name: "Notes", exact: true }).click();
+  await right.getByRole("button", { name: "Pin Preview", exact: true }).click();
+  await right.locator(".viewer-content").evaluate((n) => {
+    n.firstChild.textContent +=
+      "\n" + Array.from({ length: 70 }, (_, i) => "Research " + i).join("\n");
+    n.scrollTop = 180;
+  });
+  const media = await left.locator(".viewer img").elementHandle();
+  await left.locator(".row-splitter").focus();
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
+  await right.locator(".row-splitter").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.locator(".column-splitter").focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
   await settle();
-  const reads=await page.evaluate(()=>fixtureCalls.filter(c=>c.path==='/v1/read').length);
-  const reports=[];
-  async function modes(){return page.locator('.pane').evaluateAll(nodes=>nodes.map(n=>n.dataset.windowMax));}
-  async function sides(){
-    if(await launcher.isVisible()){await openCommands();await page.getByRole('menuitem',{name:'Swap left and right panes',exact:true}).click();}
-    else await page.getByRole('button',{name:'Swap left and right panes',exact:true}).click();
+  const reads = await page.evaluate(
+    () => fixtureCalls.filter((c) => c.path === "/v1/read").length,
+  );
+  const reports = [];
+  async function modes() {
+    return page
+      .locator(".pane")
+      .evaluateAll((nodes) => nodes.map((n) => n.dataset.windowMax));
+  }
+  async function sides() {
+    if (await launcher.isVisible()) {
+      await openCommands();
+      await page
+        .getByRole("menuitem", {
+          name: "Swap left and right panes",
+          exact: true,
+        })
+        .click();
+    } else
+      await page
+        .getByRole("button", { name: "Swap left and right panes", exact: true })
+        .click();
     await settle();
   }
-  function sameDimensions(before,after){for(let i=0;i<2;i++){for(const key of ['width','upper','lower','scroll','items'])close(after[i][key],before[i][key]);assert.deepEqual({...after[i],width:0,upper:0,lower:0,scroll:0,items:0},{...before[i],width:0,upper:0,lower:0,scroll:0,items:0});}}
-  for(const scenario of ['manually-resized','partially-expanded','fully-expanded','mixed-expansion','expanded-and-resized']){
-    if(scenario==='partially-expanded')await left.locator('.viewer .maximize').click();
-    if(['fully-expanded','expanded-and-resized'].includes(scenario)){await left.locator('.viewer .maximize').click();await right.locator('.viewer .maximize').click();}
-    if(scenario==='mixed-expansion'){await left.locator('.pane-head .maximize').click();await right.locator('.viewer .maximize').click();}
-    await settle();
-    if(scenario==='expanded-and-resized'){
-      const rect=await left.locator('.row-splitter').boundingBox();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2+24,{steps:8});await page.mouse.up();await settle();
+  function sameDimensions(before, after) {
+    for (let i = 0; i < 2; i++) {
+      for (const key of ["width", "upper", "lower", "scroll", "items"])
+        close(after[i][key], before[i][key]);
+      assert.deepEqual(
+        { ...after[i], width: 0, upper: 0, lower: 0, scroll: 0, items: 0 },
+        { ...before[i], width: 0, upper: 0, lower: 0, scroll: 0, items: 0 },
+      );
     }
-    const before=await snapshot(),mode=await modes(),x=(await left.boundingBox()).x;
-    await sides();assert((await left.boundingBox()).x!==x);sameDimensions(before,await snapshot());assert.deepEqual(await modes(),mode,scenario+' horizontal expansion follows panels');
-    await sides();sameDimensions(before,await snapshot());
-    for(const column of [left,right]){
-      const prior=await snapshot(),height=(await column.boundingBox()).height;
-      await column.locator('.pane-head .rearrange').click();await settle();
-      sameDimensions(prior,await snapshot());close((await column.boundingBox()).height,height);assert.deepEqual(await modes(),mode,scenario+' vertical expansion retained');
-      assert((await column.locator('.viewer').boundingBox()).y<(await column.locator('.hierarchy').boundingBox()).y);
-      await column.locator('.pane-head .rearrange').click();await settle();sameDimensions(prior,await snapshot());
-    }
-    assert(await media.evaluate(n=>n.isConnected));
-    reports.push({scenario,dimensions:before,expansion:mode});
-    await page.screenshot({path:output+'/'+scenario+'.png'});
-    if(mode.some(Boolean)){await page.keyboard.press('Escape');await settle();}
   }
-  assert.equal(await page.evaluate(()=>fixtureCalls.filter(c=>c.path==='/v1/read').length),reads);
-  assert.deepEqual(errors,[]);
-  await (await import('node:fs/promises')).writeFile(output+'/verification.json',JSON.stringify({browser:browser.version(),syntheticProviders:true,reports},null,2));
-  console.log('PASS Chromium '+browser.version()+': horizontal/vertical swaps preserve per-panel dimensions, expansion, occupied height, selections, scroll, pins and live media in five normal/partial/full/resized scenarios; no extra native reads.');
-} catch(error){await page.screenshot({path:output+'/failure.png'});throw error;}
-finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+  for (const scenario of [
+    "manually-resized",
+    "partially-expanded",
+    "fully-expanded",
+    "mixed-expansion",
+    "expanded-and-resized",
+  ]) {
+    if (scenario === "partially-expanded")
+      await left.locator(".viewer .maximize").click();
+    if (["fully-expanded", "expanded-and-resized"].includes(scenario)) {
+      await left.locator(".viewer .maximize").click();
+      await right.locator(".viewer .maximize").click();
+    }
+    if (scenario === "mixed-expansion") {
+      await left.locator(".pane-head .maximize").click();
+      await right.locator(".viewer .maximize").click();
+    }
+    await settle();
+    if (scenario === "expanded-and-resized") {
+      const heightBefore = (await left.locator(".hierarchy").boundingBox())
+        .height;
+      const rect = await left.locator(".row-splitter").boundingBox();
+      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(
+        rect.x + rect.width / 2,
+        rect.y + rect.height / 2 + 24,
+        { steps: 8 },
+      );
+      await page.mouse.up();
+      await settle();
+      close(
+        (await left.locator(".hierarchy").boundingBox()).height,
+        heightBefore + 24,
+      );
+    }
+    const before = await snapshot(),
+      mode = await modes(),
+      x = (await left.boundingBox()).x;
+    const savedBefore = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("atlas-test-storage"))[
+          "atlas.workspace.layout.v1"
+        ],
+    );
+    await sides();
+    assert((await left.boundingBox()).x !== x);
+    sameDimensions(before, await snapshot());
+    assert.deepEqual(
+      await modes(),
+      mode,
+      scenario + " horizontal expansion follows panels",
+    );
+    await sides();
+    sameDimensions(before, await snapshot());
+    assert.deepEqual(
+      await page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("atlas-test-storage"))[
+            "atlas.workspace.layout.v1"
+          ],
+      ),
+      savedBefore,
+      "Swaps preserve the normal saved dimensions during expanded dragging",
+    );
+    for (const column of [left, right]) {
+      const prior = await snapshot(),
+        height = (await column.boundingBox()).height;
+      await column.locator(".pane-head .rearrange").click();
+      await settle();
+      sameDimensions(prior, await snapshot());
+      close((await column.boundingBox()).height, height);
+      assert.deepEqual(
+        await modes(),
+        mode,
+        scenario + " vertical expansion retained",
+      );
+      assert(
+        (await column.locator(".viewer").boundingBox()).y <
+          (await column.locator(".hierarchy").boundingBox()).y,
+      );
+      await column.locator(".pane-head .rearrange").click();
+      await settle();
+      sameDimensions(prior, await snapshot());
+    }
+    assert(await media.evaluate((n) => n.isConnected));
+    reports.push({ scenario, dimensions: before, expansion: mode });
+    await page.screenshot({ path: output + "/" + scenario + ".png" });
+    if (mode.some(Boolean)) {
+      await page.keyboard.press("Escape");
+      await settle();
+    }
+  }
+  // Exchanging individual Previews carries expansion even when two expanded sections meet.
+  await left.locator(".pane-head .maximize").click();
+  await right.locator(".viewer .maximize").click();
+  await settle();
+  const mixedBefore = await snapshot();
+  await left
+    .getByRole("button", { name: "Swap previews between panes" })
+    .click();
+  await settle();
+  assert.deepEqual(await modes(), ["both", ""]);
+  assert(await left.locator(".row-splitter").isVisible());
+  await right
+    .getByRole("button", { name: "Swap previews between panes" })
+    .click();
+  await settle();
+  assert.deepEqual(await modes(), ["hierarchy", "viewer"]);
+  sameDimensions(mixedBefore, await snapshot());
+  await page.keyboard.press("Escape");
+  await settle();
+  // Restore follows the user's new placement instead of undoing it or saving temporary sizes.
+  const normalBeforeRestore = await snapshot();
+  await left.locator(".viewer .maximize").click();
+  await settle();
+  await left.locator(".pane-head .rearrange").click();
+  await sides();
+  await page.locator("#restore").click();
+  await settle();
+  sameDimensions(normalBeforeRestore, await snapshot());
+  assert(await left.evaluate((n) => n.classList.contains("reversed")));
+  await sides();
+  await left.locator(".pane-head .rearrange").click();
+  await settle();
+  // A maximized section cannot keep the minimized flag that hides its rail.
+  for (const region of ["viewer", "hierarchy"]) {
+    const scope = region === "viewer" ? ".viewer" : ".pane-head";
+    await left.locator(scope + " .minimize").click();
+    await settle();
+    assert.equal(await left.locator(".row-splitter").isVisible(), false);
+    await left.locator(scope + " .maximize").click();
+    await settle();
+    assert(
+      await left.locator(".row-splitter").isVisible(),
+      "Maximizing a minimized " + region + " makes its divider usable",
+    );
+    await page.locator("#restore").click();
+    await settle();
+    await left.locator(scope + " .minimize").click();
+    await settle();
+    for (let round = 0; round < 3; round++) {
+      await left.locator(scope + " .minimize").click();
+      await left.locator(scope + " .minimize").click();
+      await settle();
+      await left.locator(".pane-head .rearrange").click();
+      await sides();
+      const rail = left.locator(".row-splitter");
+      assert(await rail.isVisible());
+      const rect = await rail.boundingBox();
+      assert(rect.height >= 8);
+      const initial = (await left.locator(".hierarchy").boundingBox()).height;
+      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(
+        rect.x + rect.width / 2,
+        rect.y + rect.height / 2 + 14,
+        { steps: 5 },
+      );
+      await page.mouse.up();
+      await settle();
+      assert(
+        Math.abs(
+          (await left.locator(".hierarchy").boundingBox()).height - initial,
+        ) > 5,
+        "Rail changes real section allocation after repeated operations",
+      );
+      await sides();
+      await left.locator(".pane-head .rearrange").click();
+      await settle();
+    }
+  }
+  // Collapsed state follows a Preview exchanged across columns; reopening restores its rail.
+  await left.locator(".viewer .minimize").click();
+  await settle();
+  await left
+    .getByRole("button", { name: "Swap previews between panes" })
+    .click();
+  await settle();
+  assert(await left.locator(".row-splitter").isVisible());
+  assert.equal(await right.locator(".row-splitter").isVisible(), false);
+  await right.locator(".viewer .minimize").click();
+  await settle();
+  assert(await right.locator(".row-splitter").isVisible());
+  const movedRail = right.locator(".row-splitter"),
+    movedRect = await movedRail.boundingBox();
+  assert(movedRect.height >= 8);
+  assert((await right.locator(".hierarchy").boundingBox()).height > 100);
+  assert(
+    (await right.locator(".viewer").boundingBox()).height > 100,
+    "A moved minimized Preview recovers its normal size, not just its title height",
+  );
+  await right
+    .getByRole("button", { name: "Swap previews between panes" })
+    .click();
+  await settle();
+  const columnRail = page.locator(".column-splitter");
+  assert(await columnRail.isVisible());
+  const columnRect = await columnRail.boundingBox(),
+    widthBefore = (await left.boundingBox()).width;
+  await page.mouse.move(
+    columnRect.x + columnRect.width / 2,
+    columnRect.y + columnRect.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    columnRect.x + columnRect.width / 2 + 12,
+    columnRect.y + columnRect.height / 2,
+    { steps: 5 },
+  );
+  await page.mouse.up();
+  await settle();
+  close((await left.boundingBox()).width, widthBefore + 12);
+  assert.equal(
+    await page.evaluate(
+      () => fixtureCalls.filter((c) => c.path === "/v1/read").length,
+    ),
+    reads,
+  );
+  assert.deepEqual(errors, []);
+  await (
+    await import("node:fs/promises")
+  ).writeFile(
+    output + "/verification.json",
+    JSON.stringify(
+      { browser: browser.version(), syntheticProviders: true, reports },
+      null,
+      2,
+    ),
+  );
+  console.log(
+    "PASS Chromium " +
+      browser.version() +
+      ": horizontal/vertical swaps preserve per-panel dimensions, expansion, occupied height, selections, scroll, pins and live media in five normal/partial/full/resized scenarios plus repeated minimize/restore/swap/pointer-resize sequences and minimized-to-maximized rail recovery; no extra native reads.",
+  );
+} catch (error) {
+  await page.screenshot({ path: output + "/failure.png" });
+  throw error;
+} finally {
+  await browser.close();
+  await new Promise((resolve) => server.close(resolve));
+}

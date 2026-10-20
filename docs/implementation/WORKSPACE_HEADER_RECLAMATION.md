@@ -14,6 +14,10 @@ When one of two columns expands, the same global controls relocate above the une
 
 ⇅ on a section bar exchanges Explorer and Preview vertically in that column. ⇄ exchanges the two Explorers or the two Previews across columns according to the bar used. Swap sides exchanges both columns. These are exchanges of the existing presentation elements, not copies of resources. Preview ownership remains attached to its original Explorer and selection even when displayed on the other side. The row and column edges retain their existing pointer-captured and keyboard resize implementation; vertical drag direction follows reversed section order. `reversed`, `swapped` and `viewerSwapped` are additive, default-false fields in the existing version-1 layout preferences. Legacy saved layouts stay readable.
 
+### Subsequent swap and rail correction
+
+[Workspace layout stability](WORKSPACE_LAYOUT_STABILITY.md) corrects the earlier implementation's implicit Restore during swaps. Placement changes now retain expansion and active dimensions, and the normal restore baseline follows the chosen arrangement. Rail availability and moved section state are covered by repeated-operation regression tests. Restore reverses temporary expansion/resizing, not a deliberate later position exchange.
+
 ## Fixed and fluid
 
 Fixed: source identity, grants, selection/history, pinned preview, bounded parsing, background jobs, local/R2 capability truth and existing splitter accessibility. Fluid: presentation state, CSS grid tracks, DOM placement and toolbar placement. No new permissions, dependencies, inference, transfer APIs or native filesystem effects. Single-pane Preview Right configuration and queued breadcrumb/toolbar redesign are separate follow-up work; this change exchanges existing sections in the current 2×2 layout.
