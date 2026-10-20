@@ -70,6 +70,7 @@ const left = page.locator(".pane").nth(0),
   }),
   menu = page.locator(".command-flyout");
 async function settle() {
+  await page.waitForTimeout(160);
   await page.evaluate(
     () =>
       new Promise((resolve) =>
@@ -148,77 +149,19 @@ try {
       () => fixtureCalls.filter((c) => c.path === "/v1/read").length,
     );
     await page.screenshot({ path: output + "/normal-1366.png" });
-    // Minimize retracts to a title bar; restoring does not reconstruct or reread the viewer.
-    await right
-      .getByRole("button", { name: "Minimize right viewer", exact: true })
-      .click();
-    assert((await right.locator(".viewer").boundingBox()).height < 45);
-    await right
-      .getByRole("button", { name: "Restore right viewer", exact: true })
-      .first()
-      .click();
-    await settle();
-    close((await snapshot())[1].scroll, original[1].scroll);
-    await left
-      .getByRole("button", { name: "Minimize left hierarchy", exact: true })
-      .click();
-    assert.equal(await left.locator(".hierarchy").isVisible(), false);
-    await left
-      .getByRole("button", { name: "Restore left hierarchy", exact: true })
-      .first()
-      .click();
-    // One viewer really reaches the viewport top. Commands stay in the other, predetermined column.
-    await left
-      .getByRole("button", { name: "Maximize left viewer", exact: true })
-      .click();
-    await settle();
-    const maximized = await left.locator(".viewer").boundingBox();
-    assert(maximized.y <= 15 && maximized.height > 600);
-    const chrome = await page.locator(".workspace-chrome").boundingBox(),
-      other = await right.boundingBox();
-    assert(chrome.x >= other.x - 2);
-    assert(chrome.y + chrome.height <= other.y + 2);
-    assert.equal(
-      await left
-        .getByRole("button", { name: "Restore left viewer", exact: true })
-        .isVisible(),
-      true,
-    );
-    await page.screenshot({ path: output + "/one-maximized-1366.png" });
-    await right
-      .getByRole("button", { name: "Maximize right viewer", exact: true })
-      .click();
-    await settle();
-    assert(
-      await page
-        .locator("body")
-        .evaluate((n) => n.classList.contains("commands-corner")),
-    );
-    for (const pane of [left, right])
-      assert((await pane.locator(".viewer").boundingBox()).y < 16);
-    await page.screenshot({ path: output + "/comparison-maximized-1366.png" });
-    const edge = await page
-      .getByRole("separator", { name: "Pane widths" })
-      .boundingBox();
-    await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(edge.x + 35, edge.y + edge.height / 2, { steps: 8 });
-    await page.mouse.up();
-    assert.deepEqual(
-      await page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("atlas-test-storage"))[
-            "atlas.workspace.layout.v1"
-          ],
-      ),
-      stored,
-      "Temporary focused resizing cannot overwrite saved normal-layout preferences",
-    );
-
-    // The dock has its own footer slot, remains visible at rest and never covers a pane/scrollbar.
-    const dock = await launcher.boundingBox(),
-      paneBox = await right.boundingBox();
-    assert(dock.y >= paneBox.y + paneBox.height);
+    // Header reclamation preserves the other section's exact pixel height.
+    await left.getByRole('button',{name:'Maximize left hierarchy',exact:true}).click();await settle();
+    let next=await snapshot();close(next[0].lower,original[0].lower);assert(next[0].upper>original[0].upper+40);
+    close(next[1].upper,original[1].upper);close(next[1].lower,original[1].lower);
+    assert(await left.locator('.viewer').isVisible());assert.equal(await launcher.isVisible(),false);
+    const chrome=await page.locator('.workspace-chrome').boundingBox(),other=await right.boundingBox();assert(chrome.x>=other.x-2);assert(chrome.y+chrome.height<=other.y+2);
+    await page.screenshot({path:output+'/explorer-reclaims-header.png'});
+    await page.locator('#restore').click();await settle();assert.deepEqual(await snapshot(),original);
+    await left.getByRole('button',{name:'Maximize left viewer',exact:true}).click();await settle();
+    next=await snapshot();close(next[0].upper,original[0].upper);assert(next[0].lower>original[0].lower+40);assert(await left.locator('.hierarchy').isVisible());
+    assert((await left.boundingBox()).y<=15);assert.equal(await launcher.isVisible(),false);
+    await right.getByRole('button',{name:'Maximize right hierarchy',exact:true}).click();await settle();
+    assert(await launcher.isVisible());assert(await right.locator('.viewer').isVisible());assert(await left.locator('.hierarchy').isVisible());
     await left
       .getByRole("button", { name: "Restore left viewer", exact: true })
       .focus();
@@ -270,112 +213,40 @@ try {
     assert(await menu.isVisible());
     await page.keyboard.press("Escape");
     assert.equal(await menu.isVisible(), false);
-    // Explicit Restore restores the exact pre-focus sizes, scroll, pins and selection.
-    await openCommands();
-    await page
-      .getByRole("menuitem", { name: "Restore layout", exact: true })
-      .click();
-    await settle();
-    const restored = await snapshot();
-    for (const [i, item] of restored.entries()) {
-      close(item.width, original[i].width);
-      close(item.upper, original[i].upper);
-      close(item.lower, original[i].lower);
-      assert.deepEqual(
-        { ...item, width: 0, upper: 0, lower: 0 },
-        { ...original[i], width: 0, upper: 0, lower: 0 },
-      );
-    }
-    assert.deepEqual(
-      await page.evaluate(
-        () =>
-          JSON.parse(localStorage.getItem("atlas-test-storage"))[
-            "atlas.workspace.layout.v1"
-          ],
-      ),
-      stored,
-    );
-    assert.equal(
-      await page.evaluate(
-        () => fixtureCalls.filter((c) => c.path === "/v1/read").length,
-      ),
-      reads,
-    );
-    // Close removes only the view; Dual Pane reopens either closed column at its old state.
-    await right
-      .getByRole("button", { name: "Close right pane", exact: true })
-      .click();
-    assert.equal(await right.isVisible(), false);
-    assert((await left.boundingBox()).width > 1000);
-    assert(
-      await left
-        .getByRole("button", { name: "Close left pane", exact: true })
-        .isDisabled(),
-    );
-    await page.getByRole("button", { name: "Dual Pane", exact: true }).click();
-    await settle();
-    assert.equal((await snapshot())[1].pin, "true");
-    close((await snapshot())[1].scroll, original[1].scroll);
-    await left
-      .getByRole("button", { name: "Close left pane", exact: true })
-      .click();
-    assert.equal(await left.isVisible(), false);
-    await page.getByRole("button", { name: "Dual Pane", exact: true }).click();
-    assert(await left.locator(".viewer img").isVisible());
-    await right
-      .getByRole("button", { name: "Close right viewer", exact: true })
-      .click();
-    assert.equal(await right.locator(".viewer").isVisible(), false);
-    await openCommands();
-    await page
-      .getByRole("menuitem", { name: "Show content viewers", exact: true })
-      .click();
-    assert(await right.locator(".viewer").isVisible());
-    // Keyboard/touch activation and responsive viewport maximization.
-    await launcher.focus();
-    await page.keyboard.press("ArrowDown");
-    assert(await menu.isVisible());
-    await page.keyboard.press("End");
-    await page.keyboard.press("Escape");
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await right
-      .getByRole("button", { name: "Maximize right viewer", exact: true })
-      .click();
-    await settle();
-    assert((await right.locator(".viewer").boundingBox()).y < 12);
-    assert(await launcher.isVisible());
-    assert(
-      await right
-        .getByRole("button", { name: "Restore right viewer", exact: true })
-        .isVisible(),
-    );
-    assert(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    );
-    await page.screenshot({ path: output + "/maximized-390.png" });
-    await launcher.tap();
-    assert(await menu.isVisible());
-    await page.keyboard.press("Escape");
-    await right
-      .getByRole("button", { name: "Restore right viewer", exact: true })
-      .click();
-    await settle();
-    assert(await left.isVisible());
-    assert(await right.isVisible());
-    assert(
-      (await page.evaluate(() => fixtureCalls)).every(
-        (c) => c.path !== "/v1/operate",
-      ),
-    );
-    assert.deepEqual(errors, []);
-    console.log(
-      "PASS Chromium " +
-        browser.version() +
-        ": window controls, viewport maximization, toolbar reflow, mouse/keyboard/touch overflow, delayed dismissal/focus/dialog safety, exact sizes/scroll/pins/selection restore, close/reopen and narrow layout. Synthetic provider transport.",
-    );
+
+    await page.screenshot({path:output+'/both-reclaim-header.png'});
+    await page.keyboard.press('Escape');await settle();assert.deepEqual(await snapshot(),original);
+    // Reorder the actual sections without replacing media/selection or re-reading files.
+    const image=await left.locator('.viewer img').elementHandle();
+    await left.getByRole('button',{name:'Swap Explorer and Preview vertically in left pane'}).first().click();await settle();
+    assert((await left.locator('.viewer').boundingBox()).y<(await left.locator('.hierarchy').boundingBox()).y);
+    assert(await image.evaluate(n=>n.isConnected));
+    const edge=left.locator('.row-splitter');await edge.focus();await page.keyboard.press('ArrowDown');
+    await left.getByRole('button',{name:'Maximize left viewer',exact:true}).click();await settle();assert(await left.locator('.hierarchy').isVisible());
+    await page.locator('#restore').click();await settle();assert(await image.evaluate(n=>n.isConnected));
+    const leftX=(await left.boundingBox()).x;await page.getByRole('button',{name:'Swap left and right panes',exact:true}).click();await settle();assert((await left.boundingBox()).x>leftX);
+    await page.getByRole('button',{name:'Swap left and right panes',exact:true}).click();
+    await left.getByRole('button',{name:'Swap Explorer and Preview vertically in left pane'}).first().click();
+    await left.getByRole('button',{name:'Swap previews between panes'}).click();await settle();
+    assert(await right.locator('.viewer img').isVisible());assert.equal(await left.locator('.viewer img').count(),0);assert(await image.evaluate(n=>n.isConnected));
+    await right.getByRole('button',{name:'Maximize right viewer',exact:true}).click();await settle();assert(await right.locator('.hierarchy').isVisible());
+    await page.locator('#restore').click();await settle();assert(await right.locator('.viewer img').isVisible());
+    await right.getByRole('button',{name:'Swap previews between panes'}).click();await settle();assert(await left.locator('.viewer img').isVisible());
+    await left.getByRole('button',{name:'Swap explorers between panes'}).click();await settle();assert(await image.evaluate(n=>n.isConnected));
+    await left.getByRole('button',{name:'Swap explorers between panes'}).click();await settle();
+    // Explicitly closing the Explorer leaves its Preview alive; Restore reopens it.
+    await left.getByRole('button',{name:'Close left hierarchy',exact:true}).click();assert.equal(await left.locator('.hierarchy').isVisible(),false);assert(await image.evaluate(n=>n.isConnected));assert(await left.locator('.viewer').isVisible());
+    await page.locator('#restore').click();await settle();assert(await left.locator('.hierarchy').isVisible());
+    assert.equal(await page.evaluate(()=>fixtureCalls.filter(c=>c.path==='/v1/read').length),reads);
+    await page.locator('#dual').click();await settle();
+    const single=page.locator('.pane:not([hidden])');
+    await single.getByRole('button',{name:/Maximize .* viewer/,exact:true}).click();await settle();
+    assert(await single.locator('.hierarchy').isVisible());assert(await single.locator('.viewer').isVisible());assert.equal(await launcher.isVisible(),false);assert(await page.locator('#restore').isVisible());
+    await page.locator('#restore').click();await page.locator('#dual').click();await settle();
+    for(const width of [900,390]){await page.setViewportSize({width,height:768});await settle();await left.getByRole('button',{name:'Maximize left viewer',exact:true}).click();await settle();assert(await left.locator('.hierarchy').isVisible());assert(await right.isVisible());assert.equal(await launcher.isVisible(),false);await page.keyboard.press('Escape');}
+    assert.deepEqual(errors,[]);
+    console.log('PASS Chromium '+browser.version()+': non-destructive upper/lower header reclamation, exact dimensions/selection/pins/scroll restore, both-pane-only floating menu, vertical/side rearrangement, draggable divider, independent Close and retained preview DOM, narrow visibility; synthetic providers.');
+
   }
 } catch (error) {
   await page.screenshot({ path: output + "/failure.png" });

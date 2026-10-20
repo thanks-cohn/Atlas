@@ -37,14 +37,7 @@ export function maximizeWindow(state, index, region) {
       closed: copy(state.closed),
       regions: copy(state.regions),
     };
-  if (region === "pane") {
-    state.maximized = [null, null];
-    state.exclusive = index;
-  } else if (state.exclusive !== null) {
-    state.maximized = [null, null];
-    state.exclusive = null;
-  }
-  state.maximized[index] = region;
+  state.maximized[index] = region === "pane" ? "hierarchy" : region;
 }
 export function restoreWindow(state, index) {
   if (!state.maximized[index]) return;
@@ -79,7 +72,6 @@ export function toggleDual(state, keepIndex = 0) {
 export function visiblePanes(state) {
   return [0, 1].filter(
     (index) =>
-      !state.closed[index] &&
-      (state.exclusive === null || state.exclusive === index),
+      !state.closed[index],
   );
 }

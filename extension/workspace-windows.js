@@ -22,10 +22,11 @@ export function createWorkspaceWindows({
   const $ = (id) => document.getElementById(id);
   let state = windowState(),
     initialized = false,
-    focusMemory = null;
+    focusMemory = null,
+    expandedSizes=null;
   const regionMemory = new Map(),
     paneMemory = new Map();
-  const label = (index) => (index ? "right" : "left");
+  const label = (index) => ((getPreferences().swapped ? 1-index : index) ? "right" : "left");
   function capture() {
     return {
       panes: panes.map((p) => ({
@@ -33,7 +34,8 @@ export function createWorkspaceWindows({
         preview: p.preview,
         tab: p.previewTab,
         scroll: [
-          ...p.dom.querySelectorAll(".items,.viewer-content,.breadcrumb"),
+          ...p.dom.querySelectorAll(".items,.breadcrumb"),
+          ...p.viewerDom.querySelectorAll(".viewer-content"),
         ].map((node) => ({ node, top: node.scrollTop, left: node.scrollLeft })),
       })),
       root: { top: $("panes").scrollTop, left: $("panes").scrollLeft },
@@ -45,8 +47,9 @@ export function createWorkspaceWindows({
   }
   function restoreScroll(memory, onlyIndex = null, region = null) {
     if (!memory) return;
+    const ownerIndex=onlyIndex!==null && region==='viewer'?panes.findIndex(p=>p.viewerDom.parentElement===panes[onlyIndex].dom):onlyIndex;
     for (const [i, saved] of memory.panes.entries()) {
-      if (onlyIndex !== null && i !== onlyIndex) continue;
+      if (onlyIndex !== null && i !== ownerIndex) continue;
       for (const s of saved.scroll) {
         const viewer = s.node.matches(".viewer-content");
         if (region && viewer !== (region === "viewer")) continue;
@@ -90,6 +93,7 @@ export function createWorkspaceWindows({
         preferences: structuredClone(getPreferences()),
         scroll: capture(),
         active: document.activeElement,
+        sizes: panes.map(p=>({height:p.dom.getBoundingClientRect().height, hierarchy:p.dom.querySelector(".hierarchy").getBoundingClientRect().height, viewer:p.dom.querySelector(".viewer").getBoundingClientRect().height})),
       };
     maximizeWindow(state, index, region);
     if (!state.snapshot) finishRestore();
@@ -104,7 +108,7 @@ export function createWorkspaceWindows({
   }
   function finishRestore() {
     const memory = focusMemory;
-    focusMemory = null;
+    focusMemory = null;expandedSizes=null;
     if (memory) setPreferences(structuredClone(memory.preferences));
     redraw(memory?.scroll);
     if (memory) keepFocusVisible(memory.active);
@@ -146,14 +150,15 @@ export function createWorkspaceWindows({
       if (!closePane(state, index)) return;
       setActive(visiblePanes(state)[0]);
     } else {
-      regionMemory.set(index + "viewer", memory);
-      closeViewer(state, index);
+      regionMemory.set(index + region, memory);
+      if(region==='viewer')closeViewer(state,index);
+      else {if(state.maximized[index])restoreWindow(state,index);state.regions[index].hierarchy='closed';}
     }
     if (!state.snapshot && focusMemory) finishRestore();
     getPreferences().dual = state.closed.every((closed) => !closed);
     redraw(memory);
     keepFocusVisible(
-      panes[visiblePanes(state)[0]].dom.querySelector(".provider"),
+      panes[index].dom.querySelector(region === "hierarchy" ? ".viewer .maximize" : ".provider"),
     );
     save();
   }
@@ -197,22 +202,32 @@ export function createWorkspaceWindows({
       group.append(b);
       return b;
     };
-    const minus = make("minimize", "−", () => minimize(index, region));
+    make("rearrange", "⇅", () => {
+      if(state.snapshot)restoreAll();
+      const pref=getPreferences();pref.reversed ||= [false,false];const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;pref.reversed[target]=!pref.reversed[target];
+      redraw(capture());save();
+    }).setAttribute('aria-label',`Swap Explorer and Preview vertically in ${label(index)} pane`);
+    const side=make('move-side','⇄',()=>{
+      if(state.snapshot)restoreAll();const pref=getPreferences();
+      pref.viewerSwapped=!pref.viewerSwapped;
+      if(region==='hierarchy'){pref.swapped=!pref.swapped;pref.ratio=100-pref.ratio;}
+      redraw(capture());save();
+    });side.title=region==='viewer'?'Swap previews between panes':'Swap explorers between panes';side.setAttribute('aria-label',side.title);
+    const position=()=>{const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;return target<0?index:target;};
+    const minus = make("minimize", "−", () => minimize(position(), region));
     const max = make("maximize", "□", () => {
-      state.maximized[index] ? restoreOne(index) : focus(index, region);
+      state.maximized[position()] === region ? restoreOne(position()) : focus(position(), region);
     });
-    const closedRegion = region === "hierarchy" ? "pane" : "viewer";
-    const x = make("close", "×", () => close(index, closedRegion));
-    controls.push({ index, region, minus, max, x, closedRegion });
+    const closedRegion = region;
+    const x = make("close", "×", () => close(position(), closedRegion));
+    controls.push({ index, position,side,region, minus, max, x, closedRegion });
     return group;
   }
   function geometry() {
     if (!initialized) return;
     const visible = visiblePanes(state).filter((i) => !panes[i].dom.hidden),
       focused = visible.filter((i) => state.maximized[i]);
-    const corner =
-      focused.length > 0 &&
-      (visible.length === 1 || focused.length === visible.length);
+    const corner = visible.length === 2 && focused.length === 2;
     document.body.classList.toggle("workspace-focused", focused.length > 0);
     document.body.classList.toggle("commands-corner", corner);
     const chrome = $("workspace-chrome"),
@@ -227,26 +242,43 @@ export function createWorkspaceWindows({
         "--chrome-space",
         chrome.getBoundingClientRect().height + 12 + "px",
       );
+    } else if(visible.length===1 && focused.length===1){
+      main.style.setProperty('--chrome-left','12px');main.style.setProperty('--chrome-width',Math.max(0,main.getBoundingClientRect().width-24)+'px');main.style.setProperty('--chrome-space',chrome.getBoundingClientRect().height+12+'px');
     } else main.style.setProperty("--chrome-space", "0px");
+    for(const [index,p] of panes.entries()){
+      const saved=(expandedSizes || focusMemory?.sizes)?.[index];
+      if(!saved)continue;
+      const focused=state.maximized[index];
+      p.dom.style.setProperty('--normal-height',saved.height+'px');
+      p.dom.style.setProperty('--kept-hierarchy',saved.hierarchy+'px');
+      p.dom.style.setProperty('--kept-viewer',saved.viewer+'px');
+      p.dom.classList.toggle('keep-normal-height',!focused && state.snapshot!==null);
+    }
+    main.classList.toggle('single-expansion',visible.length===1 && focused.length===1);
   }
   function apply() {
     if (!initialized) return;
     const logical = visiblePanes(state),
       focused = logical.filter((i) => state.maximized[i]);
-    const narrow =
-      typeof matchMedia === "function" &&
-      matchMedia("(max-width:1050px)").matches;
-    const visible = narrow && focused.length === 1 ? focused : logical,
+    const visible = logical,
       dualVisible = visible.length === 2;
     const root = $("panes");
     root.classList.toggle("dual", dualVisible);
     delete root.dataset.expand;
+    for(const [owner,p] of panes.entries()){
+      const host=panes[getPreferences().viewerSwapped?1-owner:owner].dom;
+      if(p.viewerDom && p.viewerDom.parentElement!==host)host.append(p.viewerDom);
+    }
     for (const [index, p] of panes.entries()) {
       p.dom.hidden = !visible.includes(index);
       p.dom.classList.toggle(
         "only-pane",
         visible.length === 1 && visible[0] === index,
       );
+      p.dom.classList.toggle('reversed',getPreferences().reversed?.[index]===true);
+      const side=getPreferences().swapped?1-index:index;
+      p.dom.style.gridColumn=dualVisible?(side===0?'1':'3'):'1';
+      if(!state.snapshot)p.dom.classList.remove('keep-normal-height');
       p.dom.dataset.windowMax = state.maximized[index] || "";
       p.dom.dataset.hierarchyState = state.regions[index].hierarchy;
       p.dom.dataset.viewerState = state.regions[index].viewer;
@@ -260,27 +292,27 @@ export function createWorkspaceWindows({
       );
     controls = controls.filter((c) => c.max.isConnected);
     for (const c of controls) {
+      const index=c.position();c.side.disabled=logical.length<2;c.max.parentElement?.setAttribute('aria-label',`${label(index)} ${c.region} window controls`);
       const minimized =
-          !state.maximized[c.index] &&
-          state.regions[c.index][c.region] === "minimized",
-        maximized = !!state.maximized[c.index];
-      const minusText = `${minimized ? "Restore" : "Minimize"} ${label(c.index)} ${c.region}`;
+          !state.maximized[index] &&
+          state.regions[index][c.region] === "minimized",
+        maximized = state.maximized[index] === c.region;
+      const minusText = `${minimized ? "Restore" : "Minimize"} ${label(index)} ${c.region}`;
       c.minus.title = minusText;
       c.minus.setAttribute("aria-label", minusText);
       c.minus.setAttribute("aria-pressed", String(minimized));
-      const maxText = `${maximized ? "Restore" : "Maximize"} ${label(c.index)} ${c.region}`;
+      const maxText = `${maximized ? "Restore" : "Maximize"} ${label(index)} ${c.region}`;
       c.max.title = maxText;
       c.max.setAttribute("aria-label", maxText);
       c.max.textContent = maximized ? "❐" : "□";
       c.max.classList.toggle("restore", maximized);
-      c.x.title = `Close ${label(c.index)} ${c.closedRegion} view`;
+      c.x.title = `Close ${label(index)} ${c.closedRegion} view`;
       c.x.setAttribute(
         "aria-label",
-        `Close ${label(c.index)} ${c.closedRegion}`,
+        `Close ${label(index)} ${c.closedRegion}`,
       );
       c.x.disabled =
-        c.closedRegion === "pane" &&
-        state.closed.filter((closed) => !closed).length === 1;
+        state.regions[index][c.region=== "viewer"?"hierarchy":"viewer"] === "closed";
     }
     for (const b of document.querySelectorAll("[data-expand]"))
       b.setAttribute(
@@ -315,20 +347,21 @@ export function createWorkspaceWindows({
     top: { label: "Maximize hierarchies", run: () => expand("top") },
     bottom: { label: "Maximize viewers", run: () => expand("bottom") },
     left: {
-      label: "Focus left pane",
+      label: "Expand left Explorer",
       run: () => focus(0, "pane"),
       enabled: () => !state.closed[0],
     },
     right: {
-      label: "Focus right pane",
+      label: "Expand right Explorer",
       run: () => focus(1, "pane"),
       enabled: () => !state.closed[1],
     },
+    swap: {label:"Swap left and right panes",run:()=>{if(state.snapshot)restoreAll();getPreferences().swapped=!getPreferences().swapped;getPreferences().ratio=100-getPreferences().ratio;redraw(capture());save();}},
     viewers: {
-      label: "Show content viewers",
+      label: "Reopen closed sections",
       run: () => {
         if (state.snapshot) restoreAll();
-        state.regions.forEach((r) => (r.viewer = "normal"));
+        state.regions.forEach((r) => {r.viewer = "normal";r.hierarchy="normal";});
         redraw();
         requestAnimationFrame(() => {
           for (const index of [0, 1])
@@ -344,6 +377,7 @@ export function createWorkspaceWindows({
     },
   });
   document.querySelector(".actions").append(dock.root);
+  const swap=document.createElement('button');swap.type='button';swap.textContent='Swap sides';swap.onclick=commands.swap.run;swap.setAttribute('aria-label','Swap left and right panes');document.querySelector('.actions').append(swap);
   function expand(mode = "") {
     if (!mode) {
       restoreAll();
@@ -359,6 +393,7 @@ export function createWorkspaceWindows({
   }
   return {
     titleControls,
+    resize(index,value){if(!state.snapshot)return;expandedSizes ||= structuredClone(focusMemory.sizes);const p=panes[index],total=p.dom.querySelector('.hierarchy').getBoundingClientRect().height+p.dom.querySelector('.viewer').getBoundingClientRect().height;expandedSizes[index].hierarchy=total*value/100;expandedSizes[index].viewer=total*(100-value)/100;},
     apply,
     geometry,
     expand,

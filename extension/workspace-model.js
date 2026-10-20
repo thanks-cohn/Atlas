@@ -83,6 +83,9 @@ export function layoutPreferences(value = {}) {
   const legacy = clamp(value.height, 55, 25, 75);
   return {
     dual: value.dual === true,
+    reversed: [0,1].map(i=>value.reversed?.[i]===true),
+    swapped: value.swapped===true,
+    viewerSwapped:value.viewerSwapped===true,
     ratio: clamp(value.ratio, 50, 20, 80),
     heights: [0, 1].map((index) =>
       clamp(value.heights?.[index], legacy, 25, 75),

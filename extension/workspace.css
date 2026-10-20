@@ -928,38 +928,19 @@ body.workspace-focused .workspace-chrome .layout-controls button {
 body.workspace-focused .pane[data-window-max=""] {
   margin-top: var(--chrome-space, 0px);
 }
+/* Expansion changes allocation, never visibility of a neighboring section. */
+.pane[data-window-max="hierarchy"],.pane[data-window-max="pane"] {
+  grid-template-rows:auto minmax(0,1fr) 10px var(--kept-viewer);
+  margin-top:0;
+}
 .pane[data-window-max="viewer"] {
-  grid-template-rows: 0 0 0 minmax(0, 1fr);
-  margin-top: 0;
+  grid-template-rows:auto var(--kept-hierarchy) 10px minmax(0,1fr);
+  margin-top:0;
 }
-.pane[data-window-max="viewer"] .pane-head,
-.pane[data-window-max="viewer"] .hierarchy,
-.pane[data-window-max="viewer"] .row-splitter {
-  display: none;
-}
-.pane[data-window-max="viewer"] .viewer {
-  display: flex;
-}
-.pane[data-window-max="viewer"] .viewer-tabs {
-  display: flex;
-}
-.pane[data-window-max="viewer"] .viewer-content {
-  display: block;
-}
-.pane[data-window-max="hierarchy"] {
-  grid-template-rows: auto minmax(0, 1fr) 0 0;
-  margin-top: 0;
-}
-.pane[data-window-max="hierarchy"] .hierarchy {
-  visibility: visible;
-}
-.pane[data-window-max="hierarchy"] .viewer,
-.pane[data-window-max="hierarchy"] .row-splitter {
-  display: none;
-}
-.pane[data-window-max="pane"] {
-  margin-top: 0;
-}
+.pane.keep-normal-height {height:var(--normal-height);align-self:start;}
+.command-dock {display:none;}
+body.commands-corner .command-dock {display:block;}
+body.workspace-focused main.single-expansion {padding-top:var(--chrome-space,110px);}
 body.commands-corner main {
   padding-bottom: 64px;
 }
@@ -1185,4 +1166,36 @@ body.commands-corner .workspace-chrome #notice {
   border: 1px solid currentColor;
   left: calc(50% - 2px);
   top: calc(50% - 5px);
+}
+
+/* Reorder existing DOM, preserving preview elements and their state. */
+.pane.reversed {grid-template-rows:minmax(0,var(--lower,45fr)) 10px auto minmax(0,var(--upper,55fr));}
+.pane.reversed > .viewer {grid-row:1;}
+.pane.reversed > .row-splitter {grid-row:2;}
+.pane.reversed > .pane-head {grid-row:3;}
+.pane.reversed > .hierarchy {grid-row:4;}
+.pane.reversed[data-window-max="hierarchy"] {grid-template-rows:var(--kept-viewer) 10px auto minmax(0,1fr);}
+.pane.reversed[data-window-max="viewer"] {grid-template-rows:minmax(0,1fr) 10px auto var(--kept-hierarchy);}
+.pane[data-hierarchy-state="closed"] {grid-template-rows:0 0 0 minmax(0,1fr);}
+.pane[data-hierarchy-state="closed"] > .pane-head,
+.pane[data-hierarchy-state="closed"] > .hierarchy,
+.pane[data-hierarchy-state="closed"] > .row-splitter {display:none;}
+.pane.reversed[data-hierarchy-state="closed"] {grid-template-rows:minmax(0,1fr) 0 0 0;}
+.pane.reversed[data-viewer-state="closed"] {grid-template-rows:0 0 auto minmax(0,1fr);}
+body.commands-corner main {padding-bottom:64px;}
+@media(max-width:1050px){
+  #panes .pane {grid-column:1!important;}
+  body.workspace-focused #panes.dual {overflow:auto;}
+  body.workspace-focused .workspace-chrome {position:relative;}
+  body.commands-corner .workspace-chrome {position:absolute;}
+  .pane.keep-normal-height {height:auto;}
+}
+
+.pane[data-viewer-state="closed"] {grid-template-rows:auto minmax(0,1fr) 0 0;}
+.pane.reversed[data-viewer-state="closed"] {grid-template-rows:0 0 auto minmax(0,1fr);}
+.pane.reversed[data-hierarchy-state="minimized"] {grid-template-rows:minmax(0,1fr) 0 auto 0;}
+.pane.reversed[data-viewer-state="minimized"] {grid-template-rows:38px 0 auto minmax(0,1fr);}
+@media(prefers-reduced-motion:no-preference){
+ .pane {transition:margin-top .12s ease;}
+ body.resizing .pane {transition:none;}
 }

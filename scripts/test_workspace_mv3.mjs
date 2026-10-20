@@ -128,14 +128,9 @@ try {
     await right
       .getByRole("button", { name: "Restore right hierarchy", exact: true })
       .click();
-    await right
-      .getByRole("button", { name: "Close right pane", exact: true })
-      .click();
-    assert.equal(await right.isVisible(), false);
-    await workspace
-      .getByRole("button", { name: "Dual Pane", exact: true })
-      .click();
-    assert(await right.isVisible());
+    await right.getByRole('button',{name:'Close right hierarchy',exact:true}).click();
+    assert(await right.isVisible());assert.equal(await right.locator('.hierarchy').isVisible(),false);assert(await right.locator('.viewer').isVisible());
+    await workspace.locator('#restore').click();assert(await right.locator('.hierarchy').isVisible());
     for (const href of ["pinboard.html", "page.html", "explorer.html"])
       assert(await workspace.locator(`a[href="${href}"]`).count());
     console.log(

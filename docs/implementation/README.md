@@ -7,6 +7,7 @@ Research/proposals in this directory must keep their own status explicit.
 
 | Implemented area | Behavior record | Evidence boundary |
 | --- | --- | --- |
+| Workspace header reclamation | [Non-destructive expansion](WORKSPACE_HEADER_RECLAMATION.md) | Rendered Chromium geometry, restoration and exchanges; installed MV3/Windows CI separate |
 | Automatic folder-derived tags | [Folder tags](AUTOMATIC_FOLDER_TAGS.md) | Bookmark/authored sources; dedicated and rendered Chromium checks; local/R2 Pinboard adapters deferred |
 | Automatic bookmark cover fetching and sticky retries | [Automatic viewport covers](AUTOMATIC_VIEWPORT_COVERS.md) | REVERTED on performance report; preserved as historical behavior |
 | Immediate pin preview and independent media | [Immediate preview](INSTANT_PIN_PREVIEW.md) | Delayed-setup/media-state tests pass; owner Chrome visual/latency acceptance pending |

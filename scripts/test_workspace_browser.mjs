@@ -221,7 +221,7 @@ try {
       .getByRole("button", { name: "Expand viewers", exact: true })
       .first()
       .click();
-    assert.equal(await left.locator(".hierarchy").isVisible(), false);
+    assert.equal(await left.locator(".hierarchy").isVisible(), true);
     assert.equal(await right.locator(".viewer").isVisible(), true);
     await page.keyboard.press("Escape");
     close(
@@ -231,16 +231,11 @@ try {
     await page
       .getByRole("button", { name: "Expand hierarchies", exact: true })
       .click();
-    assert.equal(await left.locator(".viewer").isVisible(), false);
+    assert.equal(await left.locator(".viewer").isVisible(), true);
     await page.keyboard.press("Escape");
     assert.equal(await left.locator(".viewer").isVisible(), true);
-    await page
-      .getByRole("button", { name: "Workspace commands", exact: true })
-      .click();
-    await page
-      .getByRole("menuitem", { name: "Focus right pane", exact: true })
-      .click();
-    assert.equal(await left.isVisible(), false);
+    await right.getByRole('button',{name:'Maximize right hierarchy',exact:true}).click();
+    assert.equal(await left.isVisible(),true);
     await page.keyboard.press("Escape");
     assert.equal(await left.locator(".viewer img").isVisible(), true);
     await left.getByRole("option", { name: "Field notes.txt" }).click();
