@@ -7,6 +7,9 @@ import {
   layoutPreferences,
 } from "./workspace-model.js";
 import { PROVIDERS, listing, safeURL } from "./workspace-providers.js";
+import { bindSplitter } from "./workspace-splitter.js";
+import { fillPreview, releasePreview } from "./workspace-preview.js";
+import { showContextMenu } from "./workspace-menu.js";
 const $ = (id) => document.getElementById(id),
   panes = [paneState(), paneState("projects")];
 let preferences = layoutPreferences(),
@@ -27,23 +30,59 @@ const button = (label, fn) => {
       });
   return n;
 };
-async function save() {
-  await chrome.storage.local.set({ [WORKSPACE_KEY]: preferences });
+let saveQueue = Promise.resolve();
+const splitters = [];
+function save() {
+  const snapshot = structuredClone(preferences);
+  saveQueue = saveQueue
+    .catch(() => {})
+    .then(() => chrome.storage.local.set({ [WORKSPACE_KEY]: snapshot }));
+  return saveQueue.catch((error) => {
+    $("notice").textContent = "Could not save layout: " + error.message;
+  });
+}
+function expand(mode = "") {
+  $("panes").dataset.expand = mode;
+  $("restore").disabled = !mode;
+  for (const n of document.querySelectorAll("[data-expand]"))
+    n.setAttribute("aria-pressed", String(n.dataset.expand === mode));
 }
 function layout() {
   const root = $("panes");
   root.classList.toggle("dual", preferences.dual);
+  if (
+    preferences.dual &&
+    typeof matchMedia === "function" &&
+    matchMedia("(min-width:1051px)").matches
+  ) {
+    const width = root.getBoundingClientRect().width - 10;
+    const min = Math.min(45, Math.max(20, (260 / Math.max(1, width)) * 100));
+    preferences.ratio = Math.max(min, Math.min(100 - min, preferences.ratio));
+  }
   root.style.setProperty("--width", preferences.ratio + "fr");
   root.style.setProperty("--rest", 100 - preferences.ratio + "fr");
-  root.style.setProperty("--height", preferences.height + "%");
+  panes.forEach((p, index) => {
+    p.dom.style.setProperty("--upper", preferences.heights[index] + "fr");
+    p.dom.style.setProperty("--lower", 100 - preferences.heights[index] + "fr");
+  });
   panes[1].dom.hidden = !preferences.dual;
   $("dual").setAttribute("aria-pressed", String(preferences.dual));
   $("dual").textContent = preferences.dual ? "Single Pane" : "Dual Pane";
-  $("width").value = preferences.ratio;
-  $("height").value = preferences.height;
+  for (const splitter of splitters) splitter.sync();
+}
+function syncNavigation() {
+  for (const n of $("navigation").children)
+    n.setAttribute(
+      "aria-current",
+      String(n.dataset.provider === panes[active].location.provider),
+    );
 }
 async function navigate(p, location, record = true) {
+  if (!location) return;
   const epoch = visit(p, location, record);
+  p.page = 0;
+  p.crumbs = [];
+  p.error = null;
   p.dom.querySelector(".items").replaceChildren(el("p", "Loading…"));
   p.dom.setAttribute("aria-busy", "true");
   if (!p.pinned) renderPreview(p);
@@ -53,10 +92,12 @@ async function navigate(p, location, record = true) {
     p.entries = data.entries;
     p.title = data.title;
     p.parent = data.parent;
+    p.crumbs = data.breadcrumbs || [];
     render(p);
   } catch (error) {
     if (p.epoch !== epoch) return;
     p.entries = [];
+    p.error = error.message;
     p.title = PROVIDERS[location.provider];
     p.parent = null;
     render(p);
@@ -71,16 +112,34 @@ function render(p) {
   const root = p.dom;
   root.querySelector(".provider").value = p.location.provider;
   root.querySelector(".search").value = p.query;
+  const sort = root.querySelector(".sort");
+  const local = p.location.provider === "local" && p.location.id;
+  for (const option of sort.children)
+    if (["size", "modified"].includes(option.value)) {
+      option.hidden = !local;
+      option.disabled = !local;
+    }
+  if (!local && ["size", "modified"].includes(p.sort)) p.sort = "name";
+  sort.value = p.sort;
   root.querySelector(".back").disabled = p.index <= 0;
   root.querySelector(".forward").disabled = p.index >= p.history.length - 1;
   root.querySelector(".up").disabled = !p.parent;
   const crumbs = root.querySelector(".breadcrumb");
-  crumbs.replaceChildren(
-    button(PROVIDERS[p.location.provider], () =>
-      navigate(p, { provider: p.location.provider, id: "" }),
-    ),
-  );
-  crumbs.append(el("span", " / " + (p.title || "")));
+  const chain = [
+    {
+      name: PROVIDERS[p.location.provider],
+      location: { provider: p.location.provider, id: "" },
+    },
+    ...(p.crumbs || []),
+  ];
+  crumbs.replaceChildren();
+  for (const [i, crumb] of chain.entries()) {
+    if (i) crumbs.append(el("span", "/"));
+    crumbs.append(button(crumb.name, () => navigate(p, crumb.location)));
+  }
+  if (!p.crumbs?.length && p.location.id)
+    crumbs.append(el("span", " / " + (p.title || "")));
+  syncNavigation();
   renderItems(p);
 }
 function renderItems(p) {
@@ -88,7 +147,30 @@ function renderItems(p) {
     scroll = items.scrollTop;
   items.replaceChildren();
   items.classList.toggle("grid", p.view === "grid");
-  const entries = ordered(p);
+  const all = ordered(p);
+  p.page = Math.min(p.page || 0, Math.max(0, Math.ceil(all.length / 200) - 1));
+  const entries = all.slice(p.page * 200, (p.page + 1) * 200);
+  const footer = p.dom.querySelector(".list-status");
+  footer.replaceChildren(
+    el(
+      "span",
+      `${all.length.toLocaleString()} items · ${p.selected.size} selected`,
+    ),
+  );
+  for (const [label, delta] of [
+    ["Previous page", -1],
+    ["Next page", 1],
+  ]) {
+    const b = button(label, () => {
+      p.page += delta;
+      renderItems(p);
+      items.scrollTop = 0;
+      items.querySelector(".item")?.focus();
+    });
+    b.disabled = delta < 0 ? p.page === 0 : (p.page + 1) * 200 >= all.length;
+    footer.append(b);
+  }
+
   for (const [index, item] of entries.entries()) {
     const row = el("button");
     row.type = "button";
@@ -100,8 +182,9 @@ function renderItems(p) {
       el("small", item.kind),
     );
     row.onclick = (event) => {
-      select(p, entries, index, event);
-      if (!p.pinned) {
+      select(p, all, p.page * 200 + index, event);
+      footer.firstChild.textContent = `${all.length.toLocaleString()} items · ${p.selected.size} selected`;
+      if (!p.pinned && p.preview !== item) {
         p.preview = item;
         renderPreview(p);
       }
@@ -109,26 +192,66 @@ function renderItems(p) {
         n.setAttribute("aria-selected", String(p.selected.has(entries[i]?.id)));
     };
     row.ondblclick = () => open(p, item);
+    row.oncontextmenu = (event) =>
+      showContextMenu(event, [
+        ["Open", () => open(p, item)],
+        [
+          "Preview",
+          () => {
+            p.pinned = false;
+            p.preview = item;
+            p.previewTab = "preview";
+            renderPreview(p);
+          },
+        ],
+        [
+          "Pin Preview",
+          () => {
+            p.preview = item;
+            p.pinned = true;
+            renderPreview(p);
+          },
+        ],
+        [
+          "Properties",
+          () => {
+            p.pinned = false;
+            p.preview = item;
+            p.previewTab = "details";
+            renderPreview(p);
+          },
+        ],
+      ]);
     row.onkeydown = (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
         open(p, item);
       }
-      if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+      if (
+        !event.altKey &&
+        ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+      ) {
         event.preventDefault();
-        items.children[
-          Math.max(
-            0,
-            Math.min(
-              entries.length - 1,
-              index + (event.key === "ArrowDown" ? 1 : -1),
-            ),
-          )
-        ]?.focus();
+        const target =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? entries.length - 1
+              : Math.max(
+                  0,
+                  Math.min(
+                    entries.length - 1,
+                    index + (event.key === "ArrowDown" ? 1 : -1),
+                  ),
+                );
+        const next = items.children[target];
+        next?.focus();
+        if (!event.ctrlKey && !event.metaKey) next?.onclick(event);
       }
       if ((event.ctrlKey || event.metaKey) && event.key === "a") {
         event.preventDefault();
-        p.selected = new Set(entries.map((e) => e.id));
+        p.selected = new Set(all.map((e) => e.id));
+        footer.firstChild.textContent = `${all.length.toLocaleString()} items · ${p.selected.size} selected`;
         for (const n of items.children) n.setAttribute("aria-selected", "true");
       }
     };
@@ -150,52 +273,85 @@ function open(p, item) {
   renderPreview(p);
 }
 function renderPreview(p) {
+  releasePreview(p);
   const root = p.dom.querySelector(".viewer");
   root.replaceChildren();
   const head = el("div");
   head.className = "viewer-head";
-  head.append(el("h2", p.preview?.name || "Preview & details"));
+  head.append(el("h2", p.preview?.name || "Preview"));
+  const controls = el("div");
+  controls.className = "viewer-actions";
   const pin = button(p.pinned ? "Unpin Preview" : "Pin Preview", () => {
     p.pinned = !p.pinned;
-    renderPreview(p);
+    pin.textContent = p.pinned ? "Unpin Preview" : "Pin Preview";
+    pin.setAttribute("aria-pressed", String(p.pinned));
   });
   pin.disabled = !p.preview;
   pin.setAttribute("aria-pressed", String(p.pinned));
-  head.append(pin);
+  const maximize = button("Expand viewers", () => expand("bottom"));
+  controls.append(pin, maximize);
+  head.append(controls);
   root.append(head);
-  const item = p.preview;
-  if (!item) {
-    root.append(
-      el(
-        "p",
-        "Select an item above to inspect it. Pin a preview to keep it while browsing.",
-      ),
+  if (!p.preview) {
+    const empty = el(
+      "p",
+      "Select an item above to preview it. Pin two previews to compare while browsing.",
     );
+    empty.className = "empty";
+    root.append(empty);
     return;
   }
-  root.append(el("small", item.kind));
-  if (item.note) root.append(el("p", item.note));
-  for (const locator of item.locators || [])
-    root.append(el("p", locator.provider + ": " + locator.reference));
-  if (item.size !== undefined) root.append(el("p", item.size + " bytes"));
-  const url = safeURL(item.url);
-  if (url) {
-    const a = el(
-      "a",
-      "Open " + (item.kind === "Project" ? "project" : "source") + " ↗",
-    );
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    root.append(a);
+  const tabs = el("div");
+  tabs.className = "viewer-tabs";
+  tabs.setAttribute("role", "tablist");
+  tabs.setAttribute("aria-label", "Content view");
+  const content = el("div");
+  content.className = "viewer-content";
+  content.id = "viewer-content-" + panes.indexOf(p);
+  content.setAttribute("role", "tabpanel");
+  for (const [id, label] of [
+    ["preview", "Preview"],
+    ["contents", "Contents"],
+    ["notes", "Notes"],
+    ["details", "Details"],
+  ]) {
+    const b = button(label, () => {
+      p.previewTab = id;
+      renderPreview(p);
+      p.dom.querySelector(`[data-tab="${id}"]`)?.focus();
+    });
+    b.id = content.id + "-" + id;
+    b.dataset.tab = id;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-controls", content.id);
+    b.setAttribute("aria-selected", String(p.previewTab === id));
+    b.tabIndex = p.previewTab === id ? 0 : -1;
+    b.onkeydown = (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const ids = ["preview", "contents", "notes", "details"];
+      if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) {
+        e.preventDefault();
+        p.previewTab =
+          ids[
+            e.key === "Home"
+              ? 0
+              : e.key === "End"
+                ? 3
+                : (ids.indexOf(id) + (e.key === "ArrowRight" ? 1 : 3)) % 4
+          ];
+        renderPreview(p);
+        p.dom.querySelector(`[data-tab="${p.previewTab}"]`)?.focus();
+      }
+    };
+    tabs.append(b);
   }
-  if (item.location?.provider === "local" && !item.folder)
-    root.append(
-      el(
-        "p",
-        "Media viewing and file operations remain available in Explorer. This workspace currently shows file details only.",
-      ),
-    );
+  content.setAttribute("aria-labelledby", content.id + "-" + p.previewTab);
+  root.append(tabs, content);
+  const epoch = p.previewEpoch;
+  fillPreview(p, content, p.preview, p.previewTab).catch((error) => {
+    if (p.previewEpoch === epoch)
+      content.replaceChildren(el("p", error.message));
+  });
 }
 function buildPane(p, index) {
   const root = el("article");
@@ -203,8 +359,14 @@ function buildPane(p, index) {
   root.setAttribute("aria-label", index ? "Right explorer" : "Left explorer");
   root.onfocusin = () => {
     active = index;
+    syncNavigation();
+  };
+  root.onpointerdown = () => {
+    active = index;
+    syncNavigation();
   };
   p.dom = root;
+  root.dataset.pane = String(index);
   const head = el("div");
   head.className = "pane-head";
   const provider = el("select");
@@ -236,7 +398,7 @@ function buildPane(p, index) {
     up,
     button("↻", () => navigate(p, p.location, false)),
     button("Maximize", () => {
-      $("panes").dataset.expand = index ? "right" : "left";
+      expand(index ? "right" : "left");
     }),
   );
   const hierarchy = el("div");
@@ -253,13 +415,18 @@ function buildPane(p, index) {
   search.setAttribute("aria-label", "Search this location");
   search.oninput = () => {
     p.query = search.value;
+    p.page = 0;
     renderItems(p);
   };
   const sort = el("select");
+  sort.className = "sort";
   sort.setAttribute("aria-label", "Sort items");
   for (const [value, label] of [
     ["name", "Name A–Z"],
     ["descending", "Name Z–A"],
+    ["type", "Type"],
+    ["size", "Size, largest first"],
+    ["modified", "Modified, newest first"],
   ]) {
     const option = el("option", label);
     option.value = value;
@@ -267,6 +434,7 @@ function buildPane(p, index) {
   }
   sort.onchange = () => {
     p.sort = sort.value;
+    p.page = 0;
     renderItems(p);
   };
   const view = button("Grid view", () => {
@@ -280,48 +448,114 @@ function buildPane(p, index) {
   items.setAttribute("role", "listbox");
   items.setAttribute("aria-label", "Resources");
   items.setAttribute("aria-multiselectable", "true");
-  hierarchy.append(crumbs, tools, items);
+  const status = el("div");
+  status.className = "list-status";
+  hierarchy.append(crumbs, tools, items, status);
   const viewer = el("section");
   viewer.className = "viewer";
   viewer.setAttribute("aria-label", "Selected item preview");
-  root.append(head, hierarchy, viewer);
+  const edge = el("div");
+  edge.className = "splitter row-splitter";
+  edge.setAttribute(
+    "aria-label",
+    (index ? "Right" : "Left") + " hierarchy height",
+  );
+  root.append(head, hierarchy, edge, viewer);
+  splitters.push(
+    bindSplitter(edge, {
+      axis: "y",
+      value: () => preferences.heights[index],
+      bounds: () => [25, 75],
+      geometry: () => {
+        const upper = hierarchy.getBoundingClientRect(),
+          lower = viewer.getBoundingClientRect();
+        return { start: upper.top, size: upper.height + lower.height };
+      },
+      change: (value) => {
+        preferences.heights[index] = value;
+        layout();
+      },
+      commit: save,
+      reset: 55,
+    }),
+  );
   return root;
 }
 for (const [provider, label] of Object.entries(PROVIDERS)) {
-  $("navigation").append(
-    button(label, () => navigate(panes[active], { provider, id: "" })),
-  );
+  const b = button(label, () => navigate(panes[active], { provider, id: "" }));
+  b.dataset.provider = provider;
+  $("navigation").append(b);
 }
 for (const [index, p] of panes.entries())
   $("panes").append(buildPane(p, index));
+const columnEdge = el("div");
+columnEdge.className = "splitter column-splitter";
+columnEdge.setAttribute("aria-label", "Pane widths");
+$("panes").append(columnEdge);
+splitters.push(
+  bindSplitter(columnEdge, {
+    axis: "x",
+    value: () => preferences.ratio,
+    bounds: () => {
+      const width = $("panes").getBoundingClientRect().width - 10;
+      const min = Math.min(45, Math.max(20, (260 / Math.max(1, width)) * 100));
+      return [min, 100 - min];
+    },
+    geometry: () => {
+      const rect = $("panes").getBoundingClientRect();
+      return { start: rect.left, size: rect.width - 10 };
+    },
+    change: (value) => {
+      preferences.ratio = value;
+      layout();
+    },
+    commit: save,
+  }),
+);
 $("dual").onclick = () => {
   preferences.dual = !preferences.dual;
-  delete $("panes").dataset.expand;
+  if (!preferences.dual) active = 0;
+  expand();
   layout();
-  save().catch((error) => {
-    $("notice").textContent = error.message;
-  });
+  syncNavigation();
+  save();
 };
 $("restore").onclick = () => {
-  delete $("panes").dataset.expand;
+  expand();
   layout();
 };
-for (const id of ["width", "height"]) {
-  $(id).oninput = () => {
-    preferences[id === "width" ? "ratio" : "height"] = Number($(id).value);
-    layout();
-  };
-  $(id).onchange = () =>
-    save().catch((error) => {
-      $("notice").textContent = error.message;
-    });
-}
 for (const b of document.querySelectorAll("[data-expand]"))
-  b.onclick = () => {
-    $("panes").dataset.expand = b.dataset.expand;
-  };
+  b.onclick = () => expand(b.dataset.expand);
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") delete $("panes").dataset.expand;
+  if (event.key === "Escape") {
+    expand();
+    return;
+  }
+  const p = panes[active];
+  if (
+    event.altKey &&
+    ["ArrowLeft", "ArrowRight", "ArrowUp"].includes(event.key)
+  ) {
+    event.preventDefault();
+    if (event.key === "ArrowUp") {
+      if (p.parent) navigate(p, p.parent);
+    } else {
+      const next = p.index + (event.key === "ArrowLeft" ? -1 : 1);
+      if (next >= 0 && next < p.history.length) {
+        p.index = next;
+        navigate(p, p.history[next], false);
+      }
+    }
+  } else if (
+    (event.ctrlKey || event.metaKey) &&
+    event.key.toLowerCase() === "f"
+  ) {
+    event.preventDefault();
+    p.dom.querySelector(".search").focus();
+  } else if (event.key === "F5") {
+    event.preventDefault();
+    navigate(p, p.location, false);
+  }
 });
 try {
   preferences = layoutPreferences(
@@ -331,4 +565,9 @@ try {
   $("notice").textContent = "Layout preferences unavailable: " + error.message;
 }
 layout();
+expand();
 await Promise.all(panes.map((p) => navigate(p, p.location)));
+
+// Recompute effective minimum widths after viewport/sidebar geometry changes.
+if (typeof ResizeObserver === "function")
+  new ResizeObserver(() => layout()).observe($("panes"));

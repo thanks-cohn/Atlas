@@ -45,8 +45,8 @@ visit(left, { provider: "projects", id: "" });
 assert.equal(left.preview, null);
 assert.deepEqual(layoutPreferences({ dual: true, ratio: 99, height: -1 }), {
   dual: true,
-  ratio: 70,
-  height: 25,
+  ratio: 80,
+  heights: [25, 25],
 });
 assert.equal(safeURL("javascript:alert(1)"), null);
 assert.equal(safeURL("file:///etc/passwd"), null);
@@ -136,3 +136,19 @@ assert(calls.every((c) => c.type === "api" && !c.path.includes("write")));
 console.log(
   "Workspace independent state, history, selection, pinning, adapters and denial tests PASS",
 );
+
+assert.deepEqual(layoutPreferences({ height: 63 }).heights, [63, 63]);
+assert.deepEqual(layoutPreferences({ heights: [32, 71] }).heights, [32, 71]);
+assert.deepEqual(layoutPreferences(null).heights, [55, 55]);
+
+const sorted = paneState("local");
+sorted.entries = [
+  { id: "a", name: "Alpha", kind: "text", size: 1, modified: 2 },
+  { id: "z", name: "Zulu", kind: "image", size: 4, modified: 1 },
+];
+sorted.sort = "size";
+assert.equal(ordered(sorted)[0].id, "z");
+sorted.sort = "modified";
+assert.equal(ordered(sorted)[0].id, "a");
+sorted.sort = "type";
+assert.equal(ordered(sorted)[0].id, "z");

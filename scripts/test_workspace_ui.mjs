@@ -18,6 +18,9 @@ class Node {
       },
     };
   }
+  get firstChild() {
+    return this.children[0];
+  }
   append(...nodes) {
     this.children.push(...nodes);
   }
@@ -42,6 +45,9 @@ class Node {
         .map((n) => n.querySelector(selector))
         .find(Boolean)
     );
+  }
+  getBoundingClientRect() {
+    return { top: 0, left: 0, width: 1000, height: 500 };
   }
   focus() {
     this.focused = true;
@@ -97,7 +103,7 @@ row.onclick({});
 assert.equal(row.attributes["aria-selected"], "true");
 let viewer = left.querySelector(".viewer");
 assert.equal(viewer.children[0].children[0].textContent, "Folder");
-await viewer.children[0].children[1].onclick();
+await viewer.children[0].children[1].children[0].onclick();
 await row.ondblclick();
 assert.equal(
   left.querySelector(".items").children[0].textContent,
@@ -111,7 +117,7 @@ assert.equal(
 expansions[1].onclick();
 assert.equal(ids.panes.dataset.expand, "bottom");
 ids.restore.onclick();
-assert.equal(ids.panes.dataset.expand, undefined);
+assert.equal(ids.panes.dataset.expand, "");
 assert.equal(
   right.querySelector(".items").children[0].textContent,
   "Nothing here yet.",

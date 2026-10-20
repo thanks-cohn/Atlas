@@ -14,6 +14,8 @@ export function paneState(provider = "bookmarks") {
     pinned: false,
     preview: null,
     epoch: 0,
+    previewTab: "preview",
+    previewEpoch: 0,
   };
 }
 export function visit(pane, location, record = true) {
@@ -29,19 +31,27 @@ export function visit(pane, location, record = true) {
   return ++pane.epoch;
 }
 export function ordered(pane) {
-  const sign = pane.sort === "descending" ? -1 : 1;
+  const byName = (a, b) =>
+    a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    }) || a.id.localeCompare(b.id);
+  const number = (entry, key) =>
+    Number.isFinite(entry[key]) ? entry[key] : -Infinity;
   return pane.entries
-    .filter((e) =>
-      e.name.toLocaleLowerCase().includes(pane.query.toLocaleLowerCase()),
+    .filter((entry) =>
+      entry.name.toLocaleLowerCase().includes(pane.query.toLocaleLowerCase()),
     )
-    .sort(
-      (a, b) =>
-        sign *
-          a.name.localeCompare(b.name, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          }) || a.id.localeCompare(b.id),
-    );
+    .sort((a, b) => {
+      if (pane.sort === "type")
+        return (
+          String(a.kind || "").localeCompare(String(b.kind || "")) ||
+          byName(a, b)
+        );
+      if (pane.sort === "size" || pane.sort === "modified")
+        return number(b, pane.sort) - number(a, pane.sort) || byName(a, b);
+      return (pane.sort === "descending" ? -1 : 1) * byName(a, b);
+    });
 }
 export function select(
   pane,
@@ -67,13 +77,15 @@ export function select(
   }
 }
 export function layoutPreferences(value = {}) {
+  if (!value || typeof value !== "object") value = {};
+  const clamp = (n, fallback, min, max) =>
+    Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+  const legacy = clamp(value.height, 55, 25, 75);
   return {
     dual: value.dual === true,
-    ratio: Number.isFinite(value.ratio)
-      ? Math.min(70, Math.max(30, value.ratio))
-      : 50,
-    height: Number.isFinite(value.height)
-      ? Math.min(75, Math.max(25, value.height))
-      : 55,
+    ratio: clamp(value.ratio, 50, 20, 80),
+    heights: [0, 1].map((index) =>
+      clamp(value.heights?.[index], legacy, 25, 75),
+    ),
   };
 }
