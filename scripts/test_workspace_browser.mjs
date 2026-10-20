@@ -223,7 +223,7 @@ try {
       .click();
     assert.equal(await left.locator(".hierarchy").isVisible(), false);
     assert.equal(await right.locator(".viewer").isVisible(), true);
-    await page.getByRole("button", { name: "Restore layout" }).click();
+    await page.keyboard.press("Escape");
     close(
       (await left.locator(".hierarchy").boundingBox()).height,
       before.height,
@@ -234,9 +234,14 @@ try {
     assert.equal(await left.locator(".viewer").isVisible(), false);
     await page.keyboard.press("Escape");
     assert.equal(await left.locator(".viewer").isVisible(), true);
-    await right.getByRole("button", { name: "Maximize" }).click();
+    await page
+      .getByRole("button", { name: "Workspace commands", exact: true })
+      .click();
+    await page
+      .getByRole("menuitem", { name: "Focus right pane", exact: true })
+      .click();
     assert.equal(await left.isVisible(), false);
-    await page.getByRole("button", { name: "Restore layout" }).click();
+    await page.keyboard.press("Escape");
     assert.equal(await left.locator(".viewer img").isVisible(), true);
     await left.getByRole("option", { name: "Field notes.txt" }).click();
     assert.equal(
@@ -328,6 +333,21 @@ try {
         ": actual edge drags, independent heights/persistence, keyboard/reset, 2x2/pins, expansions/restore, bounded image/text viewers, menu, 200-row pagination, breadcrumbs, unsupported/denied and narrow rendering. Synthetic provider transport; MV3/native integration separate.",
     );
   }
+} catch (error) {
+  await page.screenshot({ path: output + "/failure.png" });
+  console.log(
+    await page
+      .locator(".pane")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => ({
+          data: { ...n.dataset },
+          rect: n.getBoundingClientRect().toJSON(),
+          viewer: n.querySelector(".viewer").getBoundingClientRect().toJSON(),
+          hidden: n.hidden,
+        })),
+      ),
+  );
+  throw error;
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));
