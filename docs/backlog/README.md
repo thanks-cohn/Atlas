@@ -48,3 +48,5 @@ in conversation or testing a nearby path is not a fix. Keep this index current.
 - [020 — Progressive Pinterest cards and two-row viewport window](020-progressive-cards-and-two-row-window.md): owner requests tiny batches (e.g.1,+2,+2), aesthetic progressive masonry population, and no ongoing distant-card work; later one-row source bound implemented, tiny startup batches pending.
 
 - [021 — Generated-index churn on preview browsing](021-generated-index-churn-on-preview.md): owner soak evidence, empty-record hashing and repeated state/chooser work corrected; browser acceptance pending.
+
+- [023 — Workspace dashboard qualification and remaining stages](023-workspace-dashboard-qualification.md): first read-only shared workspace implemented; real Chrome qualification, nested Collections, media and operation stages remain open.
