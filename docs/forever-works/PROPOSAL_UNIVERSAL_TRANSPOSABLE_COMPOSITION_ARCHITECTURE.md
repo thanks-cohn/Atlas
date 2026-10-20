@@ -4,6 +4,15 @@
 **Date:** 2026-10-19  
 **Related:** Atlas resource graph, adaptive publishing, modular templates, Any-Shape, Forever Works
 
+
+## Governing Product Direction — Convention-first Transposition
+
+> **Atlas does not initially promise to understand every website. It proposes a common compositional language through which any conforming website can be automatically translated into aesthetically coherent, semantically faithful Cards, Slices, and their expanded presentations.**
+
+**Initial commitment:** Establish documented Atlas object, grouping, semantic, and composition conventions and a template engine that can reliably generate attractive, intelligible, responsive Cards, Card Pop-outs, Slices, and expanded Slices from **conforming** projects. This is the product direction and proposed acceptance target, not an assertion that it is implemented today. Optional Artistic Refinement should improve the output, not be necessary to make a normal conforming composition intelligible.
+
+**Future research ambition:** Convert arbitrary nonconforming websites into this format, potentially using agents trained or guided by many examples. That is a separate, later capability and must not be described as the initial product promise.
+
 ## 1. Purpose and thesis
 
 Atlas must grow beyond portable cards and slices. **Every addressable part of a website created in Atlas—when organized using Atlas's shared format—should be programmatically accessible, exportable, composable, and transposable into future projects.**
