@@ -93,12 +93,14 @@ const render=pinboard.slice(pinboard.indexOf('async function showGeneratedTags(n
 let pending=[];const host={children:[],replaceChildren(...children){this.children=children;},append(...children){this.children.push(...children);}};
 const chrome={storage:{local:{get:key=>key==='runs'?new Promise(resolve=>pending.push(resolve)):Promise.resolve({anime:false})}}};
 const selected={id:'same'},itemKey=node=>node?.id;
-const show=new Function('chrome','$','imageReference','imageFor','itemKey','selected','humanTagsFor','generatedTags','tagKey','removedTags','removableTag','el',`let generatedRenderVersion=0;const generatedIndex=new Map();const readGenerationSnapshot=async()=>({...await chrome.storage.local.get('runs'),...await chrome.storage.local.get('anime')}); const TAGGING_RESULTS='runs',JOYTAG_ACTIVATED='anime'; ${render}; return showGeneratedTags;`)(chrome,()=>host,async()=> 'cover',()=> 'image',itemKey,selected,()=>[],generatedTags,tagKey,()=>({}),(_node,label)=>({label}),(_type,label)=>({label}));
+let folderLabels=[];
+const show=new Function('folderTags','chrome','$','imageReference','imageFor','itemKey','selected','humanTagsFor','generatedTags','tagKey','removedTags','removableTag','el',`let generatedRenderVersion=0;const generatedIndex=new Map();const readGenerationSnapshot=async()=>({...await chrome.storage.local.get('runs'),...await chrome.storage.local.get('anime')}); const TAGGING_RESULTS='runs',JOYTAG_ACTIVATED='anime'; ${render}; return showGeneratedTags;`)({tags:()=>folderLabels},chrome,()=>host,async()=> 'cover',()=> 'image',itemKey,selected,()=>[],generatedTags,tagKey,()=>({}),(_node,label)=>({label}),(_type,label)=>({label}));
 const older=show(selected),newer=show(selected);
 pending[1]({runs:{same:compact}});await newer;
 pending[0]({runs:{same:compact}});await older;
 assert.deepEqual(host.children.map(c=>c.label),['1 person']);
-console.log('PASS: overlapping actual renderer completions display one chip; stale reads cannot append duplicates.');
+folderLabels=['1 person'];const withFolder=show(selected);pending[2]({runs:{same:compact}});await withFolder;assert.deepEqual(host.children,[]);
+console.log('PASS: overlapping renderer reads remain safe and folder/model duplicate labels appear only once without altering model evidence.');
 const {checkpointState}=await import('data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('../extension/pinboard-generation.js',import.meta.url),'utf8')).toString('base64'));
 assert.equal(history.executions[1].change,'unchanged');
 assert.equal(history.checkpoints[1].base,1);

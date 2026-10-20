@@ -1,0 +1,33 @@
+# Automatic folder-derived Pinboard tags
+
+Owner request: 2026-10-20. Implemented for the existing bookmark and authored-card Pinboard sources. Folder names become persistent tag evidence; visibility is an independent per-board projection. No inference, model downloads, new permissions or filesystem scanning.
+
+## Preserved contracts and implementation
+
+Fixed: independent human/model provenance, existing saved board/card/image identities, shared Pinboard renderer/tag editor, permission boundaries and non-destructive presentation settings. Constrained: Chrome-profile storage and existing tag-edit limits. Fluid: source adapters and JSON representation. This is an additive slice, not a replacement of the tagging subsystem.
+
+`extension/pinboard-folder-tags.js` maps the authoritative Chrome bookmark tree to version-1 location records in `atlas.pinboard.folder-tags.v1`. Each placement is keyed by native bookmark ID, bound to its exact URL, with `source: folder`, provider, ancestor IDs/original names, normalized tags and timestamp. Normalization uses NFKC, trim and lowercase; duplicate concepts display once. Filenames, URLs/domains and the empty Chrome root are not tags. Named ancestor folders, including browser bookmark containers, are included. Non-web/credential-bearing bookmarks are excluded consistently with Pinboard browsing.
+
+Records are saved under the existing `atlas-pages-v1` lock. Rename/move replaces the current location projection and appends the prior path/tags/timestamps to history. Deletion retires current associations while retaining prior evidence; URL changes cannot inherit evidence from the previous URL. Unchanged trees cause no evidence write. Refresh/open reconciles the complete current tree; bookmark creation, edits, moves, removal and import completion debounce a refresh while the Pinboard is open. With no Pinboard open there is no new background indexing worker: the next opening reconciles the final tree, without claiming to capture every intermediate move.
+
+Manual tag strings, ONNX result stores and per-card suppression records retain their existing ownership. Folder records never enter the global manual vocabulary automatically. `tagsFor`, previews and the existing top tag field merge the visible sources without duplicating labels. Existing per-card × suppression remains available and does not delete original location evidence. The existing Add Tag dropdown receives the board's folder vocabulary through a callback, so users can apply a folder name to any other card. That explicit application is a normal **manual** assignment and remains visible when Folder Tags is OFF. An identical manual/model concept also remains available independently of the folder source.
+
+Board Settings adds the standard checkbox **Folder Tags**, checked by default. `atlas.pinboard.folder-tag-settings.v1` maps the saved board UUID (or `default` for the built-in board) to a boolean. Missing settings mean ON, including old boards. A change merges only that board's setting under the shared lock; no folder record is rewritten or erased. Other open boards read their own setting. Switching ON restores existing evidence without inference/reprocessing. Explicit manually typed search clauses remain user input, rather than being deleted when a source is hidden.
+
+Authored cards imported through Existing Bookmark retain `folderSourceBookmarkId`. The same renderer resolves the live source path with URL binding, including each additional gallery image through its parent placement. Ordinary edits preserve the reference. Independent authored cards/file uploads have no invented directory ancestry. Existing imported cards from before this feature lack a reliable placement ID; they are not guessed from URL because multiple bookmarks can share one URL.
+
+## Verification
+
+- `node scripts/test_pinboard_folder_tags.mjs`: recursive paths, normalized duplicates, persistent evidence, imported placement/URL binding, rename/move/deletion history, idempotence, separate boards and OFF/ON without evidence changes.
+- `node scripts/test_pinboard_tag_editor.mjs`: existing human/generated vocabulary and mutations plus shared folder suggestions for unrelated cards and Unicode deduplication.
+- `node scripts/test_pinboard.mjs`: existing integrated renderer/navigation/ranking/gallery/generation/regression suite, with Folder Tags OFF to preserve the baseline fixture; new folder behavior has dedicated coverage.
+- `node scripts/test_pinboard_blank.mjs`, `test_pinboard_generation.mjs`, `test_image_entries.mjs`: existing source, model and image invariants pass.
+- `scripts/test_pinboard_folder_tags_browser.mjs`: actual Chromium 153.0.8010.0 controls, recursive folder vocabulary, persisted OFF after reload, ON restoration with byte-identical evidence, existing dropdown, manual application to unrelated card, matching manual labels retained OFF, and second board independently ON. Synthetic Chrome storage/bookmark/runtime APIs over an actual rendered page; **not installed MV3/native or Windows qualification**. The browser test is included in CI.
+- `python scripts/check_project.py`: 22 model links valid; 170 Python tests, 3 failures/3 errors/33 skips in the previously recorded container native-startup/supervisor boundary. No Python source changed. This is not a full-suite PASS.
+- Extension packaging passes. This record does not claim owner hardware, screen-reader, low-memory or production release acceptance.
+
+## Integration boundaries and continuation
+
+Local Files currently browse in Workspace, not a Pinboard directory source; R2 remains unavailable as a working directory-backed Pinboard source. Neither is advertised as implemented here. Future authorized adapters must supply stable placement IDs, provider/collection identity and explicit ancestor components, reconcile only their own provider namespace, and project through this shared tag/picker layer. Do not derive paths by parsing signed URLs, copy R2 secrets, invent local parent folders from browser File.name, or expand grants.
+
+Storage remains Chrome-profile local, alongside existing Pinboard state; this feature does not add portable-library export or remote sync. Profile removal can remove it. Provenance history is retained without automatic compaction; a future bounded archival/export policy must preserve reconstruction rather than silently dropping evidence. Existing human tag editing limits (up to 100 tags of 80 characters each on authored cards) still apply to explicit manual assignment; longer folder labels retain full original evidence and automatic display. No retroactive source inference for legacy authored imports, full move audit while closed, physical folder watcher, R2 import or AI tagging changes are included.

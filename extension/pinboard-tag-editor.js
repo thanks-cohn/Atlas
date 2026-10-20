@@ -24,7 +24,7 @@ export async function removeBookmarkTag(node,tag){
   });
 }
 // Exact-URL tag editing through the existing revision-checked companion catalog.
-export function installTagEditor({onChanged,localAdapter=()=>null}){
+export function installTagEditor({onChanged,localAdapter=()=>null,suggestions=()=>[]}){
   const make=(tag,text='')=>{const e=document.createElement(tag);e.textContent=text;return e;};
   async function request(body){const result=await chrome.runtime.sendMessage({type:'api',path:'/v1/catalog',...(body?{body}:{})});if(result?.ok===false || !result?.data || !Number.isSafeInteger(result.revision))throw Error('Connect your companion, then retry.');return result;}
   return async function open(node){
@@ -40,7 +40,7 @@ export function installTagEditor({onChanged,localAdapter=()=>null}){
       const data=snapshot.data || {},owned=ownedTags();for(const tag of owned)knownTags.add(tag);
       attached.replaceChildren(...owned.map(tag=>{const b=make('button',tag+' ×');b.setAttribute('aria-label','Remove tag '+tag);b.onclick=()=>mutate('untag',tag);return b;}));
       if(!owned.length)attached.append(make('p','No tags attached.'));
-      const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const known=[...knownTags].sort((a,b)=>a.localeCompare(b));
+      const prior=select.value,scroll=select.scrollTop;for(const tag of Object.values(data.tags || {}).flat())if(typeof tag==='string')knownTags.add(tag);const known=[...new Map([...knownTags,...suggestions()].map(tag=>[tag.normalize('NFKC').trim().toLowerCase(),tag])).values()].sort((a,b)=>a.localeCompare(b));
       const placeholder=make('option',known.length?'Double-click or Enter to toggle':'No saved tags');placeholder.value='';select.replaceChildren(placeholder,...known.map(tag=>{const option=make('option',tag+(owned.includes(tag)?' ✓':''));option.value=tag;return option;}));select.value=known.includes(prior)?prior:'';select.scrollTop=scroll;controls();
     }
     async function load(){busy=true;retry.hidden=true;controls();try{const saved=await chrome.storage?.local.get([TAG_VOCABULARY,'atlas-image-tagging-runs-v1']);for(const tag of saved?.[TAG_VOCABULARY] || [])knownTags.add(tag);
@@ -52,7 +52,7 @@ export function installTagEditor({onChanged,localAdapter=()=>null}){
         if(local){snapshot=await local.mutate(action,tag);await navigator.locks.request('atlas-pages-v1',async()=>{const saved=await chrome.storage.local.get(TAG_VOCABULARY);await chrome.storage.local.set({[TAG_VOCABULARY]:[...new Set([...(saved[TAG_VOCABULARY] || []),tag])]});});}else await navigator.locks.request('atlas-pages-v1',async()=>{
           const [current]=await chrome.bookmarks.get(node.id);if(current?.url!==node.url)throw Error('This bookmark changed. Close and select it again.');
           snapshot=await request();let matches=resources(snapshot.data);
-          if(action==='tag' && !allowNew && !knownTags.has(tag))throw Error('That tag is no longer available. Retry to reload.');
+          if(action==='tag' && !allowNew && ![...knownTags,...suggestions()].includes(tag))throw Error('That tag is no longer available. Retry to reload.');
           if(action==='tag' && !matches.length){snapshot=await request({action:'add_resource',args:{kind:'bookmark',title:node.title || node.url,locators:[{provider:'web',reference:node.url}]},expected_revision:snapshot.revision});matches=resources(snapshot.data);if(!matches.length)throw Error('Could not confirm bookmark registration. Retry.');}
           for(const resource of (action==='tag'?matches.slice(0,1):matches)){
             if(action==='tag' && (snapshot.data.tags?.[resource.id] || []).includes(tag))continue;

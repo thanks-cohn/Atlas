@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createFolderTags,bookmarkLocations,reconcileLocations,FOLDER_TAGS,FOLDER_TAG_SETTINGS} from '../extension/pinboard-folder-tags.js';
+const image={id:'i',url:'https://example.com/image'},tree=[{id:'0',children:[{id:'a',title:'Photography',children:[{id:'b',title:'Architecture',children:[{id:'c',title:'Brutalism',children:[image]}]}]}]}];
+const data={},storage={async get(keys){return structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,data[k]])));},async set(v){Object.assign(data,structuredClone(v));}},lock=fn=>fn();
+const a=createFolderTags({storage,scope:'a',lock}),b=createFolderTags({storage,scope:'b',lock});await a.load();await a.sync(tree);await b.load();
+assert.deepEqual(a.tags(image),['photography','architecture','brutalism']);assert.deepEqual(a.vocabulary([image,image]),a.tags(image));
+const raw=JSON.stringify(data[FOLDER_TAGS]);await a.setEnabled(false);assert.deepEqual(a.tags(image),[]);assert.deepEqual(a.vocabulary([image]),[]);assert.equal(JSON.stringify(data[FOLDER_TAGS]),raw);assert.equal(b.enabled(),true);assert.equal(b.tags(image).length,3);
+const reload=createFolderTags({storage,scope:'a',lock});await reload.load();assert.equal(reload.enabled(),false);await reload.setEnabled(true);assert.deepEqual(reload.tags(image),b.tags(image));assert.equal(JSON.stringify(data[FOLDER_TAGS]),raw);
+assert.deepEqual(reload.tags({cardId:'card',folderSourceBookmarkId:'i',url:image.url}),b.tags(image));assert.deepEqual(reload.tags({...image,url:'https://changed.example'}),[]);
+await a.load();const renamed=structuredClone(tree);renamed[0].children[0].title='PHOTOGRAPHY';renamed[0].children[0].children[0].title='Concrete';await a.sync(renamed);assert.deepEqual(a.tags(image),['photography','concrete','brutalism']);assert.equal(data[FOLDER_TAGS].i.history.length,1);assert.deepEqual(data[FOLDER_TAGS].i.history[0].tags,['photography','architecture','brutalism']);
+const unchanged=JSON.stringify(data[FOLDER_TAGS]);await a.sync(renamed);assert.equal(JSON.stringify(data[FOLDER_TAGS]),unchanged);
+await a.sync([{id:'0',children:[{id:'x',title:'Other',children:[image]}]}]);assert.deepEqual(a.tags(image),['other']);assert.equal(data[FOLDER_TAGS].i.history.length,2);
+await a.sync([]);assert.deepEqual(a.tags(image),[]);assert.equal(data[FOLDER_TAGS].i.history.length,3);assert.equal(data[FOLDER_TAGS].i.source,'folder');assert.equal(data[FOLDER_TAG_SETTINGS].b,undefined);
+const duplicate=reconcileLocations({},bookmarkLocations([{id:'x',title:'Art',children:[{id:'y',title:'ＡＲＴ',children:[image]}]}]));assert.deepEqual(duplicate.i.tags,['art']);
+console.log('PASS recursive paths, normalization/deduplication, persistent provenance/history, imported placements, URL binding, rename/move/delete, idempotence, per-board OFF/ON with unchanged evidence.');

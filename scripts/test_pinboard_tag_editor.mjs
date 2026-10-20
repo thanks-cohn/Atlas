@@ -52,3 +52,7 @@ localPicker.value='Generated Choice';localDialog.children[4].onclick();await new
 localPicker.value='Local';localPicker.onkeydown({key:'Enter',preventDefault(){},stopPropagation(){}});await new Promise(r=>setTimeout(r,0));assert.ok(!localTags.includes('Local'));assert.equal(localChanges,2);assert.equal(localDialog.open,true);
 context.chrome.bookmarks.get=bookmarkGet;
 console.log('PASS: authored cards share retained tag dialog, vocabulary and Enter toggling without native bookmark mutation.');
+
+const folderOpen=context.install({suggestions:()=>['architecture','ＡＲＣＨＩＴＥＣＴＵＲＥ','unrelated folder'],localAdapter:()=>({read:async()=>({tags:['Manual'],data:null}),mutate:async(action,tag)=>({tags:['Manual',tag],data:null})}),onChanged:()=>{}});
+fail=false;await folderOpen({id:'own',title:'Independent'});const folderSelect=body.children.at(-1).children[3].children[0];assert.equal(folderSelect.children.filter(o=>o.value?.normalize('NFKC').toLowerCase()==='architecture').length,1);assert.ok(folderSelect.children.some(o=>o.value==='unrelated folder'));
+console.log('PASS shared folder suggestions available to unrelated authored cards and Unicode-normalized duplicates collapse in the existing picker.');
