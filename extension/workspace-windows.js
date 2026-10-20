@@ -1,4 +1,11 @@
 import {
+  rearrange,
+  regionExpanded,
+  exchangeViewerState,
+  exchangeViewerSizes,
+  canResizeSections,
+} from "./workspace-arrangement.js";
+import {
   windowState,
   maximizeWindow,
   restoreWindows,
@@ -23,10 +30,11 @@ export function createWorkspaceWindows({
   let state = windowState(),
     initialized = false,
     focusMemory = null,
-    expandedSizes=null;
+    expandedSizes = null;
   const regionMemory = new Map(),
     paneMemory = new Map();
-  const label = (index) => ((getPreferences().swapped ? 1-index : index) ? "right" : "left");
+  const label = (index) =>
+    (getPreferences().swapped ? 1 - index : index) ? "right" : "left";
   function capture() {
     return {
       panes: panes.map((p) => ({
@@ -47,7 +55,12 @@ export function createWorkspaceWindows({
   }
   function restoreScroll(memory, onlyIndex = null, region = null) {
     if (!memory) return;
-    const ownerIndex=onlyIndex!==null && region==='viewer'?panes.findIndex(p=>p.viewerDom.parentElement===panes[onlyIndex].dom):onlyIndex;
+    const ownerIndex =
+      onlyIndex !== null && region === "viewer"
+        ? panes.findIndex(
+            (p) => p.viewerDom.parentElement === panes[onlyIndex].dom,
+          )
+        : onlyIndex;
     for (const [i, saved] of memory.panes.entries()) {
       if (onlyIndex !== null && i !== ownerIndex) continue;
       for (const s of saved.scroll) {
@@ -86,6 +99,20 @@ export function createWorkspaceWindows({
     layout();
     if (memory) requestAnimationFrame(() => restoreScroll(memory));
   }
+  function measureSizes() {
+    return panes.map((p) => ({
+      height: p.dom.getBoundingClientRect().height,
+      contentHeight: Math.max(
+        0,
+        p.dom.clientHeight -
+          p.dom.querySelector(".pane-head").getBoundingClientRect().height -
+          10,
+      ),
+      hierarchy: p.dom.querySelector(".hierarchy").getBoundingClientRect()
+        .height,
+      viewer: p.dom.querySelector(".viewer").getBoundingClientRect().height,
+    }));
+  }
   function focus(index, region) {
     const entering = !state.snapshot;
     if (entering)
@@ -93,7 +120,7 @@ export function createWorkspaceWindows({
         preferences: structuredClone(getPreferences()),
         scroll: capture(),
         active: document.activeElement,
-        sizes: panes.map(p=>({height:p.dom.getBoundingClientRect().height, hierarchy:p.dom.querySelector(".hierarchy").getBoundingClientRect().height, viewer:p.dom.querySelector(".viewer").getBoundingClientRect().height})),
+        sizes: measureSizes(),
       };
     maximizeWindow(state, index, region);
     if (!state.snapshot) finishRestore();
@@ -108,13 +135,14 @@ export function createWorkspaceWindows({
   }
   function finishRestore() {
     const memory = focusMemory;
-    focusMemory = null;expandedSizes=null;
+    focusMemory = null;
+    expandedSizes = null;
     if (memory) setPreferences(structuredClone(memory.preferences));
     redraw(memory?.scroll);
     if (memory) keepFocusVisible(memory.active);
   }
-  function restoreOne(index) {
-    restoreWindow(state, index);
+  function restoreOne(index, region) {
+    restoreWindow(state, index, region);
     if (!state.snapshot) finishRestore();
     else redraw(focusMemory?.scroll);
   }
@@ -151,14 +179,19 @@ export function createWorkspaceWindows({
       setActive(visiblePanes(state)[0]);
     } else {
       regionMemory.set(index + region, memory);
-      if(region==='viewer')closeViewer(state,index);
-      else {if(state.maximized[index])restoreWindow(state,index);state.regions[index].hierarchy='closed';}
+      if (region === "viewer") closeViewer(state, index);
+      else {
+        if (state.maximized[index]) restoreWindow(state, index);
+        state.regions[index].hierarchy = "closed";
+      }
     }
     if (!state.snapshot && focusMemory) finishRestore();
     getPreferences().dual = state.closed.every((closed) => !closed);
     redraw(memory);
     keepFocusVisible(
-      panes[index].dom.querySelector(region === "hierarchy" ? ".viewer .maximize" : ".provider"),
+      panes[index].dom.querySelector(
+        region === "hierarchy" ? ".viewer .maximize" : ".provider",
+      ),
     );
     save();
   }
@@ -183,6 +216,49 @@ export function createWorkspaceWindows({
     });
     save();
   }
+  function arrange(action, index = 0) {
+    const memory = capture();
+    if (action === "viewers" || action === "explorers") {
+      const exchangeRatio = (preferences, sizes, regions) => {
+        // A collapsed title bar is not the section's saved normal dimension.
+        const normal = sizes.map((size, index) =>
+          canResizeSections(regions[index])
+            ? size
+            : {
+                ...size,
+                hierarchy:
+                  (size.contentHeight * preferences.heights[index]) / 100,
+                viewer:
+                  (size.contentHeight * (100 - preferences.heights[index])) /
+                  100,
+              },
+        );
+        const next = exchangeViewerSizes(normal);
+        preferences.heights = next.map(
+          (s) => (100 * s.hierarchy) / Math.max(1, s.hierarchy + s.viewer),
+        );
+        return next;
+      };
+      const next = exchangeRatio(
+        getPreferences(),
+        expandedSizes || measureSizes(),
+        state.regions,
+      );
+      if (focusMemory) {
+        focusMemory.sizes = exchangeRatio(
+          focusMemory.preferences,
+          focusMemory.sizes,
+          state.snapshot.regions,
+        );
+        expandedSizes = next;
+      }
+      exchangeViewerState(state);
+    }
+    rearrange(getPreferences(), action, index);
+    if (focusMemory) rearrange(focusMemory.preferences, action, index);
+    redraw(memory);
+    save(focusMemory?.preferences);
+  }
   let controls = [];
   function titleControls(index, region) {
     const group = document.createElement("div");
@@ -202,25 +278,46 @@ export function createWorkspaceWindows({
       group.append(b);
       return b;
     };
-    make("rearrange", "⇅", () => {
-      if(state.snapshot)restoreAll();
-      const pref=getPreferences();pref.reversed ||= [false,false];const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;pref.reversed[target]=!pref.reversed[target];
-      redraw(capture());save();
-    }).setAttribute('aria-label',`Swap Explorer and Preview vertically in ${label(index)} pane`);
-    const side=make('move-side','⇄',()=>{
-      if(state.snapshot)restoreAll();const pref=getPreferences();
-      pref.viewerSwapped=!pref.viewerSwapped;
-      if(region==='hierarchy'){pref.swapped=!pref.swapped;pref.ratio=100-pref.ratio;}
-      redraw(capture());save();
-    });side.title=region==='viewer'?'Swap previews between panes':'Swap explorers between panes';side.setAttribute('aria-label',side.title);
-    const position=()=>{const target=region==='viewer'?panes.findIndex(p=>p.dom===panes[index].viewerDom.parentElement):index;return target<0?index:target;};
+    const position = () => {
+      const target =
+        region === "viewer"
+          ? panes.findIndex(
+              (p) => p.dom === panes[index].viewerDom.parentElement,
+            )
+          : index;
+      return target < 0 ? index : target;
+    };
+    make("rearrange", "⇅", () => arrange("vertical", position())).setAttribute(
+      "aria-label",
+      `Swap Explorer and Preview vertically in ${label(index)} pane`,
+    );
+    const side = make("move-side", "⇄", () =>
+      arrange(region === "viewer" ? "viewers" : "explorers", position()),
+    );
+    side.title =
+      region === "viewer"
+        ? "Swap previews between panes"
+        : "Swap explorers between panes";
+    side.setAttribute("aria-label", side.title);
+
     const minus = make("minimize", "−", () => minimize(position(), region));
     const max = make("maximize", "□", () => {
-      state.maximized[position()] === region ? restoreOne(position()) : focus(position(), region);
+      regionExpanded(state.maximized[position()], region)
+        ? restoreOne(position(), region)
+        : focus(position(), region);
     });
     const closedRegion = region;
     const x = make("close", "×", () => close(position(), closedRegion));
-    controls.push({ index, position,side,region, minus, max, x, closedRegion });
+    controls.push({
+      index,
+      position,
+      side,
+      region,
+      minus,
+      max,
+      x,
+      closedRegion,
+    });
     return group;
   }
   function geometry() {
@@ -242,19 +339,33 @@ export function createWorkspaceWindows({
         "--chrome-space",
         chrome.getBoundingClientRect().height + 12 + "px",
       );
-    } else if(visible.length===1 && focused.length===1){
-      main.style.setProperty('--chrome-left','12px');main.style.setProperty('--chrome-width',Math.max(0,main.getBoundingClientRect().width-24)+'px');main.style.setProperty('--chrome-space',chrome.getBoundingClientRect().height+12+'px');
+    } else if (visible.length === 1 && focused.length === 1) {
+      main.style.setProperty("--chrome-left", "12px");
+      main.style.setProperty(
+        "--chrome-width",
+        Math.max(0, main.getBoundingClientRect().width - 24) + "px",
+      );
+      main.style.setProperty(
+        "--chrome-space",
+        chrome.getBoundingClientRect().height + 12 + "px",
+      );
     } else main.style.setProperty("--chrome-space", "0px");
-    for(const [index,p] of panes.entries()){
-      const saved=(expandedSizes || focusMemory?.sizes)?.[index];
-      if(!saved)continue;
-      const focused=state.maximized[index];
-      p.dom.style.setProperty('--normal-height',saved.height+'px');
-      p.dom.style.setProperty('--kept-hierarchy',saved.hierarchy+'px');
-      p.dom.style.setProperty('--kept-viewer',saved.viewer+'px');
-      p.dom.classList.toggle('keep-normal-height',!focused && state.snapshot!==null);
+    for (const [index, p] of panes.entries()) {
+      const saved = (expandedSizes || focusMemory?.sizes)?.[index];
+      if (!saved) continue;
+      const focused = state.maximized[index];
+      p.dom.style.setProperty("--normal-height", saved.height + "px");
+      p.dom.style.setProperty("--kept-hierarchy", saved.hierarchy + "px");
+      p.dom.style.setProperty("--kept-viewer", saved.viewer + "px");
+      p.dom.classList.toggle(
+        "keep-normal-height",
+        !focused && state.snapshot !== null,
+      );
     }
-    main.classList.toggle('single-expansion',visible.length===1 && focused.length===1);
+    main.classList.toggle(
+      "single-expansion",
+      visible.length === 1 && focused.length === 1,
+    );
   }
   function apply() {
     if (!initialized) return;
@@ -265,9 +376,11 @@ export function createWorkspaceWindows({
     const root = $("panes");
     root.classList.toggle("dual", dualVisible);
     delete root.dataset.expand;
-    for(const [owner,p] of panes.entries()){
-      const host=panes[getPreferences().viewerSwapped?1-owner:owner].dom;
-      if(p.viewerDom && p.viewerDom.parentElement!==host)host.append(p.viewerDom);
+    for (const [owner, p] of panes.entries()) {
+      const host =
+        panes[getPreferences().viewerSwapped ? 1 - owner : owner].dom;
+      if (p.viewerDom && p.viewerDom.parentElement !== host)
+        host.append(p.viewerDom);
     }
     for (const [index, p] of panes.entries()) {
       p.dom.hidden = !visible.includes(index);
@@ -275,13 +388,20 @@ export function createWorkspaceWindows({
         "only-pane",
         visible.length === 1 && visible[0] === index,
       );
-      p.dom.classList.toggle('reversed',getPreferences().reversed?.[index]===true);
-      const side=getPreferences().swapped?1-index:index;
-      p.dom.style.gridColumn=dualVisible?(side===0?'1':'3'):'1';
-      if(!state.snapshot)p.dom.classList.remove('keep-normal-height');
+      p.dom.classList.toggle(
+        "reversed",
+        getPreferences().reversed?.[index] === true,
+      );
+      const side = getPreferences().swapped ? 1 - index : index;
+      p.dom.style.gridColumn = dualVisible ? (side === 0 ? "1" : "3") : "1";
+      if (!state.snapshot) p.dom.classList.remove("keep-normal-height");
       p.dom.dataset.windowMax = state.maximized[index] || "";
       p.dom.dataset.hierarchyState = state.regions[index].hierarchy;
       p.dom.dataset.viewerState = state.regions[index].viewer;
+      const edge = p.dom.querySelector(".row-splitter");
+      edge.hidden = !canResizeSections(state.regions[index]);
+      edge.setAttribute("aria-disabled", String(edge.hidden));
+      edge.tabIndex = edge.hidden ? -1 : 0;
     }
     $("dual").textContent = logical.length === 2 ? "Single Pane" : "Dual Pane";
     $("dual").setAttribute("aria-pressed", String(logical.length === 2));
@@ -292,11 +412,16 @@ export function createWorkspaceWindows({
       );
     controls = controls.filter((c) => c.max.isConnected);
     for (const c of controls) {
-      const index=c.position();c.side.disabled=logical.length<2;c.max.parentElement?.setAttribute('aria-label',`${label(index)} ${c.region} window controls`);
+      const index = c.position();
+      c.side.disabled = logical.length < 2;
+      c.max.parentElement?.setAttribute(
+        "aria-label",
+        `${label(index)} ${c.region} window controls`,
+      );
       const minimized =
           !state.maximized[index] &&
           state.regions[index][c.region] === "minimized",
-        maximized = state.maximized[index] === c.region;
+        maximized = regionExpanded(state.maximized[index], c.region);
       const minusText = `${minimized ? "Restore" : "Minimize"} ${label(index)} ${c.region}`;
       c.minus.title = minusText;
       c.minus.setAttribute("aria-label", minusText);
@@ -307,12 +432,10 @@ export function createWorkspaceWindows({
       c.max.textContent = maximized ? "❐" : "□";
       c.max.classList.toggle("restore", maximized);
       c.x.title = `Close ${label(index)} ${c.closedRegion} view`;
-      c.x.setAttribute(
-        "aria-label",
-        `Close ${label(index)} ${c.closedRegion}`,
-      );
+      c.x.setAttribute("aria-label", `Close ${label(index)} ${c.closedRegion}`);
       c.x.disabled =
-        state.regions[index][c.region=== "viewer"?"hierarchy":"viewer"] === "closed";
+        state.regions[index][c.region === "viewer" ? "hierarchy" : "viewer"] ===
+        "closed";
     }
     for (const b of document.querySelectorAll("[data-expand]"))
       b.setAttribute(
@@ -356,12 +479,15 @@ export function createWorkspaceWindows({
       run: () => focus(1, "pane"),
       enabled: () => !state.closed[1],
     },
-    swap: {label:"Swap left and right panes",run:()=>{if(state.snapshot)restoreAll();getPreferences().swapped=!getPreferences().swapped;getPreferences().ratio=100-getPreferences().ratio;redraw(capture());save();}},
+    swap: { label: "Swap left and right panes", run: () => arrange("columns") },
     viewers: {
       label: "Reopen closed sections",
       run: () => {
         if (state.snapshot) restoreAll();
-        state.regions.forEach((r) => {r.viewer = "normal";r.hierarchy="normal";});
+        state.regions.forEach((r) => {
+          r.viewer = "normal";
+          r.hierarchy = "normal";
+        });
         redraw();
         requestAnimationFrame(() => {
           for (const index of [0, 1])
@@ -377,7 +503,12 @@ export function createWorkspaceWindows({
     },
   });
   document.querySelector(".actions").append(dock.root);
-  const swap=document.createElement('button');swap.type='button';swap.textContent='Swap sides';swap.onclick=commands.swap.run;swap.setAttribute('aria-label','Swap left and right panes');document.querySelector('.actions').append(swap);
+  const swap = document.createElement("button");
+  swap.type = "button";
+  swap.textContent = "Swap sides";
+  swap.onclick = commands.swap.run;
+  swap.setAttribute("aria-label", "Swap left and right panes");
+  document.querySelector(".actions").append(swap);
   function expand(mode = "") {
     if (!mode) {
       restoreAll();
@@ -393,7 +524,27 @@ export function createWorkspaceWindows({
   }
   return {
     titleControls,
-    resize(index,value){if(!state.snapshot)return;expandedSizes ||= structuredClone(focusMemory.sizes);const p=panes[index],total=p.dom.querySelector('.hierarchy').getBoundingClientRect().height+p.dom.querySelector('.viewer').getBoundingClientRect().height;expandedSizes[index].hierarchy=total*value/100;expandedSizes[index].viewer=total*(100-value)/100;},
+    height(index) {
+      if (!state.snapshot) return getPreferences().heights[index];
+      const p = panes[index],
+        upper = p.dom
+          .querySelector(".hierarchy")
+          .getBoundingClientRect().height,
+        lower = p.dom.querySelector(".viewer").getBoundingClientRect().height;
+      return upper + lower > 0
+        ? (100 * upper) / (upper + lower)
+        : getPreferences().heights[index];
+    },
+    resize(index, value) {
+      if (!state.snapshot) return;
+      expandedSizes ||= structuredClone(focusMemory.sizes);
+      const p = panes[index],
+        total =
+          p.dom.querySelector(".hierarchy").getBoundingClientRect().height +
+          p.dom.querySelector(".viewer").getBoundingClientRect().height;
+      expandedSizes[index].hierarchy = (total * value) / 100;
+      expandedSizes[index].viewer = (total * (100 - value)) / 100;
+    },
     apply,
     geometry,
     expand,

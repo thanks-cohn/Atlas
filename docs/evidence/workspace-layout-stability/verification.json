@@ -1,0 +1,208 @@
+{
+  "browser": "153.0.8010.0",
+  "syntheticProviders": true,
+  "reports": [
+    {
+      "scenario": "manually-resized",
+      "dimensions": [
+        {
+          "width": 592.90625,
+          "upper": 270.796875,
+          "lower": 260.203125,
+          "provider": "local",
+          "query": "",
+          "selected": [
+            "▤ Alpine study.png\nfile"
+          ],
+          "pin": "true",
+          "scroll": 0,
+          "items": 0,
+          "breadcrumb": "Local Files\n/\nAuthorized folder"
+        },
+        {
+          "width": 505.078125,
+          "upper": 302.65625,
+          "lower": 228.328125,
+          "provider": "objects",
+          "query": "",
+          "selected": [
+            "▤ Composition notes\nnote"
+          ],
+          "pin": "true",
+          "scroll": 180,
+          "items": 0,
+          "breadcrumb": "Objects"
+        }
+      ],
+      "expansion": [
+        "",
+        ""
+      ]
+    },
+    {
+      "scenario": "partially-expanded",
+      "dimensions": [
+        {
+          "width": 605.875,
+          "upper": 270.796875,
+          "lower": 421.203125,
+          "provider": "local",
+          "query": "",
+          "selected": [
+            "▤ Alpine study.png\nfile"
+          ],
+          "pin": "true",
+          "scroll": 0,
+          "items": 0,
+          "breadcrumb": "Local Files\n/\nAuthorized folder"
+        },
+        {
+          "width": 516.125,
+          "upper": 302.65625,
+          "lower": 228.328125,
+          "provider": "objects",
+          "query": "",
+          "selected": [
+            "▤ Composition notes\nnote"
+          ],
+          "pin": "true",
+          "scroll": 180,
+          "items": 0,
+          "breadcrumb": "Objects"
+        }
+      ],
+      "expansion": [
+        "viewer",
+        ""
+      ]
+    },
+    {
+      "scenario": "fully-expanded",
+      "dimensions": [
+        {
+          "width": 605.875,
+          "upper": 270.796875,
+          "lower": 369.203125,
+          "provider": "local",
+          "query": "",
+          "selected": [
+            "▤ Alpine study.png\nfile"
+          ],
+          "pin": "true",
+          "scroll": 0,
+          "items": 0,
+          "breadcrumb": "Local Files\n/\nAuthorized folder"
+        },
+        {
+          "width": 516.125,
+          "upper": 302.65625,
+          "lower": 337.34375,
+          "provider": "objects",
+          "query": "",
+          "selected": [
+            "▤ Composition notes\nnote"
+          ],
+          "pin": "true",
+          "scroll": 180,
+          "items": 0,
+          "breadcrumb": "Objects"
+        }
+      ],
+      "expansion": [
+        "viewer",
+        "viewer"
+      ]
+    },
+    {
+      "scenario": "mixed-expansion",
+      "dimensions": [
+        {
+          "width": 605.875,
+          "upper": 379.796875,
+          "lower": 260.203125,
+          "provider": "local",
+          "query": "",
+          "selected": [
+            "▤ Alpine study.png\nfile"
+          ],
+          "pin": "true",
+          "scroll": 0,
+          "items": 0,
+          "breadcrumb": "Local Files\n/\nAuthorized folder"
+        },
+        {
+          "width": 516.125,
+          "upper": 302.65625,
+          "lower": 337.34375,
+          "provider": "objects",
+          "query": "",
+          "selected": [
+            "▤ Composition notes\nnote"
+          ],
+          "pin": "true",
+          "scroll": 180,
+          "items": 0,
+          "breadcrumb": "Objects"
+        }
+      ],
+      "expansion": [
+        "hierarchy",
+        "viewer"
+      ]
+    },
+    {
+      "scenario": "expanded-and-resized",
+      "dimensions": [
+        {
+          "width": 605.875,
+          "upper": 294.796875,
+          "lower": 345.203125,
+          "provider": "local",
+          "query": "",
+          "selected": [
+            "▤ Alpine study.png\nfile"
+          ],
+          "pin": "true",
+          "scroll": 0,
+          "items": 0,
+          "breadcrumb": "Local Files\n/\nAuthorized folder"
+        },
+        {
+          "width": 516.125,
+          "upper": 302.65625,
+          "lower": 337.34375,
+          "provider": "objects",
+          "query": "",
+          "selected": [
+            "▤ Composition notes\nnote"
+          ],
+          "pin": "true",
+          "scroll": 180,
+          "items": 0,
+          "breadcrumb": "Objects"
+        }
+      ],
+      "expansion": [
+        "viewer",
+        "viewer"
+      ]
+    }
+  ],
+  "evidence_kind": "actual-rendered-Chromium-with-synthetic-Chrome-and-provider-APIs",
+  "installed_mv3": false,
+  "native_helper": false,
+  "extension_checks_passed": 23,
+  "repeated_lifecycle_sequences": 6,
+  "minimized_to_maximized_rail_checks": 2,
+  "column_rail_pointer_delta_px": 12,
+  "expanded_row_pointer_delta_px": 24,
+  "source_sha256": {
+    "extension/workspace-arrangement.js": "62e2a8490de28704bfa33e5988c107013a5dec56d328c1f053f706e34529ca77",
+    "extension/workspace-window-state.js": "601308e628d1655d2e6ad5f2401d07ee1caae12d9880141b0087551e2dd2238c",
+    "extension/workspace-windows.js": "1efdfd857601d9f4946d1a35cc5921903dce1d403b519e8c937c35f82c0e3d1d",
+    "extension/workspace-splitter.js": "595567e08da5f99f4a047f0f2b3e8b3251b086fc64f7b016898399f99f9a6e2e",
+    "extension/workspace.js": "67a5a4a03f89e618e38e1ed72d7345913ae6908b8f31ecdd3c37f97441fef929",
+    "scripts/test_workspace_swaps_browser.mjs": "f616d49f07be8d63b2eb0090dbb02dbcd6be3d0ac57e74b0d4e0918dd1055878",
+    "scripts/test_workspace_windows.mjs": "4a3d9d5daa5b33205c4b009d5baef73de999b6c137d08e39357507fb9a43364c"
+  }
+}

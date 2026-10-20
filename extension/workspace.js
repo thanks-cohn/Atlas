@@ -33,9 +33,9 @@ const button = (label, fn) => {
 };
 let saveQueue = Promise.resolve();
 const splitters = [];
-function save() {
-  if (windows.isFocused()) return Promise.resolve();
-  const snapshot = structuredClone(preferences);
+function save(baseline) {
+  if (windows.isFocused() && !baseline) return Promise.resolve();
+  const snapshot = structuredClone(baseline || preferences);
   saveQueue = saveQueue
     .catch(() => {})
     .then(() => chrome.storage.local.set({ [WORKSPACE_KEY]: snapshot }));
@@ -454,7 +454,7 @@ function buildPane(p, index) {
   hierarchy.append(navigation, crumbs, tools, items, status);
   const viewer = el("section");
   viewer.className = "viewer";
-  p.viewerDom=viewer;
+  p.viewerDom = viewer;
   viewer.setAttribute("aria-label", "Selected item preview");
   const edge = el("div");
   edge.className = "splitter row-splitter";
@@ -466,20 +466,28 @@ function buildPane(p, index) {
   splitters.push(
     bindSplitter(edge, {
       axis: "y",
-      value: () => preferences.reversed?.[index]?100-preferences.heights[index]:preferences.heights[index],
+      value: () =>
+        preferences.reversed?.[index]
+          ? 100 - windows.height(index)
+          : windows.height(index),
       bounds: () => [25, 75],
       geometry: () => {
         const upper = hierarchy.getBoundingClientRect(),
           lower = viewer.getBoundingClientRect();
-        return { start: preferences.reversed?.[index]?lower.top:upper.top, size: upper.height + lower.height };
+        return {
+          start: preferences.reversed?.[index] ? lower.top : upper.top,
+          size: upper.height + lower.height,
+        };
       },
       change: (value) => {
-        preferences.heights[index] = preferences.reversed?.[index]?100-value:value;
-        windows.resize(index,preferences.heights[index]);
+        preferences.heights[index] = preferences.reversed?.[index]
+          ? 100 - value
+          : value;
+        windows.resize(index, preferences.heights[index]);
         layout();
       },
       commit: save,
-      reset: 55,
+      reset: () => (preferences.reversed?.[index] ? 45 : 55),
     }),
   );
   return root;

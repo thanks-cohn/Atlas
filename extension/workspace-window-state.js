@@ -37,15 +37,33 @@ export function maximizeWindow(state, index, region) {
       closed: copy(state.closed),
       regions: copy(state.regions),
     };
-  state.maximized[index] = region === "pane" ? "hierarchy" : region;
+  const target = region === "pane" ? "hierarchy" : region;
+  state.regions[index][target] = "normal";
+  state.maximized[index] = target;
 }
-export function restoreWindow(state, index) {
+export function restoreWindow(state, index, region = null) {
   if (!state.maximized[index]) return;
-  state.maximized[index] = null;
+  state.maximized[index] =
+    region && state.maximized[index] === "both"
+      ? region === "viewer"
+        ? "hierarchy"
+        : "viewer"
+      : null;
   if (state.exclusive === index) state.exclusive = null;
   if (!state.maximized.some(Boolean)) restoreWindows(state);
-  else if (state.snapshot)
+  else if (state.snapshot) {
     state.regions[index] = copy(state.snapshot.regions[index]);
+    if (
+      state.maximized[index] === "hierarchy" ||
+      state.maximized[index] === "both"
+    )
+      state.regions[index].hierarchy = "normal";
+    if (
+      state.maximized[index] === "viewer" ||
+      state.maximized[index] === "both"
+    )
+      state.regions[index].viewer = "normal";
+  }
 }
 export function minimizeWindow(state, index, region) {
   const restoring =
@@ -70,8 +88,5 @@ export function toggleDual(state, keepIndex = 0) {
     : [keepIndex !== 0, keepIndex !== 1];
 }
 export function visiblePanes(state) {
-  return [0, 1].filter(
-    (index) =>
-      !state.closed[index],
-  );
+  return [0, 1].filter((index) => !state.closed[index]);
 }

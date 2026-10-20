@@ -69,7 +69,7 @@ export function bindSplitter(
   edge.onpointercancel = end;
   edge.onlostpointercapture = end;
   edge.ondblclick = () => {
-    update(reset);
+    update(typeof reset === "function" ? reset() : reset);
     commit();
   };
   edge.onkeydown = (event) => {
@@ -81,7 +81,8 @@ export function bindSplitter(
     else if (event.key === up) n += event.shiftKey ? 10 : 2;
     else if (event.key === "Home") n = bounds()[0];
     else if (event.key === "End") n = bounds()[1];
-    else if (event.key === "Enter") n = reset;
+    else if (event.key === "Enter")
+      n = typeof reset === "function" ? reset() : reset;
     else return;
     event.preventDefault();
     update(n);
