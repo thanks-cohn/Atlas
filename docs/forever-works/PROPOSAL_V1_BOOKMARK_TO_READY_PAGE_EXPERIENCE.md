@@ -44,6 +44,20 @@ Atlas is not a generic website builder:
 - Consistent visual polish and responsiveness across screens are acceptance requirements, not optional styling.
 - Do not replace existing Shelf/pinboard/bookmark explorer workflows. Use local, portable project saving and established existing infrastructure; do not silently require R2 or a paid account.
 
+## Unified tag selector — search existing tags before creating new ones
+
+The existing top tag field and every relevant tag picker should support **type-to-search autocomplete**. As the user types, immediately show matching tags already in the board/library's available vocabulary so they can see what exists and select it rather than unknowingly creating duplicates.
+
+- Search and filter the tag dropdown live with each keystroke (case-insensitive and tolerant of ordinary spacing variations); show useful exact/prefix matches first.
+- Clicking or keyboard-selecting a suggestion applies the **existing tag** with familiar selection behavior; keep its stable identity and original provenance.
+- When the entered name already exists, prioritize the existing result and **do not create another tag record** differing only in capitalization or inconsequential spacing.
+- Offer **Create new tag** only when no equivalent tag exists, and distinguish it clearly from selecting an existing tag.
+- Include all tags available under the board's active tag-display and provenance rules, including folder-derived tags when enabled, human tags and permitted model-generated tags. Don't expose disabled/hidden source suggestions contrary to board settings.
+- Keep the dropdown responsive for large vocabularies, keyboard-operable (arrows/Enter/Escape), accessible, and aesthetically consistent with Atlas's existing top tag field. Avoid building a separate tag-search interface.
+- Keep all underlying stored tag sources intact; this lookup feature is not permission to merge or destructively rewrite source tag evidence.
+
+**Acceptance:** typing `arch` shows existing relevant tags such as `architecture`; selecting one reuses it, while trying to create `Architecture` cannot silently add a duplicate. The user can find tags already present on the board before deciding whether a new tag is needed.
+
 ## Image capture and safe fallbacks
 
 Image previews are essential to the *demonstration*: do the utmost permitted to use existing saved cover/thumbnail, page metadata (e.g. og:image where fetchable and permitted), or legitimate cached images. Different websites may block metadata/image access. Show an aesthetically designed fallback with title/favicons and allow **Replace Cover**; avoid broken empty media panels. Do not claim every bookmark can supply an image, and don't automatically republish copyrighted images without considering permissions and appropriate source linking.
