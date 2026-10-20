@@ -71,6 +71,22 @@ Implement predictable view-state operations:
 
 An expanded view is a presentation change; never mutate object records as a side effect.
 
+### Mandatory: directly draggable panel edges (owner clarification)
+
+The existing workspace's grid regions currently feel **fixed-size**. This is a usability defect, not an optional enhancement. Users must be able to **grab the boundary between panes and drag to resize it** in the actual running interface:
+
+- Vertical splitter between left and right panes adjusts their relative widths.
+- Horizontal splitter above each lower content viewer adjusts the upper hierarchy and lower preview heights; **each side can have a different vertical split**.
+- If a viewer or hierarchy spans both columns, its exposed split boundaries remain intuitive and resizable wherever the layout permits.
+- Provide visible edge hover feedback, a modest grip and correct resize cursors (`col-resize`, `row-resize`); pointer drag should update dimensions smoothly without selecting page text or dragging objects accidentally.
+- Mouse and touch/pointer interactions as supported; keyboard-accessible separator adjustment with ARIA semantics where feasible.
+- Enforce reasonable minimum useful panel sizes and support collapse/expand; do not silently make content inaccessible.
+- Double-click an active divider to restore a sensible default ratio.
+- Persist user-defined ratios and restore them after refresh/restart; expansion/restore must not erase custom dimensions.
+- **Test real edge dragging** (not only saved ratio models, sliders, or maximize buttons). Include automated interaction checks and manual Chrome validation where possible.
+
+**Acceptance:** A user can place the pointer directly on a visible pane edge, drag it, and immediately see the two adjacent panels change size. No panel is locked to a hard-coded height or width in standard split mode.
+
 ## 6 — Collections and consistent actions
 
 The baseline supports flat Collections. Investigate the safest natural path to nested Collections, using folder/subfolder conventions and cycle prevention. If feasible within this stage, complete nesting with tests; otherwise document a truthful next-step plan and keep existing Collections fully usable.
