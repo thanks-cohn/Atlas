@@ -6,6 +6,8 @@ ATLAS is a **browser-first, native-capable, local-first explorer** that unifies 
 
 **Important:** PyInstaller eliminates the user's need to install Python; it does **not** authorize a Chrome Web Store extension to silently install or execute a downloaded program. ATLAS should emulate Chute's convenient **one-time user-consented installation and subsequent wake/reconnect**, not claim otherwise. Chrome Web Store eligibility is a design requirement, not an approval guarantee.
 
+**Long-term product vision:** [Atlas — The Future Vision and Product Blueprint](docs/forever-works/ATLAS_FUTURE_VISION_AND_PRODUCT_BLUEPRINT.md) describes the owner-directed objectives, user experiences, architectural conventions, product ecosystem, and exploratory ambitions. It is a north-star explanatory document, not a Codex task or implementation-status claim.
+
 **Why Atlas begins with bookmarks:** [It All Starts with a Link](docs/forever-works/FOUNDATION_IT_ALL_STARTS_WITH_A_LINK.md) is the founding explanation of the pinboard-first object model, creative reuse, and the student/research use case. This is a product vision, not a claim of completed functionality.
 
 Start with [docs/forever-works/README.md](docs/forever-works/README.md).
