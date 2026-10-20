@@ -31,6 +31,7 @@ jobs:
           node scripts/test_image_recovery.mjs
           node scripts/test_workspace.mjs
           node scripts/test_workspace_ui.mjs
+          node scripts/test_workspace_preview.mjs
           node scripts/test_explorer_entry_point.mjs
           node scripts/test_pinboard_rename.mjs
           node scripts/test_source_navigation.mjs
@@ -43,3 +44,30 @@ jobs:
         run: python scripts/smoke_companion.py
       - name: Verify native wake and worker integration without replay
         run: node scripts/test_recovery_broker_native.mjs
+
+  workspace-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/atlas-browser" playwright@1.62.1
+          "$RUNNER_TEMP/atlas-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify actual rendered pointer and content interactions
+        run: |
+          export ATLAS_PLAYWRIGHT_MODULE="$RUNNER_TEMP/atlas-browser/node_modules/playwright/index.mjs"
+          export ATLAS_WORKSPACE_EVIDENCE="$RUNNER_TEMP/workspace-evidence"
+          node scripts/test_workspace_browser.mjs
+      - name: Verify actual MV3 Shelf launcher, bookmarks and storage
+        run: |
+          export ATLAS_PLAYWRIGHT_MODULE="$RUNNER_TEMP/atlas-browser/node_modules/playwright/index.mjs"
+          export ATLAS_REQUIRE_MV3=1
+          node scripts/test_workspace_mv3.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workspace-browser-evidence
+          path: ${{ runner.temp }}/workspace-evidence

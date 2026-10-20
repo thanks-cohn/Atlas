@@ -31,7 +31,19 @@ export async function listing(location) {
       ? (await chrome.bookmarks.getSubTree(id))[0]
       : (await chrome.bookmarks.getTree())[0];
     if (!node) throw new Error("Bookmark folder no longer exists.");
+    const breadcrumbs = [];
+    let current = node;
+    for (let depth = 0; current?.parentId && depth < 64; depth++) {
+      breadcrumbs.unshift({
+        name: current.title || "Bookmarks",
+        location: { provider, id: current.id },
+      });
+      current = chrome.bookmarks.get
+        ? (await chrome.bookmarks.get(current.parentId))[0]
+        : null;
+    }
     return {
+      breadcrumbs,
       title: node.title || "Bookmarks",
       parent: node.parentId ? { provider, id: node.parentId } : null,
       entries: (node.children || []).map((n) => ({
@@ -45,7 +57,12 @@ export async function listing(location) {
     };
   }
   if (provider === "projects") {
-    const records = await chrome.storage.local.get(null);
+    const keys = chrome.storage.local.getKeys
+      ? (await chrome.storage.local.getKeys()).filter((key) =>
+          key.startsWith(PAGE_PREFIX),
+        )
+      : null;
+    const records = await chrome.storage.local.get(keys);
     return {
       title: "Projects",
       entries: Object.entries(records)
@@ -57,6 +74,11 @@ export async function listing(location) {
             name: p.title,
             kind: "Project",
             note: p.text,
+            image: p.images?.[0]?.source,
+            contents: p.images.map((image) => ({
+              id: image.id,
+              name: image.title || image.caption || "Image",
+            })),
             url:
               chrome.runtime.getURL("page.html") +
               "?id=" +
@@ -67,6 +89,14 @@ export async function listing(location) {
   }
   if (provider === "objects" || provider === "collections") {
     const { data } = await broker("/v1/catalog");
+    const entry = (r) => ({
+      ...resource(r),
+      contents: (data.relations || [])
+        .filter((rel) => rel.from === r.id)
+        .map((rel) => data.resources[rel.to])
+        .filter(Boolean)
+        .map(resource),
+    });
     if (provider === "collections")
       return {
         title: id ? data.catalogs[id]?.title || "Collection" : "Collections",
@@ -74,18 +104,21 @@ export async function listing(location) {
         entries: id
           ? data.memberships
               .filter((m) => m.catalog === id)
-              .map((m) => resource(data.resources[m.resource]))
+              .map((m) => entry(data.resources[m.resource]))
           : Object.values(data.catalogs).map((c) => ({
               id: c.id,
               name: c.title,
               kind: "Collection",
               folder: true,
               location: { provider, id: c.id },
+              contents: data.memberships
+                .filter((m) => m.catalog === c.id)
+                .map((m) => resource(data.resources[m.resource])),
             })),
       };
     return {
       title: "Objects",
-      entries: Object.values(data.resources).map(resource),
+      entries: Object.values(data.resources).map(entry),
     };
   }
   if (provider === "local") {
@@ -122,6 +155,20 @@ export async function listing(location) {
     } while (entries.length < total);
     return {
       title: path.split("/").at(-1) || "Authorized folder",
+      breadcrumbs: [
+        { name: "Authorized folder", location: { provider, id, path: "" } },
+        ...path
+          .split("/")
+          .filter(Boolean)
+          .map((part, index, array) => ({
+            name: part,
+            location: {
+              provider,
+              id,
+              path: array.slice(0, index + 1).join("/"),
+            },
+          })),
+      ],
       parent: path
         ? { provider, id, path: path.split("/").slice(0, -1).join("/") }
         : { provider, id: "" },

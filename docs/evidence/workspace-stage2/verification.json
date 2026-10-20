@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "date_utc": "2026-10-20",
+  "baseline": "76070f0",
+  "implementation_commit": "55c04d50dace81c89c87808705aca0aef6377e93",
+  "browser": {
+    "version": "Chromium 153.0.8010.0",
+    "platform": "Linux headless-shell",
+    "actual_rendering_and_pointer_input": "PASS",
+    "transport": "Synthetic Chrome/provider APIs over local HTTP; not installed MV3 or real native reads",
+    "command": "ATLAS_PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs ATLAS_CHROMIUM_PATH=/path/to/chromium node scripts/test_workspace_browser.mjs",
+    "mouse_edge_drag": "PASS",
+    "touch_edge_drag": "PASS",
+    "independent_height_and_saved_ratios": "PASS",
+    "keyboard_reset_expand_restore_pin": "PASS",
+    "bounded_image_text_menu_pagination_breadcrumbs": "PASS",
+    "actual_shelf_markup_launcher_with_synthetic_chrome_api": "PASS",
+    "viewport_sizes": [
+      [
+        1366,
+        768
+      ],
+      [
+        900,
+        768
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "reduced_motion": "PASS"
+  },
+  "installed_mv3": {
+    "local": "NOT_RUN",
+    "attempt": "Fresh isolated persistent profile; load-extension and disable-extensions-except flags; no extension serviceworker observed within 8 seconds in supplied headless-shell build. test_workspace_mv3.mjs reports explicit SKIP.",
+    "hosted_full_chromium": "PASS run39404574911 job118567278391, Chromium151.0.7922.34, fresh isolated profile with actual extension worker/bookmarks/Shelf launcher/edge drag/Chrome storage"
+  },
+  "native_windows_screenreader_4gb": "Real desktop helper image preview/Windows GUI, screen-reader and4GB benchmarks remain NOT_RUN; hosted core/native recovery and Windows boundary tests PASS as separately scoped above",
+  "node_sweep": {
+    "total": 28,
+    "pass": 25,
+    "skip_optional_browsers_without_configuration": 2,
+    "fail": 1,
+    "failure": "scripts/test_recovery_broker_native.mjs:42; existing native startup baseline"
+  },
+  "python": {
+    "records_linked": 22,
+    "tests": 170,
+    "failures": 3,
+    "errors": 3,
+    "skips": 33,
+    "failure_scope": "Existing native bootstrap/supervisor helper startup/READY in container"
+  },
+  "package": {
+    "path": "dist/atlas-extension-0.1.89.zip",
+    "sha256": "c654d5b8f9d59bc705afb5d16ea57de2a3ba89506403e6e0bf18e6e683ab1dba",
+    "status": "PASS unsigned source packaging, not release certification"
+  },
+  "source_sha256": {
+    "extension/workspace-menu.js": "e1b73d569d5845da3a44c0a3719d5ac6d9d2164a98cc92df10d8cd76c78b182c",
+    "extension/workspace-model.js": "97b92212e03a55e713820f39a4ce9c04d9468572181c56f600dba2f82d43e59b",
+    "extension/workspace-preview.js": "1fd22751621d7e15142eeb0d9e45727a22c11d7ba430f94b9e70da906741aff5",
+    "extension/workspace-providers.js": "d4789af8603d17b4c5a4131f776949ed7a259ba4ee75d531aa8c01948d9edcc9",
+    "extension/workspace-splitter.js": "4257913adfd3ebafe7b3fb01cd3798c27cc7b169f184c7ec3049c41c68d30d33",
+    "extension/workspace.css": "f315e798c03fcddf3c572e50c03133960c4554178c56aa0cd16d3b0d3eb8cc5b",
+    "extension/workspace.html": "c11810a1dd4f0810ba286c42fa482e23f3327b5644b462885602b6f8f72049b1",
+    "extension/workspace.js": "bce58d33184bcc14b15cb4a6f2ff02703ebcd2e21e44fc210bdec40f930b4975"
+  },
+  "screenshots": {
+    "docs/evidence/workspace-stage2/after-1366.png": "6c10f8976f798d27d2501ccf84ae414bfdb66c256329f2403e933e28daf41ae9",
+    "docs/evidence/workspace-stage2/before-1366.png": "f7b91352188bc61072bdf7960d23c7861ee229c02152299180ada191b2d2f553",
+    "docs/evidence/workspace-stage2/comparison-390.png": "0047f1956b92b08eeeeec24b32eaf454e0c40a83e533ef8a93054b211b50c3c2",
+    "docs/evidence/workspace-stage2/comparison-900.png": "8df8ec88deaa4d742f78827c7a6acbdab26569d1304f733ad4ca3daa943da600",
+    "docs/evidence/workspace-stage2/narrow-390.png": "abb42606e190a8d781b6ec63eab59d1f831902cb714ccb29b66803917d48a49e",
+    "docs/evidence/workspace-stage2/narrow-900.png": "4769888d33e4c02e10e3b265e8c5247d81986d1db04409a3ca682d2a191955ac"
+  },
+  "implementation_tree": "d57db2375539df4cd67c25da96133a1e4c44c69c",
+  "hosted": {
+    "tested_commit": "e3629a4d7321195e77d00cfee4c46ba251810b1f",
+    "source_unchanged_by_this_receipt_update": true,
+    "development_run": 39404574911,
+    "development_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39404574911",
+    "conclusion": "success",
+    "browser_job": 118567278391,
+    "foundation_job": 118567278765,
+    "python": "170 tests, OK skipped33;22 records linked",
+    "extension_and_native_recovery_steps": "PASS",
+    "actual_rendered_pointer_and_content_interactions": "PASS Chromium151.0.7922.34",
+    "installed_mv3_worker_bookmarks_launcher_edge_storage": "PASS",
+    "windows_boundary_run": 39404575033,
+    "windows_boundary_url": "https://github.com/thanks-cohn/Atlas/actions/runs/39404575033",
+    "windows_boundary_conclusion": "success",
+    "windows_boundary_scope": "Actual kernel/NT-handle authorization tests; not Windows GUI or installed helper preview acceptance"
+  }
+}

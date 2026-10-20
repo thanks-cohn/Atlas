@@ -49,4 +49,4 @@ in conversation or testing a nearby path is not a fix. Keep this index current.
 
 - [021 — Generated-index churn on preview browsing](021-generated-index-churn-on-preview.md): owner soak evidence, empty-record hashing and repeated state/chooser work corrected; browser acceptance pending.
 
-- [023 — Workspace dashboard qualification and remaining stages](023-workspace-dashboard-qualification.md): first read-only shared workspace implemented; real Chrome qualification, nested Collections, media and operation stages remain open.
+- [023 — Workspace dashboard qualification and remaining stages](023-workspace-dashboard-qualification.md): Stage 2 draggable edges, independent heights and bounded viewers implemented; real Chromium synthetic-provider checks pass. Full MV3/native qualification, nested Collections and operation stages remain open.
