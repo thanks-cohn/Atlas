@@ -24,6 +24,19 @@ This is a **layout change to one explorer + its viewer**, not an instruction to 
 - At constrained widths, adapt gracefully: offer a predictable fallback/stacked presentation or ask rather than cramping either panel. Keep keyboard, touch, accessibility, reduced motion and minimum viable pane sizes.
 - Focus on **familiar file-manager conventions, intuitive interactions, and aesthetic polish**, without a novel visual metaphor or toolbar bloat.
 
+## Additional requirement — Remove redundant path row; hover-reveal second toolbar row
+
+**Owner-confirmed exact scope (2026-10-20):** Apply these changes to **both explorer panes** while completing this *future* follow-up, not the currently active Stage 2 implementation.
+
+1. **Preserve the first/top toolbar row exactly as it is.** Keep its existing buttons, positions, labels, and always-visible behavior. Do not move Grid/List controls into it or redesign it.
+2. **Remove the redundant dedicated location/breadcrumb display row** that reads like `Local Files / Authorized folder / nut`; do not leave an empty placeholder row. This concerns that extra visible line, not the underlying path/navigation state or the location selector.
+3. **Keep the existing second toolbar row, including Grid/List view controls, in its current order and positions.** Hide/collapse that row by default and reveal it on toolbar hover or explicit user interaction. No move of Grid/List to the first row.
+4. The second row must also be discoverable and accessible via keyboard focus and click/tap for touch users; do not make it hover-only. Use a subtle, conventional disclosure affordance without altering the first row's existing control arrangement.
+5. When collapsed, the hidden row must consume **no permanent vertical space**. Give that space back to the explorer grid and previews. Avoid distracting layout jitter when revealing/hiding (e.g., tasteful anchored overlay as appropriate).
+6. Maintain all current functionality, navigation semantics, accessibility, responsive behavior, and reduced-motion support. Verify in single- and dual-pane layouts, including narrow widths and long paths.
+
+**Visual priority:** First row always visible and **unchanged**; second row appears on hover/activation; the `Local Files / Authorized folder / nut` display row is removed; the rest of the height belongs to content.
+
 ## Implementation and acceptance
 
 1. Read and build on the *completed* Stage 2 source branch/main state and its tests rather than racing changes against work already in progress.
