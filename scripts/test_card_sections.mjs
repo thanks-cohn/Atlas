@@ -113,3 +113,25 @@ assert.deepEqual(data, snapshot);
 console.log(
   "PASS: distinct Card-owned Sections, normalized global names, local rename/reorder/removal, scoped references, context migration, reopen, cross-Card/area rejection and atomic write failure. Content is never passed to this store.",
 );
+// Ordered flow changes membership only through explicit arrows; sorting is metadata only.
+storage.set=async next=>Object.assign(data,structuredClone(next));
+const flow=await store.create('Flow','notes',{label:'Research'});
+await store.order('Flow','notes','ctx',[{item:'first'},{section:flow.sectionId},{item:'second'}]);
+let organized=(await store.read('Flow')).document;
+assert.equal(organized.memberships[store.reference('ctx','first')],undefined);
+assert.equal(organized.memberships[store.reference('ctx','second')],flow.sectionId);
+for(const mode of ['az','za','date','recent'])await store.setSort('Flow','notes',mode);
+assert.deepEqual((await store.read('Flow')).document.memberships,organized.memberships);
+await store.order('Flow','notes','ctx',[{section:flow.sectionId},{item:'first'},{item:'second'}]);
+assert.equal((await store.read('Flow')).document.memberships[store.reference('ctx','first')],flow.sectionId);
+await assert.rejects(store.order('Flow','notes','ctx',[{section:b.sectionId},{item:'first'}]),/no longer/);
+store=createCardSections(options);
+assert.equal((await store.read('Flow')).document.orders['["ctx","notes"]'][1].item,'first');
+console.log('PASS: arrow boundary membership, unsectioned items, sorting isolation and durable manual order.');
+const imageSection=await store.create('Flow','images',{label:'Research'});
+await store.order('Flow','images','parent',[{section:imageSection.sectionId},{item:'legacy'},{item:'image-2'}]);
+await store.migrateItem('Flow','images','parent','legacy','image-1');
+assert.equal((await store.read('Flow')).document.memberships[store.reference('parent','image-1','images')],imageSection.sectionId);
+assert.equal((await store.read('Flow')).document.orders['["parent","images"]'][1].item,'image-1');
+await assert.rejects(store.assign('Flow','images','parent','image-1',flow.sectionId),/no longer/);
+console.log('PASS: Images share local Sections while retaining area ownership and legacy image identity migration.');

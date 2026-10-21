@@ -1,3 +1,5 @@
+> Organizational UI refinement: [ordered flow and Images](CARD_SECTION_FLOW_AND_IMAGES.md) supersedes the per-item selector and boxed Section presentation below; ownership/storage guarantees remain.
+
 # Pinboard searchable tags and local Sections
 
 Owner direction, 2026-10-20: improve the existing Card pop-out. Create a Section locally; reuse only its organizational name globally. Never combine content implicitly.

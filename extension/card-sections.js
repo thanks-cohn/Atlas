@@ -86,7 +86,7 @@ export function createCardSections({
     reference,
     create: (owner, area, options = {}) =>
       change(owner, (state) => {
-        if (!["notes", "bookmarks"].includes(area))
+        if (!["notes", "bookmarks", "images"].includes(area))
           throw Error("Invalid Section area.");
         const nameId = name(state, options.label, options.nameId),
           existing = state.document.sections.find(
@@ -110,6 +110,7 @@ export function createCardSections({
         const s = section(state.document, id),
           before = s.nameId;
         s.nameId = name(state, label);
+        s.updatedAt = new Date().toISOString();
         return {
           type: "section-renamed",
           sectionId: id,
@@ -159,6 +160,40 @@ export function createCardSections({
           sectionId: id || null,
         };
       }),
+    setSort: (owner, area, mode) => change(owner, ({document: doc}) => {
+      if (!['notes','bookmarks','images'].includes(area) || !['az','za','date','recent'].includes(mode)) throw Error('Invalid sorting option.');
+      (doc.sorts ||= {})[area] = mode;
+      return {type:'section-sort', area, mode};
+    }),
+    order: (owner, area, context, tokens) => change(owner, ({document: doc}) => {
+      if (!['notes','bookmarks','images'].includes(area)) throw Error('Invalid Section area.');
+      const seen = new Set(); let membership = null;
+      for (const token of tokens) {
+        const ref = JSON.stringify(token);
+        if (seen.has(ref)) throw Error('Duplicate organizational reference.');
+        seen.add(ref);
+        if (token.section) { section(doc, token.section, area); membership = token.section; }
+        else {
+          const key = reference(context, token.item, area);
+          if (membership) doc.memberships[key] = membership; else delete doc.memberships[key];
+        }
+      }
+      (doc.orders ||= {})[JSON.stringify([context,area])] = tokens;
+      // Explicit manual arrangement retains the displayed Section order.
+      const ids = tokens.filter(t=>t.section).map(t=>t.section);
+      const slots = doc.sections.map((s,i)=>ids.includes(s.id)?i:-1).filter(i=>i>=0);
+      const ordered = ids.map(id=>section(doc,id,area));
+      slots.forEach((slot,i)=>doc.sections[slot]=ordered[i]);
+      (doc.sorts ||= {})[area] = 'manual';
+      return {type:'section-flow-ordered',area,context,tokens};
+    }),
+    migrateItem: (owner, area, context, before, after) => change(owner, ({document:doc})=>{
+      const old=reference(context,before,area), next=reference(context,after,area);
+      if(doc.memberships[old]){doc.memberships[next]=doc.memberships[old];delete doc.memberships[old];}
+      const tokens=doc.orders?.[JSON.stringify([context,area])];
+      if(tokens)for(const token of tokens)if(token.item===before)token.item=after;
+      return {type:'section-item-materialized',area,context,before,after};
+    }),
     migrateContext: async (owner, before, after) => {
       if (before === after) return;
       const state = await read(owner);
@@ -170,6 +205,9 @@ export function createCardSections({
             doc.memberships[reference(after, item, area)] = id;
             delete doc.memberships[key];
           }
+        }
+        for(const [key,tokens] of Object.entries(doc.orders || {})){
+          const [context,area]=JSON.parse(key);if(context===before){doc.orders[JSON.stringify([after,area])]=tokens;delete doc.orders[key];}
         }
         return { type: "section-context-migrated", before, after };
       });

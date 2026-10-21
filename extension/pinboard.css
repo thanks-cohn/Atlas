@@ -393,3 +393,28 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 .pin-section-editor{background:var(--pin-surface,#fff);border-color:var(--pin-line,#e7dfe5)}
 [data-board-appearance=dark] .pin-section-editor{background:#182238;color:#ecedfa}
 [data-board-appearance=dark] .pin-section-editor :is(input,select){background:#202c42;color:inherit;border:1px solid var(--pin-line)}
+
+/* Shared ordered organizational flow; dividers are headings, never content cards. */
+.preview-section-divider{display:flex;align-items:center;gap:5px;margin:16px 0 8px;flex-wrap:wrap}
+.preview-divider-title:before,.preview-divider-title:after{content:'';height:1px;background:var(--pin-line,#d8dce3);flex:1;min-width:12px}
+.preview-section-divider h4{margin:0;text-align:center;font-size:13px;font-weight:600}
+.preview-section-divider button,.preview-flow-actions button{padding:3px 6px;font-size:11px}
+.preview-flow-actions{display:flex;gap:3px;justify-content:flex-end}
+.preview-area-header>select{margin-left:auto;max-width:100px}
+.preview-area-header>.preview-save-status:empty{display:none}
+
+#preview-images-panel{max-height:420px;overflow-y:auto;overscroll-behavior:contain}
+.preview-images-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:start}
+.preview-mini-image{margin:0;min-width:0;padding:4px;border-radius:7px;background:var(--pin-soft,rgba(128,128,128,.06))}
+.preview-mini-image img{display:block;max-width:100%;width:auto;height:auto;max-height:none;margin:0 auto;object-fit:contain;cursor:default}
+.preview-mini-image figcaption{font-size:11px;overflow-wrap:anywhere;margin:3px 0}
+.preview-mini-image label{display:grid;font-size:11px;gap:3px}
+.preview-mini-image textarea{box-sizing:border-box;width:100%;min-width:0;resize:vertical;font:inherit;border:1px solid var(--pin-line,#ddd);border-radius:5px;background:transparent;color:inherit}
+.preview-mini-image button{font-size:11px;padding:3px 6px}
+.preview-mini-image .preview-save-status:empty{display:none}
+.preview-add-images{margin:4px 0 8px;border-style:dashed}
+
+.preview-divider-title{display:flex;align-items:center;gap:10px;flex-basis:100%}
+.preview-section-divider>.preview-flow-actions{margin-left:auto}
+
+.preview-mini-image img[hidden]{display:none}
