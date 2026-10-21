@@ -1,0 +1,34 @@
+{
+  "tested_source_commit": "385c1e866cdac48bfc33c22117ca439993ee67a9",
+  "base": "2d49260d04ed06c6dddc82b1394c6e5a1428ed50",
+  "pr": "https://github.com/thanks-cohn/Atlas/pull/11",
+  "development_run": "https://github.com/thanks-cohn/Atlas/actions/runs/39520606888",
+  "browser_job": 118963256966,
+  "foundation_job": 118963256742,
+  "windows_run": "https://github.com/thanks-cohn/Atlas/actions/runs/39520606869",
+  "results": {
+    "hosted_foundation": "PASS:170 Python tests,33 skips;22 model links;24 extension contracts;packaging;CLI;native recovery integration",
+    "hosted_chromium": "PASS:Chromium151.0.7922.34,Sections create/reuse/search/rename/arrows/sorting/reopen/isolation;Images two columns at1100/390px,mixed aspect ratios,no click target,no upscale/overflow;existing Workspace regressions",
+    "hosted_mv3": "PASS:installed extension worker/native Chrome bookmarks/Shelf/storage/workspace smoke;no native helper in isolated browser profile",
+    "hosted_windows": "PASS:existing Windows native handle boundaries",
+    "local_contracts": "PASS:24 configured extension scripts,packaging,whitespace",
+    "local_python": "BASELINE_FAILURE:170 tests,3 failures,3 errors,33 skips in native bootstrap/supervisor;22 links pass",
+    "local_chrome": "NOT_RUN:missing browser;download invalid archive"
+  },
+  "unverified": [
+    "manual aesthetic screenshot review",
+    "installed owner desktop/helper image comparison",
+    "physical screen reader and touch",
+    "large-library/4GB performance",
+    "future Atlas Library provider picker and composition engine"
+  ],
+  "sha256": {
+    "extension/card-sections.js": "660ddf3c8a0ae9a07c24e7cec8dd5b6705be745bb67b27010f1550368fefdfc1",
+    "extension/card-section-controls.js": "934c1c30d41673d5e352705f0897ecb5a714769353dd4a1c39d5dd4eca7a948d",
+    "extension/pinboard-preview-sections.js": "3b7c9d19335a3334c00be490dc44cb26ff1a38c4db39f675af496446fb38a59e",
+    "extension/pinboard.js": "938fb0ffe424d339aaf8b1e68e3ba550929d26da36f4596780247d5b8353708d",
+    "extension/pinboard.css": "1cec0622d2f08e40908ca5ef3a993173f63687d1e847f98aedf9ee4aba1212df",
+    "extension/pinboard.html": "8f6d43f984ca924dd0910ace082184683b845599d56218792a3cdf5801ea7557",
+    "extension/image-entries.js": "2629a73610ff2d42471a074f78225828c57a359b6c45087891ba3722617fe015"
+  }
+}

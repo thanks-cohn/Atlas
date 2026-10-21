@@ -33,3 +33,7 @@ Stage 1 was implemented and committed separately at 8d9b252 before Images: store
 Stage 2 tests extend those contracts to Images identity migration, area rejection, non-clickable figures, caption save arguments/repeated edits and multi-file drops. Existing image-entry/Recovery tests cover provenance, default cover, atomic failure and independent gallery persistence. The full Pinboard contract exercises existing ingestion. Browser CI additionally checks mixed-aspect two-column geometry and non-clickability at a narrow viewport. Hosted results must be recorded separately; source/test existence is not browser proof.
 
 Installed MV3/native/Windows, real local file dialogs, physical screen reader/touch and large-library performance remain separate acceptance gates. The current environment retains the prior native-bootstrap/supervisor failures; see the status ledger for exact results. No full-suite or normative Forever Works conformance claim is made.
+
+### Hosted result
+
+Source385c1e8 passed [development run39520606888](https://github.com/thanks-cohn/Atlas/actions/runs/39520606888): foundation, Chromium151 browser interactions (including desktop/narrow Images geometry), existing Workspace regressions and actual installed MV3 smoke. [Windows boundary39520606869](https://github.com/thanks-cohn/Atlas/actions/runs/39520606869) passed. See the [verification receipt](../evidence/card-section-flow/verification.json) for exact scope and source digests. Automated rendering checks do not constitute manual aesthetic or screen-reader review.
