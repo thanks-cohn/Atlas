@@ -112,3 +112,8 @@ Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/
 ## Important strategic direction — preservation and AI collection access
 
 **Preserve whole transposable Objects from the beginning**, including source material, assets, versions and meaningful relationships. [Whole-Object Preservation, AI Collection Access and Partnership Opportunity](docs/forever-works/IMPORTANT_WHOLE_OBJECT_PRESERVATION_AND_AI_PARTNERSHIP.md) records the important owner vision: permission-based ChatGPT understanding of selected collections; separately optional structured-data/training contributions; and a proposed $2 price with a 50% distribution-partner share. This is a future proposal, not an established OpenAI partnership, implemented sharing program or pricing change.
+
+
+## Current execution priorities — checklist
+
+**First: intuitive, standardized, dependable and beautiful local/remote exploration. Then: formalize transposable Objects and qualify Dashboard hierarchy arrangement/navigation, including selecting material and saving named Collections, Galleries or Projects. Establish the stable public API after those workflows are proven.** Durable storage outside browser caches and whole/individual Object export apply throughout. Bookmarks, Pinboards, tags and notes remain the fun entry point. See [Current Priority Checklist](docs/forever-works/CURRENT_PRIORITY_CHECKLIST.md) for acceptance gates, school-centered audience goals and exact sequencing; this is a plan, not completion evidence.
