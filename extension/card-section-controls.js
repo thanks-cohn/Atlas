@@ -240,7 +240,8 @@ export function createCardSectionControls({ store, getOwner }) {
         });
       }
       paint();
-      return (item,row)=>{entries.push({ref:area==='bookmarks'?item.url:item.id,title:item.title||'image',row});paint();};
+      const place=(item,row)=>{entries.push({ref:area==='bookmarks'?item.url:item.id,title:item.title||'image',row});};
+      place.finish=paint;return place;
     },
   };
 }

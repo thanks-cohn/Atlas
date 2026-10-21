@@ -46,3 +46,11 @@ const writes=[],clean={};const quiet=createImageEntries({storage:{get:async keys
 await quiet.ensure('https://fixture.test/untagged',{id:'untagged',url:'https://fixture.test/untagged'},'https://fixture.test/image.jpg');
 assert(writes.every(keys=>!keys.includes(RUNS) && !keys.includes(REMOVALS)),'Empty imports should not notify every tag-index consumer');
 console.log('PASS: untagged legacy-gallery import does not write empty global model/removal maps; existing nonempty provenance migration remains tested.');
+const originalNote=structuredClone(store.entry(owner,c.id).notes);
+await store.mutate(owner,c.id,item=>{item.caption='Caption kept independently';},'image-caption-saved');
+const captionReload=createImageEntries({storage,lock:fn=>fn()});await captionReload.load();
+assert.equal(captionReload.entry(owner,c.id).caption,'Caption kept independently');
+assert.deepEqual(captionReload.entry(owner,c.id).notes,originalNote);
+assert.equal(captionReload.entry(owner,d.id).caption,undefined);
+assert.equal(captionReload.entry(owner,c.id).history.at(-1).after.caption,'Caption kept independently');
+console.log('PASS: image captions survive reload independently of richer Notes and other image entries.');

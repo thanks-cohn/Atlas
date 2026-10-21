@@ -18,6 +18,7 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
     }
     const top=make('div','','preview-note-toolbar'),add=action('+',()=>{if(drafts.get(identity)?.editing)drafts.delete(identity);editing=true;notes();panel('notes').querySelector?.('textarea')?.focus?.();},'preview-add-note');add.setAttribute('aria-label','Add Note');top.append(add);host.append(top);
     const place=organization?.groups('notes',host);const seen=new Set();for(const note of content.notes || []){if(!note.text || seen.has(note.id))continue;seen.add(note.id);const row=action('',()=>{drafts.set(identity,{...note,editing:true,originalTitle:note.title || '',originalText:note.text});editing=true;notes();host.scrollIntoView?.({block:'nearest',behavior:'auto'});host.querySelector?.('textarea')?.focus?.({preventScroll:true});},'preview-note');row.append(make('h3',note.title || 'Note'),make('p',note.text));if(place)place(note,row);else host.append(row);}
+    place?.finish?.();
     if(!seen.size)host.append(make('p',content.available===false?'Notes are unavailable right now.':'No notes yet.','preview-section-empty'));
   }
   function bookmarks(){
@@ -30,6 +31,7 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
       const link=make('a','Visit Bookmark ↗','preview-bookmark-visit');link.href=safeURL(current.url);link.target='_blank';link.rel='noopener noreferrer';link.title=current.url;view.append(link);host.append(view);return;
     }
     const place=organization?.groups('bookmarks',host);const seen=new Set();for(const item of entries){if(seen.has(item.url))continue;seen.add(item.url);const row=action('',()=>{focusedBookmark=item.url;bookmarks();},'preview-bookmark');row.append(make('strong',item.title || item.url),make('span',item.url));if(place)place(item,row);else host.append(row);}
+    place?.finish?.();
     if(!seen.size)host.append(make('p',content.available===false?'Linked bookmarks are unavailable right now.':'No linked bookmarks yet.','preview-section-empty'));
     const footer=make('div','','preview-bookmark-add'),trigger=action('Add Existing Bookmark ↑',()=>{chooser.hidden=!chooser.hidden;trigger.setAttribute('aria-expanded',String(!chooser.hidden));if(!chooser.hidden){options();search.focus?.();}});trigger.setAttribute('aria-expanded','false');
     const chooser=make('div','','preview-bookmark-dropup');chooser.hidden=true;const search=make('input');search.type='search';search.placeholder='Find a bookmark…';search.setAttribute('aria-label','Find an existing bookmark');const select=make('select');select.size=6;select.setAttribute('aria-label','Choose an existing bookmark');const feedback=make('p','','preview-save-status');feedback.setAttribute('role','status');
@@ -59,6 +61,7 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
       const save=action('Save Notes',async()=>{save.disabled=true;try{await saveImageNote(context,item.id,input.value,original);original=input.value;imageDrafts.delete(draftKey);feedback.textContent='Saved';}catch(error){feedback.textContent=error.message;}finally{save.disabled=false;}});
       figure.append(img,caption,label,save,feedback);if(place)place(item,figure);else fallback.append(figure);
     }
+    place?.finish?.();
     if(!(content.images || []).length)host.append(make('p','No images yet.','preview-section-empty'));
   }
   return {setContent(key,value={},options={}){
