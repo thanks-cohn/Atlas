@@ -107,3 +107,8 @@ Windows supports real list/preview/hash, mkdir, bounded file copy, rename, file/
 ## Minimal publishing, cards, slices and Any-Shape — proposal
 
 [Minimal Publishing, Card/Slice Architecture and Aesthetic Adaptation Corpus](docs/forever-works/PROPOSAL_MINIMAL_PUBLISHING_CARD_SLICE_ANY_SHAPE_CORPUS.md) sets out the owner-directed principle **“Use the smallest implementation that fully preserves the experience”**, a transparent modular HTML/CSS/JS + JSON renderer, production-ready templates, first-time-user publish test, card/whole/slice portability, responsive aesthetic equivalence and an inspectable future training corpus. This is **proposed direction, not shipped functionality**.
+
+
+## Important strategic direction — preservation and AI collection access
+
+**Preserve whole transposable Objects from the beginning**, including source material, assets, versions and meaningful relationships. [Whole-Object Preservation, AI Collection Access and Partnership Opportunity](docs/forever-works/IMPORTANT_WHOLE_OBJECT_PRESERVATION_AND_AI_PARTNERSHIP.md) records the important owner vision: permission-based ChatGPT understanding of selected collections; separately optional structured-data/training contributions; and a proposed $2 price with a 50% distribution-partner share. This is a future proposal, not an established OpenAI partnership, implemented sharing program or pricing change.
