@@ -1,0 +1,110 @@
+ATLAS Proprietary Source License 2.0
+Effective date: 21 October 2026
+
+Copyright (c) 2026 the respective ATLAS copyright holders.
+All rights reserved.
+
+1. Subject matter and ownership
+
+This license governs original ATLAS software, source code, documentation,
+designs, graphics, and other copyrightable assets in this repository to the
+extent the applicable copyright holders have authority to license them
+(collectively, the "Software"). Ownership is retained by the respective rights
+holders. Nothing in this license transfers title or intellectual property
+rights. Third-party components, independently licensed contributions, and
+materials licensed under separate notices remain subject to their own terms.
+
+2. Reservation of rights and permission
+
+Except as required or permitted independently by applicable law, no license
+or permission is granted to use, execute, copy, reproduce, distribute, publish,
+modify, adapt, translate, create derivative works from, sublicense, sell,
+commercialize, host, embed, or otherwise exploit the Software, whether for
+commercial or noncommercial purposes, without prior express written
+authorization from each relevant rights holder.
+
+Public visibility, possession of a copy, access to a repository, or the
+ability to fork it through a hosting service does not itself confer a
+copyright license from the rights holders. No rights are granted by
+implication, estoppel, or silence to the extent permitted by law. Any
+authorization must identify its covered materials, permitted acts, scope,
+duration, and any applicable conditions. An inquiry or unanswered request
+does not constitute consent.
+
+Request permission through the maintainer of the canonical repository:
+https://github.com/thanks-cohn/Atlas
+
+3. Commercial exploitation and negotiated compensation
+
+Any proposed commercial exploitation requires a separate written licensing
+agreement with the relevant rights holders before the activity begins.
+Commercial exploitation includes, without limitation, sale, paid
+distribution, paid hosting, use in monetized products or services, paid
+client work, and incorporation into products or services intended to
+produce direct or indirect commercial benefit.
+
+The rights holders may condition commercial authorization on negotiated
+license fees, royalties, revenue sharing, attribution, audit rights, or
+other lawful consideration. No fee or royalty is imposed merely by
+publishing this license, and no commercial permission arises from an
+unaccepted proposal or unilateral payment.
+
+4. Unauthorized exploitation; reservation of remedies
+
+Any act requiring authorization that is undertaken without it may
+constitute copyright infringement or another actionable violation,
+depending on applicable law and the rights at issue. The rights holders
+expressly reserve all remedies available under applicable law, which may
+include injunctive relief, actual damages, recovery of profits attributable
+to infringement, statutory damages, costs, and attorneys' fees where
+legally available.
+
+No provision in this license establishes automatic ownership of a third
+party's revenues, a predetermined damages amount, an automatic royalty
+debt, or a guaranteed right to compensation. Monetary relief, if any,
+must be established by a valid agreement, applicable statute, or judicial
+determination. Unauthorized activity does not retroactively create a
+license, and any future authorization is subject to written agreement.
+
+5. Existing grants, lawful exceptions, and third-party materials
+
+This license operates prospectively for the material rights holders may
+lawfully license under it. It cannot revoke irrevocable rights already
+granted under prior licenses, including permissions attached to earlier
+versions of the Software. It does not override the licenses of third-party
+dependencies or contributions, limit independently created material, or
+prohibit acts permitted by applicable law irrespective of copyright-owner
+permission, including applicable statutory exceptions and limitations.
+
+References to the Software do not purport to extend copyright protection
+to ideas, methods, facts, or other unprotectable subject matter. Rights
+belonging to other contributors remain theirs unless lawfully assigned or
+otherwise authorized.
+
+6. No trademarks or endorsement
+
+No trademark, service mark, trade name, or branding rights are granted.
+No person may imply sponsorship, affiliation, or endorsement by ATLAS
+or its rights holders without separate authorization, subject to
+applicable law.
+
+7. Disclaimer of warranty and limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS
+PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, AND NONINFRINGEMENT. TO THAT EXTENT, THE RIGHTS HOLDERS
+DISCLAIM LIABILITY FOR DAMAGES ARISING FROM ACCESS TO OR USE OF THE
+SOFTWARE. NOTHING HERE EXCLUDES OR LIMITS LIABILITY THAT CANNOT
+LAWFULLY BE EXCLUDED OR LIMITED.
+
+8. Separate agreements and characterization
+
+Any permitted use beyond rights independently provided by law requires
+the applicable rights holder's prior written permission, whether in an
+individual authorization or a separate signed license agreement. All
+rights not expressly granted are reserved.
+
+This is a proprietary, all-rights-reserved, source-visible notice; it is
+not an open-source license and is not represented as approved by the
+Open Source Initiative.
