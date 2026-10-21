@@ -105,3 +105,8 @@ Before claiming delivery:
 - Render representative nested collections and galleries at narrow/desktop sizes. For PDF, inspect pagination, selectable text, images, fonts, links and overflow; do not infer accessible PDF conformance without separate proof.
 
 Documentation-only decision: no schema migration, persistence change, hierarchy runtime, R2 backup, PDF export or editor implementation is delivered by this record. Next implementation should inventory existing durable gallery/graph adapters, then propose one versioned hierarchy-and-persistence slice with explicit migration and recovery evidence.
+
+
+## IMPORTANT — preservation and future AI partnership
+
+The transposable Object also serves long-term preservation: capture permitted content, assets, source context, versions and relationships from the beginning. The owner wants eventual permission-based ChatGPT access to selected collections, with optional structured-data contributions kept separate from assistance consent, and proposes a $2 price split equally with a distribution partner. See [the important preservation, AI access and partnership record](IMPORTANT_WHOLE_OBJECT_PRESERVATION_AND_AI_PARTNERSHIP.md) for the complete owner vision, economics, boundaries and verification plan. No partnership, sharing capability or training program is established; this future opportunity does not supersede current durable/interoperable Object foundation work.
