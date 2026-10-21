@@ -406,13 +406,15 @@ button.preview-note{display:block;width:100%;text-align:left;cursor:pointer}
 #preview-images-panel{max-height:420px;overflow-y:auto;overscroll-behavior:contain}
 .preview-images-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:start}
 .preview-mini-image{margin:0;min-width:0;padding:4px;border-radius:7px;background:var(--pin-soft,rgba(128,128,128,.06))}
-#detail .preview-mini-image img{display:block;max-width:100%;width:auto;height:auto;max-height:none;margin:0 auto;object-fit:contain;cursor:default}
+.preview-mini-image img{display:block;max-width:100%;width:auto;height:auto;max-height:none;margin:0 auto;object-fit:contain;cursor:default}
 .preview-mini-image figcaption{font-size:11px;overflow-wrap:anywhere;margin:3px 0}
 .preview-mini-image label{display:grid;font-size:11px;gap:3px}
 .preview-mini-image textarea{box-sizing:border-box;width:100%;min-width:0;resize:vertical;font:inherit;border:1px solid var(--pin-line,#ddd);border-radius:5px;background:transparent;color:inherit}
-#detail .preview-mini-image button{font-size:11px;padding:3px 6px}
+.preview-mini-image button{font-size:11px;padding:3px 6px}
 .preview-mini-image .preview-save-status:empty{display:none}
 .preview-add-images{margin:4px 0 8px;border-style:dashed}
 
 .preview-divider-title{display:flex;align-items:center;gap:10px;flex-basis:100%}
 .preview-section-divider>.preview-flow-actions{margin-left:auto}
+
+.preview-mini-image img[hidden]{display:none}

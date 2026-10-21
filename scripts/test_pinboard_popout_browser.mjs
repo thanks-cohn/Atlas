@@ -9,7 +9,7 @@ const { chromium } = process.env.ATLAS_PLAYWRIGHT_MODULE
   ? await import(process.env.ATLAS_PLAYWRIGHT_MODULE)
   : createRequire(import.meta.url)("playwright");
 const root = resolve(fileURLToPath(new URL("../extension", import.meta.url)));
-const html = `<!doctype html><link rel="stylesheet" href="/pinboard.css"><style>body{padding:24px}#preview-notes-panel,#preview-bookmarks-panel{max-width:620px}</style><button id="preview-notes">Notes<span></span></button><button id="preview-bookmarks">Bookmarks<span></span></button><button id="preview-images">Images<span></span></button><div id="preview-images-panel"></div><div id="preview-notes-panel"></div><div id="preview-bookmarks-panel"></div><button id="switch">Switch Card</button><button id="tags">Tags</button><script type="module">
+const html = `<!doctype html><link rel="stylesheet" href="/pinboard.css"><style>body{padding:24px}#preview-notes-panel,#preview-bookmarks-panel,#preview-images-panel{max-width:620px}</style><button id="preview-notes">Notes<span></span></button><button id="preview-bookmarks">Bookmarks<span></span></button><button id="preview-images">Images<span></span></button><div id="preview-images-panel"></div><div id="preview-notes-panel"></div><div id="preview-bookmarks-panel"></div><button id="switch">Switch Card</button><button id="tags">Tags</button><script type="module">
 import {createCardSections} from '/card-sections.js';import {createCardSectionControls} from '/card-section-controls.js';import {installPreviewSections} from '/pinboard-preview-sections.js';import {installTagEditor} from '/pinboard-tag-editor.js';
 const data=JSON.parse(localStorage.fixture || '{}');window.data=data;window.chrome={storage:{local:{async get(keys){return structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,data[k]])));},async set(values){Object.assign(data,structuredClone(values));localStorage.fixture=JSON.stringify(data);}}}};
 let card='A';const content=data.content || (data.content={A:{notes:[{id:'a',title:'A note',text:'Original A'}],bookmarks:[{id:'a-link',title:'A link',url:'https://a.example/'}]},B:{notes:[{id:'b',title:'B note',text:'Original B'}],bookmarks:[{id:'b-link',title:'B link',url:'https://b.example/'}]}});
@@ -254,6 +254,7 @@ try {
     await page.evaluate(() => document.activeElement?.textContent),
     "+ Section",
   );
+  await page.setViewportSize({width:1100,height:850});
   await page.locator('#preview-images').click();
   const images=page.locator('#preview-images-panel');
   await create('Pictures',images);
@@ -264,6 +265,9 @@ try {
   const geometry=await images.locator('.preview-images-grid').last().evaluate(grid=>({columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,rects:[...grid.querySelectorAll('img')].map(img=>({ratio:img.getBoundingClientRect().width/img.getBoundingClientRect().height,natural:img.naturalWidth/img.naturalHeight,clickable:!!img.closest('button,a')}))}));
   assert.equal(geometry.columns,2);assert.equal(geometry.rects.length,2);
   for(const r of geometry.rects){assert(Math.abs(r.ratio-r.natural)<0.02);assert.equal(r.clickable,false);}
+  await page.setViewportSize({width:390,height:844});
+  const narrow=await images.locator('.preview-images-grid').last().evaluate(grid=>({columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,fits:[...grid.querySelectorAll('img')].every(img=>img.getBoundingClientRect().right<=grid.getBoundingClientRect().right && img.getBoundingClientRect().width<=img.naturalWidth)}));
+  assert.equal(narrow.columns,2);assert.equal(narrow.fits,true);
   assert.deepEqual(errors, []);
   console.log(
     "PASS Chromium: searchable normalized tags/Enter, create and reuse A–Z/searchable names across Cards, local note/bookmark assignments, new content, saved reopen, independent rename/removal and no content transfer. Synthetic content/storage adapters; installed MV3/native NOT_RUN.",
