@@ -4,6 +4,14 @@
 
 Make all user-authorized resources accessible through one **advanced, relationship-based file explorer**, even when their actual storage spans local disks, remote R2 buckets, browser bookmarks, webpage archives, virtual archive members and other products. Users should not have to remember a storage provider or physical path before finding something.
 
+## Current stage: the transposable Object
+
+**Create once, transpose and reuse** is the focal principle. Atlas aims to be one workspace for modifying supported content, moving, bulk sending and curating local and remote resources, preserving Object identity/lineage, content, assets, sources and relationships across compatible contexts.
+
+Prioritize durable nested Collections/Galleries and interoperable PDF, Word/DOCX, text and HTML workflows with declared adapter fidelity. Build a focused Article Object/document composer gradually, evaluating Paged.js or Vivliostyle for web-source pagination/PDF, rather than adopting Puck as this stage's foundation. The full website builder is deferred. Existing working features and permission boundaries remain obligations; this direction is not an implementation or universal-conversion claim.
+
+See [the current direction and verification contract](CURRENT_DIRECTION_DURABLE_HIERARCHIES_AND_PORTABLE_OBJECTS.md), which supersedes older publishing proposals on sequencing.
+
 ## Guiding experience principles
 
 - **Intuitive:** Everyday interactions should be easy to discover and understand, with clear navigation, predictable behavior, and minimal unnecessary complexity.
