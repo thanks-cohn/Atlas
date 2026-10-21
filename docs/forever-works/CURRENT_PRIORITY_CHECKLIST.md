@@ -101,6 +101,24 @@ Owner especially wants students and school-centered communities, including Chine
 - [ ] Keep bookmark discovery, tag exploration and notes fun and useful without requiring users to understand the Object schema.
 - [ ] Prioritize understandable, dependable and polished interactions over feature count.
 
+## Communicating the Pinboard: ready material, beginning in the pop-out
+
+Owner clarification: the Pinboard is a library of ready-to-use material; opening a Card's pop-out is the beginning of developing that material into something larger. Communicate the transposable Object through familiar actions: **collect, enrich, arrange, reuse**.
+
+Proposed interface copy (to validate, not shipped text):
+- Empty Pinboard: “Collect something. See what it becomes.”
+- Card pop-out: “Build on this.” Offer notes, images, sources and related bookmarks through existing controls.
+- Multiple selected items: “Create from selected…” with supported Collection, Gallery or Project choices.
+- Saved Object: “Ready to reuse.” Offer supported open, arrange, export and add-to-project actions.
+
+- [ ] Show the depth behind a Card through visible content and accurate counts, such as “4 images · 3 notes · 2 sources”; do not imply unavailable material is saved.
+- [ ] Preserve existing pop-out controls while making the next useful action discoverable.
+- [ ] Demonstrate a student saving a history bookmark, enriching its pop-out with notes/images/sources, selecting related Cards and saving School History Project.
+- [ ] Test whether first-time users understand that collected material can be developed and reused without understanding the internal Object schema.
+- [ ] Keep messaging aligned with implemented capabilities; “Create from selected” and exports appear as working actions only when qualified.
+
+Suggested central message: **“Everything you collect is a beginning. Build on it.”** This is proposed explanatory copy, not a replacement for the enduring transposable-Object architecture.
+
 ## Evidence and continuation
 
 For each completed checkbox record the implementation revision, environment, scenario, expected outcome, observed result and limitations. This checklist itself does not certify completion.
