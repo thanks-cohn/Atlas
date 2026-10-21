@@ -9,13 +9,13 @@ const { chromium } = process.env.ATLAS_PLAYWRIGHT_MODULE
   ? await import(process.env.ATLAS_PLAYWRIGHT_MODULE)
   : createRequire(import.meta.url)("playwright");
 const root = resolve(fileURLToPath(new URL("../extension", import.meta.url)));
-const html = `<!doctype html><link rel="stylesheet" href="/pinboard.css"><style>body{padding:24px}#preview-notes-panel,#preview-bookmarks-panel{max-width:620px}</style><button id="preview-notes">Notes<span></span></button><button id="preview-bookmarks">Bookmarks<span></span></button><div id="preview-notes-panel"></div><div id="preview-bookmarks-panel"></div><button id="switch">Switch Card</button><button id="tags">Tags</button><script type="module">
+const html = `<!doctype html><link rel="stylesheet" href="/pinboard.css"><style>body{padding:24px}#preview-notes-panel,#preview-bookmarks-panel{max-width:620px}</style><button id="preview-notes">Notes<span></span></button><button id="preview-bookmarks">Bookmarks<span></span></button><button id="preview-images">Images<span></span></button><div id="preview-images-panel"></div><div id="preview-notes-panel"></div><div id="preview-bookmarks-panel"></div><button id="switch">Switch Card</button><button id="tags">Tags</button><script type="module">
 import {createCardSections} from '/card-sections.js';import {createCardSectionControls} from '/card-section-controls.js';import {installPreviewSections} from '/pinboard-preview-sections.js';import {installTagEditor} from '/pinboard-tag-editor.js';
 const data=JSON.parse(localStorage.fixture || '{}');window.data=data;window.chrome={storage:{local:{async get(keys){return structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,data[k]])));},async set(values){Object.assign(data,structuredClone(values));localStorage.fixture=JSON.stringify(data);}}}};
 let card='A';const content=data.content || (data.content={A:{notes:[{id:'a',title:'A note',text:'Original A'}],bookmarks:[{id:'a-link',title:'A link',url:'https://a.example/'}]},B:{notes:[{id:'b',title:'B note',text:'Original B'}],bookmarks:[{id:'b-link',title:'B link',url:'https://b.example/'}]}});
 const store=createCardSections(),organization=createCardSectionControls({store,getOwner:()=>card});window.store=store;
 const view=installPreviewSections({organization,getBookmarks:()=>[{id:'other',title:'Another link',url:'https://other.example/'}],save:async(key,action,value)=>{const field=action==='note'?'notes':'bookmarks';const list=content[key][field],index=list.findIndex(i=>i.id===value.id);if(index<0)list.push(value);else list[index]=value;localStorage.fixture=JSON.stringify(data);show();}});
-function show(){view.setContent(card,content[card]);}show();document.querySelector('#switch').onclick=()=>{card=card==='A'?'B':'A';show();};
+function show(){view.setContent(card,{...content[card],imagesContext:card,images:[{id:'portrait',title:'Portrait',image:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200"><rect width="100" height="200" fill="gold"/></svg>')},{id:'landscape',title:'Landscape',image:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="200" height="100" fill="teal"/></svg>')}]});}show();document.querySelector('#switch').onclick=()=>{card=card==='A'?'B':'A';show();};
 const openTags=installTagEditor({onChanged:async()=>{},suggestions:()=>['Architecture','Travel','ＡＲＣＨＩＴＥＣＴＵＲＥ'],localAdapter:()=>({read:async()=>({tags:data.tags || [],data:null}),mutate:async(action,tag)=>{data.tags=action==='tag'?[...new Set([...(data.tags || []),tag])]:(data.tags || []).filter(t=>t!==tag);return {tags:data.tags,data:null};}})});document.querySelector('#tags').onclick=()=>openTags({title:'Fixture'});
 </script>`;
 const server = createServer((req, res) => {
@@ -72,32 +72,18 @@ try {
   await create("Zoology");
   await create("Architecture");
   await create("Art");
-  await panel
-    .getByRole("button", { name: "Move Architecture up", exact: true })
-    .click();
-  await page.waitForFunction(
-    () =>
-      document.querySelector(".preview-local-section h4")?.textContent ===
-      "Architecture",
-  );
-  await panel
-    .getByRole("button", { name: "Move Architecture down", exact: true })
-    .click();
-  await page.waitForFunction(
-    () =>
-      document.querySelector(".preview-local-section h4")?.textContent ===
-      "Zoology",
-  );
-  await panel
-    .getByRole("combobox", { name: "Section for A note" })
-    .selectOption({ label: "Architecture" });
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll(".preview-local-section")].some(
-      (s) =>
-        s.querySelector("h4").textContent === "Architecture" &&
-        s.querySelector(".preview-note"),
-    ),
-  );
+  assert.deepEqual(await panel.locator('.preview-section-divider h4').allTextContents(),['Architecture','Art','Zoology']);
+  async function moveItem(host,title){
+    const before=await page.evaluate(()=>JSON.stringify(window.data));
+    await host.getByRole('button',{name:'Move '+title+' down',exact:true}).click();
+    await page.waitForFunction(before=>JSON.stringify(window.data)!==before,before);
+  }
+  await moveItem(panel,'A note');
+  assert.equal(await page.evaluate(async()=>Object.values((await store.read('A')).document.memberships).length),1);
+  const membership=await page.evaluate(async()=>(await store.read('A')).document.memberships);
+  await panel.getByRole('combobox',{name:'Sort notes'}).selectOption('za');
+  await page.waitForFunction(()=>document.querySelector('.preview-section-divider h4')?.textContent==='Zoology');
+  assert.deepEqual(await page.evaluate(async()=>(await store.read('A')).document.memberships),membership);
   if (process.env.ATLAS_POPOUT_SCREENSHOT)
     await page.screenshot({ path: process.env.ATLAS_POPOUT_SCREENSHOT });
   await page.getByRole("button", { name: "Switch Card", exact: true }).click();
@@ -127,9 +113,7 @@ try {
   assert.equal(await panel.locator(".preview-note").count(), 1);
   assert.ok((await panel.textContent()).includes("Original B"));
   assert.ok(!(await panel.textContent()).includes("Original A"));
-  await panel
-    .getByRole("combobox", { name: "Section for B note" })
-    .selectOption({ label: "Architecture" });
+  await moveItem(panel,'B note');
   await panel.locator(".preview-note").first().click();
   await panel.getByLabel("Note", { exact: true }).fill("Edited B only");
   await panel.getByRole("button", { name: "Save", exact: true }).click();
@@ -142,15 +126,11 @@ try {
   await panel.getByLabel("Title", { exact: true }).fill("New B");
   await panel.getByLabel("Note", { exact: true }).fill("Only B");
   await panel.getByRole("button", { name: "Save", exact: true }).click();
-  await panel
-    .getByRole("combobox", { name: "Section for New B" })
-    .selectOption({ label: "Architecture" });
+  await moveItem(panel,'New B');
   await page.locator("#preview-bookmarks").click();
   const links = page.locator("#preview-bookmarks-panel");
   await create("Architecture", links);
-  await links
-    .getByRole("combobox", { name: "Section for B link" })
-    .selectOption({ label: "Architecture" });
+  await moveItem(links,'B link');
   assert.equal(await links.locator(".preview-bookmark").count(), 1);
   await links
     .getByRole("button", { name: "Add Existing Bookmark ↑", exact: true })
@@ -161,9 +141,7 @@ try {
   await links
     .getByRole("button", { name: "Add Bookmark", exact: true })
     .click();
-  await links
-    .getByRole("combobox", { name: "Section for Another link" })
-    .selectOption({ label: "Architecture" });
+  await moveItem(links,'Another link');
   assert.equal(await links.locator(".preview-bookmark").count(), 2);
   await page.reload();
   await page.locator("#preview-notes").click();
@@ -276,6 +254,16 @@ try {
     await page.evaluate(() => document.activeElement?.textContent),
     "+ Section",
   );
+  await page.locator('#preview-images').click();
+  const images=page.locator('#preview-images-panel');
+  await create('Pictures',images);
+  await moveItem(images,'Portrait');
+  await moveItem(images,'Portrait');
+  await moveItem(images,'Landscape');
+  await images.locator('img').first().waitFor();
+  const geometry=await images.locator('.preview-images-grid').last().evaluate(grid=>({columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length,rects:[...grid.querySelectorAll('img')].map(img=>({ratio:img.getBoundingClientRect().width/img.getBoundingClientRect().height,natural:img.naturalWidth/img.naturalHeight,clickable:!!img.closest('button,a')}))}));
+  assert.equal(geometry.columns,2);assert.equal(geometry.rects.length,2);
+  for(const r of geometry.rects){assert(Math.abs(r.ratio-r.natural)<0.02);assert.equal(r.clickable,false);}
   assert.deepEqual(errors, []);
   console.log(
     "PASS Chromium: searchable normalized tags/Enter, create and reuse A–Z/searchable names across Cards, local note/bookmark assignments, new content, saved reopen, independent rename/removal and no content transfer. Synthetic content/storage adapters; installed MV3/native NOT_RUN.",

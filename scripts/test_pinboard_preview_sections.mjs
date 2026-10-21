@@ -32,3 +32,15 @@ assert.equal(chooserReads,0,'Opening previews must not build a hidden full-libra
 const lazyFooter=get('bookmarks-panel').children.at(-1),lazySelect=lazyFooter.children[1].children[1];assert.equal(lazySelect.children.length,0);
 lazyFooter.children[0].onclick();assert.equal(chooserReads,1);assert.equal(lazySelect.children.length,5000);lazyFooter.children[0].onclick();lazyFooter.children[0].onclick();assert.equal(chooserReads,1);
 console.log('PASS: fifty previews leave the5000-bookmark chooser empty until Add Existing Bookmark is explicitly opened.');
+let imageNoteSaves=[],drops=[];const imageView=context.installPreviewSections({saveImageNote:async(...args)=>imageNoteSaves.push(args),onDropImages:async files=>drops.push(files)});
+imageView.setContent('image-context',{imagesContext:'parent-card',images:[{id:'i1',title:'Portrait',image:'https://example.com/p.png',caption:'Existing caption'},{id:'i2',title:'Landscape',image:'https://example.com/l.png'}]});
+get('images').onclick();assert.equal(get('images-panel').hidden,false);
+const mini=get('images-panel').children.find(n=>n.className==='preview-images-grid'),figure=mini.children[0];
+assert.equal(figure.tag,'figure');assert.equal(figure.children[0].tag,'img');assert.equal(figure.children[0].onclick,undefined);
+const captionInput=figure.children[2].children[0];assert.equal(captionInput.value,'Existing caption');captionInput.value='Independent image notes';captionInput.oninput();await figure.children[3].onclick();
+assert.equal(imageNoteSaves[0][0],'parent-card');assert.equal(imageNoteSaves[0][1],'i1');assert.equal(imageNoteSaves[0][2],'Independent image notes');
+captionInput.value='Second edit';await figure.children[3].onclick();assert.equal(imageNoteSaves[1][3],'Independent image notes');
+const addImages=get('images-panel').children[0];await addImages.ondrop({preventDefault(){},stopPropagation(){},dataTransfer:{files:[{name:'one.png'},{name:'two.png'}]}});assert.equal(drops[0].length,2);
+assert.match(noteCSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+assert.match(noteCSS,/#preview-images-panel\{max-height:420px;overflow-y:auto/);
+console.log('PASS: dedicated image area, two-column CSS, non-clickable figures, independent caption saves and multi-file drop adapter.');

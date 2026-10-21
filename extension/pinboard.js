@@ -256,7 +256,9 @@ function openDetailContent(node,{preserveConnections=false}={}){
   if(node?.entryId && !storedEntry(node))return;
   if(!preserveConnections)previewingLinkedImage=false;$('preview-add-tag').disabled=previewingLinkedImage;selected=node;$('detail-title').textContent=node.title || hostLabel(node);const image=imageFor(node);
   if(!preserveConnections || !previewingLinkedImage)showDetailImage(image,node.title);
-  const details=metadata(node);previewSections.setContent(itemKey(node),{sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))},{preserve:preserveConnections});
+  const details=metadata(node),parent=parentNode(node),gallery=imageEntries.gallery(galleryOwner(parent));
+  const miniImages=gallery?.entries.map(entry=>({id:entry.id,image:entry.image,title:entry.origin?.filename || 'Image '+(gallery.entries.indexOf(entry)+1),caption:entry.caption || ''})) || (imageFor(parent)?[{id:'legacy',image:imageFor(parent),title:'Image 1',caption:''}]:[]);
+  previewSections.setContent(itemKey(node),{images:miniImages,imagesContext:galleryOwner(parent),sourceURL:node.url,available:authored(node) || !['loading','unavailable'].includes(metadataState),notes:details.notes || (details.note?[{id:itemKey(node)+':note',title:node.title || 'Note',text:details.note}]:[]),bookmarks:(details.bookmarks || []).map(bookmark=>({...bookmark,image:imageFor(bookmark)}))},{preserve:preserveConnections});
   $('detail-link').hidden=!node.url;if(node.url)$('detail-link').href=node.url;else $('detail-link').removeAttribute('href');
   $('detail-tags').replaceChildren(...previewTagChips(node));
   $('edit-authored-card').hidden=$('delete-authored-card').hidden=!authored(parentNode(node));
@@ -300,7 +302,14 @@ const writePreviewConnection=connectionWriter({catalog:previewCatalog,validateBo
 const sectionOwner=node=>{const parent=parentNode(node);return authored(parent)?itemKey(parent):JSON.stringify(['bookmark',parent?.id,parent?.url]);};
 const cardSections=createCardSections();
 const sectionControls=createCardSectionControls({store:cardSections,getOwner:()=>sectionOwner(selected)});
-const previewSections=installPreviewSections({organization:sectionControls,getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');if(node.entryId){if(action==='bookmark'){const [current]=await chrome.bookmarks.get(value.id);if(current?.url!==value.url)throw Error('This bookmark changed.');}await imageEntries.mutate(node.galleryOwner,node.entryId,entry=>{const field=action==='note'?'notes':'bookmarks',list=entry[field];if(value.editing){const old=list.find(item=>item.id===value.id);if(!old || old.title!==value.originalTitle || old.text!==value.originalText)throw Error('This note changed. Reopen it.');}const next=action==='note'?{id:value.id,title:value.title,text:value.text}:{id:value.id,title:value.title,url:value.url};const index=list.findIndex(item=>action==='note'?item.id===value.id:item.url===value.url);if(index<0)list.push(next);else list[index]=next;},action+'-saved');}else await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();paintImageNavigation(selected);$('preview-add-tag').disabled=previewingLinkedImage;const shown=image || imageFor(selected);showDetailImage(shown,title || selected?.title);$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
+const previewSections=installPreviewSections({organization:sectionControls,
+  onAddImages:()=>pickImage(selected),
+  onDropImages:files=>ingestImages(files,parentNode(selected)),
+  saveImageNote:async(owner,id,text,original)=>{
+    const parent=parentNode(selected);if(galleryOwner(parent)!==owner)throw Error('This Card changed. Reopen it.');
+    let target=id;if(id==='legacy'){await ensureImages(parent);target=imageEntries.gallery(owner)?.entries[0]?.id;}
+    await imageEntries.mutate(owner,target,entry=>{if((entry.caption || '')!==original)throw Error('These image Notes changed. Reopen the Card.');entry.caption=text;},'image-caption-saved');
+  },getBookmarks:()=>pinItems(roots),getImage:node=>imageFor(node),save:async(key,action,value)=>{const node=selected;if(!node || itemKey(node)!==key)throw Error('This preview changed. Reopen it.');if(node.entryId){if(action==='bookmark'){const [current]=await chrome.bookmarks.get(value.id);if(current?.url!==value.url)throw Error('This bookmark changed.');}await imageEntries.mutate(node.galleryOwner,node.entryId,entry=>{const field=action==='note'?'notes':'bookmarks',list=entry[field];if(value.editing){const old=list.find(item=>item.id===value.id);if(!old || old.title!==value.originalTitle || old.text!==value.originalText)throw Error('This note changed. Reopen it.');}const next=action==='note'?{id:value.id,title:value.title,text:value.text}:{id:value.id,title:value.title,url:value.url};const index=list.findIndex(item=>action==='note'?item.id===value.id:item.url===value.url);if(index<0)list.push(next);else list[index]=next;},action+'-saved');}else await writePreviewConnection(node,action,value);if(selected && itemKey(selected)===key)openDetailContent(node);},onImage:(image,title)=>{previewingLinkedImage=!!image;updateTaggingAction();paintImageNavigation(selected);$('preview-add-tag').disabled=previewingLinkedImage;const shown=image || imageFor(selected);showDetailImage(shown,title || selected?.title);$('detail-scroll').scrollTo?.({top:0,behavior:'instant'});}});
 const cardHolds=createCardHold({onRelease:()=>updatePriorities()});
 function holdCard(node){const position=positionById.get(node.id);if(!position)return;const mounted=[...blocks.values()].flatMap(block=>[...block.children]).find(card=>card.atlasNode.id===node.id),rect=mounted?.getBoundingClientRect(),root=$('pins').getBoundingClientRect();const actual=rect && Number.isFinite(rect.left) && Number.isFinite(root.left)?{...position,x:rect.left-root.left,y:rect.top-root.top}:position;cardHolds.hold(node.id,actual);}
 let tagsChangedURL=null;
@@ -629,7 +638,7 @@ async function ensureImages(parent){
   if(image && !authored(parent) && ['loading','unavailable'].includes(metadataState)){await refreshAssociations();if(['loading','unavailable'].includes(metadataState))throw Error('Connect the companion once to preserve existing image annotations.');}
   const current=metadata(parent),notes=current.notes || (current.note?[{id:owner+':note',title:parent.title || 'Note',text:current.note}]:[]);
   await imageEntries.ensure(owner,{id:parent.id,url:parent.url || '',title:parent.title,kind:parent.kind || 'bookmark',cardId:parent.cardId || null,scope:boardId || 'default',aliases:pinItems(roots).filter(n=>n.url===parent.url).map(n=>n.id)},image,{tags:current.tags || [],notes,bookmarks:current.bookmarks || []});
-  const entry=imageEntries.gallery(owner)?.entries[0];if(entry)await cardSections.migrateContext(sectionOwner(parent),itemKey(parent),entryKey(entry.id));
+  const entry=imageEntries.gallery(owner)?.entries[0];if(entry){await cardSections.migrateContext(sectionOwner(parent),itemKey(parent),entryKey(entry.id));await cardSections.migrateItem(sectionOwner(parent),'images',owner,'legacy',entry.id);}
 }
 async function materializeImageEntry(node){
   if(node?.entryId)return node;
@@ -656,7 +665,7 @@ function paintImageNavigation(node){
 }
 function navigateImage(direction){const parent=parentNode(selected),gallery=imageEntries.gallery(galleryOwner(selected));if(!gallery?.entries.length)return;const index=gallery.entries.findIndex(e=>e.id===selected.entryId),entry=gallery.entries[(index+direction+gallery.entries.length)%gallery.entries.length];openDetailContent(entryNode(parent,entry));$('detail-scroll').scrollTop=0;}
 $('previous-image').onclick=()=>navigateImage(-1);$('next-image').onclick=()=>navigateImage(1);
-$('detail').addEventListener('keydown',event=>{if(event.key==='Escape' && !event.defaultPrevented && !$('image-source').open && !document.querySelector('.pin-tag-editor[open]')){event.preventDefault();closeDetail();return;}if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.('input,textarea,select,[contenteditable],button,a') || $('image-source').open || document.querySelector('.pin-tag-editor[open]'))return;if(event.key==='ArrowLeft' || event.key==='ArrowRight'){event.preventDefault();navigateImage(event.key==='ArrowLeft'?-1:1);}});
+$('detail').addEventListener('keydown',event=>{if(event.key==='Escape' && !event.defaultPrevented && !$('image-source').open && !document.querySelector('.pin-tag-editor[open],.pin-section-editor[open]')){event.preventDefault();closeDetail();return;}if(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.('input,textarea,select,[contenteditable],button,a') || $('image-source').open || document.querySelector('.pin-tag-editor[open]'))return;if(event.key==='ArrowLeft' || event.key==='ArrowRight'){event.preventDefault();navigateImage(event.key==='ArrowLeft'?-1:1);}});
 $('default-image').onclick=async()=>{const node=selected;if(!node?.entryId)return;$('default-image').disabled=true;try{await imageEntries.setDefault(node.galleryOwner,node.entryId);await syncDefaultCover(parentNode(node));await refreshGeneratedIndex();render();if(itemKey(selected)===itemKey(node))paintImageNavigation(node);}catch(error){setTaggingChoiceStatus(error.message);}finally{if(selected)paintImageNavigation(selected);}};
 $('remove-image').onclick=async()=>{let node=selected;if(!node || (!node.entryId && !imageFor(node)) || !window.confirm('Remove this image and its section? Its references, notes, bookmarks and tag history will be saved in Recovery. Original image files are not backed up.'))return;$('remove-image').disabled=true;try{node=await materializeImageEntry(node);const parent=parentNode(node),record=await imageEntries.remove(node.galleryOwner,node.entryId);await syncDefaultCover(parent);await refreshGeneratedIndex();render();if(galleryOwner(selected)===node.galleryOwner){const gallery=imageEntries.gallery(node.galleryOwner),entry=gallery.entries[Math.min(record.position,gallery.entries.length-1)];openDetailContent(entry?entryNode(parent,entry):parent);setTaggingChoiceStatus('Moved to Recovery.');}}catch(error){setTaggingChoiceStatus(error.message || 'Could not save Recovery. Image kept.');}finally{if(selected)paintImageNavigation(selected);}};
 
@@ -671,16 +680,21 @@ $('save-image-url').onclick=async()=>{
   try{const origin=await urlImageOrigin(image);await saveImage(node,image,origin);$('image-source').close();}catch(error){$('image-status').textContent=(error.message || 'Could not save the image reference.')+' Existing images are unchanged.';}
   finally{$('save-image-url').disabled=false;}
 };
-$('image-file').onchange=async()=>{
-  const file=$('image-file').files?.[0],node=imageTarget || selected;if(!file || !node)return;
-  $('upload-image').disabled=$('save-image-url').disabled=true;
-  $('image-status').textContent='Preparing image…';
-  try{
+async function ingestImages(files,node){
+  if(!node)return;
+  const list=[...files],showImages=!$('preview-images-panel').hidden;if(!list.length)return;
+  for(const file of list){
+    if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type))throw Error('Choose PNG, JPEG, WebP or GIF images.');
     const image=await rasterImage(file,175000),origin=await localImageOrigin(file);
-    $('image-status').textContent='Saving image…';
     await saveImage(node,image,origin);
-    $('image-source').close();
-  }catch(error){$('image-status').textContent=(error.message || 'PINBOARD_IMAGE_FAILED')+': Image not added. Existing images are unchanged.';}
+    if(showImages && galleryOwner(selected)===galleryOwner(node) && $('preview-images-panel').hidden)$('preview-images').click();
+  }
+}
+$('image-file').onchange=async()=>{
+  const files=[...($('image-file').files || [])],node=imageTarget || selected;if(!files.length || !node)return;
+  $('upload-image').disabled=$('save-image-url').disabled=true;$('image-status').textContent='Preparing images…';
+  try{await ingestImages(files,node);$('image-source').close();}
+  catch(error){$('image-status').textContent=(error.message || 'PINBOARD_IMAGE_FAILED')+': Earlier successful additions are kept. Retry remaining images.';}
   finally{$('upload-image').disabled=$('save-image-url').disabled=false;}
 };
 const coverFetch=installCoverFetch({

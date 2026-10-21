@@ -118,3 +118,7 @@ Track historical mechanisms such as Chute's network bridge because successors ne
 - [Visit source behavior](PROPOSAL_VISIT_SOURCE_BEHAVIOR.md) — Settings trial for source-on-left split view or existing separate-tab navigation, with fallback; API tests pass, real Chrome 155 layout confirmation pending.
 
 - [Preview Images disclosure proposal](PROPOSAL_PREVIEW_IMAGES_DISCLOSURE.md): future vertically scrollable Images section alongside Notes and Bookmarks, including narrow/mobile screens; not implemented.
+
+## Shared Card organizational flow
+
+[Card Sections and Images](../implementation/CARD_SECTION_FLOW_AND_IMAGES.md) records the shared divider/arrow/sorting contract, independent local ownership, compact image gallery and future reference-based compositions/Atlas Library picker. See the continuation ledger for executed verification and limits.

@@ -1,7 +1,7 @@
 // Exclusive preview state; persistence and image display are injected adapters.
-export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,save=async()=>{},onImage=()=>{},organization=null}={}){
+export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,save=async()=>{},onImage=()=>{},organization=null,onAddImages=()=>{},onDropImages=async()=>{},saveImageNote=async()=>{}}={}){
   const $=id=>document.getElementById(id),make=(tag,text='',cls='')=>{const node=document.createElement(tag);node.textContent=text;node.className=cls;return node;};
-  const names=['notes','bookmarks'],drafts=new Map();let active=null,identity=null,content={},editing=false,focusedBookmark=null,busy=false;
+  const names=['notes','bookmarks',...($('preview-images')?['images']:[])],drafts=new Map(),imageDrafts=new Map();let active=null,identity=null,content={},editing=false,focusedBookmark=null,busy=false;
   const button=name=>$('preview-'+name),panel=name=>$('preview-'+name+'-panel');
   function sync(){for(const name of names){const open=active===name;button(name).setAttribute('aria-expanded',String(open));panel(name).hidden=!open;const triangle=button(name).querySelector?.('span');if(triangle)triangle.textContent=open?'▼':'▶';}}
   for(const name of names)button(name).onclick=()=>{active=active===name?null:name;sync();};
@@ -39,11 +39,33 @@ export function installPreviewSections({getBookmarks=()=>[],getImage=()=>null,sa
     chooser.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();chooser.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus?.();}};
     chooser.append(search,select,attach,feedback);footer.append(trigger,chooser);host.append(footer);
   }
+  function images(){
+    if(!names.includes('images'))return;
+    const host=panel('images');host.replaceChildren();organization?.header('images',host);
+    const add=action('+ Add Images',()=>onAddImages(),'preview-add-images');
+    add.setAttribute('aria-label','Add Images');
+    const status=make('p','','preview-save-status');status.setAttribute('role','status');
+    add.ondragover=event=>{event.preventDefault();event.dataTransfer.dropEffect='copy';};
+    add.ondrop=async event=>{event.preventDefault();event.stopPropagation();const files=[...event.dataTransfer.files];add.disabled=true;try{await onDropImages(files);}catch(error){status.textContent=error.message;}finally{add.disabled=false;}};
+    host.append(add,status);
+    const place=organization?.groups('images',host,content.imagesContext);
+    const fallback=make('div','','preview-images-grid');if(!place)host.append(fallback);
+    for(const item of content.images || []){
+      const figure=make('figure','','preview-mini-image'),img=make('img');img.src=item.image;img.alt=item.title || 'Card image';img.loading='lazy';img.referrerPolicy='no-referrer';
+      img.onerror=()=>{img.hidden=true;caption.textContent='Image unavailable';};
+      const caption=make('figcaption',item.title || 'Image'),label=make('label','Notes'),input=make('textarea');const draftKey=JSON.stringify([content.imagesContext,item.id]);input.value=imageDrafts.get(draftKey) ?? item.caption ?? '';input.oninput=()=>imageDrafts.set(draftKey,input.value);input.rows=2;input.maxLength=100000;input.setAttribute('aria-label','Notes for '+(item.title || 'image'));
+      label.append(input);const feedback=make('p','','preview-save-status');feedback.setAttribute('role','status');
+      let original=item.caption || '';const context=content.imagesContext;
+      const save=action('Save Notes',async()=>{save.disabled=true;try{await saveImageNote(context,item.id,input.value,original);original=input.value;imageDrafts.delete(draftKey);feedback.textContent='Saved';}catch(error){feedback.textContent=error.message;}finally{save.disabled=false;}});
+      figure.append(img,caption,label,save,feedback);if(place)place(item,figure);else fallback.append(figure);
+    }
+    if(!(content.images || []).length)host.append(make('p','No images yet.','preview-section-empty'));
+  }
   return {setContent(key,value={},options={}){
     const changed=identity!==key,preserve=changed && options.preserve===true;
     if(preserve && drafts.has(identity)){drafts.set(key,drafts.get(identity));drafts.delete(identity);}
-    identity=key;content=value;organization?.setContext(key,()=>{if(identity===key){if(!editing)notes();bookmarks();sync();}});
+    identity=key;content=value;organization?.setContext(key,()=>{if(identity===key){if(!editing)notes();bookmarks();images();sync();}});
     if(changed && !preserve){active=null;editing=false;focusedBookmark=null;}
-    if(!editing || preserve)notes();bookmarks();sync();
+    if(!editing || preserve)notes();bookmarks();images();sync();
   }};
 }

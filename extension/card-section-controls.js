@@ -172,7 +172,15 @@ export function createCardSectionControls({ store, getOwner }) {
     },
     header(area, host) {
       const head = make("div", "", "preview-area-header");
-      head.append(make("strong", area === "notes" ? "Notes" : "Bookmarks"));
+      head.append(make("strong", area[0].toUpperCase()+area.slice(1)));
+      const sort = make('select'); sort.setAttribute('aria-label','Sort '+area);
+      for (const [value,text] of [['az','A–Z'],['za','Z–A'],['date','Date'],['recent','Recent']]) {
+        const option=make('option',text); option.value=value; sort.append(option);
+      }
+      if (state?.document.sorts?.[area] === 'manual') {const option=make('option','Manual');option.value='manual';sort.append(option);}
+      sort.value=state?.document.sorts?.[area] || 'az';
+      sort.onchange=()=>run(()=>store.setSort(owner,area,sort.value),feedback);
+      head.append(sort);
       const feedback = make("span", loadError, "preview-save-status");
       feedback.setAttribute("role", "status");
       const add = button("+ Section", async () => {
@@ -187,80 +195,52 @@ export function createCardSectionControls({ store, getOwner }) {
       head.append(add, feedback);
       host.append(head);
     },
-    groups(area, host) {
-      const targetOwner = owner,
-        context = key,
-        groups = new Map(),
-        status = make("p", "", "preview-save-status");
-      status.setAttribute("role", "status");
-      const unsectioned = make("div", "", "preview-section-items");
-      host.append(unsectioned);
-      const sections = active(area);
-      for (const [index, s] of sections.entries()) {
-        const group = make("section", "", "preview-local-section"),
-          head = make("div", "", "preview-area-header"),
-          items = make("div", "", "preview-section-items");
-        const up = button(
-            "↑",
-            () => run(() => store.move(targetOwner, s.id, -1), status),
-            "Move " + label(s) + " up",
-          ),
-          down = button(
-            "↓",
-            () => run(() => store.move(targetOwner, s.id, 1), status),
-            "Move " + label(s) + " down",
-          );
-        up.disabled = index === 0;
-        down.disabled = index === sections.length - 1;
-        head.append(
-          make("h4", label(s)),
-          up,
-          down,
-          button(
-            "Rename",
-            () => editor(area, s),
-            "Rename " + label(s) + " Section",
-          ),
-          button(
-            "Remove",
-            () => run(() => store.remove(targetOwner, s.id), status),
-            "Remove " + label(s) + " Section; keep contents",
-          ),
-        );
-        group.append(head, items);
-        host.append(group);
-        groups.set(s.id, items);
+    groups(area, host, fixedContext = null) {
+      const targetOwner=owner, context=fixedContext || key, entries=[], status=make('p','','preview-save-status');
+      status.setAttribute('role','status');
+      const root=make('div','','preview-organized-flow'); host.append(root,status);
+      const sections=[...active(area)], mode=state?.document.sorts?.[area] || 'az';
+      if(mode!=='manual') sections.sort((a,b)=>{
+        if(mode==='date'||mode==='recent') {const result=(mode==='recent'?(a.updatedAt || a.createdAt):a.createdAt).localeCompare(mode==='recent'?(b.updatedAt || b.createdAt):b.createdAt);return mode==='recent'?-result:result;}
+        const result=label(a).localeCompare(label(b),undefined,{sensitivity:'base',numeric:true});return mode==='za'?-result:result;
+      });
+      const saved=state?.document.orders?.[JSON.stringify([context,area])] || [];
+      const rank=ref=>{const i=saved.findIndex(t=>t.item===ref);return i<0?Number.MAX_SAFE_INTEGER:i;};
+      let tokens=[];
+      function move(index,direction){
+        const next=tokens.map(t=>({...t})), other=index+direction;
+        if(other<0||other>=next.length)return;
+        [next[index],next[other]]=[next[other],next[index]];
+        return run(()=>store.order(targetOwner,area,context,next),status);
       }
-      host.append(status);
-      return (item, row) => {
-        const ref = area === "notes" ? item.id : item.url,
-          id = state?.document.memberships[store.reference(context, ref, area)],
-          wrapper = make("div", "", "preview-section-item");
-        wrapper.append(row);
-        if (sections.length) {
-          const select = make("select");
-          select.setAttribute(
-            "aria-label",
-            "Section for " + (item.title || "item"),
-          );
-          for (const [value, text] of [
-            ["", "Unsectioned"],
-            ...sections.map((s) => [s.id, label(s)]),
-          ]) {
-            const option = make("option", text);
-            option.value = value;
-            select.append(option);
+      function arrows(wrapper,index,title){
+        const controls=make('div','','preview-flow-actions');
+        const up=button('↑',()=>move(index,-1),'Move '+title+' up'),down=button('↓',()=>move(index,1),'Move '+title+' down');
+        up.disabled=index===0;down.disabled=index===tokens.length-1;controls.append(up,down);wrapper.append(controls);
+      }
+      function paint(){
+        root.replaceChildren(); tokens=[];
+        const buckets=new Map([[null,[]],...sections.map(s=>[s.id,[]])]);
+        for(const entry of entries){const id=state?.document.memberships[store.reference(context,entry.ref,area)];(buckets.get(id)||buckets.get(null)).push(entry);}
+        for(const items of buckets.values()) items.sort((a,b)=>rank(a.ref)-rank(b.ref));
+        for(const item of buckets.get(null))tokens.push({item:item.ref});
+        for(const section of sections){tokens.push({section:section.id});for(const item of buckets.get(section.id))tokens.push({item:item.ref});}
+        let grid;
+        function newGrid(){grid=make('div','',area==='images'?'preview-section-items preview-images-grid':'preview-section-items');root.append(grid);}
+        newGrid();
+        tokens.forEach((token,index)=>{
+          if(token.section){
+            const section=sections.find(s=>s.id===token.section), head=make('div','','preview-section-divider');
+            const title=make('div','','preview-divider-title');title.append(make('h4',label(section)));head.append(title);arrows(head,index,label(section)+' Section');
+            head.append(button('Rename',()=>editor(area,section),'Rename '+label(section)+' Section'),button('Remove',()=>run(()=>store.remove(targetOwner,section.id),status),'Remove '+label(section)+' Section; keep contents'));
+            root.append(head);newGrid();
+          }else{
+            const entry=entries.find(e=>e.ref===token.item),wrapper=make('div','','preview-section-item');wrapper.append(entry.row);arrows(wrapper,index,entry.title);grid.append(wrapper);
           }
-          select.value = groups.has(id) ? id : "";
-          select.onchange = () =>
-            run(
-              () => store.assign(targetOwner, area, context, ref, select.value),
-              status,
-            );
-          wrapper.append(select);
-        }
-        (groups.get(id) || unsectioned).append(wrapper);
-      };
+        });
+      }
+      paint();
+      return (item,row)=>{entries.push({ref:area==='bookmarks'?item.url:item.id,title:item.title||'image',row});paint();};
     },
   };
 }
