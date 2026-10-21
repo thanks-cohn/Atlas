@@ -110,3 +110,8 @@ Documentation-only decision: no schema migration, persistence change, hierarchy 
 ## IMPORTANT — preservation and future AI partnership
 
 The transposable Object also serves long-term preservation: capture permitted content, assets, source context, versions and relationships from the beginning. The owner wants eventual permission-based ChatGPT access to selected collections, with optional structured-data contributions kept separate from assistance consent, and proposes a $2 price split equally with a distribution partner. See [the important preservation, AI access and partnership record](IMPORTANT_WHOLE_OBJECT_PRESERVATION_AND_AI_PARTNERSHIP.md) for the complete owner vision, economics, boundaries and verification plan. No partnership, sharing capability or training program is established; this future opportunity does not supersede current durable/interoperable Object foundation work.
+
+
+## Current execution sequence — owner clarification
+
+The [Current Priority Checklist](CURRENT_PRIORITY_CHECKLIST.md) governs near-term sequencing: qualify intuitive standardized local/remote exploration first; then formalize Object structure and qualify aesthetic Dashboard hierarchy arrangement/navigation and Save as Atlas Object; establish the stable public API after the interaction surface is proven. Transposability, durable external persistence and individual/whole export remain obligations throughout. Existing Dashboard work is preserved. Focused document/PDF adapters build on this foundation rather than taking priority over it. Pinboards/bookmarks/tags/notes are the enjoyable entry point; students and Chinese/Korean audiences are explicit experience-research priorities.
