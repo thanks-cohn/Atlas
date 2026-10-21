@@ -1,4 +1,5 @@
 # ATLAS — Universal Resource & Relationship Explorer
+**Current owner direction — organize and preserve first:** Prioritize durable, deeply nested Collections, Galleries and reusable Atlas Objects, with local/optional R2 persistence outside browser caches, recoverable backups and portable structured exports. **The full web editor and website builder are deferred until later.** HTML/CSS/JS remains the proposed presentation layer; versioned data and original assets preserve editable structure, while PDF is a proposed output. See [Current Direction — Durable Hierarchies and Portable Objects](docs/forever-works/CURRENT_DIRECTION_DURABLE_HIERARCHIES_AND_PORTABLE_OBJECTS.md). This is a priority decision and proposed contract, not a claim that nesting, R2 backup or PDF export is implemented.
 
 ATLAS is a **browser-first, native-capable, local-first explorer** that unifies user-authorized local files, Cloudflare R2, bookmarks, saved webpages, archives and connected application resources. Users organize them with text, tags, user-defined catalogs and cluster pairings, independent of physical storage locations.
 
